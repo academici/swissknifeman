@@ -16,7 +16,7 @@ _CHECK_ID = re.compile(r"^V[0-9]+$")
 SUPPORT_PROVENANCE = {
     "plan_support": (("plan", "phase"), ("plan",)),
     "phase_support": (("plan", "phase"), ("plan", "phase")),
-    "review_followup": (("plan", "item", "finding", "session_ref"), ()),
+    "review_followup": (("plan", "item", "finding", "items", "findings", "session_ref"), ()),
     "deviation_fix": (("plan", "item", "event"), ("plan", "item")),
     "research": (("plan", "question"), ()),
     "advisor": (("plan", "item", "question"), ()),
@@ -49,7 +49,7 @@ def _split_review(review: str) -> tuple[str, str]:
     return base, head
 
 
-def support_provenance(kind: str, **fields: str | None) -> dict:
+def support_provenance(kind: str, **fields: str | list | dict | None) -> dict:
     """``provenance`` of work outside the items of a plan: ``kind`` is one of :data:`SUPPORT_PROVENANCE`; a field the kind
     does not carry, or a required one that is missing, is a usage mistake."""
     if kind not in SUPPORT_PROVENANCE:

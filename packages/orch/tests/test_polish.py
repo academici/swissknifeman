@@ -213,6 +213,42 @@ class TerminatedRun(unittest.TestCase):
         self.assertEqual(seen["handlers"], {signal.SIGTERM: loop.terminated, signal.SIGHUP: loop.terminated})
         self.assertEqual({n: signal.getsignal(n) for n in before}, before)
 
+    def test_an_inherited_ignored_sigint_interrupts_the_run_and_is_ignored_again_after_it(self):
+        # a conductor started in the background of a shell inherits SIG_IGN: the SIGINT of autopilot stop must still end it
+        seen = {}
+
+        def pieces():
+            seen["sigint"] = signal.getsignal(signal.SIGINT)
+            os.kill(os.getpid(), signal.SIGINT)
+            seen["survived"] = True
+
+        previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        self.addCleanup(signal.signal, signal.SIGINT, previous)
+        with mock.patch.object(loop.observer, "write_report", side_effect=RuntimeError("no report")):
+            self.assertEqual(loop.loop(self.unit(pieces)), 130)
+        self.assertEqual(({"sigint": loop.terminated}, signal.SIG_IGN), (seen, signal.getsignal(signal.SIGINT)))
+
+    def test_a_sigint_handler_of_the_caller_is_kept(self):
+        seen = {}
+
+        def pieces():
+            seen["sigint"] = signal.getsignal(signal.SIGINT)
+            raise KeyboardInterrupt
+
+        previous = signal.signal(signal.SIGINT, signal.default_int_handler)
+        self.addCleanup(signal.signal, signal.SIGINT, previous)
+        with mock.patch.object(loop.observer, "write_report", side_effect=RuntimeError("no report")):
+            self.assertEqual(loop.loop(self.unit(pieces)), 130)
+        self.assertIs(signal.default_int_handler, seen["sigint"])
+
+    @staticmethod
+    def unit(pieces):
+        return types.SimpleNamespace(_pieces=pieces, _disk_guard=lambda: None, state={"items": {}}, _segment=None,
+                                     run_id="cnd-unit", settings=types.SimpleNamespace(events_enabled=False), config_file=None,
+                                     _active_s=lambda: 0.0, _save=lambda: None, directory=Path("."), project=Path("."),
+                                     reports_dir=lambda: Path("."), progress=mock.Mock(), run_doc={},
+                                     _batch_held=lambda: False, store=types.SimpleNamespace(mutating=contextlib.nullcontext))
+
 
 class DiskGuard(unittest.TestCase):
     def test_a_shortage_names_the_filesystem_and_the_limit(self):

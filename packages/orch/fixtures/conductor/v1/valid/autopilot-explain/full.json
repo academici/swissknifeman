@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:autopilot-explain:v1",
+  "plan": "PLAN9",
+  "policy": {
+    "allowed": true,
+    "enabled": true,
+    "require_readiness": true,
+    "max_runs": 5,
+    "max_wall_s": 43200,
+    "max_no_progress_runs": 2,
+    "max_auto_decisions": 10,
+    "quota_wait_max_s": 21600,
+    "poll_s": 30.0,
+    "max_recoveries": 1,
+    "run_tokens_hard_max": 0
+  },
+  "sources": {
+    "allowed": "machine",
+    "enabled": "project",
+    "require_readiness": "defaults",
+    "max_runs": "flag:--max-runs",
+    "max_wall_s": "defaults",
+    "max_no_progress_runs": "defaults",
+    "max_auto_decisions": "defaults",
+    "quota_wait_max_s": "defaults",
+    "poll_s": "defaults",
+    "max_recoveries": "defaults",
+    "run_tokens_hard_max": "none"
+  },
+  "readiness": {
+    "op": "readiness",
+    "outcome": "ok",
+    "phases": [
+      {
+        "id": "P3",
+        "status": "ready",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "next": {
+      "kind": "run-items",
+      "items": [
+        "P3.1"
+      ],
+      "phase": "P3",
+      "message": null
+    }
+  },
+  "next": {
+    "action": "run",
+    "items": [
+      "P3.1"
+    ],
+    "phase": "P3",
+    "message": "start a run of P3.1"
+  },
+  "mode": null
+}

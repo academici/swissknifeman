@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:compress-result:v1",
+  "apply": true,
+  "runs": [
+    {
+      "run_id": "cnd-20261001T100000Z-abcdef",
+      "status": "running",
+      "age_days": 24.3,
+      "compressed": [],
+      "bytes_before": 0,
+      "bytes_after": 0
+    }
+  ]
+}

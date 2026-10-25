@@ -293,13 +293,14 @@ sequenceDiagram
   participant O as Observer agent
   participant C as Conductor
   participant D as run/debug/
+  participant R as observer report
   O->>C: run --plan P --items A B (--debug, or [orch] debug = true)
   C->>C: run.start
-  C->>D: journal.md, metrics.md, findings.md (once)
-  C-->>O: DEBUG_MODE: the layer that set it, protocol orch-debug, journal folder
-  O->>O: follow the orch-debug protocol (estimate, watch beacons, measure)
-  O->>D: journal entries, metrics rows, findings
-  Note over C: roles, prompts and decisions are the same with the mode on or off
+  C-->>O: DEBUG_MODE: the layer that set it, protocol orch-debug, observer metrics, journal path
+  O->>O: follow the orch-debug protocol (estimate, wake on health and run-end signals)
+  O->>D: journal.md, created by the observer when it has notes
+  C->>R: observer.json / observer.md with the metrics of every piece (debug or not)
+  Note over C: roles, prompts, decisions and lifecycle facts are the same with the mode on or off
 ```
 
 See [Debug mode](conductor.md#debug-mode) for the three levels (machine, project, `--debug`).

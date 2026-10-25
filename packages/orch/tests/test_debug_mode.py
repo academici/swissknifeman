@@ -1,4 +1,4 @@
-"""Debug mode of a run: three layers (machine, project, --debug), default off; the DEBUG_MODE beacon and the journal."""
+"""Debug mode of a run: three layers (machine, project, --debug), default off; the DEBUG_MODE beacon writes no file."""
 from __future__ import annotations
 
 import io
@@ -63,22 +63,27 @@ class AnnounceTests(unittest.TestCase):
         self.assertEqual([], progress.lines)
         self.assertFalse((self.run_dir / debug_mode.FOLDER).exists())
 
-    def test_on_beacons_the_protocol_and_opens_the_journal(self):
+    def test_on_beacons_the_protocol_and_the_observer_metrics_and_writes_no_file(self):
         progress = _Progress()
         on = settings.Settings(**{**settings.defaults().__dict__, "debug": True, "resolved": None})
         folder = debug_mode.announce(progress, self.run_dir, "r1", on)
         self.assertEqual([("info", "DEBUG_MODE")], [(line["event"], line["reason_code"]) for line in progress.lines])
-        self.assertIn(str(debug_mode.PROTOCOL), progress.lines[0]["message"])
+        message = progress.lines[0]["message"]
+        self.assertIn(str(debug_mode.PROTOCOL), message)
+        self.assertIn("observer.md", message)
+        self.assertIn("orch conduct observe --run r1", message)
         self.assertTrue(debug_mode.PROTOCOL.is_file())
-        self.assertEqual({"journal.md", "metrics.md", "findings.md"}, {path.name for path in folder.iterdir()})
-        self.assertEqual(0o700, folder.stat().st_mode & 0o777)
+        self.assertEqual(self.run_dir / debug_mode.FOLDER, folder)
+        self.assertEqual([], list(self.run_dir.iterdir()))  # no skeleton journal, metrics or findings
 
     def test_a_resume_keeps_what_the_observer_wrote(self):
         on = settings.Settings(**{**settings.defaults().__dict__, "debug": True, "resolved": None})
         folder = debug_mode.announce(_Progress(), self.run_dir, "r1", on)
+        folder.mkdir()
         (folder / "journal.md").write_text("my notes\n", encoding="utf-8")
         debug_mode.announce(_Progress(), self.run_dir, "r1", on)
         self.assertEqual("my notes\n", (folder / "journal.md").read_text(encoding="utf-8"))
+        self.assertEqual(["journal.md"], [path.name for path in folder.iterdir()])
 
 
 class FlagTests(unittest.TestCase):

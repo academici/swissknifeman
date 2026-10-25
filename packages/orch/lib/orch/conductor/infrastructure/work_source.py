@@ -1,5 +1,5 @@
 """The work source as the conductor reaches it: the verbs of this package's own ``orch.py source`` (claim, brief,
-release, research, register, commit), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
+release, research, register, commit, readiness), never the plan itself, and the artifact folder of a piece. ``prepare`` is the
 exception: it binds the launch-plan in this process so a public ``source prepare`` stays strict.
 
 The one place of the conductor that writes into the artifact folder (``artifacts_dir`` of the brief, or
@@ -12,6 +12,7 @@ import io
 import os
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+import re
 import shlex
 import sys
 from typing import Callable, Optional
@@ -26,6 +27,7 @@ from orch.conductor import checks as checks_mod, options as opts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
+from orch.conductor.infrastructure.commit_stages import operation_of, receipt_stem, stage_of, stage_step
 from orch.conductor.infrastructure.files import safe, write_json
 from orch.conductor.infrastructure.heartbeat import declare
 from orch.settings import ORCH_ROOT
@@ -37,6 +39,7 @@ from aicore.util.proc import run as run_with_timeout
 # evidence of its items with the plan at register.
 FALLBACK_ARTIFACTS = Path(".swissknifeman") / "orch-artifacts"
 ORCH_TRANSPORT: Optional[Callable] = None
+_CODE_LINE = re.compile(r"^([A-Z][A-Z0-9_]{1,63}): ")
 
 
 def inprocess_transport(argv, cwd, env):
@@ -81,17 +84,18 @@ def _subprocess_transport(argv, cwd, env):
 def read_receipt(item: Item, kind: str, *, project=None) -> Optional[dict]:
     """Read the work-source run, never the conductor item folder. Broken documents authorize only a repeat.
 
+    ``kind`` is a step key: a stage commit (``checkpoint``, ``fix-commit.<n>``) reads its own receipt.
     Private metadata accompanies the raw answer for recovery; it never becomes a step result.
     ``project`` is the same project passed to the source CLI (machine state is used only without a project).
     """
     if not item.orch_run:
         return None
-    kind = "register" if kind == "close" else kind
+    stem = receipt_stem(kind)
     try:
         directory = journal.run_dir(item.orch_run, project=project)
-        doc = journal.read_doc(directory, f"receipts/{kind}.json")
-        request = journal.read_doc(directory, f"receipts/{kind}-request.json")
-        request_mtime_ns = (directory / f"receipts/{kind}-request.json").stat().st_mtime_ns \
+        doc = journal.read_doc(directory, f"receipts/{stem}.json")
+        request = journal.read_doc(directory, f"receipts/{stem}-request.json")
+        request_mtime_ns = (directory / f"receipts/{stem}-request.json").stat().st_mtime_ns \
             if isinstance(request, dict) else None
         run_doc = journal.read_doc(directory, "run.json") or {}
         marker = read_marker(project) if project is not None else None
@@ -120,7 +124,8 @@ def read_receipt(item: Item, kind: str, *, project=None) -> Optional[dict]:
 def receipt_closes(kind: str, doc: Optional[dict], item: Item, *, state_saved_ns: Optional[int] = None) -> tuple:
     """L11: successful outcome, this attempt, and a finished workspace part. Git history is never authority."""
     step = item.state.get("steps", {}).get(kind, {})
-    kind = "register" if kind == "close" else kind
+    staged = stage_of(kind) is not None  # a stage commit leaves the plan files: no workspace part to wait for
+    kind = operation_of(kind)
     if not isinstance(doc, dict) or doc.get("op") != kind:
         return False, "repeated: receipt missing"
     if doc.get("outcome") not in (("recorded", "no-op") if kind == "register" else ("committed", "no-op")):
@@ -166,7 +171,7 @@ def receipt_closes(kind: str, doc: Optional[dict], item: Item, *, state_saved_ns
         attempt = request.get("attempt_id")
     if not expected or attempt != expected:
         return False, "repeated: receipt of another attempt"
-    if kind == "commit" and not workspace_complete(doc, required=bool(doc.get("_workspace_required"))):
+    if kind == "commit" and not workspace_complete(doc, required=bool(doc.get("_workspace_required")) and not staged):
         return False, "repeated: workspace part incomplete"
     return True, "closed from receipt"
 
@@ -180,6 +185,7 @@ def workspace_complete(answer: dict, *, required: bool = False) -> bool:
 
 def receipt_result(kind: str, answer: dict) -> dict:
     """The same result shapes for live calls and recovered steps (finish reads close['by'])."""
+    kind = operation_of(kind) if kind != "close" else kind
     if kind == "close":
         return {"by": "closer", "answer": "registration recovered from receipt"}
     if kind == "register":  # ``evidence``: where the source keeps the evidence for good (a workspace plan)
@@ -435,6 +441,32 @@ def decision(self, item: Item, doc: dict) -> dict:
     return {"outcome": "kept", "reason": why[:300]}
 
 
+def source_readiness(self, plan: str, *, plans_root: Optional[str] = None) -> dict:
+    """``orch.py source readiness`` of the collection ``plan``: the work-source/v1 ``readiness`` answer, checked against
+    the contract. ``self`` is the conductor or any owner with ``_orch`` (:func:`run_orch` bound to it, as the conductor
+    binds it). Never raises for the source: a refusal of the source (``READINESS_UNSUPPORTED`` included), a source that
+    failed or printed no answer, and an answer outside the contract all come back as ``{outcome: refused, reason_code,
+    message}``, so the caller decides what an unknown readiness means."""
+    args = ["source", "readiness", "--plan", plan] + (["--plans-root", plans_root] if plans_root else [])
+    _, answer, err = self._orch(*args)  # the answer decides: a refused answer exits 1 with its document
+    if not isinstance(answer, dict):
+        line = (err or "the work source printed no answer").splitlines()[-1]
+        coded = _CODE_LINE.match(line)  # ``CODE: message`` of the source CLI (WORK_SOURCE_UNAVAILABLE, ...)
+        return {"op": "readiness", "outcome": "refused", "reason_code": coded.group(1) if coded else "WORK_SOURCE_FAILED",
+                "message": line[:300]}
+    found = source_problems(answer, "output")
+    if not found and answer.get("op") != "readiness":
+        found = [f"/op: answers {answer.get('op')!r} to 'readiness'"]
+    if not found and answer["outcome"] == "ok" and not ("phases" in answer and "next" in answer):
+        found = ["/: an ok answer needs phases and next"]
+    if not found and answer["outcome"] == "refused" and "reason_code" not in answer:
+        found = ["/: a refused answer needs reason_code"]
+    if found:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "WORK_SOURCE_FAILED",
+                "message": f"the readiness answer is outside work-source/v1: {'; '.join(found[:3])}"[:300]}
+    return answer
+
+
 def register(self, item: Item, args: list) -> dict:
     """``orch.py source register`` with the arguments ``finish`` built: ``{outcome, gate}``, or a ``Stop``."""
     code, answer, err = self._orch(*args)
@@ -450,11 +482,20 @@ def register(self, item: Item, args: list) -> dict:
     return receipt_result("register", answer)
 
 
-def commit(self, item: Item, paths: list) -> dict:
-    """``orch.py source commit`` of ``paths``: ``{outcome, sha}``, or a ``Stop``."""
+def commit(self, item: Item, paths: list, role: Optional[str] = None, stage: Optional[str] = None,
+           trailers=()) -> dict:
+    """``orch.py source commit`` of ``paths``: ``{outcome, sha}``, or a ``Stop``. ``role``, ``stage`` and ``trailers``
+    belong to the commits of a split run (``commit.mode`` ``implementation-and-fixes``); without them the call is the one
+    of ``final-only``."""
     args = ["source", "commit", "--run", item.orch_run]
     for path in paths:
         args += ["--path", path]
+    if role:
+        args += ["--role", role]
+    if stage:
+        args += ["--stage", stage]
+    for trailer in trailers:
+        args += ["--trailer", trailer]
     code, answer, err = self._orch(*args)
     if code == 3:
         raise Stop("WORK_SOURCE_UNAVAILABLE", err or "no work source")
@@ -464,7 +505,7 @@ def commit(self, item: Item, paths: list) -> dict:
     if not workspace_complete(answer):
         raise Stop("COMMIT_REFUSED", "workspace part incomplete; resume repeats the commit without undoing the source part")
     if answer.get("repo") == "workspace":
-        receipt = read_receipt(item, "commit", project=self.project)
+        receipt = read_receipt(item, stage_step(stage) if stage and stage != "final" else "commit", project=self.project)
         answer = {**answer, "_source_sha": (receipt or {}).get("_source_sha")}
     return receipt_result("commit", answer)
 

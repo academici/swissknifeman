@@ -4,7 +4,8 @@
 Splits the wall time into model time (between a tool result and the next assistant message) and tool time (a tool call
 until its result), lists the longest commands, repeated commands and the share of test runs. A stream without times of
 its own (grok) is timed by the ``<stream>.times`` file the conductor writes beside it (seconds since start and size at
-every growth of the stream):
+every growth of the stream). A stream that ``orch conduct prune --compress-older-than`` packed is read from its
+``.gz`` (the same for ``.times``):
 
     step-profile.py STREAM.jsonl [--top N]
 """
@@ -13,9 +14,17 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+from pathlib import Path
 import re
 import sys
 from datetime import datetime
+
+ORCH = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ORCH / "lib"))
+if (ORCH.parent / "aicore" / "lib").is_dir():
+    sys.path.insert(0, str(ORCH.parent / "aicore" / "lib"))
+
+from orch.conductor.process import open_stream  # noqa: E402
 
 TESTS = re.compile(r"(unittest|pytest|test\.sh|validate\.sh|test-[a-z-]+\.py|ecosystem-units|golden\.py|public-hygiene|test-integration)")
 READS = re.compile(r"^\s*(cat|sed|head|tail|grep|rg|ls|find|wc|git (diff|status|log|show|grep))\b")
@@ -34,13 +43,14 @@ def load(path: str) -> list:
     """The events of the stream; each without a ``timestamp`` gets ``_t`` from ``<stream>.times`` when it exists."""
     marks = []
     try:
-        for line in open(path + ".times", encoding="utf-8"):
-            seconds, size = line.split()
-            marks.append((float(seconds), int(size)))
-    except (OSError, ValueError):
+        with open_stream(Path(path + ".times"), "r") as handle:
+            for line in handle:
+                seconds, size = line.split()
+                marks.append((float(seconds), int(size)))
+    except (OSError, EOFError, ValueError):
         marks = []
     events, offset = [], 0
-    with open(path, "rb") as handle:
+    with open_stream(Path(path)) as handle:
         for raw in handle:
             offset += len(raw)
             try:

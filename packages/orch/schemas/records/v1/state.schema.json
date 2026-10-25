@@ -181,6 +181,7 @@
             "^close$": {"$ref": "#/$defs/step-close"},
             "^register$": {"$ref": "#/$defs/step-register"},
             "^commit$": {"$ref": "#/$defs/step-commit"},
+            "^(checkpoint|fix-commit\\.[0-9]+)$": {"$ref": "#/$defs/step-commit"},
             "^.+$": {"$ref": "#/$defs/step-any"}
           }
         },
@@ -211,6 +212,21 @@
           "properties": {
             "question_ids": {"description": "Ids of the blocking questions that wait.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
             "since": {"description": "UTC time the piece began to wait.", "type": "string", "minLength": 1}
+          }
+        },
+        "commits": {
+          "description": "The commits of the piece in a split run (`commit.mode: implementation-and-fixes`): the checkpoint of the implementation and one fix commit per correction round, in order. The review of the piece reads from the parent of the first one; the group review reads them all. Absent in `final-only`.",
+          "type": "array",
+          "items": {
+            "description": "One stage commit.",
+            "type": "object",
+            "properties": {
+              "stage": {"description": "Stage: implementation or correction.<n>.", "type": "string", "pattern": "^(implementation|correction\\.[0-9]+)$"},
+              "sha": {"description": "Commit made by the stage.", "type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+              "parent": {"description": "Parent of that commit: where the piece stood before the stage.", "type": "string", "pattern": "^[0-9a-f]{7,64}$"}
+            },
+            "required": ["stage", "sha", "parent"],
+            "additionalProperties": false
           }
         },
         "session_base": {"description": "Revision of the first brief of the piece: the base of the fingerprint of its executor session.", "type": "string"},

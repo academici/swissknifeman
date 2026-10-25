@@ -289,11 +289,18 @@ def _wait_free(directory: Path, seconds: float) -> bool:
         time.sleep(0.05)
 
 
-def stop_conductor(run_dir: Path, policy: Policy, *, before_signal: Optional[Callable[[], None]] = None) -> dict:
+def owner_changed(owner: dict, expected: Optional[dict]) -> Optional[str]:  # only the keys ``expected`` carries are compared
+    return next((f"the lease owner changed since the heartbeat was classified ({key} {owner.get(key)}, expected {value})"
+                 for key, value in (expected or {}).items() if value is not None and owner.get(key) != value), None)
+
+
+def stop_conductor(run_dir: Path, policy: Policy, *, before_signal: Optional[Callable[[], None]] = None,
+                   expected: Optional[dict] = None) -> dict:
     """Stop the hung conductor of ``run_dir``: SIGINT, wait up to ``grace_s`` for the lease to be freed, SIGTERM, ``grace_s``,
     SIGKILL. The signals go to the one pid the lease names (``os.kill``, never a group: a conductor started from a terminal
     shares the group of the shell; the role groups are ``reap``'s), and only while (pid, start_ticks, boot_id) still match
-    ``/proc``. ``before_signal`` runs once, after the identity check and before the first signal (the snapshot).
+    ``/proc``, and the owner is still ``expected`` (the identity of the one classified as hung). ``before_signal`` runs once,
+    after the identity check and before the first signal (the snapshot).
 
     ``{outcome, detail, pid?, signal?}``: ``outcome`` is ``stopped``, ``free`` (nobody holds the lease), ``identity_mismatch``
     (nothing was sent) or ``failed`` (the lease is still held after SIGKILL, or the signal was refused)."""
@@ -302,7 +309,7 @@ def stop_conductor(run_dir: Path, policy: Policy, *, before_signal: Optional[Cal
     if held is not True:
         return {"outcome": "free", "detail": "nobody holds the lease"}
     owner = RunLease.owner(directory)
-    why = identity_problem(owner)
+    why = owner_changed(owner, expected) or identity_problem(owner)
     pid = owner.get("pid") if type(owner.get("pid")) is int else None
     if why or pid is None:  # no usable pid is a problem identity_problem names
         return {"outcome": "identity_mismatch", "detail": f"no signal sent: {why}", **({"pid": pid} if pid else {})}
@@ -405,8 +412,9 @@ class _Pass:
         lines = progress.read_lines(directory) if lines is None else lines
         found = runs.effective_status(directory, progress.summarize(lines))
         state = records.read(directory / STATE_FILE, "state") or {}
-        return dict(runs.health_of(directory, found, state, lines, self.now, self.policy.hung_after_s),
-                    _summary=found, _state=state)
+        owner, (beat, _) = RunLease.owner(directory) or {}, heartbeat_mod.read(directory)  # the owner the class judges
+        return dict(runs.health_of(directory, found, state, lines, self.now, self.policy.hung_after_s), _summary=found, _state=state,
+                    _owner={key: owner.get(key, (beat or {}).get(key)) for key in ("pid", "start_ticks", "boot_id")})
 
     def act(self, directory: Path, health: dict, action: str, detail: str, *, resumes: int, dedupe: bool = False, **extra):
         """Record an action unless ``dedupe`` and the supervisor already said this about the run in this episode (same class,
@@ -462,7 +470,7 @@ class _Pass:
             path = snapshot(directory, {key: value for key, value in health.items() if not key.startswith("_")}, self.now)
             self.act(directory, health, "snapshot", f"snapshot {path.relative_to(directory)}", resumes=resumes)
 
-        result = stop_conductor(directory, self.policy, before_signal=evidence)
+        result = stop_conductor(directory, self.policy, before_signal=evidence, expected=health.get("_owner"))
         if result["outcome"] == "identity_mismatch":
             self.act(directory, health, "identity_mismatch", result["detail"], resumes=resumes, dedupe=True,
                      pid=result.get("pid"))
@@ -495,6 +503,9 @@ class _Pass:
                  dedupe=not (done["killed"] or done["closed"]))
         if not self.policy.allows("resume"):
             return
+        health = self.health(directory)  # the state and the journal as reap left them, not as the pass first saw them
+        if done.get("skipped") or health["health"] != "orphaned":  # skipped: the run is not running any more
+            return
         code = last_stop_code(health["_state"], health["_summary"])
         if code in NO_AUTO_RESUME:
             self.act(directory, health, "notify", f"not resumed: the last stop was {code}, which needs the owner",
@@ -510,8 +521,9 @@ class _Pass:
             self.act(directory, health, "given_up", f"{len(recent)} recovery(ies) within {self.policy.window_s} s (max "
                      f"{self.policy.max_recoveries}); resume by hand: orch conduct resume --run {run_id}", resumes=resumes)
             return
-        started = self.spawn(self.project, run_id, config_file=self.policy.config_file)
         entry["recoveries"].append(self.at)
+        save_state(self.root, self.memory)  # the breaker counts the launch before it happens: a crash cannot forget it
+        started = self.spawn(self.project, run_id, config_file=self.policy.config_file)
         self.act(directory, health, "resume", f"started a detached resume (pid {started['pid']}, log {Path(started['log']).name})",
                  resumes=resumes, pid=started["pid"])
 

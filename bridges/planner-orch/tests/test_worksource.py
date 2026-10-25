@@ -212,6 +212,17 @@ class ClaimTests(Case):
         self.assertEqual(answer["route"], {"class": "implementation", "effort": "high"})
         self.assertEqual(self.item("P1.1")["result"]["executor"]["session"], "run-a")
 
+    def test_claim_answer_carries_the_route_correction_and_nothing_else_of_the_route(self):
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"route": {
+            "correction": {"class": "economy", "effort": "medium", "provider": "claude-code"},
+            "settings": {"native": True}}}))
+        answer = self.claim(items=["P1.1"])  # the answer is valid by the work-source output contract
+        self.assertEqual(answer["route"], {"class": "implementation", "effort": "high", "correction": {
+            "class": "economy", "effort": "medium", "provider": "claude-code"}})
+
+    def test_claim_without_route_correction_adds_none(self):
+        self.assertNotIn("correction", self.claim(items=["P1.1"])["route"])
+
     def test_repeated_claim_of_the_same_run_gives_the_same_answer(self):
         first = self.claim()
         self.assertEqual(self.claim(), first)  # the next ready item is not taken: the run resumes its own
@@ -597,6 +608,66 @@ class BriefTests(Case):
         self.assertIn("/verify", caught.exception.message)
         self.assertEqual(sorted(store.glob("*")) if store.is_dir() else [], before)
         self.assertEqual(self.item("P1.1").get("artifacts", []), [])
+
+
+class ClassAuthorityTests(unittest.TestCase):
+    """The planner (stdlib, ``command-routing.json``) and orch (aicore model catalog) grade a model alike (P7.3)."""
+
+    MODELS = [("claude-code", "haiku"), ("claude-code", "claude-haiku-4-5-20251001"), ("claude-code", "sonnet"),
+              ("claude-code", "claude-sonnet-5-5"), ("claude-code", "claude-opus-5-5"),
+              ("codex", "gpt-5.6-luna"), ("codex", "gpt-6-sol"), ("codex", "gpt-6-astra"), ("codex", "gpt-6.1-sol"),
+              ("grok", "grok-4.5"), ("grok", "grok-4.6"), ("grok", "grok-4.7"),
+              ("claude-code", "mystery-model"), ("codex", "gpt-9"), ("nope", "haiku")]
+
+    def test_planner_and_orch_agree_on_the_class_of_a_model(self):
+        from aicore.provider import models
+        lifecycle = partners.planner_engine("plan.lifecycle")
+        catalog = models.load_model_catalog()
+        for provider, model in self.MODELS:
+            with self.subTest(provider=provider, model=model):
+                self.assertEqual(models.admitted_class(catalog, provider, model),
+                                 lifecycle.admitted_class(provider, model))
+        self.assertEqual([models.admitted_class(catalog, "claude-code", model) for model in ("haiku", "sonnet", "claude-opus-5-5")],
+                         ["economy", "implementation", "frontier"])
+
+
+class RouteCorrectionFlowTests(Case):
+    """An item with ``route.correction`` goes claim -> brief -> validate -> register like any other (P7.3)."""
+
+    def test_claim_brief_validate_and_register_of_an_item_with_a_correction_route(self):
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"route": {
+            "correction": {"class": "economy", "effort": "medium"}, "settings": {"native": True}}}))
+        claimed = self.claim(items=["P1.1"])
+        self.assertEqual(claimed["route"]["correction"], {"class": "economy", "effort": "medium"})
+        brief = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+        doc = json.loads(blobs.read_bytes(brief["input_ref"], project=self.project))
+        self.assertEqual(doc["route"], {"minimum": {"class": "implementation", "effort": "high"}})
+        path = Path(self.tmp.name) / "input.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        code, out = partners.orch_validate("execution-input", path)
+        self.assertEqual(code, 0, out)
+        answer = self.register(evidence={"V1": self.evidence()})  # the fake executor's work is done
+        self.assertEqual(answer["outcome"], "recorded", answer)
+        self.assertEqual(self.item("P1.1")["status"], "done")
+        self.assertEqual(self.item("P1.1")["route"]["correction"], {"class": "economy", "effort": "medium"})
+
+
+class CorrectionGrowthRegisterTests(Case):
+    """The report the conductor writes for an executor correction that grew (P7.3) passes the registration status rule."""
+
+    DEVIATION = {"text": "CORRECTION_SCOPE_GREW: correction round 2 changed paths beyond its findings, the tests, "
+                         "CHANGELOG.md and docs: lib/b.py", "kind": "deviation", "class": "other", "outcome": "accepted",
+                 "impact": "the next review round reads these paths", "next": "none", "evidence": ["lib/b.py"]}
+
+    def test_the_deviation_goes_with_done_with_deviations_only(self):
+        self.claim()
+        report = {"summary": "did it", "open_issues": [self.DEVIATION]}
+        refused = self.register(report=report, evidence={"V1": self.evidence()})
+        self.assertEqual((refused["outcome"], refused["reason_code"]), ("refused", "REGISTER_STATUS_MISMATCH"), refused)
+        self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        recorded = self.register(status="done_with_deviations", report=report, evidence={"V1": self.evidence()})
+        self.assertEqual(recorded["outcome"], "recorded", recorded)
+        self.assertEqual(self.item("P1.1")["status"], "done_with_deviations")
 
 
 class RegisterTests(Case):
@@ -1058,6 +1129,64 @@ class ReadyRuntimeTests(Case):
         self.runtime_cycle()
 
 
+class ReadinessOpTests(Case):
+    """``readiness``: phases from ``plan.py readiness status`` and the next lane read as ``claim`` reads it."""
+
+    def setUp(self):
+        super().setUp()
+        self.plan_root = self.project / "plans" / self.plan
+        self.readiness, self.store, self.ops = partners.planner_engine("plan.readiness", "plan.store", "plan.ops")
+
+    def ask(self, plan=None) -> dict:
+        return self.op(worksource.op_readiness, op="readiness", collection=plan or self.plan)
+
+    def certify(self) -> str:
+        self.ops.add_document(self.plan_root, {"id": "audit-p1", "title": "Audit", "sections": []})
+        self.readiness.record(self.plan_root, "P1", verdict="ready", audit="knowledge/audit-p1", actor=ACTOR)
+        return self.readiness.semantic_digest(self.store.load_plan(self.plan_root), "P1")
+
+    def test_missing_phase_and_the_first_lane_of_run_items(self):
+        answer = self.ask()
+        digest = self.readiness.semantic_digest(self.store.load_plan(self.plan_root), "P1")
+        self.assertEqual(answer, {"op": "readiness", "outcome": "ok",
+                                  "phases": [{"id": "P1", "status": "missing", "digest": digest}],
+                                  "next": {"kind": "run-items", "items": ["P1.1"], "phase": "P1", "message": None}})
+
+    def test_a_ready_phase_and_a_stale_one_after_a_change_of_its_item(self):
+        digest = self.certify()
+        self.assertEqual(self.ask()["phases"], [{"id": "P1", "status": "ready", "digest": digest}])
+        run(self.project, "set", self.plan, "P1.2", "--json", json.dumps({"why": "a changed reason"}))
+        (row,) = self.ask()["phases"]
+        self.assertEqual(row["status"], "stale")
+        self.assertNotEqual(row["digest"], digest)
+
+    def test_a_required_audit_is_the_next_step_with_its_message(self):
+        run(self.project, "set", self.plan, "plan", "--json", '{"settings":{"design_audit":"required"}}')
+        answer = self.ask()
+        self.assertEqual(answer["phases"][0]["status"], "missing")
+        self.assertEqual((answer["next"]["kind"], answer["next"]["items"], answer["next"]["phase"]),
+                         ("audit-phase", [], "P1"))
+        self.assertTrue(answer["next"]["message"])
+        self.certify()
+        self.assertEqual(self.ask()["next"]["kind"], "run-items")  # the certificate opens the lane
+
+    def test_an_item_in_progress_leaves_no_free_lane_and_claim_reads_the_same(self):
+        self.assertEqual(self.claim(items=["P1.1"])["status"], "claimed")
+        lane = self.ask()["next"]
+        self.assertNotEqual(lane["kind"], "run-items")
+        self.assertEqual(lane["items"], [])
+        self.assertTrue(lane["message"])
+        self.assertEqual(worksource._candidate(self.plan, "run-other", None), (None, lane["message"]))
+
+    def test_a_refusal_of_the_planner_is_refused_with_its_code(self):
+        answer = self.ask("NO-SUCH-PLAN")
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "PLAN_NOT_FOUND"), answer)
+        self.assertNotIn("phases", answer)
+        with mock.patch.object(worksource, "plan_json", return_value={"phases": [{"id": "P1"}]}):
+            answer = self.ask()
+        self.assertEqual((answer["outcome"], answer["reason_code"]), ("refused", "READINESS_UNREADABLE"))
+
+
 class ProtocolTests(Case):
     """describe and invoke through aicore.ext.plugins with the plugin registered in a temporary machine config."""
 
@@ -1084,6 +1213,14 @@ class ProtocolTests(Case):
         self.assertEqual(result.status, "ok", result.error)
         self.valid(result.output, "output")
         self.assertEqual((result.output["status"], result.output["ref"]), ("claimed", "P1.1"))
+
+    def test_invoke_answers_readiness(self):
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        result = plugins.invoke_one(registration, "orch:work-source", {"op": "readiness", "collection": self.plan},
+                                    env=self.env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        self.assertEqual((result.output["outcome"], result.output["next"]["items"]), ("ok", ["P1.1"]))
 
     def test_an_unknown_op_is_a_protocol_error(self):
         registration = plugins.find_registration("planner-orch", self.project, env=self.env)

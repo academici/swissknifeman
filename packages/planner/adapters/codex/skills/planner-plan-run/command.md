@@ -1,6 +1,6 @@
 <!-- Generated Codex runtime projection; do not edit as source.
 Canonical source: packages/planner/commands/plan-run.md
-Canonical SHA-256: sha256:ebd5d162f28d8bd7041a2b3951d8eac0a0b4cbbf70166e3953fdf170a27ea00e
+Canonical SHA-256: sha256:5cd53630f036c8ec4ff05a0801b7e64c7d6816f60e2af33cc858b3e2ae90af09
 Adapter: planner.codex-command/1.0.18
 -->
 ## Native Codex launch-block — required only at a real user-facing boundary
@@ -29,8 +29,8 @@ Project CLI: `plan.py` means `python3 -I .swissknifeman/launcher.py planner`, ru
 Owner rules: run `plan.py overlays planner:plan-run` first and follow any rules it prints as additions to this command; they never override the plan, its checks or safety rules.
 Invocation payload: `$ARGUMENTS`.
 
-**Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks,
-one commit per item, inside the item's scope.
+**Goal:** finish the requested items (or the ready batch from `next`) with green acceptance checks, inside the
+item's scope, committed in order: the implementation before any review, corrections after it, the rest at the end.
 
 **Steps**
 1. `plan.py next <plan>` — without item ids, run the batch it names; with ids, run those.
@@ -49,14 +49,19 @@ one commit per item, inside the item's scope.
 5. When reality changes the plan, an assumption or a blocker appears:
    `plan.py log <plan> <item> --type deviation|blocker|difficulty|assumption|note --summary "…"`.
 6. Run each Validation check once per relevant change; keep long output in a file.
-   For a requested item review, use the review-only runner below after GREEN checks, with the exact
+   When the checks are GREEN, commit the implementation **before any review**:
+   `plan.py commit <plan> <item> --role executor --paths-only --path <product file>…` (exactly the files you changed;
+   the plan files wait for step 8). Then, for a requested item review, use the review-only runner below with the exact
    selected reviewer route. Read only its compact final JSON and receipt. A finding returns at most
    `policy.corrections_max` owning corrections (default 1), with affected checks, and a re-review while
    fewer than `policy.review_rounds_max` rounds (default 2) are complete. No recursive reviewer fixes.
+   Commit each green correction on its own: `plan.py commit <plan> <item> --role fix --paths-only --path <file>…
+   --trailer "Plan-Findings: <finding keys>"`, so the fix commit holds only the fix.
 7. `plan.py finish <plan> <item> --status done --check V1=0 … --notes "…" --review-receipt <path>`
    (`done_with_deviations` with `--deviation`, `blocked` with `--escalation`). The last item closes its phase.
-8. One scoped commit: `plan.py commit <plan> <item> --role executor` (plan JSON + product files of the item;
-   `--path` for an extra file, logged as a deviation). Report the printed sha, then the next item of the batch.
+8. The final commit: `plan.py commit <plan> <item> --role executor` (plan JSON and whatever of the item's files the
+   earlier commits did not take; `--path` for an extra file, logged as a deviation). Report the printed shas
+   (implementation, fixes, final), then the next item of the batch.
 
 **Review intent**
 
@@ -72,8 +77,8 @@ one commit per item, inside the item's scope.
 Use the orchestrator's review-only runner after GREEN item checks. Build a run-options JSON file
 with `reviewer` set to the exact selected `provider/model[/context][/effort]`; keep its path as
 `<reviewer-options.json>`. Record the review request in the plan first; there is no unrecorded
-run-only review of a plan item. Use the parent of the first implementation commit as `<base>`
-(or the pre-implementation HEAD when the implementation is still uncommitted).
+run-only review of a plan item. Use the parent of the first commit of the item (the implementation commit of step 6)
+as `<base>`, so the diff of the review is not empty and holds the corrections too.
 
 ```sh
 python3 -I .swissknifeman/launcher.py orch input adhoc --review <base>..WORKTREE --plan <plan> --item <item> --goal "<item summary>" > "$TMPDIR/review-<item>.json"

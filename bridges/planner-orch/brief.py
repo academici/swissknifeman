@@ -155,6 +155,16 @@ def _research(item: dict) -> dict | None:
     return {"need": rag["need"], **({"notes": rag["notes"]} if rag.get("notes") else {})}
 
 
+_ROUTE_KEYS = ("class", "effort", "provider", "model")  # exec/v1 $defs/route is closed
+
+
+def _route_minimum(route: dict | None) -> dict:
+    """The route of an item or unit projected to the exec/v1 minimum route: ``route.correction`` and ``route.settings`` of the
+    plan stay out of the execution input (the claim answer carries the correction to the conductor)."""
+    source = route or {}
+    return {key: source[key] for key in _ROUTE_KEYS if key in source}
+
+
 def _constraints(pack: dict, unit: dict | None) -> list[dict]:
     found = []
     for source, texts in (("plan.rules", pack["plan"].get("rules")), ("phase.pitfalls", pack["phase"].get("pitfalls")),
@@ -369,7 +379,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "goal": unit["goal"] if unit is not None else f"{item['title']}: {item['summary']}",
         "scope": scope,
         "acceptance": {"checks": _checks(item, unit, plan, item_id), "deliverables": copy.deepcopy(item.get("deliverables", []))},
-        "route": {"minimum": copy.deepcopy((unit if unit is not None else item).get("route"))},
+        "route": {"minimum": _route_minimum((unit if unit is not None else item).get("route"))},
         "result_contract": {"report": list(REPORT), "write_authority": "none" if read_only else "code_scope",
                             "commit_owner": "coordinator", "plan_mutation": "forbidden"},
         "escalation": escalation,

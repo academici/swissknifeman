@@ -55,6 +55,7 @@ class Settings:
     stubs: Mapping[str, object] = field(default_factory=dict)  # ``[orch.stubs]``: ``enabled``, ``layers``
     launch: Mapping[str, object] = field(default_factory=dict)  # ``[orch.launch]``: ``catalog`` (a file), ``access`` and ``entries``
     supervisor: Mapping[str, object] = field(default_factory=dict)  # ``[orch.supervisor]``: ``recover`` (already the lowest of the layers), ``max_recoveries``, ...
+    autopilot: Mapping[str, object] = field(default_factory=dict)  # ``[orch.autopilot]``: per key the values of the layers, lowest first
     debug: bool = False  # ``[orch] debug`` / ``--debug``: the observer protocol and journal of a run (conductor.debug_mode)
 
     def explain_text(self, key: str | None = None) -> str:
@@ -183,10 +184,37 @@ def _layered(resolved: ResolvedConfig, key: str, lowest) -> object:
 
 
 def _supervisor(resolved: ResolvedConfig) -> dict:
-    """``[orch.supervisor]`` as plain data: ``recover`` and ``max_recoveries`` are the lowest of the machine and invocation values."""
+    """``[orch.supervisor]`` as plain data: ``recover`` and ``max_recoveries`` are the lowest of the machine and invocation
+    values, ``window_s`` the highest (a shorter window forgets recoveries sooner, which widens the budget)."""
     return {"recover": _layered(resolved, "supervisor.recover", effective_recover),
             "max_recoveries": _layered(resolved, "supervisor.max_recoveries", lambda *values: min(values)),
-            **{key: resolved.get(f"supervisor.{key}") for key in ("interval_s", "hung_after_s", "grace_s", "window_s", "notify_send")}}
+            "window_s": _layered(resolved, "supervisor.window_s", lambda *values: max(values)),
+            **{key: resolved.get(f"supervisor.{key}") for key in ("interval_s", "hung_after_s", "grace_s", "notify_send")}}
+
+
+AUTOPILOT_KEYS = ("allowed", "enabled", "require_readiness", "max_runs", "max_wall_s", "max_no_progress_runs",
+                  "max_auto_decisions", "quota_wait_max_s", "poll_s", "max_recoveries")
+
+
+def layer_history(resolved: ResolvedConfig, key: str) -> list:
+    """``[{layer, value, file}]`` of every layer that set ``key``, lowest first, with the default first when no layer
+    replaced it (a reset ``_unset`` gives the default back). The merge of an authority key reads this, not the winner."""
+    found = resolved.explain(key)[0]
+    history: list = list(reversed(found.overridden))  # the overridden settings, then the winner
+    if found.layer == "defaults":
+        history.insert(0, found)  # after _unset the default is reported as the winner, the reset stays in overridden
+    else:
+        history.append(found)
+    if not history or history[0].layer != "defaults":
+        history.insert(0, None)
+    return [{"layer": "defaults", "value": found.default, "file": None} if setting is None else
+            {"layer": setting.layer, "value": found.default if setting.source == "_unset" else setting.value,
+             "file": setting.file} for setting in history]
+
+
+def _autopilot(resolved: ResolvedConfig) -> dict:
+    """``[orch.autopilot]`` as the history of each key (``layer_history``); ``policies.autopilot.effective_policy`` merges it."""
+    return {key: layer_history(resolved, f"autopilot.{key}") for key in AUTOPILOT_KEYS}
 
 
 def _research(resolved: ResolvedConfig) -> dict:
@@ -240,6 +268,7 @@ def load(*, project: str | Path | None = None, config_file: str | Path | None = 
         stubs={"enabled": bool(resolved.get("stubs.enabled")), "layers": list(resolved.get("stubs.layers") or [])},
         launch=_launch(resolved),
         supervisor=_supervisor(resolved),
+        autopilot=_autopilot(resolved),
         debug=bool(resolved.get("debug")),
     )
 

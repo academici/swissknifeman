@@ -1,0 +1,25 @@
+{
+  "op": "readiness",
+  "outcome": "ok",
+  "phases": [
+    {
+      "id": "P1",
+      "status": "ready",
+      "digest": "sha256:f13b1c3d08b245ec267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7e"
+    },
+    {
+      "id": "P2",
+      "status": "stale",
+      "digest": "sha256:267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7ef13b1c3d08b245ec"
+    }
+  ],
+  "next": {
+    "kind": "run-items",
+    "items": [
+      "P1.2",
+      "P1.3"
+    ],
+    "phase": "P1",
+    "message": null
+  }
+}

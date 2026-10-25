@@ -1,7 +1,7 @@
 ---
 name: orch-debug
 bucket: repository-bootstrap
-version: 0.5.0
+version: 0.6.0
 description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate when the user names this skill or a run prints the DEBUG_MODE beacon ([orch] debug = true, --debug); otherwise the agent is a plain supervisor."
 when_to_use: "On an explicit request to run orch in debug mode ('use orch-debug', '/orch-debug', 'conduct with --debug') or when a conductor run prints DEBUG_MODE; never by inference from a plan alone."
 risk: write
@@ -9,7 +9,7 @@ persona: oss-dev
 tags: [orch, conductor, debug, observer, root-bootstrap]
 requires: []
 produces_for: []
-outputs: [chat, "<run>/debug/*.md", "docs/orch-*-run-findings.md", "docs/orch-*-observer-journal.md"]
+outputs: [chat, "<run>/debug/journal.md", "docs/orch-*-run-findings.md", "docs/orch-*-observer-journal.md"]
 snippets: []
 adapters: [claude, cursor, fable]
 sha256: ""
@@ -34,12 +34,13 @@ specific layer winning:
 | run | `conduct.py run ... --debug` / `--no-debug` (also `resume`) | this run only, over both |
 
 `SKM_ORCH_DEBUG=true` and a `--config FILE` sit between the project and the flag. With it on, the run prints
-`DEBUG_MODE` right after `run.start` (and after every resume): the layer that switched it on, this file, and the run's
-journal folder `<runs>/<run>/debug/` with `journal.md`, `metrics.md` and `findings.md` skeletons (created once, a
-resume keeps them). That beacon is the cue to follow this protocol. The roles, their prompts and every decision of
-the conductor are the same with the mode on or off: it changes only what the observer does and where it writes.
-The run folder is outside the tracked tree, so writing the journal there does not break "the main tree is the
-conductor's"; copy the finished journal and findings into the plan or `docs/` after the run.
+`DEBUG_MODE` right after `run.start` (and after every resume): the layer that switched it on, this file, the observer
+report that holds the per-item metrics and the path `<runs>/<run>/debug/journal.md` for your notes. The beacon writes no
+file: create `journal.md` yourself when you have something to record (a resume never touches it). That beacon is the
+cue to follow this protocol. The roles, their prompts and every decision of the conductor are the same with the mode
+on or off: it changes only what the observer does and where it writes. The run folder is outside the tracked tree, so
+writing the journal there does not break "the main tree is the conductor's"; copy the finished journal and findings
+into the plan or `docs/` after the run.
 
 ## Invariants
 
@@ -123,24 +124,34 @@ is waiting, so keep the waiting cheap and the context small.
 2. **Estimate before the run.** `python3 packages/orch/scripts/estimate.py --input <the item's input.json> --effort E`
    (or `--cmd` per acceptance command): the history medians of the roles and the measured seconds of the same
    commands. Write it down; after the run compare each step; a deviation over 30% needs a recorded cause.
-3. **Watch.** Arm the completion monitor (`Monitor`, unbounded `tail -F` of the run log, filter on `run end|item end|STAGE_|CHECK_SLOW|BUDGET_OVER|LIMIT_OVER|RESULT_|WORKTREE|Traceback|stopped`, max timeout, re-arm on expiry) in the SAME turn as the run start — never start a run without it, and report the end of every item in the chat at once; the owner must never learn of a finished item before you. Status on every notification and at least every 30 minutes (`conduct.py status` prints the latest beacon of
-   the running step). Answer each beacon by its content, not by its clock.
+3. **Watch.** Do not poll. Hangs are the supervisor's: `orch conduct status --json` carries `health` (from the
+   heartbeat and the lease) and `orch conduct supervise --once --json` classifies the run, recovers what its policy allows
+   and records the action in `<run>/supervisor.jsonl`; `orch conduct autopilot status` shows the queue and its stop code.
+   Wake up only on a deterministic signal: `run.end` or `item.end` of the run, exit 4 (`waiting`), a health of `hung`,
+   `suspected_stall` or `given_up` (breaker open), or an `AUTOPILOT_*` stop; report the end of every item in the chat
+   at once. Then read `orch conduct status` (the latest beacon of the running step) and answer each beacon by its
+   content, not by its clock.
 4. **Before the commit.** The conductor reads the changed paths from git and reports paths outside the write set as a
    deviation (shown to the reviewer, committed with the piece); review that list and widen the plan for the next items
    like this one.
 5. **Profile.** `packages/orch/scripts/step-profile.py <stream>` for each role step (model wait vs commands, own test runs,
    polling waits, reads through Bash; grok streams are timed by their `.times` file) and
-   `packages/orch/scripts/run-usage.py <run>` for time and tokens per role; `observer.md` of the run counts the beacons,
-   the mends (`RESULT_HEALED`, `RESULT_REPAIRED`) and the share of the wall time spent in checks.
+   `packages/orch/scripts/run-usage.py <run>` for time and tokens per role (both read the `.gz` of a stream that
+   `orch conduct prune --compress-older-than` packed); the *Item metrics* table of `observer.md` holds the numbers of
+   every piece.
 6. **Analyze and fix** what slowed or broke the item; test, document, commit, merge to the branch.
-7. **Log** (below), then start the next item. An item is not closed for the observer until its metrics row is complete: estimate versus actual, step profile, deviations, block of Repository rules; an empty cell is written as «not measured» with the reason, never skipped silently.
+7. **Log** (below), then start the next item. Compare the observer metrics of the item with the estimate and name the
+   cause of each deviation over 30%.
 
 ## Metrics per item
 
-Record for every item, in one table row: wall time and the estimate; executor, review, checks and correction minutes;
-checks share of the wall time; check rounds and review rounds (and `LIMIT_OVER` count); repeats of roles; heals and
-repairs; beacons by code; fresh tokens in/out per role; deviations (paths outside the write set); confirmed and rejected
-findings by severity, and the rejected Majors (each is a plan note). A metric that grows from item to item is a finding.
+The conductor writes them, with or without debug: `metrics` of `observer.json` and the *Item metrics* table of
+`observer.md` (`orch conduct observe --run R` writes them again), per piece: wall time, active time by role group
+(executor, checks, review, triage, scout, advice, registrar), checks share, executor/review/checks rounds, steps
+repeated after a resume, heals/repairs/unrepairable, beacons by code, fresh/cached/output tokens, deviations, confirmed
+and rejected findings by severity and the health transitions of `supervisor.jsonl`. Do not fill them in by hand; add
+only what the report cannot know: the estimate, the step profile, the rejected Majors (each is a plan note). A metric
+that grows from item to item is a finding.
 
 ## What to log (for a final reviewer and for correcting instructions)
 
@@ -154,8 +165,9 @@ findings by severity, and the rejected Majors (each is a plan note). A metric th
 
 ## Where things are
 
-- While the run goes: `<runs>/<run>/debug/` (named by the `DEBUG_MODE` beacon). After it, the committed copies:
-  findings and tables `docs/orch-*-run-findings.md`, observer journal `docs/orch-*-observer-journal.md`.
+- While the run goes: your notes in `<runs>/<run>/debug/journal.md` (named by the `DEBUG_MODE` beacon, created by you)
+  and the metrics in the observer report `.swissknifeman/orch/reports/<run>/observer.md`. After it, the committed
+  copies: findings and tables `docs/orch-*-run-findings.md`, observer journal `docs/orch-*-observer-journal.md`.
 - Options (`review.*`, `checks.*`, `scope.*`, `instructions.*`, `limits.*`) and beacons: `packages/orch/docs/conductor.md`.
 - Tools: `packages/orch/scripts/estimate.py`, `run-usage.py`, `step-profile.py`; `scripts/affected-tests.py`.
 - Editing this skill: follow the `skill-authoring` workflow (registry, `golden.py check`, affected tests).

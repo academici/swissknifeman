@@ -9,9 +9,10 @@ from orch import events
 from orch.conductor import agents, process, prompts, records
 from orch.conductor.domain.stop import Stop
 from orch.conductor.domain.item import Item
-from orch.conductor.infrastructure import clock, work_source
+from orch.conductor.infrastructure import clock, commit_stages, work_source
 from orch.conductor.infrastructure.tree import porcelain_paths as dirty_paths
 from orch.conductor.infrastructure.files import safe
+from orch.conductor.stages import finish
 
 
 def reconcile_interrupted(run) -> None:
@@ -27,6 +28,7 @@ def reconcile_interrupted(run) -> None:
         state_saved_ns = None
     for ref, item in run.state.get("items", {}).items():
         steps = item.get("steps", {})
+        sync_commits(run, ref, item)
         if item.get("outcome") in ("done", "done_with_deviations", "blocked", "abandoned"):
             unfinished = [key for key, step in steps.items() if step.get("status") in ("started", "stopped")]
             for key in unfinished:
@@ -35,17 +37,24 @@ def reconcile_interrupted(run) -> None:
                 run._save()
             continue  # a closed item has no work to repeat, including unknown steps
         for key, step in list(steps.items()):
-            if step.get("status") != "started":
-                continue
+            stage = commit_stages.stage_of(key)
+            if step.get("status") != "started" and not (stage and step.get("status") == "stopped"):
+                continue  # a stage commit whose source call died (stopped, COMMIT_REFUSED) may still have committed
             prefix = key.split(".", 1)[0]
             message = "repeated"
-            if key in ("close", "register", "commit"):
+            if key in ("close", "register", "commit") or stage:
                 recovering = Item(ref, item.get("orch_run", ""), item, run.directory / safe(ref),
-                                  {"attempt_id": step.get("attempt")})
+                                  {"attempt_id": step.get("attempt") or commit_stages.run_attempt(item.get("orch_run", ""), run.project)})
                 receipt = work_source.read_receipt(recovering, key, project=run.project)
                 closes, message = work_source.receipt_closes(key, receipt, recovering, state_saved_ns=state_saved_ns)
+                found = None
+                if (stage or key == "commit") and not closes:  # the crash fell between the commit of the stage and its receipt (I4)
+                    found = commit_stages.committed_stage(recovering, stage or "final", project=run.project)
+                    if found:
+                        closes, message = True, "closed from the Plan-Stage trailer of the commit"
                 if closes:
-                    result = work_source.receipt_result(key, receipt)
+                    result = ({"outcome": "committed", "sha": found} if found
+                              else work_source.receipt_result(key, receipt))
                     verdict = ("closer ran" if key == "close" else
                                f"{result['outcome']} gate {result['gate']}" if key == "register" else
                                " ".join(str(result[k]) for k in ("outcome", "sha", "message") if result.get(k)))
@@ -53,6 +62,8 @@ def reconcile_interrupted(run) -> None:
                                   "role": step.get("role", "deterministic"), "route": step.get("route"),
                                   "duration_s": 0, "ended": clock.utc_now()}
                     run._save()
+                    if stage:
+                        finish.record_commit(run, recovering, stage, result)
                     run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message=message)
                     continue
             elif prefix == "executor":
@@ -71,6 +82,18 @@ def reconcile_interrupted(run) -> None:
             del steps[key]
             run._save()
             run.progress.emit("info", item=ref, stage=key, reason_code="STAGE_INTERRUPTED", message=message)
+
+
+def sync_commits(run, ref: str, item: dict) -> None:
+    """``state.commits`` of a split piece follows its closed stage commits: a crash between the closing of a stage step and
+    its record (or a recovery that closed the step) must not leave the sha out of the review base, the group review and the
+    handoff. Idempotent and in the order of the steps."""
+    steps = item.get("steps") or {}
+    for key, step in steps.items():
+        stage = commit_stages.stage_of(key)
+        if stage and step.get("status") == "done" and isinstance(step.get("result"), dict):
+            finish.record_commit(run, Item(ref, item.get("orch_run", ""), item, run.directory / safe(ref), {}), stage,
+                                 step["result"])
 
 
 def kill_orphaned_roles(run) -> dict:

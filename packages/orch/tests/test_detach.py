@@ -15,6 +15,7 @@ import unittest
 from unittest import mock
 
 from aicore.ext import events as journal
+from aicore.util.lock import probe_free
 from orch import events, settings
 from orch.conductor import checks, contract, engine, progress, records, runs, supervise_cli
 from orch.conductor.domain.item import Item
@@ -28,7 +29,9 @@ from tests.test_supervisor_faults import FaultCase, alive, eventually
 
 ID = "cnd-20261024T100000Z-abcdef"
 NONCE = "1234567890abcdef"
-INTERNAL_ENV = ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE")
+LAUNCH = "fedcba9876543210"
+INTERNAL_ENV = ("SKM_ORCH_DETACHED", "SKM_ORCH_LAUNCHER", "SKM_ORCH_DETACH_ACK", "SKM_ORCH_DETACH_NONCE",
+                "SKM_ORCH_AUTOPILOT_STATE", "SKM_ORCH_AUTOPILOT_LAUNCH_ID", "SKM_ORCH_FENCE_GATE")
 
 
 def ack(**over):
@@ -95,9 +98,10 @@ class HandshakeTests(ConductorCase):
             self.assertIn(str(Path("../config.toml").resolve()), argv)
             self.assertIn("--input=" + str(Path("../input.json").resolve()), argv)
             self.assertIn(str(Path("options.json").resolve()), argv)
-            records.write(Path(kwargs["env"]["SKM_ORCH_DETACH_ACK"]),
-                          ack(nonce=kwargs["env"]["SKM_ORCH_DETACH_NONCE"]), "detach-ack")
-            return {"pid": 123, "log": "/tmp/detached.log"}
+            self.assertIsNone(kwargs.get("ack_nonce"), "an ordinary detach lets spawn generate the nonce")
+            path = runs_root(self.project) / "detached" / f"{ID}.{NONCE}.ack.json"
+            records.write(path, ack(), "detach-ack")
+            return {"pid": 123, "log": "/tmp/detached.log", "ack": str(path), "nonce": NONCE}
         with mock.patch.object(detach, "spawn", side_effect=started), redirect_stdout(io.StringIO()):
             self.assertEqual(detach.launch(["--config", "../config.toml", "run", "--input=../input.json", "--options", "options.json", "--detach"],
                                            project=self.project, run_id=ID, launcher="detached", new_run=True), 0)
@@ -318,6 +322,163 @@ class HandshakeTests(ConductorCase):
         self.assertEqual([row["run_id"] for row in rows], [ID])
         self.assertFalse((runs_root(self.project) / "detached" / f"{ID}.log").exists())
         self.assertTrue(log.exists())
+
+
+class StartupFenceTests(ConductorCase):
+    """P8.8: a child of the autopilot checks the launch intent under ``autopilot-launch.lock`` before the checkout lock, the
+    run lease, the run folder, any claim and any role; it acknowledges under that lock and lets it go before its work."""
+
+    scenario = "scout-solo"
+
+    def setUp(self):
+        super().setUp()
+        for name in INTERNAL_ENV:
+            os.environ.pop(name, None)
+        self.root = runs_root(self.project)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.state_doc = self.root / "autopilot.json"
+
+    def intent(self, run_id: str = ID, launch_id: str = LAUNCH, state: str = "launching", kind: str = "run",
+               current: bool = True) -> None:
+        records.write(self.state_doc, {
+            "plan": "T", "project": str(self.project), "pid": 4242, "started_at": "2026-10-24T10:00:00Z",
+            "updated_at": "2026-10-24T10:00:01Z", "deadline_at": "2026-10-24T22:00:00Z", "mode": "running",
+            "limits": {"max_runs": 20, "max_wall_s": 43200, "run_tokens_hard_max": 0, "max_no_progress_runs": 2,
+                       "max_auto_decisions": 10, "quota_wait_max_s": 21600},
+            "counters": dict.fromkeys(("runs", "items_closed", "no_progress_streak", "auto_decisions", "recoveries",
+                                       "quota_waits"), 0),
+            "current": {"run_id": run_id, "launch_id": launch_id, "state": state, "kind": kind,
+                        "since": "2026-10-24T10:00:01Z"} if current else None,
+            "waiting_runs": [], "history": [], "last_blockers": [], "stop": None}, "autopilot-state")
+
+    def child(self, run_id: str = ID, launch_id: str = LAUNCH) -> tuple:
+        path = self.root / "detached" / f"{run_id}.{launch_id}.ack.json"
+        return path, {"SKM_ORCH_DETACHED": "1", "SKM_ORCH_LAUNCHER": "autopilot", "SKM_ORCH_DETACH_ACK": str(path),
+                      "SKM_ORCH_DETACH_NONCE": launch_id, "SKM_ORCH_AUTOPILOT_STATE": str(self.state_doc),
+                      "SKM_ORCH_AUTOPILOT_LAUNCH_ID": launch_id}
+
+    def refused(self, path: Path, err: str) -> dict:
+        self.assertIn("AUTOPILOT_LAUNCH_CANCELLED: ", err)
+        found = records.read(path, "detach-ack")
+        self.assertEqual(("refused", "AUTOPILOT_LAUNCH_CANCELLED", LAUNCH), (found["status"], found["code"], found["nonce"]))
+        self.assertIs(True, probe_free(self.root / detach.LAUNCH_LOCK), "the launch lock is let go")
+        return found
+
+    def finished_run(self) -> str:
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": report("W1")}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        return self.run_dir(err).name
+
+    def test_a_cancelled_or_replaced_intent_starts_no_folder_lock_claim_or_role(self):
+        cases = {"no autopilot state": None, "no intent": {"current": False}, "another launch": {"launch_id": "0" * 16},
+                 "another run": {"run_id": "cnd-20261024T100009Z-abcdef"}, "already running": {"state": "running"}}
+        for name, fields in cases.items():
+            with self.subTest(name):
+                self.state_doc.unlink(missing_ok=True)
+                if fields is not None:
+                    self.intent(**fields)
+                path, env = self.child()
+                path.unlink(missing_ok=True)
+                with mock.patch.dict(os.environ, env), mock.patch.object(RunStore, "ownership") as owned, \
+                        mock.patch.object(roles.process, "run_role") as role:
+                    code, out, err = self.run_items("W1", extra=("--run-id", ID))
+                self.assertEqual((1, ""), (code, out), err)
+                self.refused(path, err)
+                owned.assert_not_called()
+                role.assert_not_called()
+                self.assertFalse((self.root / ID).exists(), "no run folder")
+                self.assertEqual("todo", self.source()["items"]["W1"]["status"], "no claim")
+
+    def test_a_matching_intent_acknowledges_under_the_launch_lock_and_works_without_it(self):
+        self.intent()
+        path, env = self.child()
+        seen = []
+        acknowledge = detach.acknowledge
+
+        def acknowledged(run_id):
+            seen.append(("ack", probe_free(self.root / detach.LAUNCH_LOCK), RunLease.held(self.root / run_id)))
+            acknowledge(run_id)
+
+        def owned_loop(owner):
+            seen.append(("loop", probe_free(self.root / detach.LAUNCH_LOCK), RunLease.held(owner.directory)))
+            return 0
+        with mock.patch.dict(os.environ, env), mock.patch.object(detach, "acknowledge", side_effect=acknowledged), \
+                mock.patch.object(engine.Conductor, "_loop", owned_loop):
+            code, _, err = self.run_items("W1", extra=("--run-id", ID))
+            self.assertNotIn("SKM_ORCH_AUTOPILOT_LAUNCH_ID", os.environ, "roles do not inherit the launch context")
+        self.assertEqual(code, 0, err)
+        self.assertEqual([("ack", False, True), ("loop", True, True)], seen)
+        found = records.read(path, "detach-ack")
+        self.assertEqual(("started", LAUNCH, ID), (found["status"], found["nonce"], found["run_id"]))
+
+    def test_resume_and_continue_of_a_cancelled_launch_take_no_lease_and_change_nothing(self):
+        run_id = self.finished_run()
+        before = (self.root / run_id / "state.json").read_text(encoding="utf-8")
+        self.intent(run_id=run_id, launch_id="0" * 16, kind="continue")
+        for verb in ("resume", "continue"):
+            with self.subTest(verb):
+                path, env = self.child(run_id)
+                with mock.patch.dict(os.environ, env), mock.patch.object(RunStore, "ownership") as owned, \
+                        mock.patch.object(RunStore, "load") as loaded:
+                    code, _, err = self.conduct(verb, "--run", run_id)
+                self.assertEqual(code, 1, err)
+                self.refused(path, err)  # continue too: the fence comes before NOT_WAITING
+                owned.assert_not_called()
+                loaded.assert_not_called()
+                self.assertEqual(before, (self.root / run_id / "state.json").read_text(encoding="utf-8"))
+                self.assertFalse(any(line["event"] == "run.resume" for line in progress.read_lines(self.root / run_id)))
+
+    def test_continue_passes_the_fence_once_and_resume_of_the_intent_acknowledges(self):
+        run_id = self.finished_run()
+        self.intent(run_id=run_id, kind="continue")
+        path, env = self.child(run_id)
+        with mock.patch.dict(os.environ, env):
+            code, _, err = self.conduct("continue", "--run", run_id)
+        self.assertEqual(code, 1, err)
+        self.assertIn("NOT_WAITING: ", err, "the fence passed: the run itself is read")
+        self.assertEqual("NOT_WAITING", records.read(path, "detach-ack")["code"])
+        self.assertIs(True, probe_free(self.root / detach.LAUNCH_LOCK))
+        self.intent(run_id=run_id, kind="resume")
+        path.unlink()
+        with mock.patch.dict(os.environ, env), mock.patch.object(engine.Conductor, "_loop", return_value=0):
+            code, _, err = self.conduct("resume", "--run", run_id)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(("started", LAUNCH), (records.read(path, "detach-ack")["status"], LAUNCH))
+
+    def test_a_launch_lock_that_stays_busy_refuses_the_start(self):
+        self.intent()
+        path, env = self.child()
+        lock = detach.launch_lock(self.root, 0)
+        self.addCleanup(lock.release)
+        with mock.patch.dict(os.environ, env), mock.patch.object(detach, "LAUNCH_LOCK_WAIT_S", 0.2):
+            code, _, err = self.run_items("W1", extra=("--run-id", ID))
+        self.assertEqual(code, 1, err)
+        self.assertIn("stayed busy", records.read(path, "detach-ack")["message"])
+        self.assertFalse((self.root / ID).exists())
+
+    def test_spawn_binds_the_given_ack_nonce_or_generates_one(self):
+        log_dir = self.root / "detached"
+        argv = [sys.executable, "-c", "pass", "--run", ID]
+        with mock.patch.dict(os.environ, {"SKM_ORCH_AUTOPILOT_LAUNCH_ID": "inherited"}), \
+                mock.patch.object(detach.subprocess, "Popen") as popen:
+            popen.return_value.pid = os.getpid()
+            given = detach.spawn(argv, project=self.project, launcher="autopilot", log_dir=log_dir,
+                                 env={"SKM_ORCH_AUTOPILOT_LAUNCH_ID": NONCE}, ack_nonce=NONCE)
+            generated = detach.spawn(argv, project=self.project, launcher="detached", log_dir=log_dir)
+            with self.assertRaises(Stop) as invalid:
+                detach.spawn(argv, project=self.project, launcher="autopilot", log_dir=log_dir, ack_nonce="NOT-HEX")
+        detach._CHILDREN.clear()
+        self.assertEqual("RECORD_INVALID", invalid.exception.code)
+        self.assertEqual(2, popen.call_count)
+        first, second = (call.kwargs["env"] for call in popen.call_args_list)
+        self.assertEqual((NONCE, str(log_dir / f"{ID}.{NONCE}.ack.json"), NONCE),
+                         (first["SKM_ORCH_DETACH_NONCE"], first["SKM_ORCH_DETACH_ACK"], first["SKM_ORCH_AUTOPILOT_LAUNCH_ID"]))
+        self.assertEqual((given["nonce"], given["ack"]), (NONCE, first["SKM_ORCH_DETACH_ACK"]))
+        self.assertRegex(generated["nonce"], r"^[0-9a-f]{16}$")
+        self.assertNotEqual(NONCE, generated["nonce"])
+        self.assertEqual(str(log_dir / f"{ID}.{generated['nonce']}.ack.json"), second["SKM_ORCH_DETACH_ACK"])
+        self.assertNotIn("SKM_ORCH_AUTOPILOT_LAUNCH_ID", second, "an inherited launch context never reaches another child")
 
 
 class DetachedProcessTests(FaultCase):

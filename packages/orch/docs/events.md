@@ -25,6 +25,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.provider.fallback` | `<run>/<item>` | `run_id`, `role`, `from`, `to` (routes: `provider`, `model_class`, `model`, `effort`), `reason_codes` | `work_id`, `item`, `step` |
 | `orch.input.rebuilt` | `<run>/<item>` | `run_id`, `work_id`, `digest` | `item`, `previous_digest` |
 | `orch.conductor.lifecycle` | conductor run id | `conductor_run_id`, `phase` (`started`, `resumed`, `ended`) | `outcome` (`finished`, `stopped`, `waiting`, `interrupted`, `crashed`), `reason_code`, `launcher`, `items` (up to 50 references) |
+| `orch.autopilot.stopped` | plan | `plan`, `code` (`AUTOPILOT_*`), `runs`, `items_closed` | `message` |
 | `orch.conductor.health` | run id | `conductor_run_id`, `health` (`running`, `waiting_provider`, `waiting_tool`, `waiting_owner`, `waiting_budget_reset`, `suspected_stall`, `hung`, `orphaned`, `stopped`, `finished`, `unknown`) | `previous`, `reason_code`, `action` (`notify`, `snapshot`, `stop`, `reap`, `resume`, `given_up`, `identity_mismatch`, `busy`), `silent_s`, `item`, `step` |
 
 The agent events are emitted by the conductor for every agent run (a role process, the report-fixer included):
@@ -38,6 +39,10 @@ The types `rate-limited` and `quota-exhausted` are written with a hyphen because
 underscore. A wait for a transient failure that is not a limit gives no provider event. `deviation.recorded` is emitted
 when a correction round for an `auto_fixable` deviation starts, or when the final report is written; `deviation.resolved`
 when the fixed deviation is carried as accepted.
+
+`orch.autopilot.stopped` (subject: the plan; data `plan`, `code` (an `AUTOPILOT_*` stop code), `runs`, `items_closed`, and
+`message`) is emitted once by `orch conduct autopilot start` when its session ends, whatever the code (see *Autopilot* in
+`docs/conductor.md`); the same stop is in `autopilot.json` and on stderr.
 
 `orch.conductor.health` is emitted by the supervisor (`orch conduct supervise`, `orch conduct reap`; see *Supervisor* in
 `docs/conductor.md`) for every action it records in `<run>/supervisor.jsonl`, not by the conductor itself: `previous` is the
@@ -54,6 +59,14 @@ class it saw before, `action` what it did. `status` and `runs` emit nothing.
 - Pure operations (`prepare --dry-run`, `policy test`) never emit.
 - `data` passes `aicore.util.redact.redact_document` first: the values of environment variables named like api key, token, secret or password and the explicit token formats become `‹redacted›`. The same masking covers the progress lines, the `detail` of a failed role (the stderr tail) and the observer report; the raw streams under `streams/` stay as the role printed them and live in the ignored runtime folder (`orch doctor` warns when `.swissknifeman/state/` is not ignored).
 - `data` never carries a secret: aicore refuses a `Secret` value (`EVENT_SECRET`) and the event is not journaled.
+
+## Retention of the event journal
+
+orch writes events into the aicore journal of the project (`events.jsonl`) and never rotates, compacts or removes it:
+compaction changes the delivery offsets of the subscribers, and the journal is owned by aicore. Decision (PLAN9 P8.6):
+the retention of the event journal is a task of aicore, recorded for the roadmap (P10.2); its trigger is an
+`events.jsonl` larger than 50 MB. Until then `orch conduct prune` leaves the journal alone; what orch can shrink itself
+are the raw role streams of old runs (`conduct prune --compress-older-than DAYS`, `docs/conductor.md`).
 
 ## Producer fixtures
 

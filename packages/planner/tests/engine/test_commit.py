@@ -353,6 +353,69 @@ class CommitTests(unittest.TestCase):
         for trailer in ("Plan: spoofed", "Plan-Role: reviewer", "Extra: ok\nPlan: spoofed"):
             self.refusal("CONTENT_INVALID", trailers=[trailer])
 
+    def messages(self):
+        return self.git("log", "--format=%B%x1e").stdout.split("\x1e")
+
+    def test_implementation_fix_final_sequence_gives_each_commit_only_its_own_work(self):
+        lifecycle.start(self.root, ["P1.1"], actor=demo.AUTHORING)
+        plan_file = str(self.root.relative_to(self.repo) / "phases/P1/P1.1.json")
+        self.write("src/impl.txt")
+        first = self.commit(paths=["src/impl.txt"], paths_only=True, trailers=["Plan-Stage: implementation"])
+        self.assertEqual((first["paths"], first["outside"][:0]), (["src/impl.txt"], []))
+        self.write("src/fix.txt")
+        second = self.commit(role="fix", paths=["src/fix.txt"], paths_only=True, trailers=["Plan-Stage: correction.2"])
+        self.assertEqual(second["paths"], ["src/fix.txt"])
+        self.assertEqual(self.changed(), {"src/fix.txt"})  # the fix commit does not take the implementation
+        lifecycle.finish(self.root, "P1.1", status="done", checks={"V1": 0}, notes="done")
+        final = self.commit()
+        self.assertIn(plan_file, final["paths"])
+        self.assertNotIn("src/impl.txt", final["paths"] + second["paths"])
+        roles = [line for text in self.messages() for line in text.splitlines() if line.startswith("Plan-Role:")]
+        self.assertEqual(roles, ["Plan-Role: executor", "Plan-Role: fix", "Plan-Role: executor"])
+        self.assertIn("Plan-Stage: implementation", self.messages()[2])
+        self.assertEqual(self.git("status", "--porcelain").stdout, "")
+
+    def test_paths_only_leaves_a_dirty_foreign_file_inside_a_broad_template(self):
+        self.write("src/mine.txt")
+        self.write("src/someone-elses.txt")
+        result = self.commit(paths=["src/mine.txt"], paths_only=True)
+        self.assertEqual(result["paths"], ["src/mine.txt"])
+        self.assertEqual(self.changed(), {"src/mine.txt"})
+        self.assertIn("src/someone-elses.txt", self.git("status", "--porcelain").stdout)
+        without = self.commit(leave_outside=True)  # without the flag the broad template takes it (unchanged behaviour)
+        self.assertIn("src/someone-elses.txt", without["paths"])
+
+    def test_paths_only_names_files_literally_and_never_as_globs(self):
+        self.write("src/a[1].py")
+        self.write("src/a1.py")
+        result = self.commit(paths=["src/a[1].py"], paths_only=True)
+        self.assertEqual(result["paths"], ["src/a[1].py"])
+        self.assertEqual(self.changed(), {"src/a[1].py"})
+        self.assertIn("src/a1.py", self.git("status", "--porcelain").stdout)  # the neighbour is still dirty
+
+    def test_paths_only_leaves_the_plan_files_for_the_final_commit(self):
+        lifecycle.start(self.root, ["P1.1"], actor=demo.AUTHORING)
+        self.write("src/mine.txt")
+        self.commit(paths=["src/mine.txt"], paths_only=True)
+        plan_file = str(self.root.relative_to(self.repo) / "phases/P1/P1.1.json")
+        self.assertIn(plan_file, self.git("-c", "core.quotepath=false", "status", "--porcelain").stdout)
+        self.assertNotIn(".gitattributes", " ".join(self.changed()))
+        lifecycle.finish(self.root, "P1.1", status="done", checks={"V1": 0}, notes="done")
+        self.assertIn(plan_file, self.commit()["paths"])
+
+    def test_paths_only_refuses_a_path_outside_the_item_templates_and_commits_nothing(self):
+        self.write("src/mine.txt")
+        plan_json = str(self.root.relative_to(self.repo) / "plan.json")
+        for outside in ("foreign.txt", plan_json):
+            self.refusal("PATH_OUTSIDE_SCOPE", paths=["src/mine.txt", outside], paths_only=True)
+        self.refusal("CONTENT_INVALID", paths=[], paths_only=True)
+        self.refusal("CONTENT_INVALID", role="reviewer", paths=["src/mine.txt"], paths_only=True)
+
+    def test_paths_only_needs_a_path_on_the_command_line(self):
+        code, out, err = test_envelope.run("commit", str(self.root), "P1.1", "--role", "executor", "--paths-only", "--json")
+        self.assertEqual(code, 1)
+        self.assertIn("USAGE", out + err)
+
     def test_cli_json_and_envelope(self):
         self.write("src/old.txt")
         args = ("commit", str(self.root), "P1.1", "--role", "executor", "--dry-run", "--json")
@@ -436,6 +499,32 @@ class WorkspaceCommitTests(unittest.TestCase):
         event = store.new_event("note", "started", demo.AUTHORING)
         with (self.root / "log.jsonl").open("a", encoding="utf-8") as log:
             log.write(json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+    def test_paths_only_commits_the_product_path_and_leaves_the_workspace_alone(self):
+        self.write(self.src, "src/old.txt")
+        self.write(self.src, "src/other.txt")
+        self.start()
+        before = self.head(self.ws)
+        result = self.commit(paths=["src/old.txt"], paths_only=True)
+        self.assertEqual((result["repo"], result["paths"], result["sha"]), ("source", ["src/old.txt"], self.head(self.src)))
+        self.assertEqual(self.head(self.ws), before)
+        self.assertIn("log.jsonl", self.git(self.ws, "status", "--porcelain"))
+        self.assertEqual(result["workspace_commit"], {"status": "skipped-legacy"})
+        with self.assertRaises(PlanError) as refused:
+            self.commit(paths=[self.prefix + "/plan.json"], paths_only=True)
+        self.assertEqual(refused.exception.code, "PATH_OUTSIDE_SCOPE")
+        with self.assertRaises(PlanError) as nothing:
+            self.commit(paths=["src/old.txt"], paths_only=True)
+        self.assertEqual(nothing.exception.code, "NOTHING_TO_COMMIT")
+
+    def test_paths_only_names_files_literally_in_a_workspace_plan_too(self):
+        self.write(self.src, "src/a[1].py")
+        self.write(self.src, "src/a1.py")
+        self.start()
+        result = self.commit(paths=["src/a[1].py"], paths_only=True)
+        self.assertEqual(result["paths"], ["src/a[1].py"])
+        self.assertEqual(self.changed(self.src), {"src/a[1].py"})
+        self.assertIn("src/a1.py", self.git(self.src, "status", "--porcelain"))
 
     def test_product_and_bookkeeping_are_two_linked_commits(self):
         self.write(self.src, "src/old.txt")
@@ -624,8 +713,8 @@ class CliWorkspaceCommitExitTests(unittest.TestCase):
         import contextlib
         import io
         from planner.plan import cli
-        args = argparse.Namespace(ref="P1.1", role="executor", path=[], leave_outside=False, dry_run=False, type=None,
-                                  scope=None, summary=None, trailer=[], actor=None, json=False, output="text")
+        args = argparse.Namespace(ref="P1.1", role="executor", path=[], leave_outside=False, paths_only=False,
+                                  dry_run=False, type=None, scope=None, summary=None, trailer=[], actor=None, json=False, output="text")
         result = {"sha": sha, "ref": "P1.1", "role": "executor", "paths": [], "workspace_sha": None,
                   "workspace_commit": workspace_commit}
         out, err = io.StringIO(), io.StringIO()

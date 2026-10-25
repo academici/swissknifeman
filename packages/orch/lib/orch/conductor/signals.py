@@ -61,7 +61,9 @@ def _clock_ticks() -> int:
 
 def tree_cpu_ticks(pid: int) -> Optional[int]:
     """User and system clock ticks spent by ``pid`` and all its descendants (``/proc/<n>/stat`` fields 14 and 15, found by
-    the parent pid, field 4); ``None`` without ``/proc`` or when ``pid`` is gone."""
+    the parent pid, field 4), plus those of the descendants each of them has already waited for (fields 16 and 17: a
+    finished child leaves the tree, its time moves to the ``cutime`` and ``cstime`` of its parent, so the sum never drops
+    when a child ends); ``None`` without ``/proc`` or when ``pid`` is gone."""
     proc = Path("/proc")
     if not proc.is_dir():
         return None
@@ -71,7 +73,7 @@ def tree_cpu_ticks(pid: int) -> Optional[int]:
             continue
         try:
             fields = (entry / "stat").read_text(encoding="utf-8", errors="replace").rsplit(")", 1)[1].split()
-            rows[int(entry.name)] = (int(fields[1]), int(fields[11]) + int(fields[12]))
+            rows[int(entry.name)] = (int(fields[1]), sum(int(fields[index]) for index in (11, 12, 13, 14)))
         except (OSError, IndexError, ValueError):
             continue
     if pid not in rows:

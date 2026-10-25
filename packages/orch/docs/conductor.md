@@ -47,6 +47,8 @@ Exit codes: 0 the run finished, 1 it stopped (or a command was refused; `CODE: m
 4 the run waits for a decision (`run.end` outcome `waiting`, status `waiting`: a piece waits for the answer to a question;
 `orch conduct answer`, then `orch conduct continue`; code 1 keeps its meaning for every other stop),
 130 interrupted (Ctrl-C, SIGTERM or SIGHUP: the role and check processes of the run are killed with their groups; `resume` continues).
+A conductor that inherits an ignored SIGINT (started in the background of a shell) still takes SIGINT as an interrupt while its
+loop runs, so `autopilot stop` and the supervisor reach it; a SIGINT handler the caller installed is kept.
 
 ## Detached runs
 
@@ -64,8 +66,10 @@ run id and child pid every 0.1 seconds for at most 20 seconds. An existing `run.
 A refusal returns exit 1 with its code. A child that exits without acknowledging yields `DETACH_FAILED` and up to twenty
 sanitized log lines; a timeout names the pid and log and leaves the child alone. The hidden `--run-id` is restricted to
 internal launches (`SKM_ORCH_DETACHED=1`), a correctly formatted id and a run directory that does not exist.
-`spawn` also accepts a per-launch environment overlay for the nonce channel. Roles and checks receive neither that
-channel nor `SKM_ORCH_DETACHED` / `SKM_ORCH_LAUNCHER`; the owning conductor retains its launcher in leases and events.
+`spawn` sets up the acknowledgement channel itself: it takes an optional `ack_nonce` (16 hex digits; generated when not given,
+as for `--detach`; the autopilot gives its launch id), returns `{pid, start_ticks, log, ack, nonce}`, and accepts a per-launch
+environment overlay. Roles and checks receive neither that channel nor `SKM_ORCH_DETACHED` / `SKM_ORCH_LAUNCHER` nor the
+startup fence variables of the autopilot (below); the owning conductor retains its launcher in leases and events.
 
 The lease and lifecycle events identify the launcher: `detached` from the terminal, `gui` from gui-orch,
 `supervisor` from automatic recovery, or `autopilot` for its future caller. The supervisor uses the same session/log
@@ -274,6 +278,179 @@ directory; its exit code is returned. Without that tool it prints `systemd-analy
 and exits 0. Neither command installs units, enables timers or changes a running service. The owner installs the
 printed files and enables the timer when desired.
 
+## Autopilot
+
+The autopilot (`orch conduct autopilot`, the controller `application/autopilot.py`, its rules `policies/autopilot.py`) works
+through a plan lane after lane without the owner and without a model: it asks the work source which lane comes next, checks
+that exactly the phase of that lane is ready, starts one conductor run for the lane, waits for it and decides from how it
+ended whether to go on, to continue, to resume or to stop. A `conduct run --ready` takes one lane and exits; the autopilot
+starts a run per lane. It never calls a model and never reads the streams of the roles: a semantic question is answered
+inside the run (questions, advisor, panel), a decision the run leaves to the owner is a stop with one action in its message.
+
+```text
+orch conduct autopilot start --plan P [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
+orch conduct autopilot status [--json]
+orch conduct autopilot pause | resume | drain | stop
+orch conduct autopilot explain [--plan P] [--json]
+```
+
+`start` runs the controller in the foreground until a stop code (`--detach`: in a session of its own, printing a
+`detach-result` once the controller holds its lock; progress lines go to `<runs root>/detached/<label>.log`). `status` shows
+the session (`--json`: a `conductor/v1` `autopilot-status` with `status` `none`, `running`, `paused`, `draining`, `stopped`
+or `dead`: a session that did not stop and whose controller no longer holds the lock). `pause` takes no new work after the
+current run, `resume` takes work again, `drain` lets the current run end and stops, `stop` interrupts the current run: they
+write `<runs root>/autopilot.request.json`, which the controller reads and removes at its next look; without a live controller
+they refuse with `AUTOPILOT_NOT_RUNNING` (exit 1). `explain` prints the effective policy with the layer of each value, the
+readiness answer of the source and the next action a controller would take now (`--json`: `autopilot-explain`); it starts and
+writes nothing.
+
+**Policy.** `[orch.autopilot]` (see [configuration](configuration.md)): `allowed` (default `false`) is set by the machine
+only: a project file that sets it is refused by the configuration (`CONFIG_LAYER_FORBIDDEN`), the project layer is then left
+out and the session stops with `AUTOPILOT_NOT_ALLOWED` unless the machine allows it. `enabled` (default `false`) is the
+project's switch (the machine may set it for every project). `require_readiness` (default `true`) is on when the machine or
+any other layer turns it on. `max_runs` (20), `max_wall_s` (43200), `max_no_progress_runs` (2), `max_auto_decisions` (10),
+`quota_wait_max_s` (21600) and `max_recoveries` (1, per run) are the lowest of the machine value and the values of the other
+layers and the flags of `start`: a project or a flag can only narrow. `poll_s` (30) is the pause between two looks. Machine
+policy of an owner who lets the autopilot run:
+
+```toml
+[orch.autopilot]
+allowed = true
+```
+
+and in the project `.swissknifeman/config.toml`: `[orch.autopilot] enabled = true`.
+
+**The loop.** One controller per checkout holds `<runs root>/autopilot.lock` (taken without waiting; a second `start` stops
+with `AUTOPILOT_BUSY` and touches nothing). Then, at every step:
+
+1. A request is applied; a stop request or a passed deadline interrupts the current child (below).
+2. A current run is watched every `poll_s` with `health.classify`: `hung` is stopped by its identity and `orphaned` reaped
+   (the supervisor library: `stop_conductor`, `reap`), then resumed by an ordinary `conduct resume` while the resumes of that
+   run stay below `max_recoveries` (else `AUTOPILOT_RECOVERY_EXHAUSTED`). A hung child is stopped only when its whole saved
+   identity `(pid, start_ticks, boot_id)` is confirmed; otherwise nothing is signalled or reaped, `current` stays and the
+   session stops with `AUTOPILOT_CHECKOUT_LOST`. An ended run is classified (below).
+3. A draining session stops (`AUTOPILOT_DRAINED`) and a paused one waits, before any next child: a run that waits for a
+   provider quota reset is resumed after it only while the session runs; `max_runs` started runs stop (`AUTOPILOT_MAX_RUNS`).
+4. First the runs that wait for answers: when every blocking question of the waiting pieces of one of them is answered
+   (`answered`, `applied` or `open` with a resolution, as `orch conduct answer` writes it), `conduct continue --run R` is
+   started, and readiness is not asked.
+5. Else `orch.py source readiness` (the work-source op `readiness`) gives the phases and the next step. A `run-items` lane
+   with `require_readiness` needs its own phase `ready` or `ready_with_advisories` (other phases, finished or unrelated, do not
+   matter); then `conduct run --plan P --items <lane> --options <runs root>/autopilot-options.json --json-lines` starts. While
+   runs wait for answers and nothing else can start, the controller waits; a plan with no work left (`terminal`, `archive`) is
+   `AUTOPILOT_NO_WORK`, any other next step `AUTOPILOT_NOT_READY` with `NEXT_<KIND>`, a lane whose phase is not ready
+   `AUTOPILOT_NOT_READY` with `READINESS_<STATUS>`, and a source without the op `AUTOPILOT_NOT_READY` with
+   `READINESS_UNSUPPORTED`.
+
+`autopilot-options.json` is `{"scope": {"outside": "block"}}` (a path outside the write set blocks the piece, D14), plus
+`limits.run_tokens_hard_max` with `--run-tokens-hard-max` (the run cap of the trusted invocation layer). Every child starts
+through `detach.spawn` (launcher `autopilot`) with a run id chosen before (`--run-id`) and a fresh `launch_id` (16 hex) as the
+nonce of its detach acknowledgement: **before** the child exists, `autopilot.json` holds the launch intent `current = {run_id,
+launch_id, state: launching, kind, since}`; after the acknowledgement `state: running` with `pid` and `start_ticks`. The child
+takes the checkout lock and the run lease itself: while another conductor holds them it refuses (`RUN_BUSY`, `WORKTREE_BUSY`) and
+the session stops with `AUTOPILOT_CHECKOUT_LOST`, never with a second conductor on the checkout.
+
+**Startup fence.** The controller holds `autopilot.lock` for its whole session. The short transitions of a launch intent take a
+second lock, `<runs root>/autopilot-launch.lock`, which is never held while a child or an acknowledgement is awaited. Order of
+locks: `autopilot-launch.lock`, then the checkout lock, then the run lease. The controller writes the intent under the launch
+lock before the spawn. Every child gets `SKM_ORCH_AUTOPILOT_STATE=<runs root>/autopilot.json`,
+`SKM_ORCH_AUTOPILOT_LAUNCH_ID=<launch_id>`, `SKM_ORCH_DETACH_NONCE=<launch_id>` and the acknowledgement path
+`<runs root>/detached/<run_id>.<launch_id>.ack.json` (`run`, `continue` and `resume` alike). Before the checkout lock, the run
+lease, the run folder, any claim and any role, `run`, `continue` and `resume` of such a child take the launch lock (waiting up to
+30 s), read `autopilot.json` (records/v1) and require `current` to be `launching` with their `run_id` and `launch_id`. Otherwise
+the child acknowledges `refused` with `AUTOPILOT_LAUNCH_CANCELLED` and exits 1, having taken no lease and created, claimed and
+started nothing. When the intent matches, the child keeps the launch lock while it takes the checkout lock and the run lease,
+creates or loads the run and writes its `started` acknowledgement; only then does it let the launch lock go, keeping the run
+until its end. `continue` passes the fence once (its `resume` does not take it again). The variables are dropped before roles
+and checks.
+
+A controller decides about an intent that is still `launching` (after a crash of the one that wrote it, or a child that did not
+acknowledge within 20 s or exited first: an acknowledgement written after the wait ran out still adopts the child) only under the
+launch lock, so it sees either the acknowledgement of the launch or a child that has not passed its fence yet:
+
+- a `started` acknowledgement of this run and launch id adopts the child (`state: running` with its identity);
+- a new run (`run`) whose folder exists without one is adopted when `run.json` and `state.json` are valid, and is otherwise a
+  partial record: `AUTOPILOT_STATE_INVALID`, the folder and `current` are kept, nothing replaces them;
+- for `continue` and `resume` the folder of the existing run proves nothing about this launch (P8.3): only the acknowledgement does;
+- younger than 30 s (and the child, when known, still alive): wait. Else a new run with no folder is cancelled (`current`
+  cleared, `history` `never_started` once) and the next lane may start. An existing run whose lease is held without the
+  acknowledgement of this launch stops the session with `AUTOPILOT_CHECKOUT_LOST`, no second child. An existing run whose lease
+  is free keeps its id and resumable state: in the same save that cancels the intent, `current` becomes the intent of its next
+  attempt with a new launch id (no `never_started`), so a crash, a `stop` or `max_runs` before that attempt is spawned leaves it
+  `current` and the next start goes on with it before asking readiness. A `continue` saves the waiting pieces it takes back in
+  its intent (`retry`) before its child exists; its next attempt is `resume --retry <pieces>`, because a child may have taken them
+  back and died before its acknowledgement (taking a piece back again is idempotent, so no `NOT_WAITING`). The attempt is counted
+  in `runs`; at `max_runs` the session stops `AUTOPILOT_MAX_RUNS` with the attempt kept. A child that exited without an
+  acknowledgement is classified like a run that stopped `DETACH_FAILED`, its next attempt kept `current`.
+
+A child of a cancelled launch id that reaches its fence later is always refused. A timeout or a missing folder alone never
+proves that a child died: the lock and the launch id close the window between the check of the intent and the lease.
+`AUTOPILOT_LAUNCH_CANCELLED` is a refusal of the child's startup, not a stop code of the controller.
+
+**How a run ended.** Exit 0: no piece taken is `AUTOPILOT_NO_WORK`; closed pieces go on (the streak of runs without a closed
+piece is reset; `max_no_progress_runs` of them in a row is `AUTOPILOT_NO_PROGRESS`). Exit 4 (a piece waits for an answer): with
+tracked changes in the checkout (`git status --porcelain --untracked-files=no`, outside `.swissknifeman/` and the folder of the plan, compared by whole folders;
+the plan folder is only the one the work source named for the run, `<folder>/artifacts/<piece>` of its briefs inside the
+checkout: a plan kept in a workspace, or an unknown one, leaves nothing else out, so `plans/<plan>/x` is then a change too) the owner
+is needed (`AUTOPILOT_OWNER_NEEDED`; nothing is reset, stashed or checked out), else the run joins `waiting_runs` and independent
+lanes go on (three waiting runs at once need the owner). Exit 1, by the stop code of the run: `PROVIDER_QUOTA` with a reset
+within `quota_wait_max_s` waits, then resumes (else `AUTOPILOT_QUOTA`); `TOKEN_BUDGET*` is `AUTOPILOT_BUDGET`; the one-time
+failures `TIMEOUT`, `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID`, `MODEL_UNAVAILABLE`, `GROUP_REVIEW_FAILED`,
+`QUESTIONS_LOCKED` and `CONDUCTOR_CRASHED` are resumed, and `QUESTION_ANSWERED_NOT_RETRIED` resumed with `--retry` of the named
+pieces, within `max_recoveries` of the run; `ITEM_BLOCKED` whose escalations are all `WRITE_PROTECTED_PATH: <path> -> <staged
+path>` needs the owner to place the files (the pairs are in the message); `ITEM_BLOCKED`, `CHECKS_RED` and `REVIEW_LIMIT` go on
+once and stop the second time in a row for the same piece and code (`AUTOPILOT_REPEATED_BLOCKER`; with tracked changes at once
+`AUTOPILOT_OWNER_NEEDED`); `RUN_BUSY`/`WORKTREE_BUSY` is `AUTOPILOT_CHECKOUT_LOST`; `STATE_CORRUPT`, `STATE_INVALID`,
+`RUN_INVALID` is `AUTOPILOT_STATE_INVALID`; any other code `AUTOPILOT_RUN_STOPPED`. Exit 130 that no stop request caused is
+`AUTOPILOT_INTERRUPTED`. Before all of these, a group review with Blocker or Major findings whose follow-up is not settled
+(`state.group_reviews[*].followup`) needs the owner with the follow-up command, and `QUESTION_ADVISED` lines of the session's runs
+(questions answered by the advisor or panel) reaching `max_auto_decisions` stop with `AUTOPILOT_DECISIONS_EXCEEDED`. The info
+beacons of a run (`STAGE_SLOW`, `STAGE_IDLE`, `RUN_SLOW`, `RESULT_*`, `GENERATED`, ...) are not outcomes.
+
+**Deadline and stop.** `deadline_at = started_at + max_wall_s` is written at the first start of a session and a restart after a
+crash keeps it; it is checked at every look (a running child, a pause, a quota wait, a wait for answers). When it passes, and on
+a `stop` request, the current child gets SIGINT (`os.kill` of its pid only, while the `(pid, start_ticks, boot_id)` saved in `current` at the
+launch or the adoption all match `/proc`, the boot of the machine and the owner of a held lease; an unknown or different
+identity gets no signal, neither here nor through the supervisor library), the controller waits `[orch.supervisor] grace_s` for it to end `INTERRUPTED` (resumable with
+`orch conduct resume --run R`); a child that does not end is stopped by the supervisor library (`stop_conductor`: SIGINT,
+SIGTERM, SIGKILL to the identified pid; then `reap` of its role groups). Only when no conductor of the run is alive does the
+session stop with `AUTOPILOT_MAX_WALL` or `AUTOPILOT_STOPPED`; a child that cannot be stopped stays `current` and the session
+stops with `AUTOPILOT_CHECKOUT_LOST` (exit 1). A start after the deadline of an unfinished session stops at once. A session that
+stopped begins anew at the next `start` (new deadline and counters; the waiting runs and the history stay).
+
+**Stop codes.** Each stop is written to `autopilot.json` (`stop`), sent as the event `orch.autopilot.stopped` (`plan`, `code`,
+`runs`, `items_closed`, `message`) and printed as `CODE: message` on stderr. `AUTOPILOT_BUSY` and an unreadable `autopilot.json`
+(`AUTOPILOT_STATE_INVALID`, the file is kept as evidence) leave the file alone. These are not stops or beacons of a run:
+
+| Code | Exit | Meaning |
+| --- | --- | --- |
+| `AUTOPILOT_NO_WORK` | 0 | the plan has no work left, or a run took no piece |
+| `AUTOPILOT_DRAINED` | 0 | `drain`: the current run ended and none was started |
+| `AUTOPILOT_STOPPED` | 0 | `stop`: the current run was interrupted (resumable) |
+| `AUTOPILOT_MAX_RUNS` | 0 | `max_runs` runs were started |
+| `AUTOPILOT_MAX_WALL` | 0 | the deadline passed; the current run was interrupted (resumable) |
+| `AUTOPILOT_NOT_ALLOWED` | 1 | the machine does not allow the autopilot (`allowed`) |
+| `AUTOPILOT_DISABLED` | 1 | the project does not enable it (`enabled`) |
+| `AUTOPILOT_BUSY` | 1 | another controller holds `autopilot.lock` |
+| `AUTOPILOT_NOT_READY` | 1 | the next step is not a ready lane (`NEXT_<KIND>`, `READINESS_<STATUS>`, `READINESS_UNSUPPORTED`) |
+| `AUTOPILOT_OWNER_NEEDED` | 1 | an answer with changes in the tree, protected files to place, group review findings, three waiting runs |
+| `AUTOPILOT_BUDGET` | 1 | a run stopped on a token limit |
+| `AUTOPILOT_QUOTA` | 1 | a provider quota resets later than `quota_wait_max_s` (or when nobody knows) |
+| `AUTOPILOT_REPEATED_BLOCKER` | 1 | the same piece blocked by the same code twice in a row |
+| `AUTOPILOT_NO_PROGRESS` | 1 | `max_no_progress_runs` runs in a row closed no piece |
+| `AUTOPILOT_DECISIONS_EXCEEDED` | 1 | `max_auto_decisions` questions were answered by the advisor or panel |
+| `AUTOPILOT_RECOVERY_EXHAUSTED` | 1 | a run crashed, hung or failed once more than `max_recoveries` allows |
+| `AUTOPILOT_CHECKOUT_LOST` | 1 | another conductor holds the run or the checkout, or a child could not be stopped by its identity (it stays `current`) |
+| `AUTOPILOT_STATE_INVALID` | 1 | a record of the current run or `autopilot.json` cannot be read or breaks its schema (`current` and the records are kept) |
+| `AUTOPILOT_RUN_STOPPED` | 1 | a run stopped with a code the autopilot does not handle (named in the message) |
+| `AUTOPILOT_INTERRUPTED` | 1 | a run ended 130 without a stop request, or the controller itself was interrupted |
+
+**Files.** In `<runs root>`: `autopilot.json` (records/v1 `autopilot-state`: plan, controller identity, `started_at`,
+`deadline_at`, `mode`, `limits`, `counters` (`runs`, `items_closed`, `no_progress_streak`, `auto_decisions`, `recoveries`,
+`quota_waits`), `recoveries` per run, `current`, `quota_wait`, `waiting_runs`, the last 50 runs in `history` (one entry per run),
+`last_blockers`, `stop`), `autopilot.request.json` (records/v1 `autopilot-request`: `action`, `at`, `by`), `autopilot.lock`,
+`autopilot-launch.lock`, `autopilot-options.json` and the logs and acknowledgements of the children in `detached/`.
+
 ## A piece that rewrites the orchestrator: `--frozen`
 
 A piece that refactors `orch` changes the code of the process that conducts it. `run --frozen` (and `resume --frozen`) takes a snapshot of
@@ -356,6 +533,7 @@ steps before reconciliation. The rule uses the key's prefix before the first dot
 | `research-save.N` | repeat the idempotent save for that research number |
 | `close`, `register` | recover a successful registration receipt of this attempt; otherwise repeat the idempotent call |
 | `commit` | recover a successful commit receipt of this attempt only when its workspace part is complete; otherwise repeat commit |
+| `checkpoint`, `fix-commit.N` | the stage commits of a split run (see Split commits): recover the receipt `commit-<stage>.json`; without one, the newest commit that carries this attempt's `Plan-Run`, `Plan-Attempt` and `Plan-Stage` trailers closes the step (the stage is never committed twice, I4); otherwise repeat the commit |
 | any other key | stop with `STAGE_RECOVERY_UNKNOWN`; settle the item, or use `--retry` if it is blocked |
 
 Each decision emits `info` with `reason_code: STAGE_INTERRUPTED`, the item and stage,
@@ -374,7 +552,7 @@ after `done` remains `ATTEMPT_CONFLICT`.
 Malformed fields used by the recovered result also require a repeat; recovery checks them against the live
 work-source response contract before recording `done`.
 
-Before a closing source call, `register-request.json` or `commit-request.json` durably records `attempt_id`,
+Before a closing source call, `register-request.json` or `commit-request.json` (`commit-<stage>-request.json` for a stage of a split run) durably records `attempt_id`,
 the request parameters and their canonical JSON SHA-256 digest. After the call, the request also records the
 SHA-256 of the unmodified response before the receipt is published. Recovery requires both digests and the
 request's run, reference and attempt to match, including responses with an explicit `attempt`. The request's
@@ -554,6 +732,7 @@ The conductor stops only on:
 | Code | When |
 | --- | --- |
 | `DETACH_FAILED` | the detached child exited without acknowledging startup, or no matching acknowledgement arrived within 20 seconds; inspect the named log and status before retrying |
+| `AUTOPILOT_LAUNCH_CANCELLED` | a child of the autopilot found at its startup fence that the launch intent of `autopilot.json` no longer names its run and launch id (the controller cancelled or replaced it), or that `autopilot-launch.lock` stayed busy for 30 s; it took no lock or lease, created no run, claimed and started nothing, and acknowledged `refused` (exit 1). Nothing to do: the autopilot already went on |
 | `RUN_BUSY`, `WORKTREE_BUSY` | another conductor owns the run or checkout; wait for it or stop it before retrying |
 | `QUESTIONS_LOCKED` | the item's questions lock could not be acquired within 10 seconds |
 | `CONDUCTOR_CRASHED` | an unexpected exception in the conductor loop; exit 1, stopped state and `run.end`; the redacted traceback is written to `<run>/crash.txt` when that write succeeds. If the artifact cannot be written, the stop still names `CONDUCTOR_CRASHED` and says `crash.txt unavailable` (it does not claim the file exists); fix the cause, then resume |
@@ -572,6 +751,7 @@ The conductor stops only on:
 | `QUESTION_ANSWERED_NOT_RETRIED` | a resume skips a blocked piece with an answer awaiting consumption and no piece starts in this pass; exit 1; use `orch conduct resume --run RUN --retry ITEM` |
 | `OUTSIDE_MODULE` | the executor (an escalation of the blocked piece, `ITEM_BLOCKED`) or the checks (the run stops) changed files of another module than the write set names, `CHANGELOG.md`, `docs/**` and the granted `extra_paths` aside; only under `scope.outside_module: block` (the default `deviation` reports them as a deviation); add the paths to the item's `task_files`, or set them aside and retry |
 | `OUTSIDE_RUNTIME_ARTIFACT` | the executor (blocked piece) or the checks (the run stops) changed a **tracked** file under `scope.runtime_paths` (`.swissknifeman/orch-artifacts/**`, `tests/evidence/**`, …): runtime artifacts are history, not product; restore the file from git |
+| `CORRECTION_SCOPE_GREW` | a correction round of review findings run by the bounded-implementer (`review.correction_route`) changed paths beyond the paths of its findings, the tests of the write set, `CHANGELOG.md` and the documentation; the piece is blocked (`ITEM_BLOCKED`) with the escalation `CORRECTION_SCOPE_GREW: <paths>`; the owner decides whether the paths belong to the piece, or runs the correction on the executor route (on that route the same growth is a deviation, not a stop) |
 | `CHECKS_MUTATED` | the checks changed the tree again when they ran a second time on the tree their first run had changed: they are not idempotent (resumable); make the check change nothing on a tree it has already changed |
 | `GENERATE_FAILED` | `[orch.conductor] generate` or `generate_check` exited non-zero (or ran past 600 s) before the checks of a round: the generated files would not match their sources (`checks/<n>/generate.log`, `generate-check.log`) | fix the sources or the generator, then `resume` |
 | `GROUP_REVIEW_BLOCKER` | the group review of a batch found a **Blocker**; the run stops (resumable) and a resume stops again at once until the group is settled: run the follow-up (`orch conduct run --input <run folder>/group-review-<n>.followup.json --commit`), then `orch conduct settle --run <R> --group <n> --followup-run <F> --reason …` (see "The review strategy of a batch") |
@@ -1023,6 +1203,36 @@ check's tail is bounded to forty lines and 4000 characters including an omitted-
 the full log path (`checks/<round>/<V#>.log`); failure-header samples are bounded separately to
 4000 characters. Read the referenced full log when diagnosing all independent failures.
 
+### The route of a correction
+
+`review.correction_route` (`executor`, the default, or `bounded-implementer`) names the role that runs the correction rounds of
+confirmed review findings. With `bounded-implementer` a correction without a Blocker finding runs on the route of the
+`bounded-implementer` role (launch catalog economy/medium unless a stage says otherwise; its own session, never the executor's);
+a correction with a Blocker finding always runs on the executor. The step stays `executor.<n>`; its agent, route and prompt are
+the role's. The bounded route is used only when it starts here and meets the minimum of the work: the claim's `route.correction`
+(`{class, effort, provider?, model?}` of the plan item, carried by the answer of `claim`), else the whole ordinary minimum
+(the claim's `route` completed by the execution input's `route.minimum`, so the provider and model the plan pins count) —
+without `route.correction` nothing is relaxed. The same minimum admits every later route of the role: a fallback route taken
+after a quota or provider failure that is below it, or off a pin, is refused and never runs (the stop is the provider's). Otherwise the correction stays with the executor and an info beacon
+`CORRECTION_ROUTE_REFUSED` says why (class or effort below the minimum, a pinned provider or model, a command that cannot start).
+The group review follow-ups (`review_followup`) always run on the executor.
+
+`CORRECTION_SCOPE_GREW`: after a review correction round, the paths the round changed (the tree before the round is kept in
+`state.correction_baselines["files-<n>"]`, so a resume compares with the same tree) minus the paths of the findings of its
+fix-brief, the test files inside the write set (`*/tests/*`, `test_*.py`), `CHANGELOG.md` and the documentation (`docs/**`,
+`packages/*/docs/**`) are the growth. On the executor route the growth is an info beacon `CORRECTION_SCOPE_GREW` and an accepted
+`other` deviation of the report (evidence: the paths), which the next review round reads with the diff; on the bounded-implementer
+route the piece is blocked (stop `CORRECTION_SCOPE_GREW`, see *Stops*). The check is repeated before each review round and
+before the piece finishes for every closed correction round, so a conductor that stopped between the saved round and its check
+still blocks (or reports the deviation) after a resume. A report with the deviation registers as `done_with_deviations`.
+
+The class of a route that names a model is the class the model catalog gives that model
+(`aicore.provider.models.admitted_class`: entry id or alias, then patterns; retired entries are skipped; the highest class of the
+roles wins), when it is lower than the label of the stage or of the launch entry: `{model: haiku, model_class: implementation}`
+is an economy route and is below an implementation piece (`ROUTE_UNDERSHOOT`). A label never raises a class. A model the catalog does
+not know keeps the label and is said once per role (`ROUTE_MODEL_UNKNOWN`, info). The planner keeps its own copy of the algorithm
+(`command-routing.json`); a bridge test holds the two together.
+
 ## Interactive review-only runner
 
 `orch input adhoc --review BASE..WORKTREE --plan P --item I` builds a read-only execution-input.
@@ -1192,10 +1402,11 @@ and `REVIEW_MODE_NONE_SKIPPED` names it.
 | `session` | `executor`: `handoff` (default), `shared` or `per-item`; `max_idle_s` (default 0 = never): a session unused for longer is not resumed, the next attempt starts fresh (`idle_expired`). `handoff`: each piece of the run starts a fresh Claude Code session and its correction rounds resume it; the prompt of every piece carries the `## Run batch` block that names all pieces and, for each piece already done, a bounded `### Handoff of` (commit, summary, open issues, changed paths from its `register-report.json`) — a later piece does not re-read the transcript of the earlier ones on every turn (measured: a shared session carried 229K→372K tokens of context into the second piece, 18.5M cache-read tokens for one step). Each piece keeps its own slot in `executor_sessions` of the run state (see *Session slots*). `shared`: the executor of every piece of the run, and of every correction round of a piece, resumes the Claude Code session of the previous executor (`claude -p --resume`), so the later pieces start with what the earlier ones learned, and the prompt of the first one carries a `run_rules` block `## Run batch` that names all pieces; the later ones are told that the session is resumed. Checks, review, register and commit stay per piece. `per-item`: a fresh session per executor step. `--batch` / `--no-batch` of `run` set it (`handoff` / `per-item`), and `--no-batch` also claims the pieces one at a time (layer `invocation:--batch`, above `--options`). Shared executors run without `--no-session-persistence` (the launch catalog sets it; a session that is not saved cannot be resumed), so their sessions stay in the provider's own store. A session that failed is forgotten and a fresh one starts. The session id, the task digest and the answers it has seen are kept in the slot of the piece (see *Session slots* and *Resumed sessions*). A provider resumes when its capability record says `resume` is `supported` or `adapted` (not by its name): Claude Code with `--resume`; a Codex executor its thread and a Grok executor its conversation through the `resume_argv` of the launch catalog entry (`codex -a never exec resume <thread> --json -c sandbox_mode="…" --model … -`, `grok … --resume <id>`). |
 | `scope` | `outside`: `deviation` (default) or `block`, for paths changed outside `scope.write_set`; `fence`: `project` (default: the executor may change any file of the project, `scope.write_set` is the expected change and a path outside it is reported by the executor as a `deviation`, not a block; the filesystem guard still confines it to the project) or `plan` (the write set is a fence: a path outside it makes the executor stop with `blocked`); `extra_paths`: directories outside the project the executor may also change (absolute or `~/…`; named in its prompt and granted to every writing role: `--rw` on its `ro-run.py` guard, for Claude Code also `--add-dir` and, under the provider sandbox, `sandbox.filesystem.allowWrite`, for Codex `--add-dir`); `outside_module`: `deviation` (default) or `block`, for paths of another module than the write set names (`OUTSIDE_MODULE` under `block`); `runtime_paths`: patterns of runtime artifacts that are set aside, never committed (see "The write set is a fence by module"). `--fence` and `--allow-path DIR` (repeatable) set them for one run. `outside: block` with `fence: project` stops the piece at the first path outside the plan. |
 | `checks` | `parallel` (1–8, default 2: command checks run together, sharing the jobs budget `SKM_TEST_JOBS`), `fail_fast` (default false: every item check runs, so one round collects every independent failure; true: after a red command check no other check starts, the ones running end and the rest are `skipped` with `skip_reason` `fail_fast`; `phase` checks run only when every item check is green, else `skipped` with `phase_after_red`; the item checks run cheapest first by their time in earlier rounds), `reuse` (default true: a command check with green evidence of this run for the same candidate, command, directory and fingerprint is not run again; its row is `reused`), `overlap_review` (default false: the checks of a round run while the review of that candidate reads it; red checks drop that review and it is repeated), `kinds` (default `["acceptance","impact"]`), `cadence` (default `["item","phase"]`; `["item"]` leaves out the `cadence: phase` checks, the full pass that the planner bridge gives to the item closing a phase), `red_first` (default true: in a correction round the previously red checks run first, and the others only when those are green; false runs the checks in plan order in every round, with no red-first staging; whether the later checks start after a red one is decided by `fail_fast` alone, independently of `red_first`), `executor_runs_checks` (default false: the executor runs only the tests of the code it changed), `self_check` (default empty: a list of the project's cheap commands, e.g. the tests of the touched units and their dependents and lint, that an executor with `executor_runs_checks: false` runs once on its final tree before it reports and lists in `self_check` of its stage-report; the claim proves nothing, the conductor still runs every acceptance check) |
-| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the diff of the paths changed since the previous review, see *Review of round 2 and later*; `full`: the whole diff every round), `final_correction` (default `true`: when no further round is allowed the findings are corrected without another review, noted in the plan and as `review_debt` of the piece with a `REVIEW_DEBT` beacon, instead of `REVIEW_LIMIT`; `review_rounds` is a wall, `ceiling_factor` does not extend it), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*) and `strategist` (`rules` default, `model`: who chooses it) |
+| `review` | `correct_min_severity` (`Blocker`/`Major`/`Minor`/`Nit`, default `Major`), `pre_final` (default `true`), `audit_scope` (`corrected` default: the round after a correction reads only the corrected findings and the diff of the paths changed since the previous review, see *Review of round 2 and later*; `full`: the whole diff every round), `final_correction` (default `true`: when no further round is allowed the findings are corrected without another review, noted in the plan and as `review_debt` of the piece with a `REVIEW_DEBT` beacon, instead of `REVIEW_LIMIT`; `review_rounds` is a wall, `ceiling_factor` does not extend it), `dynamic` (default `true`: a piece whose pack has no review gets one when its risk score reaches the threshold, see Dynamic review), `dynamic_threshold` (0–100, default 60); `strategy` (`auto` default, `each`, `groups`, `single`, `none`: how a batch is reviewed, see *The review strategy of a batch*), `strategist` (`rules` default, `model`: who chooses it) and `correction_route` (`executor` default, or `bounded-implementer`: the role that runs the corrections of review findings without a Blocker, see *The route of a correction*) |
 | `limits` | targets `review_rounds` (0–5), `corrections` (0–3), `check_fixes` (0–3) and their `ceiling_factor` (1–5, default 2); `retries` (0–5, per step); `repairs` (0–3, default 1); `provider_wait_max_s` (default 900: the longest wait for a provider limit to reset); hard token limits `tokens_hard_max` (of the piece) and `run_tokens_hard_max` (of the run), 0 off (see Hard token limits and resume), with `unmetered` (`stop` default, or `charge`) and `unmetered_charge_tokens` (50000) for an attempt that reports no usage while one is in force; beacons `tokens_max`, `stage_warn_s` (2700), `stage_idle_warn_s` (600), `check_warn_s` (900), `check_idle_warn_s` (600), and the stall beacons `stall_repeat_n` (5: one `STALL_SUSPECTED` after this many identical tool commands in a row) and `stall_window_s` (1800: a stream that grows this long without a tool step), 0 switching each off; wall-clock ceilings: `role_timeout_s` (a map role → seconds for a streaming role: `context-scout` 900, `triager` 1800, `report-fixer` 600, `registrar` 600, `reviewer` 3600, `advisor` 1800, `researcher` 2700; the `executor` and the `bounded-implementer` have none; a layer names only the walls it changes, 0 removes one; the group review uses the `reviewer` wall), `stage_timeout_s` (0, off; when set it replaces the wall of every role), `check_timeout_s` (7200, 0 off); silence ceilings: `stage_idle_timeout_s` (5400), `check_idle_timeout_s` (3600). Disk: `disk_min_gb` (5, 0 off: a run or the checks of a round do not start with less free space under the project and the temporary directory, `DISK_LOW`), `triage_repro_timeout_s` (600, 0 none: the ceiling in seconds on the read-only rerun of the reproduction of a rejected Blocker or Major finding; past it the finding is confirmed again, `TRIAGE_REPRO_UNVERIFIED`). Run-wide: `run_warn_s` (7200: a beacon when a run is longer) and `run_timeout_s` (0, off: a ceiling for the whole run); batch targets `review_rounds_batch`, `corrections_batch`, `findings_batch` (0, off: the totals of all pieces of a run); `question_warn_s` (1800: a beacon for a question waiting that long); `skill_tokens_max` (5000: the budget of the skills of one role); prompt blocks `prompt_core_tokens` (12000), `prompt_supporting_tokens` (30000) and `prompt_retrieval_tokens` (50000). |
 | `on_error` | `{<failure class>: {action, max?}}`, the form of the run-policy `on_error` (`action`: `stop`, `retry`, `retry_after`, `fallback_route`, `replan`, `reconcile`); layers merge by class; the conductor default is `unknown` → `retry` (see Provider failures) |
 | `fallback_routes` | `[{role, provider, model_class, effort?}]`: the routes a role may move to when its provider cannot serve it; default: the reviewer (grok) moves to `claude-code`, class `frontier`, effort `high`. A layer replaces the list, so a layer that names routes drops the default for roles it does not name; `[]` switches every route, the default included, off |
+| `commit` | `mode`: `final-only` (default: one commit after the registration) or `implementation-and-fixes` (see Split commits) |
 | `on_blocked` | `stop` or `report` |
 
 `limits.question_warn_s` (default 1800; 0 off) marks a question that waits too long for an answer (see Questions of the executor).
@@ -1591,6 +1802,34 @@ disabling or raising it is `OPTIONS_UNTRUSTED`. Byte caps apply independently of
 origin, tokens, the start of the digest) and what was left out; the default run is the latest. `MANIFEST_UNKNOWN` (exit 1)
 means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer lists the five heaviest blocks by role.
 
+### Split commits: `commit.mode`
+
+`commit.mode` of the run options (`final-only` by default) chooses how the commits of a piece come about, when the run policy
+commits (`git_action: commit`):
+
+| Mode | Commits of a piece |
+| --- | --- |
+| `final-only` | one commit after the registration, as before: same message, same receipts (`receipts/commit.json`, `commit-request.json`) |
+| `implementation-and-fixes` | the **checkpoint** (stage `implementation`, role `executor`) once the checks of the first round are green and before the first review; one **fix** commit (stage `correction.<n>`, role `fix`) per green correction of review round `n`; the **final** commit (stage `final`, role `executor`) of what is left: the records of the piece, the plan files and any path no stage took |
+
+A stage commit takes the product paths of the piece that the tree still shows as changed (what the executor rounds and the
+checks changed, without the runtime artifacts set aside, without the artifact folder and without anyone else's dirty
+paths): the work source commits exactly those paths (the planner bridge asks its commit for `--paths-only`; a path
+the task files of the item do not cover waits for the final commit). A stage that changed no product path commits nothing.
+Each commit carries the trailers `Plan-Run` (the work-source run), `Plan-Attempt` and `Plan-Stage`; a fix commit also
+`Plan-Review: <conductor run>/<item>/review.<n>` and `Plan-Findings: <finding keys>`. The checkpoint is not acceptance:
+the review receipt and `finish` decide whether the piece is done. A split run never overlaps the review with the checks (`checks.overlap_review` is ignored): the first review starts after the checkpoint.
+
+`state.items.<ref>.commits` lists `{stage, sha, parent}` of the stage commits. **The review of the piece starts from the
+`parent` of its first commit**, not from HEAD (which would show an empty diff once the implementation is committed); the
+audit of a later round also reads the paths of the fix commits. The group review and the handoff to a later piece read all
+the commits of a piece: the diff is the range from the parent of the first to the last commit.
+
+Receipts are kept per stage: `receipts/commit-<stage>.json` and `commit-<stage>-request.json` (`commit-implementation`,
+`commit-correction.2`); the final commit keeps the names `commit.json` and `commit-request.json`. The steps are `checkpoint`
+and `fix-commit.<n>`. If the conductor dies between the commit of a stage and its receipt, a resume finds the commit by its
+`Plan-Run`/`Plan-Attempt`/`Plan-Stage` trailers in the newest commit and closes the step with it instead of committing again. This also holds for a stage whose source call died without an answer (the step is `stopped`, `COMMIT_REFUSED`), and a resume copies every closed stage step into `state.commits` before the loop starts. The final commit of a workspace plan is never closed by the trailer alone (its workspace part is repeated).
+
 ## Files: what is committed
 
 | Path | Git | Content |
@@ -1601,7 +1840,7 @@ means the step wrote none, `RUN_UNKNOWN` that there is no such run. The observer
 | artifact folder of the piece (`artifacts_dir` of the brief; the planner: `plans/<plan>/artifacts/<item>/`) | committed | `stage-report.json` (closed), `review-receipt.json` (last review, subject/attempt, content fingerprints and finding keys), `review-verdict.json` (selector, rounds, sessions, findings with the triage's reproductions, the stream path in state), `evidence/V#.json` (check-evidence) |
 | `.swissknifeman/orch/reports/<run>/` | ignored | `observer.json`, `observer.md` (written when the run ends, after its last commit) |
 | `.swissknifeman/orch-artifacts/<run>/<item>/` | ignored | local records: the artifact folder of a source without `artifacts_dir` (a workspace plan, the file source); never in a commit of the piece. The planner bridge copies the evidence of a workspace plan item into `<plan>/artifacts/<item>/<run>/evidence/` at register and the item refers to it there; files tracked before the folder was ignored stay in the index |
-| the plan (JSON) | committed | through the work source's own commit |
+| the plan (JSON) | committed | through the work source's own commit (the final commit; with `commit.mode: implementation-and-fixes` the stage commits before it hold product files only) |
 
 ### Run records
 
@@ -1739,6 +1978,22 @@ run that is running, and a run whose `run.json` cannot be read are never listed.
 source names itself, and the aicore event journal (its compaction changes delivery offsets and is the owner's decision). The
 fallback artifacts are committed records: after `--apply` the removal shows in `git status` and is committed by the owner.
 
+**Compressing raw streams.** `orch conduct prune --compress-older-than DAYS [--dry-run] [--apply] [--json]` (instead of
+`--older-than`; the two exclude each other) keeps the runs and packs only their raw role streams: every
+`*.jsonl`, `*.txt`, `*.stderr` and `*.times` file in a `streams` folder below the run (the pieces, their earlier attempts
+under `attempts/<n>/streams/`, the run's own `streams/` of group reviews and batch reviews) becomes `<name>.gz`. The runs are
+those `--older-than` would remove (a status of `runs.PRUNABLE`, older than `DAYS`, never the latest run); the journal,
+`state.json`, the agent records, the prompts and the check logs stay as they are, so `status`, `timeline`, `observe` and the
+observer metrics read the run as before. A dry run (the default) lists the files and their size. `--apply` takes the run lease
+first (a busy lease skips the run with the reason, as `prune` does), looks at the status and age again under it, writes each
+copy under a temporary name, reads it back and compares it with the original, renames it into place and only then removes
+the original; a copy that does not read back leaves the stream as it was (`reason: not packed …`). Links are neither
+followed nor packed. Rows: `{run_id, status, age_days, compressed, bytes_before, bytes_after}` (`reason` when skipped;
+`bytes_after` null for a dry run); `--json` prints them as a `compress-result` document (`schemas/conductor/v1`). The
+readers of streams take the packed file in place of a missing one through `process.open_stream(path)`
+(`<path>` else `<path>.gz`): the last command of a beacon, `scripts/step-profile.py` (with its `.times`), and
+`scripts/run-usage.py` reads only `progress.jsonl`, which is never packed. The observer reads no stream at all.
+
 ## Observer
 
 The observer only reads: the journal and state of the run and the `orch.*` and `planner.*` events of the
@@ -1783,16 +2038,42 @@ the full `test.sh` or `affected-tests.py --run`, or a full `test.sh` and its `-p
 the proposal names concrete new or failing diagnostics or a faster local variant, and the conductor keeps the named
 acceptance checks and the phase gates.
 
+### Observer — item metrics
+
+`metrics` of `observer.json` (and the table *Item metrics* of `observer.md`) holds the metrics of every piece, written at
+the end of every run with or without debug (`observer.item_metrics(run_dir)`, computed in `observer/metrics.py`). Sources:
+`progress.jsonl`, `state.json`, `agents/*/{request,result,usage}.json` and `supervisor.jsonl`; never a raw stream. One row
+per piece (state order):
+
+| Field | Meaning |
+| --- | --- |
+| `wall_s` | Seconds the piece was on: from its first to its last journal line within each conductor process, summed over the resumes (the time between a stop and a resume is not the piece's). |
+| `active_s` | `duration_s` of its `stage.end` lines by role group: `executor` (`executor.*`, corrections and follow-ups), `checks` (`checks.*`), `review`, `triage`, `scout`, `advice`, `registrar`, and `conductor` for the other deterministic steps (brief, prepare, register, commit). |
+| `checks_share` | `active_s.checks / wall_s` (0 without wall time); a checks round is one step, so parallel checks are not counted twice. |
+| `rounds` | Ended steps: `executor`, `review`, `checks`. |
+| `resume_repeats` | Steps started again after a resume that an earlier conductor process of the run had started. |
+| `heal` | `healed` (`RESULT_HEALED`), `repaired` (`RESULT_REPAIRED`), `unrepairable` (`REPAIR_FAILED`). |
+| `beacons` | Info lines of the piece by reason code. |
+| `tokens` | `input` (fresh), `cached` and `output` tokens of its agent runs (`usage.json`). |
+| `deviations` | Deviations recorded for the piece (`deviation_ids` of the state). |
+| `findings` | Triage `confirmed` and `rejected`, review findings `by_severity` of the current steps. |
+| `health_transitions` | Changes of the health class in `supervisor.jsonl` (`{at, from, to, reason_code, action}`) while the run was on the piece: the piece of the last journal line at or before the action, unless that line ended it. |
+
+`metrics.health_transitions` lists every transition of the run. The per-check table *Checks by command* stays as it was.
+The field is additive in `records/v1 observer-report`; a report written before it reads as before.
+
 ### Debug mode
 
 `[orch] debug` (default `false`) is set per machine (`~/.config/swissknifeman/config.toml`), per project
 (`<project>/.swissknifeman/config.toml`, wins over the machine) or for one run with `run`/`resume --debug` or
 `--no-debug` (wins over both; `SKM_ORCH_DEBUG` and `--config` sit in between). With it on, the run prints the beacon
 `DEBUG_MODE` after `run.start` and after every resume: the layer that switched it on, the observer protocol
-(`dev-skills/orch-debug/SKILL.md`) and the folder `<run>/debug/` with `journal.md`, `metrics.md` and `findings.md`
-skeletons (created once; a resume keeps what the observer wrote). `run.json` records `debug`. The roles, their
-prompts and the decisions of the conductor do not change: the mode tells the agent who watches the run to work as a
-team-lead observer and where to keep its record.
+(`dev-skills/orch-debug/SKILL.md`), the observer report with the per-item metrics (`.swissknifeman/orch/reports/<run>/
+observer.md`, `orch conduct observe --run <run>`) and `<run>/debug/journal.md` for the notes of the observer. The
+announcement writes no file: the metrics are the observer's (written with or without debug), and `<run>/debug/journal.md`
+is created by the agent of the orch-debug protocol only when it has something to record (a resume never touches it).
+`run.json` records `debug`. The roles, their prompts, the decisions of the conductor and the lifecycle facts it records do
+not change: the mode tells the agent who watches the run to work as a team-lead observer and where to keep its record.
 
 ## Configuration
 

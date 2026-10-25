@@ -136,6 +136,15 @@ class PolicyTests(SupervisorCase):
         self.machine('[orch.supervisor]\nrecover = "notify"\n')
         self.assertEqual("notify", settings.load(project=self.project, config_file=invocation).supervisor["recover"])
 
+    def test_an_invocation_can_only_lengthen_the_recovery_window(self):
+        self.machine('[orch.supervisor]\nrecover = "resume"\nmax_recoveries = 3\nwindow_s = 3600\n')
+        invocation = self.project.parent / "invocation.toml"
+        for given, expected in ((10, 3600), (7200, 7200)):
+            with self.subTest(window_s=given):
+                invocation.write_text(f"schema_version = 1\n[orch.supervisor]\nwindow_s = {given}\n", encoding="utf-8")
+                self.assertEqual(expected, settings.load(project=self.project, config_file=invocation).supervisor["window_s"])
+        self.assertEqual(3600, self.policy().window_s)
+
     def test_a_project_file_cannot_set_the_authority_keys(self):
         (self.project / ".swissknifeman").mkdir()
         for line in ('recover = "resume"', "max_recoveries = 9", "window_s = 10"):
@@ -236,7 +245,7 @@ class ClassTableTests(SupervisorCase):
             taken.append(run_dir)
             return run_dir / "supervisor" / "snapshot-x.json"
 
-        def stop(run_dir, policy, *, before_signal=None):
+        def stop(run_dir, policy, *, before_signal=None, expected=None):
             if stopped["outcome"] in ("stopped", "failed") and before_signal:
                 before_signal()
             return stopped
@@ -397,6 +406,36 @@ class BreakerTests(SupervisorCase):
         found = self.once(policy, now=NOW + 30)
         self.assertEqual(["reap", "resume"], self.names(found), "the breaker is closed: the run is a candidate again")
         self.assertIsNone(self.memory()["given_up"])
+
+    def test_the_recovery_is_saved_before_the_resume_is_launched(self):
+        path = runs_root(self.project) / supervisor.STATE_DOC
+        seen = []
+
+        def launch(project, run_id, config_file=None):
+            seen.append(records.read(path, "supervisor-state")["runs"][run_id]["recoveries"])
+            return {"pid": 4242, "log": "resume-1.log"}
+
+        self.spawn.side_effect = launch
+        self.once(self.policy(), now=NOW)
+        self.assertEqual([1], [len(found) for found in seen], "the breaker already counted the launch when it happened")
+
+    def test_a_run_that_reap_finds_not_running_is_not_resumed(self):
+        with mock.patch.object(supervisor, "reap", return_value={"killed": 0, "closed": 0, "skipped": "not running"}):
+            found = self.once(self.policy(), now=NOW)
+        self.assertEqual(["reap"], self.names(found))
+        self.spawn.assert_not_called()
+
+    def test_the_stop_that_forbids_a_resume_is_read_again_after_reap(self):
+        def reap(*args, **kwargs):
+            store = RunStore(self.project, self.directory.name)
+            _, state = store.load()
+            store.save({**state, "stop": {"code": "PROVIDER_AUTH"}})
+            return {"killed": 0, "closed": 0}
+
+        with mock.patch.object(supervisor, "reap", side_effect=reap):
+            found = self.once(self.policy(), now=NOW)
+        self.assertEqual(["reap", "notify"], self.names(found))
+        self.spawn.assert_not_called()
 
     def test_the_memory_is_a_valid_record_and_a_damaged_one_stops_the_pass(self):
         self.once(self.policy())
@@ -561,6 +600,16 @@ class StopConductorTests(SupervisorCase):
         result, sent = self.ladder(frees_after=0, identity=lambda owner: next(calls, "gone"))
         self.assertEqual([(4242, "SIGINT")], sent[1:])
         self.assertEqual("identity_mismatch", result["outcome"])
+
+    def test_a_new_owner_of_the_lease_is_not_signalled(self):
+        directory = self.make_run()
+        with mock.patch.object(supervisor.RunLease, "held", return_value=True), \
+                mock.patch.object(supervisor.RunLease, "owner", return_value=self.owner(pid=5151, start_ticks=900)), \
+                mock.patch.object(supervisor, "identity_problem", return_value=None), \
+                mock.patch.object(supervisor.os, "kill", side_effect=AssertionError("signal to a new owner")):
+            result = supervisor.stop_conductor(directory, self.policy(), expected={"pid": 4242, "start_ticks": 777, "boot_id": "boot-a"})
+        self.assertEqual("identity_mismatch", result["outcome"])
+        self.assertIn("lease owner changed", result["detail"])
 
     def test_a_free_lease_needs_no_signal(self):
         directory = self.make_run()

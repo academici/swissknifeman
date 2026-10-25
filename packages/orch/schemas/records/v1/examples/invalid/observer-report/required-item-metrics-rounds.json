@@ -1,0 +1,26 @@
+{
+  "schema": "orch-conductor-observer/v1",
+  "run": "cnd-20261025T100000Z-a1b2c3",
+  "beacons": {},
+  "red_checks": {},
+  "items": [],
+  "metrics": {
+    "items": [
+      {
+        "item": "W1",
+        "wall_s": 10.0,
+        "active_s": {},
+        "checks_share": 0.0,
+        "resume_repeats": 0,
+        "heal": {"healed": 0, "repaired": 0, "unrepairable": 0},
+        "beacons": {},
+        "tokens": {"input": 0, "cached": 0, "output": 0},
+        "deviations": 0,
+        "findings": {"confirmed": 0, "rejected": 0, "by_severity": {}},
+        "health_transitions": []
+      }
+    ],
+    "health_transitions": []
+  },
+  "proposals": []
+}

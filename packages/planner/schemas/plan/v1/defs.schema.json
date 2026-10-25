@@ -77,6 +77,33 @@
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/modelClass",
           "description": "Minimum model class."
         },
+        "correction": {
+          "additionalProperties": false,
+          "description": "Minimum route for a bounded correction of recorded review findings; without it a correction is checked against this route.",
+          "properties": {
+            "class": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/modelClass",
+              "description": "Minimum model class of a correction."
+            },
+            "effort": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
+              "description": "Minimum effort of a correction."
+            },
+            "model": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Model."
+            },
+            "provider": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+              "description": "Provider."
+            }
+          },
+          "required": [
+            "class",
+            "effort"
+          ],
+          "type": "object"
+        },
         "effort": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/effort",
           "description": "Minimum effort."

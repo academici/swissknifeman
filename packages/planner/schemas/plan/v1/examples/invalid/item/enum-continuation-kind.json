@@ -1,0 +1,57 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "a",
+  "status": "in_progress",
+  "summary": "a",
+  "why": "a",
+  "scope": {
+    "include": [],
+    "exclude": []
+  },
+  "route": {
+    "class": "economy",
+    "effort": "low",
+    "correction": {
+      "class": "economy",
+      "effort": "low"
+    }
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "updated_at": "2026-01-02T03:04:05Z",
+  "result": {
+    "started_at": "2026-01-02T03:04:05Z",
+    "executor": {
+      "provider": "claude-code",
+      "model": "haiku",
+      "session": "s2"
+    },
+    "continuation": {
+      "kind": "rework",
+      "attempt_id": "att-1",
+      "previous_executor": {
+        "provider": "claude-code",
+        "model": "opus",
+        "session": "s1"
+      },
+      "executor": {
+        "provider": "claude-code",
+        "model": "haiku",
+        "session": "s2"
+      },
+      "receipt": "@plan/artifacts/review-receipt.json",
+      "findings": [
+        "fk-aaaaaaaaaaaaaaaa"
+      ]
+    }
+  }
+}

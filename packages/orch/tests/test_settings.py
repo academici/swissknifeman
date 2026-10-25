@@ -66,6 +66,33 @@ class LoadTests(SettingsCase):
         found = self.load(config_file=path, env={**self.env, "SKM_ORCH_ENGINE": "cao"})
         self.assertEqual(found.engine, "claude-only")
 
+    def test_the_autopilot_keys_keep_every_layer_and_allowed_only_the_machine(self):
+        self.machine("[orch.autopilot]\nallowed = true\nmax_runs = 8\n")
+        self.project_file("[orch.autopilot]\nenabled = true\nmax_runs = 50\n")
+        path = self.config_file("[orch.autopilot]\nmax_runs = 4\n")
+        found = self.load(project=self.project, config_file=path).autopilot
+        self.assertEqual([("defaults", 20), ("machine", 8), ("project", 50), ("invocation", 4)],
+                         [(row["layer"], row["value"]) for row in found["max_runs"]])
+        self.assertEqual([("defaults", False), ("machine", True)], [(row["layer"], row["value"]) for row in found["allowed"]])
+        self.assertEqual(set(settings.AUTOPILOT_KEYS), set(found))
+        self.project_file("[orch.autopilot]\nallowed = true\n")
+        with self.assertRaises(ConfigError) as raised:
+            self.load(project=self.project)
+        self.assertEqual("CONFIG_LAYER_FORBIDDEN", raised.exception.code)
+
+    def test_autopilot_poll_s_is_an_integer_so_the_digest_of_a_run_stays_valid(self):
+        self.machine("[orch.autopilot]\npoll_s = 0.2\n")
+        with self.assertRaises(ConfigError):  # a float here would break settings.config_digest of every child run
+            self.load()
+        self.machine("[orch.autopilot]\npoll_s = 2\n")
+        self.assertTrue(settings.config_digest(self.load()).startswith("sha256:"))
+
+    def test_a_reset_gives_the_default_back_in_the_history(self):
+        self.machine("[orch.autopilot]\nmax_runs = 8\n")
+        self.project_file('[orch]\n_unset = ["autopilot.max_runs"]\n')
+        rows = self.load(project=self.project).autopilot["max_runs"]
+        self.assertEqual((("defaults", 20), 20), ((rows[0]["layer"], rows[0]["value"]), rows[-1]["value"]))
+
     def test_an_unknown_engine_is_refused(self):
         self.machine('[orch]\nengine = "tmux"\n')
         with self.assertRaises(ConfigError):

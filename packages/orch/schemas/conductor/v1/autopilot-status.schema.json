@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:autopilot-status:v1",
+  "title": "autopilot-status",
+  "description": "What `orch conduct autopilot status --json` prints: the state of the autopilot of the project (autopilot.json, records/v1 autopilot-state), whether a controller holds autopilot.lock, and a request it has not read yet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "status",
+    "alive",
+    "state",
+    "request"
+  ],
+  "properties": {
+    "$schema": {
+      "description": "Producer schema.",
+      "const": "urn:swissknifeman:orch:conductor:autopilot-status:v1"
+    },
+    "status": {
+      "description": "none (no session yet), running, paused, draining, stopped, or dead (a session that did not stop and whose controller no longer holds the lock).",
+      "enum": [
+        "none",
+        "running",
+        "paused",
+        "draining",
+        "stopped",
+        "dead"
+      ]
+    },
+    "alive": {
+      "description": "A controller holds <runs root>/autopilot.lock.",
+      "type": "boolean"
+    },
+    "state": {
+      "description": "autopilot.json as written (records/v1 autopilot-state), null when there is none.",
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "request": {
+      "description": "autopilot.request.json not read yet (records/v1 autopilot-request), null when there is none.",
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "$defs": {}
+}

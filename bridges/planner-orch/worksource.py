@@ -26,7 +26,10 @@ and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a 
 - ``decision`` records an answered question of an item (an owner's answer, an applied advice or panel recommendation)
   as an accepted decision ``D#`` that applies to the item (``plan.py add-decision``) with an ``origin`` that names the
   question (``question_key``, ``question_digest``); a repeat for the same ``question_key`` and item changes nothing, so a
-  later run of the item finds the decision in its brief and does not ask the question again.
+  later run of the item finds the decision in its brief and does not ask the question again;
+- ``readiness`` (read-only) answers the readiness of every detailed phase (``plan.py readiness status <plan> --json``:
+  id, status, digest) and the next lane (``plan.py next <plan> --parallel 1 --json``, read as ``claim`` reads it:
+  ``run-items`` with its items, or another kind with a message); a refusal of the planner is ``refused`` with its code.
 
 An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
 ``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
@@ -53,7 +56,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -146,18 +149,31 @@ def _held_by(plan: str, run_id: str, plans_root) -> str | None:
     return None
 
 
+def next_lane(plan: str, plans_root) -> dict:
+    """The first lane of ``plan.py next <plan> --parallel 1 --json`` as ``{kind, items, phase, message}``: ``run-items``
+    with its items when one is ready, else the kind of the semantic next step with why nothing runs (a ``run-items`` step
+    without a free lane, such as an item already in progress, is ``waiting``). The one reading of ``next`` for ``claim``
+    and ``readiness``."""
+    ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
+    for lane in ready.get("lanes", []):
+        if lane.get("kind") == "run-items" and lane.get("items"):
+            return {"kind": "run-items", "items": list(lane["items"]), "phase": lane.get("phase"), "message": None}
+    upcoming = ready.get("next") or {}
+    kind = upcoming.get("kind") if upcoming.get("kind") not in (None, "", "run-items") else "waiting"
+    return {"kind": kind, "items": [], "phase": upcoming.get("phase"),
+            "message": upcoming.get("reason") or upcoming.get("exact") or "no item is ready"}
+
+
 def _candidate(plan: str, run_id: str, plans_root) -> tuple:
     """``(ref, None)`` of the item to claim, or ``(None, message)`` when nothing is ready; ``_LANE`` keeps the whole lane."""
     held = _held_by(plan, run_id, plans_root)  # a repeated claim of the same run answers for its own item
     if held:
         return held, None
-    ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
-    for lane in ready.get("lanes", []):
-        if lane.get("kind") == "run-items" and lane.get("items"):
-            _LANE[:] = list(lane["items"])
-            return lane["items"][0], None
-    upcoming = ready.get("next") or {}
-    return None, upcoming.get("reason") or upcoming.get("exact") or "no item is ready"
+    lane = next_lane(plan, plans_root)
+    if lane["kind"] == "run-items":
+        _LANE[:] = lane["items"]
+        return lane["items"][0], None
+    return None, lane["message"]
 
 
 def _overlay(document: dict) -> dict | None:
@@ -298,6 +314,10 @@ def op_claim(fields: dict) -> dict:
             answer["depends_on"] = [dep for dep in doc["depends_on"] if isinstance(dep, str)]
         if isinstance(doc.get("route"), dict):
             answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
+            if isinstance(doc["route"].get("correction"), dict):  # the minimum of a bounded correction (P7.3)
+                answer["route"]["correction"] = {key: doc["route"]["correction"][key]
+                                                 for key in ("class", "effort", "provider", "model")
+                                                 if key in doc["route"]["correction"]}
         context = plan_json(["context", plan, ref, "--stdout"], plans_root)
         answer["scenario"], answer["scenario_source"], layers = orchestration_of(context, ref)
         if fields.get("scenario"):  # the invocation (`--scenario`) wins over the plan's own scenario
@@ -646,6 +666,13 @@ _FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-o
 
 
 _PLAN_FILE = re.compile(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$")
+_OUTSIDE_PRODUCT = re.compile(r"PATH_OUTSIDE_SCOPE: paths outside the product paths of the item: (.*?); --paths-only")
+
+
+def _outside_product(text: str) -> list:
+    """The paths a ``--paths-only`` refusal (``PATH_OUTSIDE_SCOPE``) names as not covered by the task files of the item."""
+    found = _OUTSIDE_PRODUCT.search(text or "")
+    return re.findall(r"'([^']+)'", found.group(1)) if found else []
 
 
 def _foreign_paths(text: str) -> list:
@@ -668,13 +695,35 @@ def op_commit(fields: dict) -> dict:
 
 
 def _commit(fields: dict) -> dict:
-    """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op."""
-    argv = ["commit", fields["plan"], fields["ref"], "--role", "executor"]
-    for path in fields.get("paths") or []:
-        argv += ["--path", path]
-    if fields.get("actor"):
-        argv += ["--actor", actor_text(fields["actor"])]
-    done = plan_py([*argv, "--json"], fields.get("plans_root"))
+    """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op.
+
+    A split run names a ``stage``: ``implementation`` and ``correction.<n>`` commit exactly the product paths of the stage
+    (``--paths-only``: no other task file, no plan file, no workspace commit; a path the task files do not cover stays for
+    the final commit), ``final`` (and no stage) is the commit of the plan files and the rest. ``role`` (``executor``,
+    ``fix``) and ``trailers`` go to the commit as given."""
+    stage = fields.get("stage")
+    paths = list(fields.get("paths") or [])
+    staged = stage not in (None, "final")
+    deferred = []  # product paths the task files of the item do not cover: the final commit takes them
+    while True:
+        argv = ["commit", fields["plan"], fields["ref"], "--role", fields.get("role") or "executor"]
+        for path in paths:
+            argv += ["--path", path]
+        for trailer in fields.get("trailers") or []:
+            argv += ["--trailer", trailer]
+        if staged:
+            argv.append("--paths-only")
+        if fields.get("actor"):
+            argv += ["--actor", actor_text(fields["actor"])]
+        done = plan_py([*argv, "--json"], fields.get("plans_root"))
+        outside = _outside_product(done.stderr or done.stdout) if staged and done.returncode else []
+        if not outside or not set(outside) <= set(paths):
+            break
+        deferred += outside
+        paths = [path for path in paths if path not in outside]
+        if not paths:
+            return {"op": "commit", "outcome": "no-op", "message": "the task files cover none of the paths of the stage: "
+                    + ", ".join(deferred)[:900]}
     left = []
     foreign = _foreign_paths(done.stderr or done.stdout) if done.returncode else []
     if foreign and (fields.get("paths") or _only_plan_dirt(done.stderr or done.stdout)):
@@ -705,6 +754,8 @@ def _commit(fields: dict) -> dict:
         answer.update(repo=result.get("repo", "source"), workspace_sha=result.get("workspace_sha"),
                       workspace_commit=split)
     notes = []
+    if deferred:
+        notes.append("not covered by the task files, left for the final commit: " + ", ".join(deferred))
     if left:
         notes.append("left outside, not the work of this piece: " + ", ".join(left))
     if split.get("error"):  # the product commit stands; the plan files wait for the next commit or `workspace sync`
@@ -840,6 +891,22 @@ def op_decision(fields: dict) -> dict:
     return {"op": "decision", "outcome": "recorded", **({"decision_id": found.group(0)} if found else {})}
 
 
+def op_readiness(fields: dict) -> dict:
+    """The readiness of every detailed phase (``plan.py readiness status <plan> --json``: id, status, digest) and the next
+    lane (:func:`next_lane`, the reading of ``claim``). Read-only; a refusal of the planner is ``refused`` with its code."""
+    plan_ref, plans_root = fields["collection"], fields.get("plans_root")
+    try:
+        found = plan_json(["readiness", "status", plan_ref, "--json"], plans_root, code="READINESS_UNREADABLE")
+        phases = [{"id": row["id"], "status": row["status"], "digest": row["digest"]} for row in found["phases"]]
+        lane = next_lane(plan_ref, plans_root)
+    except Blocked as blocked:
+        return {"op": "readiness", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    except (KeyError, TypeError) as error:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_UNREADABLE",
+                "message": f"plan.py readiness status printed an unexpected document: {error!r}"}
+    return {"op": "readiness", "outcome": "ok", "phases": phases, "next": lane}
+
+
 # ------------------------------------------------------------------------------------------------ protocol
 
 
@@ -869,7 +936,7 @@ def invoke(request_id: str, request: dict) -> None:
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
                "release": op_release, "note": op_note, "research": op_research,
-               "decision": op_decision}[fields["op"]]
+               "decision": op_decision, "readiness": op_readiness}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

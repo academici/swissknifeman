@@ -1,0 +1,5 @@
+{
+  "op": "readiness",
+  "collection": "PLAN1",
+  "plans_root": "plans"
+}

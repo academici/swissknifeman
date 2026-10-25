@@ -3,7 +3,9 @@
 State: ``order`` (references in plan order), ``items`` (per reference: ``status``, ``title``, ``scenario``,
 ``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
 ``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
-``register``, ``release``, ``decision``); ``no_decision`` makes the source a plugin without the ``decision`` operation.
+``register``, ``release``, ``decision``, ``readiness``); ``no_decision`` and ``no_readiness`` make the source a plugin
+without the ``decision`` or ``readiness`` operation. ``readiness`` (``phases``, ``next``, ``phase``) is what ``readiness``
+answers; ``reopen_blocked`` gives a piece registered blocked back as ``todo`` at once.
 An accepted ``decision`` is kept in ``decisions`` and in the ``decisions`` of its item, which the next brief carries
 into the execution-input (like the planner bridge, ``question_key`` and ``question_digest`` included). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
 """
@@ -137,6 +139,8 @@ def register(state, given, project):
             for key in given.get("evidence", {})} if state.get("workspace_plan") else {}
     state["registered"][attempt] = given["status"]
     item["status"] = given["status"]
+    if given["status"] == "blocked" and state.get("reopen_blocked"):  # the owner reopened the piece at once
+        item["status"], item["holder"] = "todo", None
     if kept:
         item["evidence_kept"] = kept
     item["report"] = given["report"]
@@ -146,16 +150,24 @@ def register(state, given, project):
 
 
 def commit(state, given, project):
+    """A commit with a ``stage`` (a split run) takes exactly the ``paths`` it is given and carries the ``trailers``; one without
+    a stage takes everything that is dirty, as the first conductor tests expect."""
     if "commit" in state.get("refuse", []):
         state["refuse"].remove("commit")
         return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_TEST_REFUSAL", "message": "once"}
     git = ["git", "-C", project]
-    subprocess.run(git + ["add", "-A"], check=True, capture_output=True)
-    if subprocess.run(git + ["diff", "--cached", "--quiet"]).returncode == 0:
+    staged = given.get("stage") is not None
+    only = ["--", *given["paths"]] if staged else []
+    if staged and not given["paths"]:
+        return {"op": "commit", "outcome": "no-op", "message": "no paths to commit"}
+    subprocess.run(git + ["add", *(only or ["-A"])], check=True, capture_output=True)
+    if subprocess.run(git + ["diff", "--cached", "--quiet", *only]).returncode == 0:
         return {"op": "commit", "outcome": "no-op", "message": "nothing to commit"}
-    subprocess.run(git + ["commit", "-q", "-m", f"feat: {given['ref']}"], check=True, capture_output=True)
+    message = f"feat: {given['ref']}" + ("\n\n" + "\n".join(given["trailers"]) if given.get("trailers") else "")
+    subprocess.run(git + ["commit", "-q", "-m", message, *only], check=True, capture_output=True)
     sha = subprocess.run(git + ["rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
-    state["commits"].append({"ref": given["ref"], "sha": sha, "paths": given["paths"]})
+    state["commits"].append({"ref": given["ref"], "sha": sha, "paths": given["paths"],
+                             **{key: given[key] for key in ("role", "stage", "trailers") if key in given}})
     return {"op": "commit", "outcome": "committed", "sha": sha}
 
 
@@ -189,6 +201,20 @@ def research(state, given, project):
     target.write_text(json.dumps(given["result"], indent=2) + "\n", encoding="utf-8")
     state.setdefault("research", []).append({"ref": given["ref"], "number": given["number"], "path": relative})
     return {"op": "research", "outcome": "recorded", "path": relative}
+
+
+def readiness(state, given):
+    """The readiness the test set: ``readiness`` of the state (``phases``, ``next``; default no phases and the first todo
+    item as a run-items lane of the phase ``readiness.phase``, null when unset), or a refusal once when ``refuse`` names
+    it."""
+    if "readiness" in state.get("refuse", []):
+        state["refuse"].remove("readiness")
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_TEST_REFUSAL", "message": "once"}
+    kept = state.get("readiness") or {}
+    todo = [name for name in state["order"] if state["items"][name]["status"] == "todo"]
+    lane = ({"kind": "run-items", "items": todo[:1], "phase": kept.get("phase"), "message": None} if todo
+            else {"kind": "terminal", "items": [], "phase": None, "message": "no item is left"})
+    return {"op": "readiness", "outcome": "ok", "phases": kept.get("phases", []), "next": kept.get("next", lane)}
 
 
 def decision(state, given):
@@ -232,10 +258,15 @@ elif request.get("op") == "invoke":
     handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
                 "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
                 "release": lambda: release(state, given), "note": lambda: note(state, given),
-                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given)}
+                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given),
+                "readiness": lambda: readiness(state, given)}
     if given["op"] == "decision" and state.get("no_decision"):  # a source without the operation
         save(state)
         reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
+        sys.exit(0)
+    if given["op"] == "readiness" and state.get("no_readiness"):  # a source without the operation
+        save(state)
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source tells no readiness"})
         sys.exit(0)
     answer = handlers[given["op"]]()
     save(state)

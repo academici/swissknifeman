@@ -360,7 +360,7 @@ class FactsBeforeRulesTests(unittest.TestCase):
     def item(self, sandbox: str = "require", stages=None):
         from types import SimpleNamespace
         return SimpleNamespace(options={"instructions": {"sandbox": sandbox}, "limits": {}, "scope": {},
-                                        "stages": stages or []}, claim={}, launch_plan={})
+                                        "stages": stages or []}, claim={}, launch_plan={}, ref="W1")
 
     def instrumented(self, result):
         seen = []
@@ -410,11 +410,13 @@ class FactsBeforeRulesTests(unittest.TestCase):
                 self.assertFalse(any(probe_frames) or any(knows_frames), (probe_frames, knows_frames))
 
     def test_the_catalogs_are_loaded_outside_the_route_rules(self):
+        from aicore.provider import models
         from orch import launch
         from orch.conductor.application import route_service
         catalog = launch.load_catalog()
         load, load_frames = self.instrumented(lambda settings: catalog)
         owner = self.owner()
+        owner._catalog = mock.Mock(models=models.load_model_catalog())  # a named model is graded by the model catalog
         named = self.item(stages=[{"role": "executor", "provider": "claude-code", "model": "fixture-model"}])
         with mock.patch.object(route_service.launch, "effective_catalog", side_effect=load):
             cold = owner._route(named, "executor")

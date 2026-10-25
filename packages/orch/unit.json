@@ -25,7 +25,7 @@
                "orch.run.warning", "orch.run.waiting", "orch.work.blocked", "orch.review.added",
                "orch.deviation.recorded", "orch.deviation.resolved", "orch.provider.rate-limited",
                "orch.provider.quota-exhausted", "orch.provider.fallback", "orch.input.rebuilt", "orch.conductor.health",
-               "orch.conductor.lifecycle"],
+               "orch.conductor.lifecycle", "orch.autopilot.stopped"],
     "doctor": [
       {"id": "orch.conductor-gitignore", "category": "config", "probe": ["scripts/orch.py", "doctor", "--json"], "output": "check-result/v1"},
       {"id": "orch.sandbox", "category": "config", "probe": ["scripts/orch.py", "doctor", "--json"], "output": "check-result/v1"},

@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from aicore.provider.models import admitted_class
+
 from orch import catalog as catalogs, launch, sandbox
 from orch.conductor import gates, process, records
 from orch.conductor.domain.item import Item
@@ -113,6 +115,12 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
         except Stop as stop:
             item.routes.pop("report-fixer", None)
             unavailable["report-fixer"] = f"{stop.code}: {stop.message}"
+    if self._bounded_corrections(item):  # optional: without a route the corrections stay with the executor
+        try:
+            item.routes["bounded-implementer"] = self._selected(item, "bounded-implementer", persist)
+        except Stop as stop:
+            item.routes.pop("bounded-implementer", None)
+            unavailable["bounded-implementer"] = f"{stop.code}: {stop.message}"
     if "executor" in item.routes:
         self._route_minimum(item)
     if persist:
@@ -211,6 +219,10 @@ def admit(self, item: Item, role: str, route: dict) -> Optional[str]:
             self._route_minimum(item, route)
         except Stop as stop:
             return f"{stop.code}: {stop.message}"
+    if role == "bounded-implementer":  # also a fallback route taken after a quota: the same minimum every time
+        why = route_rules.correction_refusal(correction_minimum(item), route, item.ref)
+        if why:
+            return why
     return self.route_problem(route) or self._claude_sandbox_problem(item, route)
 
 
@@ -271,11 +283,67 @@ def route(self, item: Item, role: str, override: Optional[dict] = None) -> dict:
             chosen["model"] = self._catalog_get().resolve_model(chosen["provider"], chosen["model_class"])
         except catalogs.CatalogError as error:
             raise Stop(error.code, str(error)) from None
+    chosen = named_model_class(self, item, role, target, chosen)
     builds = route_rules.builds_argv(role, chosen["effort"], self.conductor)
     return route_rules.route(role=role, item_options=item.options, chosen=chosen, entry=entry,
                              conductor_cfg=self.conductor, project=self.project,
                              launch_catalog=self._launch_catalog() if builds else None,
                              access=self._launch_access() if builds else None)
+
+
+def named_model_class(self, item: Item, role: str, target: dict, chosen: dict) -> dict:
+    """``chosen`` with the class the model catalog knows for a model the layers name (``admitted_class``), when that is
+    lower than the label of the stage or of the launch entry: the route minimum then sees the model, not the label. A
+    model the catalog does not know keeps the label and is said once per role (``ROUTE_MODEL_UNKNOWN``, info)."""
+    if not target["model"]:
+        return chosen
+    known = admitted_class(self._catalog_get().models, chosen["provider"], target["model"])
+    if known is None:
+        noted = self.__dict__.setdefault("_model_unknown_noted", set())
+        mark = (item.ref, role, chosen["provider"], target["model"])
+        if mark not in noted and self.progress is not None:
+            noted.add(mark)
+            self.progress.emit("info", item=item.ref, role=role, reason_code="ROUTE_MODEL_UNKNOWN",
+                               message=f"{role}: {chosen['provider']}/{target['model']} is not in the model catalog; the "
+                                       f"class {chosen['model_class']} of its stage or launch entry is taken as is")
+        return chosen
+    lowered = route_rules.lowered_class(chosen["model_class"], known)
+    return chosen if lowered == chosen["model_class"] else {**chosen, "model_class": lowered}
+
+
+def bounded_corrections(self, item: Item) -> bool:
+    """Whether the corrections of confirmed review findings may run on the bounded-implementer
+    (``review.correction_route``) in a piece that is reviewed."""
+    return item.options["review"].get("correction_route") == "bounded-implementer" and self._reviewing(item)
+
+
+def correction_minimum(item: Item) -> dict:
+    """:func:`policies.routing.correction_minimum` of ``item``: its claim's ``route.correction``, else the full ordinary
+    minimum (the claim's route and the execution-input ``route.minimum`` with its provider and model pins)."""
+    return route_rules.correction_minimum(item.claim.get("route"), (item.input_doc.get("route") or {}).get("minimum"))
+
+
+def correction_role(self, item: Item, blockers: bool) -> str:
+    """The role that runs the next correction of confirmed review findings. ``executor`` unless
+    ``review.correction_route`` is ``bounded-implementer`` and the correction has no Blocker finding; the bounded route
+    must exist, start here and meet the claim's ``route.correction`` (else its ``route``), or the executor takes it with
+    ``CORRECTION_ROUTE_REFUSED`` (info)."""
+    if item.options["review"].get("correction_route") != "bounded-implementer" or blockers:
+        return "executor"
+    route = item.routes.get("bounded-implementer")
+    if route is None:
+        try:
+            self._route(item, "bounded-implementer")
+            why = "ROUTE_UNAVAILABLE: no bounded-implementer route could be selected for this piece"
+        except Stop as stop:
+            why = f"{stop.code}: {stop.message}"
+    else:
+        why = self._admit(item, "bounded-implementer", route)
+    if why is None:
+        return "bounded-implementer"
+    self.progress.emit("info", item=item.ref, role="bounded-implementer", reason_code="CORRECTION_ROUTE_REFUSED",
+                       message=f"the correction stays with the executor: {why}")
+    return "executor"
 
 
 def reviewer_selector(self, item: Item) -> tuple:

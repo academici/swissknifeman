@@ -652,6 +652,22 @@ class CorrectionTests(ConductorCase):
         notes = [issue["text"] for issue in self.source()["items"]["W1"]["report"]["open_issues"]]
         self.assertTrue(any("changed no product file" in text for text in notes), notes)
 
+    def test_an_unchanged_final_correction_is_not_hidden_by_the_clock_of_the_review_receipt(self):
+        """The receipt the conductor rewrites before the executor carries ``at``; a second that ticks over meanwhile (a loaded
+        machine) must not make the untouched tree look changed."""
+        import itertools
+        ticks = itertools.count(1)
+        triage = {"result": {"confirmed": [{"finding": "F1", "reproduction": {"cmd": "cat out/W1.txt", "exit": 0,
+                                                                              "observed": "ok"}, "fix": "fix it"}],
+                             "rejected": []}}
+        self.script({"executor": [executor_ok("W1"), {"write": {"out/W1.txt": "done\n"}, "result": report("W1")},
+                                  {"result": report("W1")}],
+                     "reviewer": [FINDING, FINDING], "triager": [triage, triage]})
+        with mock.patch.object(checks_mod, "_utc", side_effect=lambda: f"2026-01-01T00:{next(ticks) // 60:02d}:{next(ticks) % 60:02d}Z"):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.state(err)["items"]["W1"]["review_debt"], {"round": 2, "findings": ["F1"], "corrected": False})
+
     def test_review_debt_is_said_once_when_a_resume_walks_the_closed_rounds(self):
         import threading
         from types import SimpleNamespace

@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "3fb80a900cdc",
-  "reason": "merge stable/p7 into main after v0.34.0: plugin manifest version 0.34.0 with the P7/P8 planner commands",
+  "captured_from": "1603bfd8c988",
+  "reason": "merge stable/p7 into main: union of planner error codes (REWORK_LIMIT, CONTINUATION_INVALID, PATH_OUTSIDE_SCOPE)",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

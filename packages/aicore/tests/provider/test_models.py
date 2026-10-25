@@ -62,6 +62,55 @@ class TestPackagedCatalog(unittest.TestCase):
             item.class_selectors["economy"].append("x")
 
 
+class TestAdmittedClass(unittest.TestCase):
+    """The class of a concrete model; the planner's stdlib ``admitted_class`` answers the same for these models."""
+
+    def setUp(self):
+        self.catalog = models.load_model_catalog()
+
+    def test_packaged_models_by_id_and_pattern(self):
+        for provider, model, expected in [
+                ("claude-code", "haiku", "economy"), ("claude-code", "claude-haiku-4-5-20251001", "economy"),
+                ("claude-code", "sonnet", "implementation"), ("claude-code", "claude-sonnet-5-5", "implementation"),
+                ("claude-code", "claude-opus-5-5", "frontier"),
+                ("codex", "gpt-5.6-luna", "economy"), ("codex", "gpt-6-luna", "economy"),
+                ("codex", "gpt-6-sol", "implementation"), ("codex", "gpt-6-astra", "frontier"),
+                ("codex", "gpt-6.1-sol", "frontier"),
+                ("grok", "grok-4.5", "economy"), ("grok", "grok-4.6", "implementation"), ("grok", "grok-4.7", "frontier")]:
+            with self.subTest(provider=provider, model=model):
+                self.assertEqual(models.admitted_class(self.catalog, provider, model), expected)
+
+    def test_unknown_provider_model_or_roleless_entry_gives_none(self):
+        self.assertIsNone(models.admitted_class(self.catalog, "nope", "haiku"))
+        self.assertIsNone(models.admitted_class(self.catalog, "claude-code", "mystery-model"))
+        self.assertIsNone(models.admitted_class(self.catalog, "claude-code", ""))
+        self.assertIsNone(models.admitted_class(self.catalog, "cursor", "auto"))  # routing-assist is no class
+
+    def inventory(self, *entries):
+        item = models.ProviderModels("p", {}, {}, models._freeze({"entries": list(entries)}))
+        return models.ModelCatalog("1", (item,))
+
+    def test_alias_is_matched_like_an_id_and_shadows_patterns(self):
+        catalog = self.inventory({"id": "big", "aliases": ["b"], "roles": ["frontier"], "patterns": ["x.*"]},
+                                 {"id": "small", "roles": ["economy"], "patterns": ["b.*"]})
+        self.assertEqual(models.admitted_class(catalog, "p", "b"), "frontier")
+        self.assertEqual(models.admitted_class(catalog, "p", "big"), "frontier")
+        self.assertEqual(models.admitted_class(catalog, "p", "bad"), "economy")  # pattern only without an id match
+
+    def test_retired_entries_are_skipped_and_the_highest_class_wins(self):
+        catalog = self.inventory({"id": "old", "roles": ["frontier"], "status": "retired", "patterns": ["m.*"]},
+                                 {"id": "m1", "roles": ["economy", "implementation"]},
+                                 {"id": "m2", "roles": ["economy"], "patterns": ["m.*"]})
+        self.assertIsNone(models.admitted_class(catalog, "p", "old"))
+        self.assertEqual(models.admitted_class(catalog, "p", "m1"), "implementation")
+        self.assertEqual(models.admitted_class(catalog, "p", "m9"), "economy")  # not the retired frontier pattern
+
+    def test_pattern_must_match_the_whole_model(self):
+        catalog = self.inventory({"id": "x", "roles": ["frontier"], "patterns": ["gpt-6"]})
+        self.assertIsNone(models.admitted_class(catalog, "p", "gpt-6-luna"))
+        self.assertEqual(models.admitted_class(catalog, "p", "gpt-6"), "frontier")
+
+
 class TestBrokenCatalogs(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()

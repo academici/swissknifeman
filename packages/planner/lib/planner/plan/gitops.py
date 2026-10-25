@@ -103,11 +103,30 @@ def _product_texts(ref: str, item: dict, target: dict) -> list[str]:
     return target.get("files", []) if "/" in ref else [f["path"] for f in item.get("task_files", [])]
 
 
+def _covered(normalized: str, product: list[str]) -> bool:
+    """Whether a product template of the item covers the normalized path (a folder: a file in it)."""
+    probe = normalized + "x" if normalized.endswith("/") else normalized
+    return any(_matches(probe, template) for template in product)
+
+
+def _outside_product(paths: list[str]) -> PlanError:
+    return PlanError("PATH_OUTSIDE_SCOPE", "paths outside the product paths of the item: "
+                     + ", ".join(repr(p) for p in paths) + "; --paths-only commits only paths that its task_files cover")
+
+
 def _allowed(plan: store.Plan, repo: Path, ref: str, role: str, item: dict, target: dict,
-             paths: list[str]) -> tuple[list[str], list[str]]:
-    """Ownership patterns of a plan that lives inside ``repo`` (the plan and its product share one repository)."""
+             paths: list[str], *, paths_only: bool = False) -> tuple[list[str], list[str]]:
+    """Ownership patterns of a plan that lives inside ``repo`` (the plan and its product share one repository).
+    ``paths_only``: exactly ``paths`` (each covered by a product template of the item), no plan files, no templates."""
     prefix = plan.root.resolve().relative_to(repo).as_posix()
     patterns, excluded = _plan_patterns(prefix, ref, role)
+    if paths_only:
+        product = [_pattern(p, repo, prefix) for p in _product_texts(ref, item, target)]
+        found = [_pattern(path, repo, prefix) for path in paths]
+        stray = [text for text, normalized in zip(paths, found) if not _covered(normalized, product)]
+        if stray:
+            raise _outside_product(stray)
+        return found, excluded
     if role != "reviewer":
         patterns += [_pattern(p, repo, prefix) for p in _product_texts(ref, item, target)]
     for path in paths:
@@ -141,10 +160,27 @@ def _route(text: str, role: str, source: Path | None, plan_root: Path, ws_repo: 
 
 
 def _workspace_allowed(plan: store.Plan, source: Path | None, ws_repo: Path, ref: str, role: str, item: dict,
-                       target: dict, paths: list[str]) -> tuple[list[str], list[str], list[str]]:
-    """``(source patterns, workspace patterns, workspace excluded)`` of a plan that lives in the workspace."""
+                       target: dict, paths: list[str], *, paths_only: bool = False
+                       ) -> tuple[list[str], list[str], list[str]]:
+    """``(source patterns, workspace patterns, workspace excluded)`` of a plan that lives in the workspace.
+    ``paths_only``: the source patterns are exactly ``paths`` (each covered by a product template of the item) and the
+    workspace part owns nothing."""
     prefix = plan.root.resolve().relative_to(ws_repo).as_posix()
     ws_patterns, ws_excluded = _plan_patterns(prefix, ref, role)
+    if paths_only:
+        product = [normalized for text in _product_texts(ref, item, target)
+                   for where, normalized in [_route(text, role, source, plan.root.resolve(), ws_repo, prefix)]
+                   if where == "source"]
+        found, stray = [], []
+        for text in paths:
+            where, normalized = _route(text, role, source, plan.root.resolve(), ws_repo, prefix)
+            if where == "source" and _covered(normalized, product):
+                found.append(normalized)
+            else:
+                stray.append(text)
+        if stray:
+            raise _outside_product(stray)
+        return found, [], ws_excluded
     src_patterns: list[str] = []
     texts = list(paths) if role == "reviewer" else [*_product_texts(ref, item, target), *paths]
     for text in texts:
@@ -277,17 +313,20 @@ def _identity_args(repo: Path) -> list[str]:
 
 
 def _commit_part(repo: Path, patterns: list[str], excluded: list[str], message: str, *, attr_root: Path | None,
-                 leave_outside: bool, dry_run: bool, allow_empty: bool = False, identity: bool = False) -> dict:
+                 leave_outside: bool, dry_run: bool, allow_empty: bool = False, identity: bool = False,
+                 literal: bool = False) -> dict:
     """One scoped commit in ``repo``: the changed paths that match ``patterns`` and not ``excluded`` go through a private
     index. ``attr_root`` is the plan directory whose ``.gitattributes`` the part keeps current (``None``: the part holds no
     plan files). Returns ``{"sha", "paths", "paths_digest", "outside"}``; ``sha`` is ``None`` for a dry run or an empty
-    selection (``allow_empty``, else ``NOTHING_TO_COMMIT``)."""
+    selection (``allow_empty``, else ``NOTHING_TO_COMMIT``). ``literal``: ``patterns`` are the exact paths of ``--paths-only``
+    (a trailing ``/`` a folder), never globs: ``src/a[1].py`` is that file and not ``src/a1.py``."""
     _ensure_not_busy(repo)
+    own = (lambda p, pat: p == pat or (pat.endswith("/") and p.startswith(pat))) if literal else _matches
     # Status index refreshes are optional: suppress them so refusals are byte-identical.
     groups = _changes(_git(repo, "--no-optional-locks", "status", "--porcelain=v2", "-z", "--untracked-files=all"))
     selected, outside = set(), set()
     for group in groups:
-        allowed = all(any(_matches(p, pat) for pat in patterns)
+        allowed = all(any(own(p, pat) for pat in patterns)
                       and not any(_matches(p, pat) for pat in excluded) for p in group)
         (selected if allowed else outside).update(group)
     # A source recreated after a rename is also a separate untracked record.
@@ -384,16 +423,24 @@ def _in_workspace(root: Path) -> tuple[str, str] | None:
 
 def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), leave_outside: bool = False,
            dry_run: bool = False, commit_type: str | None = None, scope: str | None = None,
-           summary: str | None = None, trailers: list[str] = (), actor: dict | None = None) -> dict:
+           summary: str | None = None, trailers: list[str] = (), actor: dict | None = None,
+           paths_only: bool = False) -> dict:
     """Commit precisely the changed paths of one operation; preflight precedes owned writes.
 
     A plan inside its checkout: one commit in that repository (plan files and product together). A plan in the portable
     workspace (D7): the product paths are committed in the source repository, then the plan files in the workspace
     repository under ``git.lock``, with ``Plan-Project`` and ``Plan-Source-Commit``; a failing workspace part never undoes the
     source commit.
+
+    ``paths_only`` (a stage commit of a split run): exactly ``paths``, each covered by the product templates of the item
+    (``PATH_OUTSIDE_SCOPE`` otherwise), without the plan files, the other task files and the workspace repository; the
+    dirty paths it leaves are not an error.
     """
     if role not in ("executor", "reviewer", "fix"):
         raise PlanError("CONTENT_INVALID", "commit role must be executor, reviewer or fix")
+    if paths_only and (role == "reviewer" or not list(paths)):
+        raise PlanError("CONTENT_INVALID", "--paths-only commits the given product paths of an executor or fix role")
+    leave_outside = leave_outside or paths_only
     root = Path(plan_dir).resolve()
     _target(store.load_plan(root), ref)
     found = _in_workspace(root)
@@ -401,17 +448,17 @@ def commit(plan_dir: str | Path, ref: str, *, role: str, paths: list[str] = (), 
         project_id = found[1]
         return _commit_split(root, ref, project_id, role=role, paths=list(paths), leave_outside=leave_outside,
                              dry_run=dry_run, commit_type=commit_type, scope=scope, summary=summary,
-                             trailers=list(trailers), actor=actor)
+                             trailers=list(trailers), actor=actor, paths_only=paths_only)
     repo = Path(os.fsdecode(_git(root, "rev-parse", "--show-toplevel", code="GIT_UNAVAILABLE")).removesuffix("\n")).resolve()
     with store.PlanLock(root, timeout=float(settings.for_root(root.parent).get("lock.timeout_seconds"))):
         plan = store.load_plan(root)
         item, target = _target(plan, ref)
         _ensure_not_busy(repo)
-        patterns, excluded = _allowed(plan, repo, ref, role, item, target, list(paths))
+        patterns, excluded = _allowed(plan, repo, ref, role, item, target, list(paths), paths_only=paths_only)
         message = _message(plan, ref, role, item, target, commit_type=commit_type, scope=scope,
                            summary=summary, trailers=list(trailers), actor=actor)
-        part = _commit_part(repo, patterns, excluded, message, attr_root=root, leave_outside=leave_outside,
-                            dry_run=dry_run)
+        part = _commit_part(repo, patterns, excluded, message, attr_root=None if paths_only else root,
+                            leave_outside=leave_outside, dry_run=dry_run, literal=paths_only)
         return {"sha": part["sha"], "ref": ref, "role": role, "paths": part["paths"],
                 "paths_digest": part["paths_digest"], "outside": part["outside"], "message": message,
                 "repo": "source", "workspace_sha": None, "workspace_commit": {"status": "skipped-legacy"}}
@@ -460,7 +507,7 @@ def _workspace_part(ws_repo: Path, plan: store.Plan, patterns: list[str], exclud
 
 def _commit_split(root: Path, ref: str, project_id: str, *, role: str, paths: list[str], leave_outside: bool,
                   dry_run: bool, commit_type: str | None, scope: str | None, summary: str | None, trailers: list[str],
-                  actor: dict | None) -> dict:
+                  actor: dict | None, paths_only: bool = False) -> dict:
     ws_repo = workspace.workspace_root(_in_workspace(root)[0]).resolve()
     with store.PlanLock(root, timeout=float(settings.for_root(root.parent).get("lock.timeout_seconds"))):
         plan = store.load_plan(root)
@@ -470,7 +517,8 @@ def _commit_split(root: Path, ref: str, project_id: str, *, role: str, paths: li
             source = Path(os.fsdecode(_git(plan.repo_root, "rev-parse", "--show-toplevel",
                                            code="GIT_UNAVAILABLE")).removesuffix("\n")).resolve()
             _ensure_not_busy(source)
-        src_patterns, ws_patterns, ws_excluded = _workspace_allowed(plan, source, ws_repo, ref, role, item, target, paths)
+        src_patterns, ws_patterns, ws_excluded = _workspace_allowed(plan, source, ws_repo, ref, role, item, target, paths,
+                                                                    paths_only=paths_only)
         message = _message(plan, ref, role, item, target, commit_type=commit_type, scope=scope,
                            summary=summary, trailers=trailers, actor=actor)
         # refuse a spoofed Plan-Project/Plan-Source-Commit now, before the source commit; the workspace message repeats it
@@ -479,11 +527,14 @@ def _commit_split(root: Path, ref: str, project_id: str, *, role: str, paths: li
         part = {"sha": None, "paths": [], "paths_digest": sha256(b"").hexdigest(), "outside": []}
         if source is not None:
             part = _commit_part(source, src_patterns, [".git/**"], message, attr_root=None,
-                                leave_outside=leave_outside, dry_run=dry_run, allow_empty=True)
-        ws = _workspace_part(ws_repo, plan, ws_patterns, ws_excluded, ref, role, item, target, project_id, part["sha"],
-                             dry_run=dry_run, root=root, commit_type=commit_type, scope=scope, summary=summary,
-                             trailers=trailers, actor=actor)
-        if not part["paths"] and ws["status"] == "nothing":
+                                leave_outside=leave_outside, dry_run=dry_run, allow_empty=True, literal=paths_only)
+        if paths_only:  # a stage commit leaves the plan files: no workspace part (the answer of a plan in its checkout)
+            ws = {"status": "skipped-legacy", "sha": None, "paths": [], "outside": []}
+        else:
+            ws = _workspace_part(ws_repo, plan, ws_patterns, ws_excluded, ref, role, item, target, project_id,
+                                 part["sha"], dry_run=dry_run, root=root, commit_type=commit_type, scope=scope,
+                                 summary=summary, trailers=trailers, actor=actor)
+        if not part["paths"] and (paths_only or ws["status"] == "nothing"):
             raise PlanError("NOTHING_TO_COMMIT", "no changed paths are allowed for this operation")
         primary = part if part["paths"] else ws
         workspace_commit = {"status": ws["status"], **({"error": ws["error"]} if "error" in ws else {})}

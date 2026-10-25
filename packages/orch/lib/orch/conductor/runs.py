@@ -7,6 +7,9 @@ Newest first, then by run id; an empty project gives an empty list; a run whose 
 """
 from __future__ import annotations
 
+import gzip
+import hashlib
+import os
 import re
 import shutil
 import time
@@ -17,7 +20,7 @@ from aicore.ext.plugins import safe_text
 from aicore.util import timefmt
 from aicore.util.redact import env_secrets, redact_text
 
-from orch.conductor import health as health_mod, options as opts, progress, records
+from orch.conductor import contract, health as health_mod, options as opts, progress, records
 from orch.conductor.infrastructure.files import REPORTS, RUN_FILE, STATE_FILE, runs_root, safe
 from orch.conductor.infrastructure import heartbeat as heartbeat_mod
 from orch.conductor.infrastructure.lease import RunLease
@@ -322,6 +325,142 @@ def prune(project: Path, older_than_days: int, apply: bool = False, now: Optiona
                      "removed": removed, **({"reason": reason} if reason else {}),
                      **({"local_evidence": evidence} if evidence else {})})
     return rows
+
+
+STREAM_SUFFIXES = (".jsonl", ".txt", ".stderr", ".times")
+COMPRESS_TAG = "urn:swissknifeman:orch:conductor:compress-result:v1"
+
+
+def _streams(directory: Path) -> List[Path]:
+    """The raw stream files of a run not packed yet: the files with a stream suffix in every ``streams`` folder below the
+    run (the pieces, their earlier attempts, the run's own group reviews); links are neither followed nor packed."""
+    found = []
+    for folder, _dirs, files in os.walk(directory):  # os.walk does not follow links to folders
+        if Path(folder).name == "streams":
+            found += [Path(folder) / name for name in files if name.endswith(STREAM_SUFFIXES)
+                      and not (Path(folder) / name).is_symlink() and (Path(folder) / name).is_file()]
+    return sorted(found)
+
+
+def _same(path: Path, packed: Path) -> bool:
+    """Whether the gzip file ``packed`` reads back exactly the bytes of ``path``."""
+    first, second = hashlib.sha256(), hashlib.sha256()
+    try:
+        with open(path, "rb") as plain, gzip.open(packed, "rb") as unpacked:
+            for digest, handle in ((first, plain), (second, unpacked)):
+                for chunk in iter(lambda handle=handle: handle.read(1 << 20), b""):
+                    digest.update(chunk)
+    except (OSError, EOFError):
+        return False
+    return first.digest() == second.digest()
+
+
+def _gzip(path: Path) -> int:
+    """Pack ``path`` into ``<path>.gz`` and remove ``path``: the copy is written under a temporary name, read back and
+    compared, and only then renamed into place; ``path`` goes last. The size of the packed file; ``OSError`` leaves
+    ``path`` as it was."""
+    packed = path.with_name(path.name + ".gz")
+    partial = path.with_name(f".{path.name}.gz.partial")
+    try:
+        with open(path, "rb") as plain, gzip.open(partial, "wb") as target:
+            shutil.copyfileobj(plain, target)
+        os.chmod(partial, path.stat().st_mode & 0o777)
+        if not _same(path, partial):
+            raise OSError(f"{partial.name} does not read back as {path.name}")
+        os.replace(partial, packed)
+    except BaseException:
+        partial.unlink(missing_ok=True)
+        raise
+    path.unlink()
+    return packed.stat().st_size
+
+
+def _relative(project: Path, path: Path) -> str:
+    return str(path.relative_to(project)) if project in path.parents else str(path)
+
+
+def compress(project: Path, older_than_days: int, apply: bool = False, now: Optional[float] = None) -> List[dict]:
+    """Pack the raw streams (``*/streams/*.jsonl|.txt|.stderr|.times`` → ``.gz``) of the runs ``prune`` would remove after
+    ``older_than_days`` days: a status of ``PRUNABLE``, never the latest run. Only ``apply`` packs, under the lease of the
+    run (a busy lease skips the run with its reason) and after a second look at its status and age. Rows:
+    ``{run_id, status, age_days, compressed, bytes_before, bytes_after}`` (``reason`` when skipped); a dry run gives
+    ``bytes_after`` null. The journal, the state and the records are not touched: only raw streams."""
+    root = runs_root(project)
+    keep = latest_run_id(project)
+    clock = time.time() if now is None else now
+    rows: List[dict] = []
+    try:
+        directories = sorted(path for path in root.glob("cnd-*") if (path / RUN_FILE).is_file())
+    except OSError:
+        return rows
+    for directory in directories:
+        run_id = directory.name
+        if run_id == keep:
+            continue
+        row = _row(directory)
+        age = _age_days(directory, clock)
+        if row["status"] not in PRUNABLE or age < older_than_days:
+            continue
+        files = _streams(directory)
+        if not files:
+            continue
+        before = sum(path.stat().st_size for path in files)
+        packed: List[Path] = []
+        after: Optional[int] = None
+        reason = None
+        if apply:
+            lease = RunLease(directory)
+            try:
+                lease.acquire("prune")
+            except Stop as error:
+                reason = f"{error.code}: {error.message}"
+            except FileNotFoundError:
+                reason = "run was removed by another prune"
+            else:
+                try:
+                    row = _row(directory, owned=True)
+                    age = _age_days(directory, clock)
+                    if row["status"] not in PRUNABLE or age < older_than_days or run_id == latest_run_id(project):
+                        reason = "run is no longer eligible"
+                    else:
+                        files = _streams(directory)
+                        before, after = sum(path.stat().st_size for path in files), 0
+                        for path in files:
+                            try:
+                                after += _gzip(path)
+                            except OSError as error:
+                                after += path.stat().st_size if path.exists() else 0
+                                reason = f"not packed: {_relative(project, path)}: {error}"
+                                continue
+                            packed.append(path.with_name(path.name + ".gz"))
+                finally:
+                    lease.release()
+        rows.append({"run_id": run_id, "status": row["status"], "age_days": round(age, 1),
+                     "compressed": [_relative(project, path) for path in (packed if apply else files)],
+                     "bytes_before": before, "bytes_after": after, **({"reason": reason} if reason else {})})
+    return rows
+
+
+def compress_result(rows: List[dict], apply: bool) -> dict:
+    """The ``compress-result`` document of ``prune --compress-older-than --json``, checked against its schema."""
+    doc = {"$schema": COMPRESS_TAG, "apply": bool(apply), "runs": rows}
+    found = contract.problems(doc, "compress-result")
+    if found:
+        raise Stop("RECORD_INVALID", f"compress-result: {'; '.join(found[:3])}; {records.WRITER_HINT}")
+    return doc
+
+
+def compress_text(rows: List[dict], apply: bool) -> str:
+    if not rows:
+        return "no run streams to compress"
+    out = [f"{row['run_id']}: {row['status']}, {row['age_days']} day(s) old, "
+           + (f"skipped: {row['reason']}" if row.get("reason") and not row["compressed"] else
+              f"{len(row['compressed'])} stream file(s) {'packed' if apply else 'would be packed'}, "
+              f"{row['bytes_before']} bytes" + (f" -> {row['bytes_after']} bytes" if row["bytes_after"] is not None else "")
+              + (f"; {row['reason']}" if row.get("reason") else "")) for row in rows]
+    if not apply:
+        out.append(f"{len(rows)} run(s) would have their streams compressed; repeat with --apply")
+    return "\n".join(out)
 
 
 def prune_text(rows: List[dict], apply: bool) -> str:

@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:detach-ack:v1",
+  "nonce": "fedcba9876543210",
+  "run_id": "cnd-20261024T100001Z-0a1b2c",
+  "pid": 4243,
+  "start_ticks": 9876,
+  "status": "refused",
+  "at": "2026-10-24T10:01:00Z",
+  "code": "AUTOPILOT_LAUNCH_CANCELLED",
+  "message": "launch fedcba9876543210 of run cnd-20261024T100001Z-0a1b2c is not the launch intent of the autopilot (the autopilot has no launch intent): it was cancelled or replaced; nothing was started"
+}

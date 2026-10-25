@@ -326,7 +326,7 @@ def advice_evidence(self, item: Item, *parts, diff: bool = True) -> list:
     diff of the candidate against the head."""
     found = [(kind, prompts.evidence(title, text, tag)) for kind, title, text, tag in parts]
     if diff:
-        shown = checks_mod.diff(self.project, checks_mod.head(self.project)) or "(no tracked changes)"
+        shown = checks_mod.diff(self.project, self._review_base(item)) or "(no tracked changes)"
         if len(shown) > ADVICE_DIFF_CHARS:
             shown = shown[:ADVICE_DIFF_CHARS] + "\n(cut: the diff is longer; read the files)"
         found.append(("diff", prompts.evidence("Diff of the candidate against the head", shown, "diff")))

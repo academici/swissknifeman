@@ -6,8 +6,9 @@ reports folder (``.swissknifeman/orch/reports/<run>/``, ignored run output): rep
 findings by class, idle time between stages, tokens and time by role, the beacons and mends of the run (slow or
 silent steps, rounds past a target, healed and repaired results), the share of the wall time spent in checks, stops,
 the blocks that cost the most prompt tokens by role and the prompt budget classes against their limits (both from
-``prompts/*.manifest.json``), and proposals to improve the run
-options.
+``prompts/*.manifest.json``), the metrics of every piece (``metrics``: wall and active time by role, rounds, repeats after
+a resume, mends, beacons, tokens, deviations, findings, health transitions of ``supervisor.jsonl``; always, debug or
+not, never from a raw stream), and proposals to improve the run options.
 ``follow`` prints the notable lines of a run that is still going.
 
 The package keeps the seams apart: ``reader`` (the only module that opens a file, and the incremental
@@ -30,9 +31,10 @@ from orch.conductor.observer.proposals import proposals
 from orch.conductor.observer.reader import EVENT_TYPES
 from orch.conductor.policies import review_strategy as strategy
 from orch.conductor.observer.render import markdown
+from orch.conductor.infrastructure.files import safe
 
-__all__ = ["EVENT_TYPES", "IDLE_S", "TOP_BLOCKS", "build", "follow", "markdown", "proposals", "prompt_blocks",
-           "prompt_budgets", "write_report"]
+__all__ = ["EVENT_TYPES", "IDLE_S", "TOP_BLOCKS", "build", "follow", "item_metrics", "markdown", "proposals",
+           "prompt_blocks", "prompt_budgets", "write_report"]
 
 
 def prompt_blocks(directory: Path) -> dict:
@@ -45,6 +47,21 @@ def prompt_budgets(directory: Path) -> dict:
     """``{role: {class: {max_tokens, limit, steps, over}}}`` of the prompt manifests of the run (see
     ``metrics.prompt_budgets``)."""
     return metrics.prompt_budgets(reader.manifests(directory))
+
+
+def _item_metrics(directory: Path, lines: list, state: dict, by_agent: list) -> dict:
+    folders = {safe(str(ref)): ref for ref in (state.get("items") or {})}
+    agents: dict = {}
+    for row in by_agent:
+        agents.setdefault(folders.get(row["item"], row["item"]), []).append(row)
+    return metrics.item_metrics(lines, state, agents, reader.supervisor_actions(directory))
+
+
+def item_metrics(directory: Path) -> dict:
+    """``{items: [row], health_transitions}``: the metrics of every piece of the run in ``directory`` (see
+    ``metrics.item_metrics``), from its journal, state, agent records and ``supervisor.jsonl``; debug or not."""
+    lines, _discarded = reader.journal(directory)
+    return _item_metrics(directory, lines, reader.state(directory), reader.agent_runs(directory))
 
 
 def build(directory: Path, project: Path) -> dict:
@@ -106,7 +123,8 @@ def build(directory: Path, project: Path) -> dict:
         "seconds_by_role": {role: round(value, 1) for role, value in sorted(seconds.items())},
         "scout_cache": {"runs": found["scout_runs"], "hits": found["scout_hits"]},
         "sessions": metrics.session_totals(lines),
-        "items": items, "events": counts, "event_problems": problems,
+        "items": items, "metrics": _item_metrics(directory, lines, state, by_agent),
+        "events": counts, "event_problems": problems,
     }
     if discarded:  # lines of progress.jsonl that were left out (not progress-line documents) or quarantined at write
         report["discarded_lines"] = discarded

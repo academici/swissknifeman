@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:autopilot-state:v1",
+  "title": "autopilot.json of a project",
+  "description": "The state of the autopilot controller of a project (<runs root>/autopilot.json), replaced atomically after every change while the controller holds <runs root>/autopilot.lock: the plan, the session limits and counters, the deadline, the conductor run it drives now (written as a launch intent before the child is started), the runs that wait for answers, the last runs and blockers, and the stop that ended the session.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "plan", "project", "pid", "started_at", "updated_at", "deadline_at", "mode", "limits", "counters",
+               "current", "waiting_runs", "history", "last_blockers", "stop"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:autopilot-state:v1"},
+    "plan": {"description": "Collection of the work source the session works through.", "type": "string", "minLength": 1},
+    "project": {"description": "Absolute path of the project.", "type": "string", "minLength": 1},
+    "pid": {"description": "Process id of the controller.", "type": "integer", "minimum": 1},
+    "start_ticks": {"description": "Start time of the controller process in clock ticks since boot (/proc/<pid>/stat), null when unknown.", "type": ["integer", "null"], "minimum": 0},
+    "boot_id": {"description": "Boot id of the machine the controller runs on, null when unknown.", "type": ["string", "null"]},
+    "started_at": {"description": "UTC time the session started; a restart after a crash keeps it.", "type": "string", "minLength": 1},
+    "updated_at": {"description": "UTC time of the last write.", "type": "string", "minLength": 1},
+    "deadline_at": {"description": "UTC time started_at + max_wall_s; written at the first start of the session and never moved by a restart.", "type": "string", "minLength": 1},
+    "mode": {"description": "running, paused (no new work), draining (finish the current run, then stop) or stopped.", "enum": ["running", "paused", "draining", "stopped"]},
+    "limits": {"$ref": "#/$defs/limits"},
+    "counters": {"$ref": "#/$defs/counters"},
+    "recoveries": {
+      "description": "Resumes the controller started per run after a crash, a hang or a one-time failure (max_recoveries per run).",
+      "type": "object",
+      "patternProperties": {"^cnd-[0-9A-Za-z-]+$": {"description": "Resumes of that run.", "type": "integer", "minimum": 0}},
+      "additionalProperties": false
+    },
+    "current": {"description": "The conductor run the controller drives now, null when none.", "oneOf": [{"type": "null"}, {"$ref": "#/$defs/current"}]},
+    "quota_wait": {
+      "description": "A stopped run waiting for the reset of a provider quota, null when none.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["run_id", "until"],
+      "properties": {
+        "run_id": {"description": "The run to resume after the reset.", "type": "string", "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        "until": {"description": "UTC time of the reset.", "type": "string", "minLength": 1}
+      }
+    },
+    "waiting_runs": {"description": "Runs that ended waiting for answers (exit 4) with a clean tree; continued once their questions are answered.", "type": "array", "items": {"$ref": "#/$defs/waiting"}},
+    "history": {"description": "The last runs (at most 50), oldest first; one entry per run id.", "type": "array", "maxItems": 50, "items": {"$ref": "#/$defs/history"}},
+    "last_blockers": {"description": "The blockers of the last runs, newest last (the same item and code twice in a row is AUTOPILOT_REPEATED_BLOCKER).", "type": "array", "maxItems": 50, "items": {"$ref": "#/$defs/blocker"}},
+    "stop": {"description": "Why the session ended, null while it runs.", "oneOf": [{"type": "null"}, {"$ref": "#/$defs/stop"}]}
+  },
+  "$defs": {
+    "run_id": {"description": "A conductor run id.", "type": "string", "pattern": "^cnd-[0-9A-Za-z-]+$"},
+    "limits": {
+      "description": "The effective limits of the session (policy merged with the flags of start).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_runs", "max_wall_s", "run_tokens_hard_max", "max_no_progress_runs", "max_auto_decisions", "quota_wait_max_s"],
+      "properties": {
+        "max_runs": {"description": "Runs the session may start.", "type": "integer", "minimum": 1},
+        "max_wall_s": {"description": "Wall-clock seconds of the session.", "type": "integer", "minimum": 1},
+        "run_tokens_hard_max": {"description": "Run cap handed to each run (0: none).", "type": "integer", "minimum": 0},
+        "max_no_progress_runs": {"description": "Runs in a row without a closed piece.", "type": "integer", "minimum": 1},
+        "max_auto_decisions": {"description": "Questions answered by the advisor or panel.", "type": "integer", "minimum": 0},
+        "quota_wait_max_s": {"description": "Longest quota wait.", "type": "integer", "minimum": 0},
+        "max_recoveries": {"description": "Resumes per run.", "type": "integer", "minimum": 0},
+        "poll_s": {"description": "Seconds between two looks.", "type": "number", "minimum": 0.1}
+      }
+    },
+    "counters": {
+      "description": "Counters of the session.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runs", "items_closed", "no_progress_streak", "auto_decisions", "recoveries", "quota_waits"],
+      "properties": {
+        "runs": {"description": "Runs started (new lanes and continues).", "type": "integer", "minimum": 0},
+        "items_closed": {"description": "Pieces closed done or done_with_deviations.", "type": "integer", "minimum": 0},
+        "no_progress_streak": {"description": "Runs in a row that closed no piece.", "type": "integer", "minimum": 0},
+        "auto_decisions": {"description": "QUESTION_ADVISED lines of the runs of the session.", "type": "integer", "minimum": 0},
+        "recoveries": {"description": "Resumes after a crash, a hang or a one-time failure.", "type": "integer", "minimum": 0},
+        "quota_waits": {"description": "Resumes after a quota reset.", "type": "integer", "minimum": 0}
+      }
+    },
+    "current": {
+      "description": "The launch intent of a child conductor (state launching, written before the child is started) and, after its acknowledgement, the child itself (state running).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "launch_id", "state", "kind", "since"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/run_id"},
+        "launch_id": {"description": "Nonce of this launch: the detach acknowledgement of the child must carry it.", "type": "string", "pattern": "^[0-9a-f]{16}$"},
+        "state": {"description": "launching (the intent is written, no acknowledgement yet) or running.", "enum": ["launching", "running"]},
+        "kind": {"description": "The conductor verb: run (a new lane), continue (answered questions) or resume (recovery, quota reset, one-time failure).", "enum": ["run", "continue", "resume"]},
+        "items": {"description": "The pieces of a new lane.", "type": "array", "items": {"description": "A piece.", "type": "string", "minLength": 1}},
+        "retry": {"description": "Pieces a resume retries.", "type": "array", "items": {"description": "A piece.", "type": "string", "minLength": 1}},
+        "pid": {"description": "Process id of the child conductor, after the acknowledgement.", "type": "integer", "minimum": 1},
+        "start_ticks": {"description": "Start time of the child in clock ticks since boot, null when unknown.", "type": ["integer", "null"], "minimum": 0},
+        "boot_id": {"description": "Boot id of the machine the child was started (or adopted) in; with pid and start_ticks the identity a signal needs, null when unknown.", "type": ["string", "null"]},
+        "since": {"description": "UTC time the intent was written.", "type": "string", "minLength": 1},
+        "log": {"description": "Output file of the child.", "type": "string"}
+      }
+    },
+    "waiting": {
+      "description": "A run that waits for answers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "items", "since"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/run_id"},
+        "items": {"description": "The waiting pieces.", "type": "array", "items": {"description": "A piece.", "type": "string", "minLength": 1}},
+        "since": {"description": "UTC time it began to wait.", "type": "string", "minLength": 1}
+      }
+    },
+    "history": {
+      "description": "One run the session started or adopted.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "started_at", "ended_at", "exit", "status", "reason_code", "items_closed"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/run_id"},
+        "kind": {"description": "The verb of the last launch for this run.", "enum": ["run", "continue", "resume"]},
+        "started_at": {"description": "UTC time of the first launch.", "type": "string", "minLength": 1},
+        "ended_at": {"description": "UTC time of the last end, null while it runs.", "type": ["string", "null"]},
+        "exit": {"description": "Exit code the run ended with (0, 1, 4, 130), null when it never started or is not over.", "type": ["integer", "null"]},
+        "status": {"description": "running, finished, stopped, waiting, interrupted, orphaned or never_started.", "enum": ["running", "finished", "stopped", "waiting", "interrupted", "orphaned", "never_started"]},
+        "reason_code": {"description": "Stop code of the run, null when none.", "type": ["string", "null"]},
+        "items_closed": {"description": "Pieces it closed.", "type": "array", "items": {"description": "A piece.", "type": "string", "minLength": 1}},
+        "auto_decisions": {"description": "QUESTION_ADVISED lines of its journal already counted in counters.auto_decisions.", "type": "integer", "minimum": 0}
+      }
+    },
+    "blocker": {
+      "description": "A piece a run left blocked.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item", "code", "at"],
+      "properties": {
+        "item": {"description": "The piece.", "type": "string", "minLength": 1},
+        "code": {"description": "Its code (the stop or escalation code).", "type": "string", "minLength": 1},
+        "at": {"description": "UTC time.", "type": "string", "minLength": 1}
+      }
+    },
+    "stop": {
+      "description": "The stop code of the session, its message and time.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "at"],
+      "properties": {
+        "code": {"description": "AUTOPILOT_* stop code.", "enum": ["AUTOPILOT_NO_WORK", "AUTOPILOT_DRAINED", "AUTOPILOT_STOPPED", "AUTOPILOT_MAX_RUNS", "AUTOPILOT_MAX_WALL", "AUTOPILOT_NOT_ALLOWED", "AUTOPILOT_DISABLED", "AUTOPILOT_BUSY", "AUTOPILOT_NOT_READY", "AUTOPILOT_OWNER_NEEDED", "AUTOPILOT_BUDGET", "AUTOPILOT_QUOTA", "AUTOPILOT_REPEATED_BLOCKER", "AUTOPILOT_NO_PROGRESS", "AUTOPILOT_DECISIONS_EXCEEDED", "AUTOPILOT_RECOVERY_EXHAUSTED", "AUTOPILOT_CHECKOUT_LOST", "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED", "AUTOPILOT_INTERRUPTED"]},
+        "message": {"description": "What happened and the one action that goes on.", "type": "string"},
+        "at": {"description": "UTC time.", "type": "string", "minLength": 1}
+      }
+    }
+  }
+}

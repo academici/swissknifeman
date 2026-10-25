@@ -9,7 +9,7 @@ from aicore.util.proc import run as run_with_timeout
 from orch.conductor import contract, records
 from orch.conductor.heal import heal
 from orch.conductor.domain.report import json_block, findings_problems
-from orch.conductor.domain.item import done_steps
+from orch.conductor.domain.item import piece_commits
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import STATE_FILE
 
@@ -47,20 +47,30 @@ def has_hunks(diff: str) -> bool:
 
 
 def commits_of_state(state: dict) -> tuple:
-    """``(refs, shas)`` of the pieces of a run state that were committed, in the order of the state."""
+    """``(refs, shas)`` of the pieces of a run state that were committed, in the order of the state. An entry of ``shas``
+    is the sha of a piece that has one commit and the list of its commits (in order) for a piece of a split run
+    (``commit.mode: implementation-and-fixes``)."""
     refs, shas = [], []
     for ref, item in (state.get("items") or {}).items():
-        sha = ((done_steps(item.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
-        if sha:
+        found = piece_commits(item)
+        if found:
             refs.append(ref)
-            shas.append(sha)
+            shas.append(found[0] if len(found) == 1 else found)
     return refs, shas
 
 
+def last_sha(entry) -> str:
+    """The newest commit of an entry of :func:`commits_of_state`."""
+    return entry if isinstance(entry, str) else entry[-1]
+
+
 def diff_of(project: Path, shas: list, include: list, exclude: list) -> str:
+    """The production diff of the commits. A piece with one commit is read as ``sha~1..sha``; a piece of a split run (an entry
+    that is a list) as one range from the parent of its first commit to its last."""
     out = []
-    for sha in shas:
-        shown = run_with_timeout(["git", "diff", f"{sha}~1", sha, "--", *include], cwd=project, capture_output=True,
+    for entry in shas:
+        first, last = (entry, entry) if isinstance(entry, str) else (entry[0], entry[-1])
+        shown = run_with_timeout(["git", "diff", f"{first}~1", last, "--", *include], cwd=project, capture_output=True,
                                text=True, check=True, timeout=60).stdout
         shown = str(shown)  # text=True: a str
         for block in shown.split("\ndiff --git ")[0:]:

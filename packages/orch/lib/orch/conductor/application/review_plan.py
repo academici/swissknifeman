@@ -442,6 +442,8 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
             "The reproduction below is reported by the reviewer and must be verified before correction.\n"
             + fix_brief.render(brief))
     reference = session_ref(self, refs)
+    run_doc = getattr(self, "run_doc", None) or {}  # scripts/batch-review.py owns no run document
+    plan = None if (run_doc.get("source") or {}).get("kind") == "file" else run_doc.get("plan")  # the plan of the pieces
     commands = piece_checks(self, refs)
     # the reviewed pieces' own command checks decide when they exist: a procedure check (a verdict the executor must report)
     # cost a round and a full checks pass whenever the executor forgot it; only a follow-up without commands keeps one
@@ -451,7 +453,9 @@ def followup_input(self, number: int, refs: list, read: dict, effort: Optional[s
         doc = adhoc.build_adhoc_input(goal, paths, checks=checks, procedures=procedures,
                                       why=f"group review {number} of this run",
                                       route={"class": "implementation", "effort": effort or "high"},
-            provenance={**adhoc.support_provenance("review_followup"), **({"fix_briefs": backlog} if backlog else {}),
+            provenance={**adhoc.support_provenance("review_followup", plan=plan, items=list(refs),
+                                                   findings=[finding_key(row) for row in loud]),
+                        **({"fix_briefs": backlog} if backlog else {}),
                         **({"session_ref": reference} if reference else {})})
     except adhoc.AdhocError as error:
         self.progress.emit("info", reason_code="GROUP_REVIEW_FOLLOWUP_FAILED", message=f"group {number}: {error}"[:200])

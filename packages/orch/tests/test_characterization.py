@@ -604,7 +604,7 @@ T = "test_conductor.py"
 # snapshot) or ``test:<file>`` (the file of tests/ that names it). WORK_SOURCE_* stands for the whole family.
 COVERAGE = {
     # Stops
-    "DETACH_FAILED": "test:test_detach.py",
+    "DETACH_FAILED": "test:test_detach.py", "AUTOPILOT_LAUNCH_CANCELLED": "test:test_detach.py",
     "RUN_BUSY": "test:test_run_lease.py", "WORKTREE_BUSY": "test:test_run_lease.py",
     "QUESTIONS_LOCKED": "test:test_run_lease.py",
     "QUESTION_ANSWERED_NOT_RETRIED": "test:test_conductor_questions.py",
@@ -632,6 +632,7 @@ COVERAGE = {
     "TOKEN_BUDGET": "snapshot:budget-stop", "TOKEN_BUDGET_UNMETERED": "test:test_budget_hard.py",
     "BRIEF_TOO_LARGE": "test:test_budget_hard.py",
     "MODEL_CATALOG_UNAVAILABLE": "test:test_prepare.py",
+    "CORRECTION_SCOPE_GREW": "test:test_correction_route.py",
     "OUTSIDE_MODULE": "test:test_write_fence.py", "OUTSIDE_RUNTIME_ARTIFACT": "test:test_write_fence.py",
     "CHECKS_MUTATED": "test:test_write_fence.py",
     "RUN_INVALID": "test:test_records_migration.py", "STATE_INVALID": "test:test_records_migration.py",

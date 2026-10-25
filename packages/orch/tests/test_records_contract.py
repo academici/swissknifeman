@@ -56,10 +56,10 @@ def golden_state(path: Path) -> dict:
 
 
 class SchemaTests(unittest.TestCase):
-    def test_the_registry_holds_the_twenty_two_kinds_each_with_its_one_carrier(self):
+    def test_the_registry_holds_the_twenty_four_kinds_each_with_its_one_carrier(self):
         self.assertEqual(records.registry().kinds, records.KINDS)
         self.assertEqual(set(records.KINDS) - set(records.SHORT_TAGS),
-                         {"agent-request", "agent-result", "agent-usage", "detach-ack", "heartbeat", "item-options", "item-routes", "lease",
+                         {"agent-request", "agent-result", "agent-usage", "autopilot-request", "autopilot-state", "detach-ack", "heartbeat", "item-options", "item-routes", "lease",
                           "process", "questions", "review-strategy", "risk", "run", "state", "supervisor-action",
                           "supervisor-snapshot", "supervisor-state"})
         self.assertEqual(set(records.SHORT_TAGS), {"conformance-report", "observer-report", "prompt-diff",

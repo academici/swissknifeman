@@ -1,4 +1,4 @@
-"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap``.
+"""Command line of the conductor: ``swissknifeman orch conduct run|resume|continue|settle|release|status|runs|observe|answer|questions|prompt|timeline|gates|supervise|reap|autopilot``.
 
 Exit codes: 0 the run finished (or the command succeeded), 1 the run stopped or a command was refused (``CODE:
 message`` on stderr), 2 usage, 4 the run waits for a decision (a piece waits for the answer to a question: ``answer``,
@@ -20,7 +20,7 @@ from aicore.state import ProjectContextRequired
 
 from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
-from orch.conductor import prompt_cli, records, runs, supervise_cli
+from orch.conductor import autopilot_cli, prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import detach, launch_plan
 from orch.conductor.infrastructure.lease import launcher
@@ -356,8 +356,9 @@ def main(argv: list | None = None) -> int:
     cont.add_argument("--frozen", action="store_true", help="as for resume")
     for sub in (run, resume, cont):
         sub.add_argument("--debug", action=argparse.BooleanOptionalAction, default=None,
-                         help="debug mode for this run: DEBUG_MODE beacon with the observer protocol and a journal in "
-                              "<run>/debug/ (default: `[orch] debug` of the project, else of the machine, else off)")
+                         help="debug mode for this run: DEBUG_MODE beacon with the observer protocol and the per-item "
+                              "metrics of the observer report; writes no file (default: `[orch] debug` of the project, "
+                              "else of the machine, else off)")
         quiet = sub.add_mutually_exclusive_group()
         quiet.add_argument("--quiet", action="store_true", help="no progress lines on stderr")
         quiet.add_argument("--json-lines", dest="json_lines", action="store_true", help="progress lines as JSON")
@@ -388,12 +389,16 @@ def main(argv: list | None = None) -> int:
     listing.add_argument("--limit", type=int, default=None, metavar="N", help="at most N runs (default: all)")
     listing.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, reason_code, created, '
                                                               'items, resumes}]}')
-    prune = verbs.add_parser("prune", help="remove the folders of runs that ended long ago (dry run unless --apply); the latest "
-                                           "and a running run stay")
-    prune.add_argument("--older-than", type=int, required=True, metavar="DAYS", help="runs that ended more than DAYS days ago")
-    prune.add_argument("--dry-run", action="store_true", help="only list what would be removed (the default)")
-    prune.add_argument("--apply", action="store_true", help="remove them")
-    prune.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, age_days, paths, removed}]}')
+    prune = verbs.add_parser("prune", help="remove the folders of runs that ended long ago, or gzip their raw streams (dry "
+                                           "run unless --apply); the latest and a running run stay")
+    age = prune.add_mutually_exclusive_group(required=True)
+    age.add_argument("--older-than", type=int, metavar="DAYS", help="remove runs that ended more than DAYS days ago")
+    age.add_argument("--compress-older-than", type=int, metavar="DAYS",
+                     help="gzip the raw streams (streams/*.jsonl|.txt|.stderr|.times -> .gz) of those runs instead")
+    prune.add_argument("--dry-run", action="store_true", help="only list what would be removed or packed (the default)")
+    prune.add_argument("--apply", action="store_true", help="remove them, or pack their streams")
+    prune.add_argument("--json", action="store_true", help='print {"runs": [{run_id, status, age_days, paths, removed}]}; '
+                                                            'with --compress-older-than a compress-result document')
     observe = verbs.add_parser("observe", help="write the observer report of a run, or --follow a running one")
     observe.add_argument("--run", metavar="RUN")
     observe.add_argument("--follow", action="store_true")
@@ -441,6 +446,7 @@ def main(argv: list | None = None) -> int:
     gate_list.add_argument("--clear", nargs="?", const="", default=None, metavar="PROVIDER",
                            help="remove the gate of PROVIDER, or every gate when no provider is given")
     supervise_cli.add_parsers(verbs)
+    autopilot_cli.add_parsers(verbs)
     args = parser.parse_args(argv)
     if getattr(args, "detach", False) and (getattr(args, "dry_run", False) or args.frozen):
         parser.error("--detach is incompatible with --dry-run and --frozen")
@@ -450,6 +456,7 @@ def main(argv: list | None = None) -> int:
         if args.detach:
             parser.error("--run-id cannot be combined with --detach")
     supervise_cli.check(parser, args)
+    autopilot_cli.check(parser, args)
     if args.verb == "run":
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
@@ -469,8 +476,9 @@ def main(argv: list | None = None) -> int:
     if args.verb == "runs" and args.limit is not None and args.limit < 1:
         parser.error("--limit must be at least 1")
     if args.verb == "prune":
-        if args.older_than < 1:
-            parser.error("--older-than must be at least 1")
+        for flag, days in (("--older-than", args.older_than), ("--compress-older-than", args.compress_older_than)):
+            if days is not None and days < 1:
+                parser.error(f"{flag} must be at least 1")
         if args.apply and args.dry_run:
             parser.error("--apply and --dry-run exclude each other")
     if args.verb == "gates":
@@ -482,6 +490,8 @@ def main(argv: list | None = None) -> int:
     project = context.root
     if getattr(args, "run_id", None) and (engine.runs_root(project) / args.run_id).exists():
         parser.error("--run-id already exists")
+    if args.verb == "autopilot":
+        return autopilot_cli.run(args, project, list(sys.argv[1:] if argv is None else argv))
     if getattr(args, "detach", False):
         return detach.launch(list(sys.argv[1:] if argv is None else argv), project=project,
                              run_id=engine.new_run_id() if args.verb == "run" else args.run,
@@ -496,6 +506,11 @@ def main(argv: list | None = None) -> int:
     if args.verb == "runs":
         rows = runs.listing(project, args.limit)
         print(json.dumps({"runs": rows}, ensure_ascii=False, indent=2) if args.json else runs.text(rows))
+        return 0
+    if args.verb == "prune" and args.compress_older_than is not None:
+        rows = runs.compress(project, args.compress_older_than, apply=args.apply)
+        print(json.dumps(runs.compress_result(rows, args.apply), ensure_ascii=False, indent=2) if args.json
+              else runs.compress_text(rows, args.apply))
         return 0
     if args.verb == "prune":
         rows = runs.prune(project, args.older_than, apply=args.apply)

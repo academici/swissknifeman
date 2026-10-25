@@ -41,7 +41,7 @@ DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retri
                   "check_idle_warn_s": 600}
 DEFAULT_REVIEW = {"correct_min_severity": "Major", "pre_final": True, "final_correction": True,
                   "audit_scope": "corrected", "dynamic": True, "dynamic_threshold": 60,
-                  "strategy": "auto", "strategist": "rules",
+                  "strategy": "auto", "strategist": "rules", "correction_route": "executor",
                   "fix_brief": {"max_findings": 12, "max_chars": 24000}}
 DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar",
                                          "report-fixer", "researcher", "advisor"],
@@ -64,6 +64,11 @@ DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "deviation", "fence":
 # pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
 DEFAULT_SESSION = {"executor": "handoff", "max_idle_s": 0}  # max_idle_s 0: a session never expires by idleness
+# How the commits of a piece are made. ``final-only`` (default): one commit after the registration. ``implementation-and-fixes``:
+# a checkpoint commit of the implementation after the first green checks and before the first review, one fix commit per
+# green correction round of the review, then the final commit of what is left (artifacts, plan files).
+COMMIT_MODES = ("final-only", "implementation-and-fixes")
+DEFAULT_COMMIT = {"mode": "final-only"}
 # ``self_check``: the project's cheap commands the executor runs once on its final tree before it reports (the tests of the
 # units it touched and their dependents, lint); empty keeps the old "single test files" rule. They are not acceptance:
 # the conductor still runs every acceptance check itself, and the executor's claims about them prove nothing.
@@ -77,7 +82,7 @@ DEFAULT_FALLBACK_ROUTES = [{"role": "reviewer", "provider": "claude-code", "mode
 AUTO_SKILLS = "auto"  # the one name of a role's skills that asks the skills bridge to choose them from the work
 DEFAULTS = {"stages": [], "reviewer": "grok/grok-4.7/high", "rules": [], "skills": {}, "limits": DEFAULT_LIMITS,
             "review": DEFAULT_REVIEW, "checks": DEFAULT_CHECKS, "instructions": DEFAULT_INSTRUCTIONS, "scope": DEFAULT_SCOPE,
-            "session": DEFAULT_SESSION, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
+            "session": DEFAULT_SESSION, "commit": DEFAULT_COMMIT, "on_blocked": "stop", "on_error": {}, "fallback_routes": DEFAULT_FALLBACK_ROUTES}
 ROLE_ALIASES = {"scout": "context-scout"}
 WRITING_ROLES = ("executor", "bounded-implementer")  # the roles that change the project: they get ``scope.extra_paths``
 MODEL_ROLES = ("context-scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
@@ -168,7 +173,7 @@ def merge(base: dict, layer: dict) -> dict:
             out["stages"] = _merge_stages(out.get("stages", []), value)
         elif key == "rules":
             out["rules"] = _dedupe(list(out.get("rules", [])) + list(value))
-        elif key in ("limits", "review", "checks", "instructions", "scope", "session", "on_error"):
+        elif key in ("limits", "review", "checks", "instructions", "scope", "session", "commit", "on_error"):
             out[key] = {**out.get(key, {}), **copy.deepcopy(value)}
             if key == "limits" and "role_timeout_s" in value:  # by role: a layer names the walls it changes
                 out[key]["role_timeout_s"] = {**(base.get(key, {}).get("role_timeout_s") or {}), **value["role_timeout_s"]}
@@ -232,7 +237,7 @@ def effective(conductor: dict, policy: dict, layers: list) -> tuple:
         nonlocal current
         current = merge(current, layer)
         for key, value in layer.items():
-            if key in ("limits", "review", "checks", "instructions", "scope", "session", "on_error"):
+            if key in ("limits", "review", "checks", "instructions", "scope", "session", "commit", "on_error"):
                 sources.update({f"{key}.{sub}": name for sub in value})
             elif key == "skills":
                 sources.update({f"skills.{entry['role']}": name for entry in value})

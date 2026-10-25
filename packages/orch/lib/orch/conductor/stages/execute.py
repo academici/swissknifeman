@@ -11,7 +11,7 @@ from aicore.util.digest import sha256_hex
 
 from orch.contracts import required_digest
 from orch.conductor import checks as checks_mod, contract, self_check as self_check_mod, options as opts, prompts, questions as questions_mod, records, scope as scopes
-from orch.conductor.domain.item import Item, done_steps
+from orch.conductor.domain.item import Item, done_steps, piece_commits
 from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, sessions, work_source
@@ -19,9 +19,12 @@ from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write
 from orch.conductor.stages import advice, decisions
 
 
-def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "") -> dict:
+def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "",
+            role: str = "executor") -> dict:
     """One executor round. A blocking question is queued, denied or, with a default, answered by policy once and the
-    round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round."""
+    round is asked again (``executor.<n>-q<k>``); the answers of earlier questions reach every round. ``role`` is the
+    executor, or the bounded-implementer for a correction of review findings (``review.correction_route``): its step
+    is still ``executor.<n>``, its agent, route, prompt text and session are the role's own."""
     # A combined correction may have consumed its transient state before an interruption. Its durable brief still
     # owns the assignment of this executor round, including on resume after that interruption.
     path = item.directory / "fix-briefs" / f"executor.{number}.json"
@@ -36,7 +39,7 @@ def execute(self, item: Item, number: int, scout_text: str, correction: str, fix
     again = 0
     while True:
         key = f"executor.{number}" + (f"-q{again}" if again else "")
-        report = self._round(item, key, number, again > 0, scout_text, correction, fix)
+        report = self._round(item, key, number, again > 0, scout_text, correction, fix, role)
         if report.get("questions") and f"executor.{number}-q{again + 1}" in done_steps(item.state.get("steps", {})):
             again += 1  # a resume walks the closed rounds again
             continue
@@ -47,8 +50,8 @@ def execute(self, item: Item, number: int, scout_text: str, correction: str, fix
 
 
 def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout_text: str, correction: str,
-                   fix: str = "") -> dict:
-    route = item.routes["executor"]
+                   fix: str = "", role: str = "executor") -> dict:
+    route = item.routes[role]
 
     def run() -> dict:
         if number > 1 or refresh:
@@ -60,16 +63,17 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         answers = questions_mod.answers_text(self._questions(item))
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   correction_origin=correction_origin(self, item, key),
-                                  rules=item.options["rules"], correction=corrected, roles_dir=self.roles_dir, stub=self._stub("executor", route),
+                                  rules=item.options["rules"], correction=corrected, role=role, roles_dir=self.roles_dir,
+                                  stub=self._stub(role, route),
                                   targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                   self_check=item.options["checks"].get("self_check") or (),
-                                  skills=self._skills(item, "executor"),
-                                  repo_rules=self._repo_rules(item, "executor"),
-                                  skill_texts=self._skill_texts(item, "executor"),
+                                  skills=self._skills(item, role),
+                                  repo_rules=self._repo_rules(item, role),
+                                  skill_texts=self._skill_texts(item, role),
                                   expected=item.state.get("expected"),
                                   answers=answers, fix=fix,
                                   scout_origin=scouted.get("cache") or "",
-                                  batch=self._batch_note(item), research=researched.get("result"),
+                                  batch=self._batch_note(item) if role == "executor" else "", research=researched.get("result"),
                                   research_origin=researched.get("path") or "",
                                   fence=self._scope_option(item, "fence", "plan"),
                                   extra_paths=self._scope_option(item, "extra_paths", []),
@@ -78,14 +82,14 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   protected=self._write_protected(item),
                                   generated=self._write_generated(item), generator=self.conductor.get("generate") or (),
                                   staged=self._relative(work_source.protected_dir(item)))
-        resumed = self._resumed_prompt(item, key, correction, note, fix, answers)
-        report, meta = self._role(item, key, "executor", prompt, "stage-report", extra=report_problems, resumed=resumed)
-        if self._shared_session(item, "executor", item.routes["executor"]):  # the session has now seen every answer the prompt carried
+        resumed = self._resumed_prompt(item, key, correction, note, fix, answers) if role == "executor" else None
+        report, meta = self._role(item, key, role, prompt, "stage-report", extra=report_problems, resumed=resumed)
+        if self._shared_session(item, role, route):  # the session has now seen every answer the prompt carried
             self._note_answers(item, [answer_key(row) for row in answers])
         write_json(item.directory / "reports" / f"{key}.json", report)
         return {"report": report, "changed": self._changed_now(item), **meta}
 
-    found = self._step(item, key, run, role="executor", route=self.label(route),
+    found = self._step(item, key, run, role=role, route=self.label(route),
                        verdict=lambda result: result["report"]["status"])
     notes = item.state.get("interrupted_note") or {}
     if key in notes:
@@ -245,12 +249,13 @@ def handoff_of(self, ref: str, state: Optional[dict] = None, directory=None) -> 
     paths, from the report it registered (``register-report.json``), each part bounded. ``state`` and ``directory`` are
     those of another run (the run a review follow-up corrects); the default is this one."""
     piece = ((self.state if state is None else state).get("items") or {}).get(ref) or {}
-    sha = ((done_steps(piece.get("steps") or {}).get("commit") or {}).get("result") or {}).get("sha")
+    shas = piece_commits(piece)
     try:
         report = json.loads(((directory or self.directory) / safe(ref) / "register-report.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         report = {}
-    lines = [f"### Handoff of `{ref}`" + (f" (commit {sha[:12]})" if sha else "")]
+    lines = [f"### Handoff of `{ref}`" + (f" (commit{'s' if len(shas) > 1 else ''} {', '.join(sha[:12] for sha in shas)})"
+                                         if shas else "")]
     if report.get("summary"):
         lines += ["", str(report["summary"])[:HANDOFF_TEXT]]
     issues = [row for row in report.get("open_issues") or [] if isinstance(row, dict) and row.get("text")]

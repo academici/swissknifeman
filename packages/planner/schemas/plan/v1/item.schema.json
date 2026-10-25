@@ -575,6 +575,53 @@
           },
           "description": "Evidence."
         },
+        "continuation": {
+          "type": "object",
+          "description": "A correction of recorded review findings continued by another executor (start --continue correction).",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "description": "Continuation kind.",
+              "enum": [
+                "correction"
+              ]
+            },
+            "attempt_id": {
+              "type": "string",
+              "description": "Attempt of the receipt, when it names one.",
+              "minLength": 1
+            },
+            "previous_executor": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+              "description": "Executor that held the item before."
+            },
+            "executor": {
+              "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+              "description": "Executor admitted by route.correction."
+            },
+            "receipt": {
+              "type": "string",
+              "description": "Receipt path.",
+              "minLength": 1
+            },
+            "findings": {
+              "type": "array",
+              "description": "Finding keys the correction answers.",
+              "items": {
+                "type": "string",
+                "description": "Finding key.",
+                "pattern": "^fk-[0-9a-f]{16}$"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "executor",
+            "receipt",
+            "findings"
+          ]
+        },
         "review": {
           "type": "object",
           "description": "Validated receipt and content freshness at finish.",

@@ -210,6 +210,24 @@ class MappingTests(BriefCase):
         self.assertEqual(self.brief()["route"]["minimum"], {"class": "frontier", "effort": "max"})
 
 
+    def test_route_minimum_leaves_out_correction_and_settings_and_stays_a_valid_execution_input(self):
+        route = {"class": "frontier", "effort": "max", "provider": "claude-code", "model": "claude-opus-5-5",
+                 "correction": {"class": "economy", "effort": "medium"}, "settings": {"native": True}}
+        ops.patch(self.root, "P1.1", {"route": route})
+        doc = self.brief()
+        self.assertEqual(doc["route"]["minimum"], {"class": "frontier", "effort": "max", "provider": "claude-code",
+                                                   "model": "claude-opus-5-5"})
+        self.assertNotIn("correction", json.dumps(doc["route"]))
+        self.assertNotIn("settings", json.dumps(doc["route"]))
+        if partners.find_orch_root() is None:
+            self.skipTest("orch not found")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "input.json"
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            code, out = partners.orch_validate("execution-input", path)
+        self.assertEqual(code, 0, out)
+
+
 class PhaseChecksTests(BriefCase):
     FULL = {"id": "V9", "cmd": "python3 scripts/affected-tests.py --tier all --run", "expect": "exit 0", "kind": "acceptance"}
 

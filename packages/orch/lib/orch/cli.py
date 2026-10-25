@@ -816,12 +816,34 @@ def _source_register(args, current, project) -> int:
 
 
 def _source_commit(args, current, project) -> int:
+    """One commit of the run. ``--stage`` names a stage of a split run (``implementation``, ``correction.<n>``, ``final``):
+    its receipts are ``receipts/commit-<stage>.json`` and ``-request.json`` (``final`` and no stage keep ``commit.json``)."""
     directory, doc = _run(args.run, project)
-    answer = _source_effect(_source(current, project, args.config, doc), directory, "commit", plan=doc["plan"],
+    extra = {name: value for name, value in (("role", args.role), ("stage", args.stage),
+                                             ("trailers", list(args.trailer or []))) if value}
+    answer = _source_effect(_source(current, project, args.config, doc), directory, "commit",
+                   stem=commit_stem(args.stage), plan=doc["plan"],
                    plans_root=doc.get("plans_root"), ref=doc["ref"], run_id=doc["run_id"],
-                   attempt_id=doc["attempt_id"], paths=list(args.path or []), actor=args.actor)
+                   attempt_id=doc["attempt_id"], paths=list(args.path or []), actor=args.actor, **extra)
     _print(answer)
     return 1 if answer["outcome"] == "refused" else 0
+
+
+def commit_stem(stage: str | None) -> str:
+    """The receipt name of a commit stage: ``commit`` for the final commit (and the only commit of ``final-only``)."""
+    return "commit" if stage in (None, "final") else f"commit-{stage}"
+
+
+def _stage(text: str) -> str:
+    if not re.fullmatch(r"implementation|correction\.[0-9]+|final", text):
+        raise argparse.ArgumentTypeError(f"{text!r} must be implementation, correction.<n> or final")
+    return text
+
+
+def _trailer(text: str) -> str:
+    if not re.fullmatch(r"[A-Za-z0-9-]+: [^\r\n\0]+", text):
+        raise argparse.ArgumentTypeError(f"{text!r} must be one line: Key: value")
+    return text
 
 
 def _source_effect(source, directory, kind: str, *, stem: str | None = None, **fields) -> dict:
@@ -837,8 +859,8 @@ def _source_effect(source, directory, kind: str, *, stem: str | None = None, **f
         # A repeat can finish only the workspace part. Retain the already committed product revision before
         # replacing either document, including when another crash happens before the repeated answer is published.
         try:
-            prior = journal.read_doc(directory, "receipts/commit-request.json")
-            receipt = journal.read_doc(directory, "receipts/commit.json")
+            prior = journal.read_doc(directory, f"receipts/{stem or 'commit'}-request.json")
+            receipt = journal.read_doc(directory, f"receipts/{stem or 'commit'}.json")
         except (OSError, ValueError):
             prior, receipt = None, None
         parameters = prior.get("parameters") if isinstance(prior, dict) else None
@@ -921,10 +943,23 @@ def _source_decision(args, current, project) -> int:
     return 0 if answer["outcome"] in ("recorded", "no-op") else 1
 
 
+def _source_readiness(args, current, project) -> int:
+    """The readiness of every detailed phase of a plan and its next lane, read-only and without a run: ``ok`` (exit 0) or
+    ``refused`` (exit 1; ``READINESS_UNSUPPORTED`` for a file input or a source without the operation)."""
+    if args.input:
+        source = _source(current, project, args.config, {"source": {"kind": "file", "path": str(Path(args.input).resolve())}})
+        collection = str(Path(args.input).resolve())
+    else:
+        source, collection = _source(current, project, args.config), args.plan
+    answer = _call(source, "readiness", collection=collection, plans_root=args.plans_root)
+    _print(answer)
+    return 0 if answer["outcome"] == "ok" else 1
+
+
 def _source_command(args: argparse.Namespace) -> int:
     handler = {"claim": _source_claim, "brief": _source_brief, "prepare": _source_prepare,
                "register": _source_register, "commit": _source_commit, "release": _source_release,
-               "research": _source_research, "decision": _source_decision}[args.action]
+               "research": _source_research, "decision": _source_decision, "readiness": _source_readiness}[args.action]
     try:
         context = project_mod.require(getattr(args, "project", None))  # the cycle writes the state of a project
         project = context.root
@@ -949,7 +984,7 @@ def _source_command(args: argparse.Namespace) -> int:
 
 
 def _source_parser(verbs) -> None:
-    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research, decision")
+    command = verbs.add_parser("source", help="cycle of a work source: claim, brief, prepare, register, commit, release, research, decision, readiness")
     actions = command.add_subparsers(dest="action", required=True)
     claim = actions.add_parser("claim", help="claim one piece of work for a run (repeatable: same arguments, same run)")
     where = claim.add_mutually_exclusive_group(required=True)
@@ -997,6 +1032,11 @@ def _source_parser(verbs) -> None:
     commit.add_argument("--path", action="append", default=[], metavar="PATH",
                         help="repository path the commit owns beyond the scope of the work (repeatable)")
     commit.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who commits (default: the source decides)")
+    commit.add_argument("--role", choices=("executor", "fix"), help="role of the commit in a split run (default: the source's)")
+    commit.add_argument("--stage", type=_stage, metavar="STAGE",
+                        help="stage of a split run: implementation, correction.<n> or final (receipts per stage)")
+    commit.add_argument("--trailer", action="append", default=[], type=_trailer, metavar="KEY: VALUE",
+                        help="trailer line of the commit message (repeatable)")
     release = actions.add_parser("release", help="give a claimed run back to the source (no work began), so that a later "
                                                  "run can claim the piece")
     release.add_argument("--run", required=True, metavar="RUN")
@@ -1014,6 +1054,13 @@ def _source_parser(verbs) -> None:
     decision.add_argument("--file", required=True, type=Path, metavar="FILE",
                           help="JSON: question, question_key, question_digest, resolution, authority, rationale, evidence")
     decision.add_argument("--actor", type=_actor, metavar="P/M[/E]", help="who records (default: the source decides)")
+    readiness = actions.add_parser("readiness", help="readiness of every detailed phase of a plan and its next lane "
+                                                     "(read-only, no run)")
+    where = readiness.add_mutually_exclusive_group(required=True)
+    where.add_argument("--plan", help="collection of the work source, such as a plan id or path")
+    where.add_argument("--input", type=Path, metavar="FILE",
+                       help="the built-in file source (always refused: a file input has no phases)")
+    readiness.add_argument("--plans-root", dest="plans_root", metavar="DIR")
 
 
 def _conduct_args(argv: list[str]) -> list[str] | None:

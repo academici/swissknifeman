@@ -833,6 +833,35 @@
  "routes": {
   "W1": {
    "$schema": "urn:swissknifeman:orch:records:item-routes:v1",
+   "advisor": {
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "opus",
+     "--effort",
+     "high",
+     "--tools",
+     "Bash,Read,Grep,Glob",
+     "--allowedTools",
+     "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "opus",
+    "model_class": "frontier",
+    "provider": "claude-code",
+    "role": "advisor",
+    "timeout_s": 1800,
+    "transport": "jsonl"
+   },
    "context-scout": {
     "argv": [
      "<python>",

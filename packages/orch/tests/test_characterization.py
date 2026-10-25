@@ -301,6 +301,8 @@ class ScenarioTests(CharacterizationCase):
         self.snapshot("input-rebuilt", err)
 
     def test_question_answer_resume(self):
+        # The owner flow: a question waits in the queue (the default ``advisor`` mode would let the advisor take it first).
+        self.write_config(extra='[orch.conductor]\nquestions = "queue"\n')
         self.script({"executor": [asking(dict(ASK)), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.outcome(err)), (4, ("waiting", "WAITING_DECISION")), err)

@@ -151,7 +151,7 @@ class AuthorityPolicyTests(unittest.TestCase):
 
     def test_d_transcripts_are_narrow_and_previews_create_nothing(self):
         home = self.matrix.home
-        project = "/home/vostrikov/projects/packages/swissknifeman"
+        project = "/srv/checkouts/team-alph/packages/swissknifeman"
         folder = launch_plan.transcripts_folder(project, home, persist=False)
         self.assertEqual(len(launch_plan.transcript_folder_name(project)), 47)
         self.assertFalse((home / ".claude").exists())

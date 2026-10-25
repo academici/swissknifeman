@@ -2058,6 +2058,11 @@ class ProviderErrorTests(ConductorCase):
     def gate_file(self) -> dict:
         return json.loads(gates.path().read_text(encoding="utf-8"))["gates"]
 
+    def without_advisor(self) -> None:
+        """The advisor is on by default and routed on ``claude-code``: a gate on that provider would stop it at the start.
+        The gate tests count the roles they route around the gate, so the advisor stays out of them."""
+        self.write_config(extra="[orch.advisor]\nenabled = false\n")
+
     def test_a_short_quota_wait_is_a_beacon_and_the_second_call_succeeds(self):
         self.script({"executor": [quota_failure(3), executor_ok("W1")], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1")
@@ -2133,6 +2138,7 @@ class ProviderErrorTests(ConductorCase):
         self.assertIn("RETRY_AFTER_UNKNOWN", fallback[0]["message"])
 
     def test_a_gated_provider_goes_to_the_fallback_at_once_and_stops_without_one(self):
+        self.without_advisor()
         gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
         self.options(fallback_routes=[self.FALLBACK, dict(self.FALLBACK, role="triager")])
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
@@ -2266,6 +2272,7 @@ class ProviderErrorTests(ConductorCase):
         self.assertEqual((self.calls("executor"), self.calls("reviewer")), (2, 0), err)
 
     def test_a_gate_in_force_routes_every_gated_role_at_the_start(self):
+        self.without_advisor()
         gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
         self.options(reviewer="claude-code/sonnet-5-5/high", fallback_routes=[
             self.FALLBACK, dict(self.FALLBACK, role="reviewer"), dict(self.FALLBACK, role="triager")])
@@ -2313,6 +2320,7 @@ class ProviderErrorTests(ConductorCase):
         self.assertTrue(problem and problem.startswith("SANDBOX_UNAVAILABLE"), problem)
 
     def test_a_dry_run_marks_a_gated_provider_unavailable(self):
+        self.without_advisor()
         gates.set_gate("claude-code", until=time.time() + 3600, code="PROVIDER_QUOTA", run_id="other", now=time.time())
         options = self.project.parent / "gated.json"
         options.write_text(json.dumps({"fallback_routes": [self.FALLBACK, dict(self.FALLBACK, role="triager")]}),

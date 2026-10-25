@@ -470,6 +470,8 @@ class SessionRunTests(ConductorCase):
                 if line.get("reason_code") in ("SESSION_RESUMED", "SESSION_FRESH")]
 
     def test_a_retry_of_an_earlier_piece_resumes_its_own_session_after_a_later_piece_ran(self):
+        # The question waits for the owner (the default ``advisor`` mode would let the advisor take it first).
+        self.write_config(extra=HANDOFF_CONFIG + 'questions = "queue"\n')
         self.set_items({"W1": {}, "W2": {}})
         self.script({"executor": [asking(dict(ASK)), executor_ok("W2"), executor_ok("W1")], "reviewer": [GREEN, GREEN]})
         options = self.project.parent / "report.json"

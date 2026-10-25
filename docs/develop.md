@@ -315,12 +315,26 @@ file and without editing the interface - this is a conscious narrowing (form «a
 **Gates CI-wood hygiene (`.github/workflows/hygiene.yml`, P8.6).** Two stdlib-script,
 lists of rules - data:
 
-- `scripts/public-hygiene.py` — fail-closed by **monitored** tree (`git ls-files`,
-  content is not readable) for prohibited suffixes/names/directories: `.sqlite`/`.log`/`.pem`/
+- `scripts/public-hygiene.py` — checks the tracked tree (`git ls-files`)
+  for prohibited suffixes/names/directories: `.sqlite`/`.log`/`.pem`/
   `.key`/archives (`.zip`/`.tar`/`.tar.gz`/`.tgz`/`.rar`/`.7z`), `.env` (except `*.example`),
   `__pycache__`/`.venv`/`node_modules`. Each violation is a line `<path> — is prohibited by the rule
   «<reason>»`; step `public-hygiene` in job `hygiene`. Red on the current tree is a gate
   **reports**, repaired by a man (files are not deleted silently).
+  The same command checks owner terms from `configs/neutrality.json` in tracked core text files.
+  Its default neutrality ratchet permits the counts recorded in `configs/neutrality-baseline.json`,
+  fails on a new term/path pair or a higher occurrence count, and reports decreases.
+  `--neutrality-strict` requires zero hits; `--neutrality-update-baseline` initializes an absent baseline
+  or records decreases, refusing growth with `NEUTRALITY_BASELINE_GROWTH` (exit 1).
+  Invalid rules or baseline data produce `NEUTRALITY_CONFIG_INVALID` (exit 2).
+  Tests, fixtures, examples, the overlay module and historical paths listed in the policy are excluded;
+  every allowance has a reason, and path allowances never exempt libraries, configs, skills, commands,
+  templates or agent packs. JSON allowances cover attribution field values (including author objects),
+  while keys and other fields such as description remain checked.
+  `--json` emits only `{violations, improved, counts}`; line 0 denotes a legacy rule or data error.
+  Rules and the baseline/report definitions are validated with the closed aicore profile in
+  `configs/schemas/neutrality.schema.json`. The existing affected-tests hub check and hygiene CI step run
+  the default ratchet automatically.
 - `scripts/verify-tag.py <tag>` — tag `vX.Y.Z` must be **top released** header
   `## [X.Y.Z] - YYYY-MM-DD` in root `CHANGELOG.md` (umbrella version carrier - CHANGELOG, not
   `package.json`: there is no root, package versions do not carry tags). Step `verify-tag` in a separate job

@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-"""Public tree hygiene: prohibited suffixes/names/prefixes in the TRACKED tree.
-
-Catches SECRET/ARTIFACT (pathnames), does not scan the contents of files - it is not a secret scanner.
-List source - `git ls-files` (index), not `os.walk` (P8.6, transfer raytsystem
-public_hygiene.py).
-"""
+"""Public tree hygiene: tracked paths, machine/plan references and a neutrality ratchet."""
+import argparse
+from collections import Counter
 import hashlib
+import json
+from pathlib import Path
 import re
 import subprocess
 import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+NEUTRALITY_FILE = ROOT / "configs/neutrality.json"
+BASELINE_FILE = ROOT / "configs/neutrality-baseline.json"
+NEUTRALITY_SCHEMA = ROOT / "configs/schemas/neutrality.schema.json"
+ATTRIBUTION_FIELDS = {"author", "owner", "homepage", "repository", "url", "email"}
+RUNTIME_FOLDERS = {"lib", "configs", "skills", "commands", "templates"}
+JSON_STRING = re.compile(r'"(?:[^"\\]|\\.)*"')
+JSON_COLON = re.compile(r"\s*:")
+JSON_WHITESPACE = re.compile(r"\s*")
 
 # Rules - DATA, each with a named reason; expansion "just in case" prohibited
 # (Code Guidance P8.6): undecrypted reason The ⇒ gate will start turning red on legal files.
@@ -144,6 +153,207 @@ def _read_text(path):
     return data.decode("utf-8", "replace")
 
 
+class NeutralityConfigError(ValueError):
+    """Invalid gate data, including a malformed or unreadable baseline."""
+
+    def __init__(self, pointer, message):
+        super().__init__(f"NEUTRALITY_CONFIG_INVALID: {pointer or '/'}: {message}")
+
+
+def _schema_context():
+    lib = str(ROOT / "packages/aicore/lib")
+    if lib not in sys.path:
+        sys.path.insert(0, lib)
+    from aicore.util import schema
+    registry = schema.load_schema_file(NEUTRALITY_SCHEMA, urn_prefix="urn:swissknifeman:hub:", kind="neutrality")
+    return schema, registry
+
+
+def _validate_neutrality(document, definition=None):
+    try:
+        schema, registry = _schema_context()
+        if definition:
+            node, owner = registry.resolve(f"#/$defs/{definition}", "urn:swissknifeman:hub:neutrality:v1")
+            issues = schema.validate_node(registry, node, owner, document)
+        else:
+            issues = schema.validate(document, "neutrality", registry)
+    except (ImportError, OSError, ValueError, LookupError) as exc:
+        raise NeutralityConfigError("/", str(exc)) from exc
+    if issues:
+        issue = issues[0]
+        prefix = f"{issue.path or '/'}: "
+        message = issue.message.removeprefix(prefix)
+        raise NeutralityConfigError(issue.path, message)
+
+
+def _load_neutrality_json(path):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise NeutralityConfigError("/", f"{Path(path).name}: {exc}") from exc
+
+
+def _glob_regex(glob):
+    """Path globs: ** spans directories; * and ? stay within one component."""
+    parts = []
+    index = 0
+    while index < len(glob):
+        if glob.startswith("**/", index):
+            parts.append("(?:.*/)?")
+            index += 3
+        elif glob.startswith("**", index):
+            parts.append(".*")
+            index += 2
+        elif glob[index] == "*":
+            parts.append("[^/]*")
+            index += 1
+        elif glob[index] == "?":
+            parts.append("[^/]")
+            index += 1
+        else:
+            parts.append(re.escape(glob[index]))
+            index += 1
+    return re.compile("".join(parts))
+
+
+def _runtime_path(path):
+    parts = path.split("/")
+    return ("agent-packs" in parts or
+            (len(parts) >= 3 and parts[0] == "packages" and parts[2] in RUNTIME_FOLDERS))
+
+
+def neutrality_rules(path=NEUTRALITY_FILE):
+    """Load closed-profile gate data and compile its patterns once."""
+    rules = _load_neutrality_json(path)
+    _validate_neutrality(rules)
+    ids = set()
+    patterns = []
+    for index, term in enumerate(rules["terms"]):
+        pointer = f"/terms/{index}"
+        if term["id"] in ids:
+            raise NeutralityConfigError(pointer + "/id", "duplicate term id")
+        ids.add(term["id"])
+        try:
+            pattern = re.compile(term["pattern"])
+        except re.error as exc:
+            raise NeutralityConfigError(pointer + "/pattern", str(exc)) from exc
+        if not term["reason"].strip():
+            raise NeutralityConfigError(pointer + "/reason", "reason must not be blank")
+        patterns.append((term["id"], pattern))
+    path_allow = []
+    field_allow = []
+    for index, allow in enumerate(rules["allow"]):
+        pointer = f"/allow/{index}"
+        if allow["term"] != "*" and allow["term"] not in ids:
+            raise NeutralityConfigError(pointer + "/term", "unknown term id")
+        if not allow["reason"].strip():
+            raise NeutralityConfigError(pointer + "/reason", "reason must not be blank")
+        if "json_fields" in allow:
+            if set(allow["json_fields"]) - ATTRIBUTION_FIELDS:
+                raise NeutralityConfigError(pointer + "/json_fields", "only attribution fields may be allowed")
+            field_allow.append((allow["term"], set(allow["json_fields"])))
+        else:
+            # Exact runtime targets are invalid; broad globs also cannot exempt a runtime path below.
+            probe = allow["path_glob"].replace("*", "_").replace("?", "_")
+            if _runtime_path(probe):
+                raise NeutralityConfigError(pointer + "/path_glob", "path allowances cannot cover runtime surfaces")
+            path_allow.append((allow["term"], _glob_regex(allow["path_glob"])))
+    rules["_patterns"] = patterns
+    rules["_exclude"] = [_glob_regex(glob) for glob in rules["scope"]["exclude_globs"]]
+    rules["_path_allow"] = path_allow
+    rules["_field_allow"] = field_allow
+    return rules
+
+
+def _json_segments(text):
+    """Keep physical offsets while decoding JSON strings, including escaped owner terms.
+
+    Full parsing is required before any attribution exemption applies. Attribution values may be
+    strings or containers (for example an author object); their keys remain subject to scanning.
+    """
+    try:
+        json.loads(text)
+    except ValueError:
+        return [(text, 0, False, set())]
+    segments = []
+    attribution = []
+    decoder = json.JSONDecoder()
+    end = 0
+    for token in JSON_STRING.finditer(text):
+        segments.append((text[end:token.start()], end, False, set()))
+        value = json.loads(token.group())
+        colon = JSON_COLON.match(text, token.end())
+        if colon and value in ATTRIBUTION_FIELDS:
+            start = JSON_WHITESPACE.match(text, colon.end()).end()
+            _value, finish = decoder.raw_decode(text, start)
+            attribution.append((start, finish, value))
+        fields = {field for start, finish, field in attribution
+                  if not colon and start <= token.start() and token.end() <= finish}
+        segments.append((value, token.start(), True, fields))
+        end = token.end()
+    segments.append((text[end:], end, False, set()))
+    return segments
+
+
+def neutrality_hits(paths, rules, read=_read_text):
+    """Return (term id, path, physical line, excerpt) for every non-exempt occurrence."""
+    hits = []
+    for path in sorted(paths):
+        if not any(path.startswith(entry) if entry.endswith("/") else path == entry
+                   for entry in rules["scope"]["include"]):
+            continue
+        if any(glob.fullmatch(path) for glob in rules["_exclude"]):
+            continue
+        text = read(path)
+        if text is None:
+            continue
+        segments = _json_segments(text) if path.endswith(".json") else [(text, 0, False, set())]
+        for term_id, pattern in rules["_patterns"]:
+            if not _runtime_path(path) and any(
+                    term in ("*", term_id) and glob.fullmatch(path) for term, glob in rules["_path_allow"]):
+                continue
+            allowed_fields = set().union(*(fields for term, fields in rules["_field_allow"] if term in ("*", term_id)))
+            for segment, offset, decoded, fields in segments:
+                if fields & allowed_fields:
+                    continue
+                for match in pattern.finditer(segment):
+                    position = offset if decoded else offset + match.start()
+                    line = text.count("\n", 0, position) + 1
+                    start = max(segment.rfind("\n", 0, match.start()) + 1, match.start() - 20)
+                    excerpt = segment[start:match.end() + 60].split("\n", 1)[0][:80]
+                    hits.append((term_id, path, line, excerpt))
+    return hits
+
+
+def _neutrality_counts(hits):
+    return dict(sorted(Counter(f"{term}|{path}" for term, path, _line, _excerpt in hits).items()))
+
+
+def ratchet(hits, baseline):
+    """Allow existing counts; return excess occurrences and every decrease, including removals."""
+    counts = _neutrality_counts(hits)
+    old = baseline["counts"]
+    seen = Counter()
+    violations = []
+    for hit in hits:
+        key = f"{hit[0]}|{hit[1]}"
+        seen[key] += 1
+        if seen[key] > old.get(key, 0):
+            violations.append(hit)
+    improved = [{"key": key, "old": old[key], "new": counts.get(key, 0)}
+                for key in sorted(old) if counts.get(key, 0) < old[key]]
+    return violations, improved
+
+
+def _neutrality_baseline(path, initialize=False):
+    # Absence is the only bootstrap case. An existing empty or invalid baseline never permits growth.
+    if initialize and not path.exists():
+        return None
+    baseline = _load_neutrality_json(path)
+    _validate_neutrality(baseline, "baseline")
+    return baseline
+
+
 def list_tracked_files():
     try:
         out = subprocess.run(
@@ -181,14 +391,68 @@ def check(paths):
 
 
 def main(argv):
-    paths = list_tracked_files()
-    violations = check(paths) + content_violations(paths) + plan_reference_violations(paths)
-    if violations:
-        for path, reason in violations:
+    parser = argparse.ArgumentParser(description=__doc__)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--neutrality-strict", action="store_true", help="require zero neutrality hits")
+    modes.add_argument("--neutrality-update-baseline", action="store_true", help="initialize or decrease the baseline")
+    parser.add_argument("--json", action="store_true", help="print a schema-validated JSON report")
+    args = parser.parse_args(argv[1:])
+    try:
+        rules = neutrality_rules(NEUTRALITY_FILE)
+        baseline = None if args.neutrality_strict else _neutrality_baseline(
+            BASELINE_FILE, initialize=args.neutrality_update_baseline)
+        paths = sorted(list_tracked_files())
+        legacy = [(kind, path, reason) for kind, found in (
+            ("path", check(paths)), ("content", content_violations(paths)),
+            ("plan-reference", plan_reference_violations(paths))) for path, reason in found]
+        hits = neutrality_hits(paths, rules, read=_read_text)
+        counts = _neutrality_counts(hits)
+        violations, improved = ratchet(hits, baseline) if baseline is not None else ([], [])
+        if args.neutrality_strict:
+            violations = hits
+        reasons = {term["id"]: term["reason"] for term in rules["terms"]}
+        report = {"violations": [{"path": max((p for p in paths if path == p or path.startswith(p + " (")),
+                                               key=len, default=path), "line": 0, "term": kind, "reason": reason}
+                                 for kind, path, reason in legacy] +
+                  [{"path": path, "line": line, "term": term, "reason": reasons[term]}
+                   for term, path, line, _excerpt in violations], "improved": improved, "counts": counts}
+        growth = [(key, baseline["counts"].get(key, 0), count) for key, count in counts.items()
+                  if baseline is not None and count > baseline["counts"].get(key, 0)]
+        if args.neutrality_update_baseline and growth:
+            growth_reasons = {key: f"NEUTRALITY_BASELINE_GROWTH: {key} {old}→{new}" for key, old, new in growth}
+            for violation in report["violations"]:
+                key = f"{violation['term']}|{violation['path']}"
+                if key in growth_reasons:
+                    violation["reason"] = growth_reasons[key]
+        _validate_neutrality(report, "report")
+        if args.neutrality_update_baseline and not growth and not legacy:
+            document = {"schema_version": 1, "counts": counts}
+            _validate_neutrality(document, "baseline")
+            BASELINE_FILE.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    except (NeutralityConfigError, OSError) as exc:
+        message = str(exc) if isinstance(exc, NeutralityConfigError) else str(NeutralityConfigError("/", str(exc)))
+        if args.json:
+            print(json.dumps({"violations": [{"path": "configs/neutrality.json", "line": 0,
+                                             "term": "config", "reason": message}], "improved": [], "counts": {}}))
+        else:
+            print(message, file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(report, ensure_ascii=False, sort_keys=True))
+    else:
+        for _kind, path, reason in legacy:
             print(f"{path} — is prohibited by the rule «{reason}»")
-        return 1
-    print("public-hygiene: 0 violations")
-    return 0
+        if args.neutrality_update_baseline and growth:
+            for key, old, new in growth:
+                print(f"NEUTRALITY_BASELINE_GROWTH: {key} {old}→{new}")
+        else:
+            for term, path, line, _excerpt in violations:
+                print(f"{path}:{line} — neutrality «{term}»: {reasons[term]}")
+        for row in improved:
+            print(f"neutrality: improved {row['key']} {row['old']}→{row['new']} (run --neutrality-update-baseline)")
+        if not report["violations"]:
+            print("public-hygiene: 0 violations")
+    return 1 if report["violations"] else 0
 
 
 if __name__ == "__main__":

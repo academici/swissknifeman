@@ -97,7 +97,7 @@ schema_version = 1
 # on_blocked = "stop"
 
 # What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled). Approval and credential questions always stay open for the owner in every mode. One of: "queue", "deny", "defaults", "advisor".
-# questions = "queue"
+# questions = "advisor"
 
 # Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: ["auto"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs. Array of strings.
 # Allowed in layers: defaults, machine, invocation, flags.
@@ -237,8 +237,8 @@ schema_version = 1
 # order = 100
 
 [orch.advisor]
-# Whether the conductor asks the advisor at all. Off: every trigger behaves as before. Boolean.
-# enabled = false
+# Whether the conductor asks the advisor at all. Off: every trigger behaves as before. The human_gate still holds security, destructive, public-api and scope-expansion advice for the owner. Boolean.
+# enabled = true
 
 # Advice rounds per piece of work, all triggers together; past it the problem is handled as without the advisor. Integer >= 0.
 # max_rounds = 2

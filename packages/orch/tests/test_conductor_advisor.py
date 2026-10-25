@@ -150,7 +150,7 @@ class QuestionTriggerTests(AdvisorCase):
         self.assertIn("QUESTION: Q2 Keep the old flag name?", self.escalations())
 
     def test_advisor_mode_without_enabled_queues_the_question(self):
-        self.configure('[orch.conductor]\nquestions = "advisor"\n')
+        self.configure('[orch.conductor]\nquestions = "advisor"\n\n[orch.advisor]\nenabled = false\n')
         self.script({"executor": [asking(dict(ASK))]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("advisor")), (4, 0), err)
@@ -158,7 +158,7 @@ class QuestionTriggerTests(AdvisorCase):
         self.assertEqual(self.state(err)["questions"]["W1"]["Q1"]["status"], "open")
 
     def test_enabled_without_the_advisor_mode_leaves_questions_to_the_queue(self):
-        self.configure("[orch.advisor]\nenabled = true\n")
+        self.configure('[orch.conductor]\nquestions = "queue"\n\n[orch.advisor]\nenabled = true\n')
         self.script({"executor": [asking(dict(ASK))]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("advisor")), (4, 0), err)
@@ -353,7 +353,7 @@ class RedChecksTriggerTests(AdvisorCase):
         self.assertIn("Chosen way: rename — Rename the flag (chosen by owner", self.prompt("executor", 3))
 
     def test_without_the_advisor_the_red_checks_block_as_before(self):
-        self.configure("")
+        self.configure("[orch.advisor]\nenabled = false\n")
         self.script({"executor": [self.red(), self.red()]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("advisor"), self.calls("executor")), (1, 0, 2), err)
@@ -440,7 +440,7 @@ class RejectedFindingTriggerTests(AdvisorCase):
         self.assertIn("Chosen way: rename — Rename the flag (chosen by owner", self.prompt("triager", 2))
 
     def test_without_the_advisor_the_rejection_stands(self):
-        self.configure("")
+        self.configure("[orch.advisor]\nenabled = false\n")
         self.script({"executor": [executor_ok("W1")], "reviewer": [FINDING], "triager": [self.rejecting()]})
         code, _, err = self.run_items("W1")
         self.assertEqual((code, self.calls("advisor"), self.calls("triager")), (0, 0, 1), err)
@@ -656,7 +656,7 @@ class ContractAndConfigTests(unittest.TestCase):
 
     def test_the_defaults_of_orch_advisor(self):
         found = settings.defaults().advisor
-        self.assertEqual(found, {"enabled": False, "max_rounds": 2,
+        self.assertEqual(found, {"enabled": True, "max_rounds": 2,
                                  "human_gate": ["destructive", "public-api", "scope-expansion", "security"],
                                  "min_confidence": "medium", "panel": [], "panel_on": ["low_confidence"]})
 

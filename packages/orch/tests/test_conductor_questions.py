@@ -22,6 +22,16 @@ ASK = {"id": "Q1", "revision": 1, "kind": "decision", "text": "Keep the old flag
        "options": [{"id": "keep", "label": "keep"}, {"id": "rename", "label": "rename"}], "blocking": True}
 
 
+class AnswererTests(unittest.TestCase):
+    def test_an_answer_without_a_terminal_is_not_recorded_as_the_user(self):
+        from orch.conductor import cli
+        with mock.patch("getpass.getuser", return_value="owner"):
+            with mock.patch.object(sys.stdin, "isatty", return_value=False):
+                self.assertEqual("cli:owner", cli._answerer())
+            with mock.patch.object(sys.stdin, "isatty", return_value=True):
+                self.assertEqual("owner", cli._answerer())
+
+
 class ConcurrentQuestionsTests(unittest.TestCase):
     def test_an_owner_answer_survives_a_denial_computed_before_the_file_lock(self):
         with tempfile.TemporaryDirectory() as temporary:

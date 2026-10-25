@@ -803,6 +803,26 @@ class RetryRegisterTests(Case):
         self.assertIn("now really done", notes)
         self.assertNotIn("stuck", notes)  # the text of the blocked attempt does not outlive the retry
 
+    def test_a_retried_attempt_blocked_again_replaces_its_first_block(self):
+        # PLAN9 P6.3 (cnd-20261025T112512Z-0d84ef): blocked on Q1/Q2, retried, blocked again on Q3 with green checks:
+        # the planner refused the second block of the same attempt with ATTEMPT_CONFLICT and the run stopped
+        self.claim()
+        first = {"summary": "stuck", "open_issues": [{"text": "QUESTION: Q1 which version", "kind": "escalation"}]}
+        self.assertEqual(self.register(status="blocked", report=first)["outcome"], "recorded")
+        again = self.register(status="blocked", evidence={"V1": self.evidence()}, report={
+            "summary": "stuck again", "open_issues": [{"text": "QUESTION: Q3 which boundary", "kind": "escalation"}]})
+        self.assertEqual(again["outcome"], "recorded", again)
+        piece = self.item("P1.1")
+        self.assertEqual(piece["status"], "blocked")
+        self.assertIn("stuck again", piece["result"].get("notes", ""))
+        self.assertIn("Q3", piece["result"].get("escalation", ""))
+
+    def test_a_repeated_block_of_the_same_attempt_stays_a_no_op(self):
+        self.claim()
+        report = {"summary": "stuck", "open_issues": [{"text": "QUESTION: Q1 which version", "kind": "escalation"}]}
+        self.assertEqual(self.register(status="blocked", report=report)["outcome"], "recorded")
+        self.assertEqual(self.register(status="blocked", report=report)["outcome"], "no-op")
+
 
 class CommitTests(Case):
     def setUp(self):

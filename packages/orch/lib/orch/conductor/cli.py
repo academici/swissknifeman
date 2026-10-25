@@ -26,6 +26,13 @@ from orch.conductor.infrastructure import detach, launch_plan
 from orch.conductor.infrastructure.lease import launcher
 
 
+def _answerer() -> str:
+    """The name an answer is written under when ``--by`` is not given: only a person at a terminal is the user; a caller
+    without one (an agent, a script) is recorded as ``cli:<user>``, so the log never shows the owner as the answerer."""
+    user = getpass.getuser()
+    return user if sys.stdin.isatty() else f"cli:{user}"
+
+
 def _project(args):
     """The project context (``--project``, ``SKM_PROJECT_ROOT`` or the nearest marker), or ``None`` after the refusal was
     printed: ``PROJECT_CONTEXT_REQUIRED`` without a project, ``PROJECT_NOT_GIT`` when it is not a git repository."""
@@ -152,7 +159,7 @@ def _questions(args, project: Path) -> int:
     folder = directory / engine.safe(args.item)
     try:
         entry = questions.answer_file(folder, args.question, item=args.item, option=args.option, text=args.text,
-                                      by=args.by or getpass.getuser(), now=engine.utc_now())
+                                      by=args.by or _answerer(), now=engine.utc_now())
     except (questions.QuestionError, engine.Stop) as error:
         print(f"{error.code}: {error.message}", file=sys.stderr)
         return 1
@@ -412,7 +419,7 @@ def main(argv: list | None = None) -> int:
     chosen = answer.add_mutually_exclusive_group(required=True)
     chosen.add_argument("--option", metavar="ID", help="one of the options of the question")
     chosen.add_argument("--text", help="a free answer (for a question without options, or a clarification)")
-    answer.add_argument("--by", metavar="WHO", help="who answers (default: the user of the shell)")
+    answer.add_argument("--by", metavar="WHO", help="who answers (default: the user of the shell at a terminal, ``cli:USER`` without one: a script or an agent is not the owner)")
     answer.add_argument("--continue", dest="cont", action="store_true",
                         help="then continue this piece in the same command (as `continue --item ITEM`)")
     quiet = answer.add_mutually_exclusive_group()

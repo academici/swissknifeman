@@ -29,7 +29,7 @@ orch conduct resume --run RUN [--retry ITEM]   # after a stop
 | What | Switch | Default |
 |---|---|---|
 | Where the executor may write | `--fence project|plan`, `--allow-path DIR` (repeatable) | `project`: any file of the project; paths outside the plan's write set are reported as deviations. `plan` makes the write set a fence. `--allow-path` adds directories outside the project. |
-| Executor session | `--batch` / `--no-batch` (`[orch.conductor] session_executor`) | `--batch`: all pieces of the run in progress at once, a session per piece with the handoff of the earlier ones (`session.executor: handoff`; `shared` keeps one `claude --resume` session); `--no-batch`: one at a time, a fresh session each |
+| Executor session | `--batch` / `--no-batch` (`[orch.conductor] session_executor`) | `--batch`: all pieces of the run in progress at once, one executor session carries all pieces (`session.executor: shared`, a `claude --resume` session; `handoff` gives each piece a session of its own with the handoff of the earlier ones); `--no-batch`: one at a time, a fresh session each |
 | Review | `review.*` in `--options` (`reviewer`, rounds, dynamic) | see conductor.md; set it per piece on purpose |
 | Limits and beacons | `limits.*` | nothing is stopped for being long; beacons tell what runs. `limits.disk_min_gb` (5): a run or a round of checks does not start with less free space (`DISK_LOW`) |
 | Scenario | `--scenario S` | the plan's own (overlays, `orchestration`), else `solo`; the flag wins over the plan |

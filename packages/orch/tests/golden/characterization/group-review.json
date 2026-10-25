@@ -23,7 +23,9 @@
   },
   {
    "argv": [
-    "--safe-mode"
+    "--safe-mode",
+    "--resume",
+    "executor-session-1"
    ],
    "n": 2,
    "role": "executor"
@@ -327,8 +329,8 @@
     },
     "run_id": "run-<digest>",
     "session": {
-     "reason": "first_round",
-     "resumed": false
+     "reason": "next_piece",
+     "resumed": true
     },
     "step": "executor.1",
     "work_id": "PLAN9.W2@<digest>"
@@ -496,7 +498,7 @@
      "id": "batch",
      "kind": "run_rules",
      "origin": "conductor",
-     "tokens": 92
+     "tokens": 99
     },
     {
      "kind": "context_map",
@@ -530,7 +532,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 289
+     "tokens": 296
     },
     "task": {
      "limit": 0,
@@ -612,7 +614,7 @@
      "id": "batch",
      "kind": "run_rules",
      "origin": "conductor",
-     "tokens": 155
+     "tokens": 104
     },
     {
      "kind": "context_map",
@@ -646,7 +648,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 352
+     "tokens": 301
     },
     "task": {
      "limit": 0,
@@ -898,8 +900,8 @@
   {
    "event": "info",
    "item": "W2",
-   "message": "a fresh session starts; reason=first_round",
-   "reason_code": "SESSION_FRESH",
+   "message": "session executor-session-1 resumed; reuse=next_piece",
+   "reason_code": "SESSION_RESUMED",
    "role": "executor",
    "route": "claude-code/sonnet/high",
    "stage": "executor.1"
@@ -1117,38 +1119,12 @@
    }
   },
   "executor_sessions": {
-   "W1": {
+   "*": {
     "created_at": "<time>",
     "fingerprint": {
-     "attempt_id": "att-run-<digest>-W1",
      "authority_digest": "",
-     "base": "<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
-     "item": "W1",
-     "project": "<project>",
-     "provider": "claude-code",
-     "role": "executor",
-     "worktree": "<project>"
-    },
-    "fingerprint_digest": "sha256:<digest>",
-    "last_item": "W1",
-    "last_used_at": "<time>",
-    "provider": "claude-code",
-    "rounds": 1,
-    "route": "claude-code/sonnet/high",
-    "session": "executor-session-1",
-    "task_digest": "<digest>"
-   },
-   "W2": {
-    "created_at": "<time>",
-    "fingerprint": {
-     "attempt_id": "att-run-<digest>-W2",
-     "authority_digest": "",
-     "base": "<digest>",
-     "instructions_digest": "sha256:<digest>",
-     "isolation_home": "",
-     "item": "W2",
      "project": "<project>",
      "provider": "claude-code",
      "role": "executor",
@@ -1158,7 +1134,7 @@
     "last_item": "W2",
     "last_used_at": "<time>",
     "provider": "claude-code",
-    "rounds": 1,
+    "rounds": 2,
     "route": "claude-code/sonnet/high",
     "session": "executor-session-2",
     "task_digest": "<digest>"
@@ -1197,7 +1173,6 @@
     "outcome": "done",
     "plan_notes": [],
     "retries_used": 0,
-    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {
@@ -1385,7 +1360,6 @@
     "outcome": "done",
     "plan_notes": [],
     "retries_used": 0,
-    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

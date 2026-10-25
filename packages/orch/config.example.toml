@@ -80,8 +80,8 @@ schema_version = 1
 # Rules for the executor of every run; the options of the pack, the phase and the item append theirs. Array of strings.
 # rules = []
 
-# How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `handoff` gives each piece a fresh session with the handoff of the earlier pieces, `shared` resumes the session of the previous executor, `per-item` starts a fresh one for every step. One of: "handoff", "shared", "per-item".
-# session_executor = "handoff"
+# How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` (default) resumes the session of the previous executor, `handoff` gives each piece a fresh session with the handoff of the earlier pieces, `per-item` starts a fresh one for every step. One of: "handoff", "shared", "per-item".
+# session_executor = "shared"
 
 # Untracked files already in the tree when a run starts new work (a tree shared with another session): refuse stops with WORKTREE_DIRTY; keep lets the run start, fingerprints them and never counts them as the work of a piece while their content stays the same (FOREIGN_KEPT). Tracked changes always stop the run. One of: "refuse", "keep".
 # foreign_untracked = "refuse"

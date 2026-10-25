@@ -40,6 +40,9 @@ def piece(ref: str = "W1", mode: str = "handoff", **options):
                                  input_doc={}, routes={"executor": CLAUDE})
 
 
+HANDOFF_CONFIG = '[orch.conductor]\nsession_executor = "handoff"\n'  # the default is `shared`
+
+
 class DecisionTests(unittest.TestCase):
     def owner(self, slots: dict):
         owner, base = stub(slots)
@@ -433,6 +436,10 @@ class ObserverTests(unittest.TestCase):
 
 class SessionRunTests(ConductorCase):
     """The decisions in a whole run, through the fake executor."""
+
+    def setUp(self):
+        super().setUp()
+        self.write_config(extra=HANDOFF_CONFIG)  # the default is `shared`; these tests are about `handoff`
 
     RED = {"result": report("W1")}  # no file written: the check is red and the round is corrected
 

@@ -58,12 +58,13 @@ DEFAULT_INSTRUCTIONS = {"isolate_roles": ["context-scout", "executor", "bounded-
 # committed; a tracked one that changed blocks the piece.
 DEFAULT_SCOPE = {"outside": "deviation", "outside_module": "deviation", "fence": "project", "extra_paths": [],
                  "runtime_paths": [".swissknifeman/orch-artifacts/**", ".swissknifeman/orch/**", "**/tests/evidence/**"]}
-# How the executor sessions of a run of several pieces are kept. ``handoff`` (default): each piece starts a fresh session
+# How the executor sessions of a run of several pieces are kept. ``shared`` (default): one session for all pieces (a piece
+# resumes the session of the previous executor), so a batch is one context. ``handoff``: each piece starts a fresh session
 # that its correction rounds resume, and its prompt carries the handoff of the earlier pieces (summary, commit, notes), so
-# a later piece does not re-read the whole transcript of the earlier ones on every turn. ``shared``: one session for all
-# pieces (a piece resumes the session of the previous executor). ``per-item``: a fresh session for every executor step.
+# a later piece does not re-read the whole transcript of the earlier ones on every turn. ``per-item``: a fresh session for
+# every executor step.
 SESSION_MODES = ("handoff", "shared", "per-item")
-DEFAULT_SESSION = {"executor": "handoff", "max_idle_s": 0}  # max_idle_s 0: a session never expires by idleness
+DEFAULT_SESSION = {"executor": "shared", "max_idle_s": 0}  # max_idle_s 0: a session never expires by idleness
 # How the commits of a piece are made. ``final-only`` (default): one commit after the registration. ``implementation-and-fixes``:
 # a checkpoint commit of the implementation after the first green checks and before the first review, one fix commit per
 # green correction round of the review, then the final commit of what is left (artifacts, plan files).

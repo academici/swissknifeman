@@ -716,15 +716,12 @@
    }
   },
   "executor_sessions": {
-   "adhoc@9b97afced891": {
+   "*": {
     "created_at": "<time>",
     "fingerprint": {
-     "attempt_id": "att-run-<digest>-adhoc-9b97afced891",
      "authority_digest": "",
-     "base": "<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
-     "item": "adhoc@<digest>",
      "project": "<project>",
      "provider": "claude-code",
      "role": "executor",
@@ -759,7 +756,6 @@
       "out/adhoc.txt": "<digest>"
      }
     },
-    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

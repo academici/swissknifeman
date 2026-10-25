@@ -15,9 +15,12 @@ from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor
 from tests.test_conductor_prompts import fixture
 
 
+HANDOFF_CONFIG = '[orch.conductor]\nsession_executor = "handoff"\n'  # the default is `shared`
+
+
 class SessionOptionsTests(unittest.TestCase):
-    def test_handoff_is_the_default(self):
-        self.assertEqual(options.DEFAULTS["session"], {"executor": "handoff", "max_idle_s": 0})
+    def test_shared_is_the_default(self):
+        self.assertEqual(options.DEFAULTS["session"], {"executor": "shared", "max_idle_s": 0})
 
     def test_a_layer_can_choose_per_item_and_a_bad_value_is_refused(self):
         merged = options.merge(options.DEFAULTS, {"session": {"executor": "per-item"}})
@@ -107,8 +110,12 @@ class SharedSessionTests(ConductorCase):
 
 
 class HandoffSessionTests(ConductorCase):
-    """``handoff`` (default): a new piece starts a fresh session with the handoff of the earlier pieces; its correction
+    """``handoff``: a new piece starts a fresh session with the handoff of the earlier pieces; its correction
     rounds resume its own session."""
+
+    def setUp(self):
+        super().setUp()
+        self.write_config(extra=HANDOFF_CONFIG)  # the default is `shared`; these tests are about `handoff`
 
     def argv(self, number: int) -> list:
         return json.loads((self.fake / f"executor-{number}.argv").read_text(encoding="utf-8"))
@@ -198,6 +205,10 @@ class ResumedBlocksTests(unittest.TestCase):
 
 class ResumedRoundTests(ConductorCase):
     """A correction round continues the session with the delta prompt; every doubt gives the whole prompt."""
+
+    def setUp(self):
+        super().setUp()
+        self.write_config(extra=HANDOFF_CONFIG)  # the default is `shared`; these tests are about `handoff`
 
     RED = {"result": report("W1")}  # no file written: the check is red and the round is corrected
 
@@ -328,7 +339,8 @@ class CodexResumeTests(ConductorCase):
         process.available.__globals__["_command_available"].cache_clear()
         self.addCleanup(process.available.__globals__["_command_available"].cache_clear)
         self.write_config(argv={role: [sys.executable, str(FIXTURES / "fake_role.py"), role]
-                                for role in ROLES if role != "executor"})  # the executor starts from the launch catalog
+                                for role in ROLES if role != "executor"},
+                          extra=HANDOFF_CONFIG)  # the executor starts from the launch catalog
         path = self.project.parent / "codex-executor.json"
         path.write_text(json.dumps({"stages": [{"role": "executor", "provider": "codex", "model": "gpt-6.1-sol",
                                                 "effort": "high"}]}), encoding="utf-8")

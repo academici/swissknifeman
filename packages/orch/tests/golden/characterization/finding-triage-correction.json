@@ -1179,15 +1179,12 @@
    }
   },
   "executor_sessions": {
-   "W1": {
+   "*": {
     "created_at": "<time>",
     "fingerprint": {
-     "attempt_id": "att-run-<digest>-W1",
      "authority_digest": "",
-     "base": "<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
-     "item": "W1",
      "project": "<project>",
      "provider": "claude-code",
      "role": "executor",
@@ -1244,7 +1241,6 @@
      }
     },
     "review_rounds_used": 1,
-    "session_base": "<digest>",
     "source_paths": [],
     "stage_usage": {
      "executor.1": {

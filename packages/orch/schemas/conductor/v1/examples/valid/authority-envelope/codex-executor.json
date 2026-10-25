@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:authority-envelope:v1",
+  "role": "executor",
+  "provider": "codex",
+  "access": "open",
+  "guard": "none",
+  "write_roots": [
+    {
+      "path": "/",
+      "why": "unconfined"
+    }
+  ],
+  "read_masks": "none",
+  "setting_sources": null,
+  "permission_mode": null,
+  "permission_rules": {
+    "deny": [],
+    "ask": []
+  },
+  "network": {
+    "declared": "none",
+    "effective": "open",
+    "enforced_by": null,
+    "allowed_domains": []
+  },
+  "docker": "open",
+  "git": {
+    "commit": "work-source",
+    "push": "unenforced",
+    "reset_hard": "unenforced",
+    "clean": "unenforced",
+    "dot_git_write": true
+  },
+  "isolation": {
+    "profile": "codex",
+    "guarantee": "partial",
+    "args": [
+      "--ignore-user-config",
+      "-c",
+      "project_doc_max_bytes=0"
+    ],
+    "env_keys": [],
+    "home_var": "CODEX_HOME"
+  },
+  "degraded": [
+    {
+      "code": "SURFACES_UNCONFIRMED",
+      "detail": "repository_instructions canary, user_skills unknown"
+    },
+    {
+      "code": "NETWORK_UNENFORCED",
+      "detail": "codex confines no network of its commands here"
+    }
+  ],
+  "digest": "sha256:b80272be0e7d19998cb9e6f46f8cbc66356d2a6b68c5cda73b87cd35d0f616dc"
+}

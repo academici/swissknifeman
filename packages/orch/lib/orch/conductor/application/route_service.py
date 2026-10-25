@@ -14,7 +14,8 @@ from orch.conductor import gates, options as opts, process, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import cli_probe, clock
-from orch.conductor.policies import isolation as isolation_rules, routing as route_rules, sandbox as sandbox_rules
+from orch.conductor.policies import authority as authority_rules, isolation as isolation_rules, routing as route_rules
+from orch.conductor.policies import sandbox as sandbox_rules
 from orch.conductor.policies.routing import OPTIONAL_ROLES
 
 
@@ -274,10 +275,16 @@ def preflight(self, item: Item) -> None:
     if blocked:
         raise Stop("SANDBOX_UNAVAILABLE", "; ".join(blocked))
     # the profiles are read (ISOLATION_PROFILES_INVALID) and, under require, every isolated role must be isolated fully
-    plans = [self._isolation_plan(item, role, route) for role, route in required.items()
-             if role in item.options["instructions"]["isolate_roles"]
-             and item.options["instructions"].get("isolation", "prefer") != "off"]
+    isolated = {role: route for role, route in required.items()
+                if role in item.options["instructions"]["isolate_roles"]
+                and item.options["instructions"].get("isolation", "prefer") != "off"}
+    plans = [self._isolation_plan(item, role, route) for role, route in isolated.items()]
     refused = [text.split(": ", 1)[1] for text in map(isolation_rules.problem, plans) if text]
+    if not refused and item.options["instructions"].get("isolation") == "require":  # the project settings stay out too
+        refused = [text.split(": ", 1)[1] for plan, (role, route) in zip(plans, isolated.items())
+                   if route.get("provider") == "claude-code"
+                   for text in [authority_rules.setting_sources_problem(
+                       self._authority(item, role, route, admit=False, quiet=True), plan)] if text]
     if refused:
         raise Stop("ISOLATION_UNAVAILABLE", " | ".join(refused))
     off = [f"{role}: {self.provider_disabled(route['provider'])}" for role, route in required.items()
@@ -396,22 +403,41 @@ def claude_sandbox_problem(self, item: Item, route: dict) -> Optional[str]:
     return sandbox_rules.claude_sandbox_problem(item.options, route, probe=probed, settings_listed=listed)
 
 
-def sandbox_args(self, item: Item, role: str, route: dict) -> list:
-    """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
-    the user's settings), with a write grant for ``scope.extra_paths`` when the role writes. A sandbox that cannot start
-    never leaves the commands unconfined silently: ``prefer`` says so once and goes on under the filesystem guard (which
-    gets the paths as ``--rw``), ``require`` was stopped in the preflight."""
-    mode = self._sandbox_mode(item)
-    if mode == "off" or not self._claude_bash(route):
-        return []
+def sandbox_facts(self, item: Item, role: str, route: dict, quiet: bool = False) -> dict:
+    """``{mode, available, reason, settings_listed}``: what the Claude Code sandbox of ``role`` on ``route`` depends on,
+    probed only for a Claude Code role with Bash and a ``mode`` not ``off`` (the CLI only when the sandbox starts). A
+    sandbox that cannot start never leaves the commands unconfined silently: ``prefer`` says so once and goes on under
+    the filesystem guard, ``require`` was stopped in the preflight. ``quiet`` probes the same facts and says nothing
+    (the identity of an executor session). A piece without instructions (a batch role of a piece the run did not
+    resolve) has the default mode ``prefer``."""
+    mode = self._sandbox_mode(item) if "instructions" in (item.options or {}) else "prefer"
+    found = {"mode": mode, "available": None, "reason": None, "settings_listed": None}
+    if mode == "off" or not route.get("argv") or not self._claude_bash(route):
+        return found
     probed = sandbox.probe()
+    found.update(available=bool(probed["available"]), reason=probed["reason"])
     if not probed["available"]:
-        if mode == "prefer":
+        if mode == "prefer" and not quiet:
             note_isolation(self, route["provider"], "sandbox",
                            f"sandbox unavailable: {probed['reason']}; the commands of claude-code roles run under the "
                            "filesystem guard only")
-        return []
-    if not self._knows(route["argv"], ["--settings"]):
+        return found
+    found["settings_listed"] = (cli_probe.knows if quiet else self._knows)(route["argv"], ["--settings"])
+    return found
+
+
+def launch_facts(self, item: Item, role: str, route: dict, quiet: bool = False) -> dict:
+    """``{sandbox, access, declared_network}``: what the authority envelope of a launch of ``role`` on ``route`` is
+    computed over from this layer (:func:`sandbox_facts`, ``[orch.launch] access``, ``tools.network`` of the role)."""
+    return {"sandbox": sandbox_facts(self, item, role, route, quiet=quiet), "access": self._launch_access(),
+            "declared_network": self.declared_network(role)}
+
+
+def sandbox_args(self, item: Item, role: str, route: dict) -> list:
+    """``--settings`` with only the ``sandbox`` block for a Claude Code role with Bash (the provider merges it with
+    the user's settings), with a write grant for ``scope.extra_paths`` when the role writes (:func:`sandbox_facts`)."""
+    facts = sandbox_facts(self, item, role, route)
+    if not facts["available"] or not facts["settings_listed"]:
         return []
     return sandbox_rules.sandbox_args(item.options, role, route,
                                       extra_paths=self._scope_option(item, "extra_paths", []),

@@ -473,6 +473,7 @@ class PreviewClaimActor(unittest.TestCase):
             run_id="", run_doc={}, settings=types.SimpleNamespace(default_profile="solo"),
             preview_routes=lambda it: {}, sandbox_mode=lambda it: "off", claim_actor=lambda: claim_actor,
             route_problem=lambda route: None, role_argv=lambda it, role, route: route["argv"],
+            authority=lambda it, role, route: {"network": {"declared": "none", "enforced_by": None}},
             declared_network=lambda role: "none", codex_sandboxed=lambda route: False, claude_bash=lambda route: False)
         with mock.patch.object(cli.engine, "Item", return_value=item), \
                 mock.patch.object(cli.sandbox, "probe", return_value={"available": True, "reason": ""}):

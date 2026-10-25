@@ -2,11 +2,11 @@ exit: 0
 --- stdout ---
 usage: orch.py [-h] [--config FILE] [--project DIR]
                [--project-resolution {launcher,flag,environment,marker,git}]
-               {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,stubs,doctor}
+               {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,roles,conformance,source,research,stubs,doctor}
                ...
 
 positional arguments:
-  {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,stubs,doctor}
+  {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,roles,conformance,source,research,stubs,doctor}
     conduct             the conductor: run|resume|settle|release|status|observ
                         e|answer|questions|prompt|gates (orch conduct --help)
     validate            validate an exec/v1, conductor/v1 or records/v1 JSON
@@ -19,6 +19,8 @@ positional arguments:
     explain             why a launch-plan looks as it does (read-only)
     policy              run-policy packs: list, show, test
     route               routes of the conductor roles: explain (read-only)
+    roles               the authority of the conductor roles: matrix (read-
+                        only)
     conformance         engine conformance scenarios; covered ones run,
                         declared ones are listed
     source              cycle of a work source: claim, brief, prepare,

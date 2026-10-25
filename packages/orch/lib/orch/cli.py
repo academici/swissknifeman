@@ -274,6 +274,22 @@ def _route_explain(args: argparse.Namespace) -> int:
     return 0
 
 
+def _roles_matrix(args: argparse.Namespace) -> int:
+    """Read-only: the authority of every role and provider of the shipped launch catalog with access open and confined
+    on a reference machine (``launch_plan.authority_matrix``); the table docs/conductor.md "Sandboxes" holds."""
+    from orch.conductor.infrastructure import launch_plan
+    try:
+        rows = launch_plan.authority_matrix(launch.load_catalog())
+    except launch.LaunchError as error:
+        print(f"{error.code}: {error}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+    else:
+        sys.stdout.write(launch_plan.matrix_markdown(rows))
+    return 0
+
+
 def _policy(args: argparse.Namespace) -> int:
     try:
         current = settings.load(project=_project_root(args), config_file=args.config)
@@ -1176,6 +1192,13 @@ def _main(argv: list[str] | None = None) -> int:
     explain.add_argument("--item", help="with --plan or --run: the piece of work")
     explain.add_argument("--scenario", help="the scenario to explain (default: default_profile)")
     explain.add_argument("--json", action="store_true")
+    command = verbs.add_parser("roles", help="the authority of the conductor roles: matrix (read-only)")
+    actions = command.add_subparsers(dest="action", required=True)
+    matrix = actions.add_parser("matrix", help="guard, network, Docker, setting sources and isolation of every role and "
+                                               "provider of the launch catalog, access open and confined")
+    shown = matrix.add_mutually_exclusive_group()
+    shown.add_argument("--markdown", action="store_true", help="a Markdown table (the default)")
+    shown.add_argument("--json", action="store_true", help="one object per role, provider and access")
     command = verbs.add_parser("conformance", help="engine conformance scenarios; covered ones run, declared ones are listed")
     command.add_argument("--binding", choices=sorted(BINDINGS), help="only this binding (default: every binding)")
     command.add_argument("--json", action="store_true")
@@ -1217,6 +1240,8 @@ def _main(argv: list[str] | None = None) -> int:
         return _policy(args)
     if args.verb == "route":
         return _route_explain(args)
+    if args.verb == "roles":
+        return _roles_matrix(args)
     if args.verb == "conformance":
         return _conformance(args)
     if args.verb == "launch":

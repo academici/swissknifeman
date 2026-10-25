@@ -32,6 +32,21 @@
     "duration_s": {"description": "Wall time of the agent run.", "type": "number", "minimum": 0},
     "stream": {"description": "Stream of the last attempt, relative to the project; null when none.", "type": ["string", "null"]},
     "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"},
+    "authority": {
+      "description": "The authority envelope of each process the agent run started (P6.2: authority/a<attempt>.json of the agent folder), in the order of the attempts; absent when no process started.",
+      "type": "array",
+      "items": {
+        "description": "One launch.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attempt", "provider", "digest"],
+        "properties": {
+          "attempt": {"description": "Attempt of the launch (the a<attempt>.json file).", "type": "integer", "minimum": 1},
+          "provider": {"description": "Provider of the route of the attempt.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "digest": {"description": "digest of the envelope.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
     "isolation": {
       "description": "The isolation the stream of an isolated role showed (P6.1); absent when the stream had no init event.",
       "type": "object",

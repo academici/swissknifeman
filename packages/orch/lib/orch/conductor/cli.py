@@ -60,8 +60,11 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     problems = {**{role: conductor.route_problem(route) for role, route in item.routes.items()}, **unavailable}
     available = {role: problem is None for role, problem in problems.items()}
     unavailable = {role: problem for role, problem in problems.items() if problem}
-    isolation = {}
+    # The authority of each role is that of its launch, computed over the same trusted options (with the invocation
+    # scope of --fence and --allow-path) as the full command line; routes[*].argv stays the base route template.
+    isolation, authority = {}, {}
     for role, route in item.routes.items():
+        authority[role] = conductor.authority(item, role, route)
         built = conductor.role_argv(item, role, route)
         guarded = any(arg.endswith("ro-run.py") for arg in built[:2])
         base = route["argv"] if guarded else launch_plan.strip_guard(route["argv"])
@@ -69,7 +72,7 @@ def _preview(conductor: engine.Conductor, args) -> dict:
     probed = sandbox.probe()
     network, warnings = {}, []
     for role, route in item.routes.items():
-        network[role] = _network(conductor, role, route, isolation[role], probed)
+        network[role] = _network(authority[role], probed)
         if network[role]["declared"] == "none" and not network[role]["enforced"]:
             warnings.append(f"{role}: network is declared none, but nothing enforces it "
                             f"({route['provider']} has no sandbox for its commands here)")
@@ -87,7 +90,8 @@ def _preview(conductor: engine.Conductor, args) -> dict:
             "fallback_routes": item.options["fallback_routes"], "route_notes": item.route_notes,
             "gates": [{"provider": name, **entry} for name, entry in sorted(gates.active(time.time()).items())],
             "routes": item.routes, "available": available, "unavailable": unavailable,
-            "isolation_args": isolation, "sandbox": {"available": probed["available"], "reason": probed["reason"]},
+            "isolation_args": isolation, "authority": authority,
+            "sandbox": {"available": probed["available"], "reason": probed["reason"]},
             "claim_actor": claim_actor, "network": network, "warnings": warnings,
             "note": "the work source adds the scenario and the options of the plan, phase and item at claim time"}
 
@@ -112,18 +116,14 @@ def _claim_actor_of(conductor, route: dict | None) -> tuple:
                    "a piece whose route pins the executor is refused at the claim")
 
 
-def _network(conductor, role: str, route: dict, isolation: list, probed: dict) -> dict:
+def _network(envelope: dict, probed: dict) -> dict:
     """What a role may reach (``declared``, from its manifest) and whether a provider sandbox confines its commands
-    (``enforced``). The agent process itself is never confined: its model API stays reachable."""
-    declared = conductor.declared_network(role)
-    by = None
-    if "--settings" in isolation:
-        by = "claude-sandbox"
-    elif conductor.codex_sandboxed(route) and probed["available"]:
-        by = "codex-sandbox"
-    elif route.get("provider") == "claude-code" and not conductor.claude_bash(route):
-        by = "claude-tools"  # no shell tool: its commands cannot reach anything
-    return {"declared": declared, "enforced": by is not None, "by": by}
+    (``enforced``), from the authority envelope of its launch (a Codex sandbox that cannot start here confines nothing:
+    the route is unavailable). The agent process itself is never confined: its model API stays reachable."""
+    by = envelope["network"]["enforced_by"]
+    if by == "codex-sandbox" and not probed["available"]:
+        by = None
+    return {"declared": envelope["network"]["declared"], "enforced": by is not None, "by": by}
 
 
 def _questions(args, project: Path) -> int:

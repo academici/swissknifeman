@@ -18,7 +18,8 @@ from orch.conductor import options as opts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import cli_probe, sessions
-from orch.conductor.policies import isolation as isolation_rules
+from orch import launch
+from orch.conductor.policies import authority as authority_rules, isolation as isolation_rules, sandbox as sandbox_rules
 from orch.settings import ORCH_ROOT
 
 TRANSCRIPT_NAME_MAX = 200  # Claude Code shortens a longer folder name and appends a hash it does not publish
@@ -46,10 +47,11 @@ def shell(role: str) -> str:
     return (manifest.get("tools") or {}).get("shell") or "full"
 
 
-def isolation_plan(self, item: Item, role: str, route: dict) -> dict:
+def isolation_plan(self, item: Item, role: str, route: dict, quiet: bool = False) -> dict:
     """:func:`policies.isolation.plan` of ``role`` on ``route``: the profile of its provider, the flags its CLI lists
     (``role_ports.knows``, which says a missing one once per run), its version, the live probes of this machine for that
-    version, a drift an earlier role of the run showed, and ``[orch.isolation.<provider>] auth``. A route whose command
+    version, a drift an earlier role of the run showed, and ``[orch.isolation.<provider>] auth``; ``quiet`` asks the CLI
+    without saying a missing flag. A route whose command
     is not a provider CLI the conductor can name (a wrapper, a stand-in) gets the flags as asked, unconfirmed."""
     instructions = (item.options or {}).get("instructions") or {}
     isolated, mode = role in (instructions.get("isolate_roles") or ()), instructions.get("isolation", "prefer")
@@ -60,7 +62,7 @@ def isolation_plan(self, item: Item, role: str, route: dict) -> dict:
     probe = {}
     if profile is not None:
         argv, helper, flags = route.get("argv") or [], profile["probe"]["help"], profile["probe"]["flags"]
-        every = not flags or self.role_ports.knows(argv, flags, help_argv=helper)
+        every = not flags or (cli_probe.knows if quiet else self.role_ports.knows)(argv, flags, help_argv=helper)
         noted = (getattr(self, "state", None) or {}).get("isolation_noted") or []
         probe = {"listed": {flag: every or cli_probe.knows(argv, [flag], help_argv=helper) for flag in flags},
                  "failed": not every and cli_probe.failed(argv, help_argv=helper),
@@ -131,33 +133,163 @@ def prepare_home(run_dir: Path, provider: str, home: dict, original_env: dict) -
     return found
 
 
-def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None, *, admit: bool = True) -> list:
-    """The command line of a role process. Every launch builds it here, so this is where ``instructions.isolation =
-    require`` refuses a role that would start without the full isolation of its profile (``ISOLATION_UNAVAILABLE``: a
-    drift of an earlier role since the preflight, a report-fixer or a batch role the preflight does not see); ``admit``
-    False only builds it (the dry run)."""
-    isolation = isolation_plan(self, item, role, route)
+def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, quiet: bool = False) -> dict:
+    """The ``authority-envelope`` of a launch of ``role`` on ``route`` (:func:`policies.authority.compute`) over the
+    facts probed here: the isolation plan, the Claude sandbox, the flags of the CLI, the transcripts folder of a guarded
+    Claude Code executor. Every launch computes it, so this is where ``instructions.isolation = require`` refuses a role
+    that would start without the full isolation of its profile (``ISOLATION_UNAVAILABLE``: a drift of an earlier role
+    since the preflight, a report-fixer or a batch role the preflight does not see, a CLI that cannot keep the project
+    settings out); ``admit`` False only computes it (the dry run). ``quiet`` probes the same facts and says nothing,
+    creates no folder (the identity of an executor session)."""
+    isolation = isolation_plan(self, item, role, route, quiet=quiet)
     refused = isolation_rules.problem(isolation) if admit else None
     if refused:
         raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
-    self.role_ports.note_isolation(item, isolation)
-    extra = isolation["args"]
-    resume = sessions.resume_args(self, item, role, route, decision)  # the decision of the attempt, as it announced it
-    argv = [arg.replace("{session}", resume[0]) for arg in route["resume_argv"]] \
-        if resume and route.get("resume_argv") else list(route["argv"])  # a catalog entry that names its own resume command
-    if sessions.shared_session(self, item, role, route):  # a session that is not saved cannot be resumed by the next executor
+    if not quiet:
+        self.role_ports.note_isolation(item, isolation)
+    found = self.role_ports.launch_facts(item, role, route, quiet=quiet)
+    facts = found["sandbox"]
+    argv = route.get("argv") or []
+    transcripts = None
+    if role == "executor" and authority_rules.guard_prefix(argv) is not None \
+            and not authority_rules.sandbox_applies(route, facts) and "claude" in argv[argv.index("--") + 1:][:1] \
+            and self._shared_session(item, role, {"provider": "claude-code"}):
+        # else the guard stops the CLI from saving the session it must resume
+        transcripts = transcripts_folder(self) if quiet else self._claude_transcripts()
+    listed = None
+    if route.get("provider") == "claude-code" and isolation["isolated"]:
+        listed = {flag:cli_probe.knows(argv, [flag]) for flag in ("--setting-sources", "--settings")}
+    doc = authority_rules.compute(
+        role, route, access=found["access"], sandbox=facts, isolation=isolation,
+        declared_network=found["declared_network"],
+        sandbox_domains=((item.options or {}).get("instructions") or {}).get("sandbox_domains") or [],
+        extra_paths=list(self._scope_option(item, "extra_paths", [])), transcripts=transcripts,
+        project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
+        listed=listed)
+    refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
+    if refused:
+        raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
+    return doc
+
+
+def role_argv(self, item: Item, role: str, route: dict, decision: Optional[dict] = None, *, admit: bool = True,
+              envelope: Optional[dict] = None, resume: Optional[list] = None) -> list:
+    """The command line of a role process, built from the authority envelope of the launch (``envelope``, computed by
+    :func:`authority` when not given) and the session of the attempt (``decision``; ``resume``, its resume arguments,
+    when the caller already has them); ``admit`` False only builds it (the dry run). A resume command whose authority is
+    not the one of the route's command is refused (:func:`resume_problem`)."""
+    envelope = envelope if envelope is not None else authority(self, item, role, route, admit=admit)
+    if resume is None:
+        resume = sessions.resume_args(self, item, role, route, decision)  # the decision of the attempt, as it announced it
+        refused = resume_problem(self, item, role, route, resume, envelope) if admit else None
+        if refused:
+            raise Stop("AUTHORITY_RESUME_MISMATCH", refused)
+    return argv_from(envelope, route, resume, shared=sessions.shared_session(self, item, role, route))
+
+
+def resume_command(route: dict, resume: list) -> Optional[list]:
+    """The command an attempt that continues a session runs instead of ``route["argv"]``: the catalog's own
+    ``resume_argv`` with the session filled in; ``None`` when the attempt runs the route's command (a fresh session, or
+    a provider that resumes with ``--resume`` added to it)."""
+    if not resume or not route.get("resume_argv"):
+        return None
+    return [arg.replace("{session}", resume[0]) for arg in route["resume_argv"]]
+
+
+def resume_problem(self, item: Item, role: str, route: dict, resume: list, envelope: dict) -> Optional[str]:
+    """Why the resume command of an attempt may not run under ``envelope`` (the authority computed, recorded and
+    fingerprinted for the route's command): its own authority differs (another guard, grant, sandbox mode, permission
+    mode or setting sources), so the process would get what no record names. ``None`` when they are the same."""
+    command = resume_command(route, resume)
+    if command is None:
+        return None
+    resumed = self._authority(item, role, {**route, "argv": command}, admit=False, quiet=True)
+    if resumed["digest"] == envelope["digest"]:
+        return None
+    return (f"{role}/{route.get('provider')}: the resume command of the launch catalog has another authority than its "
+            f"command ({', '.join(authority_rules.changed_keys(envelope, resumed)) or 'digest'}); the attempt is not "
+            "started: make resume_argv grant what argv grants")
+
+
+def argv_from(envelope: dict, route: dict, resume: list, *, shared: bool) -> list:
+    """The command line of ``route`` under ``envelope``: the catalog argv (or its resume command), the guard the provider
+    sandbox replaces dropped, the ``--rw`` grants of the guard, the ``--add-dir`` grants, the isolation arguments, the
+    setting sources, the resume arguments and one ``--settings`` object (the sandbox block and the permissions of orch)."""
+    argv = resume_command(route, resume) or list(route["argv"])  # a catalog entry that names its own resume command
+    if shared:  # a session that is not saved cannot be resumed by the next executor
         argv = [arg for arg in argv if arg != "--no-session-persistence"]
-    sandboxed = self.role_ports.sandbox_args(item, role, route)
-    if sandboxed:  # the provider sandbox (bubblewrap) cannot start under the Landlock guard: it replaces the guard
+    if envelope["guard"] == "claude-sandbox":  # bubblewrap cannot start under the Landlock guard: it replaces the guard
         argv = strip_guard(argv)
-    argv = self._extra_write_dirs(item, role, argv)
-    granted = granted_paths(self, item, role)
+    granted = authority_rules.extra_roots(envelope, "extra_paths")
+    guarded = granted + authority_rules.extra_roots(envelope, "transcripts")
+    if guarded and authority_rules.guard_prefix(argv) is not None:
+        at = argv.index("--")
+        argv = argv[:at] + [part for path in guarded for part in ("--rw", path)] + argv[at:]
     if granted and route.get("provider") == "codex":  # a confined Codex writes beside the project only where it is told
         argv = codex_add_dirs(argv, granted)
+    sources = []
+    if envelope["setting_sources"] == ["user"] and envelope["permission_rules"]["deny"]:
+        if "--setting-sources" in argv[:-1]:
+            at = argv.index("--setting-sources") + 1
+            argv = argv[:at] + ["user"] + argv[at + 1:]
+        else:
+            sources = ["--setting-sources", "user"]
     # a Claude Code role reaches a directory outside the project with its file tools only when it is added; the shell
-    # of a sandboxed one is granted the same paths in the sandbox block (``sandbox_args``)
+    # of a sandboxed one is granted the same paths in the sandbox block
     added = [part for path in granted for part in ("--add-dir", path)] if route.get("provider") == "claude-code" else []
-    return argv + (extra or []) + ([] if route.get("resume_argv") else resume) + added + sandboxed
+    found = authority_rules.settings(envelope) if route.get("provider") == "claude-code" else None
+    tail = ["--settings", json.dumps(found, sort_keys=True)] if found else []
+    return argv + list(envelope["isolation"]["args"]) + sources + ([] if route.get("resume_argv") else resume) \
+        + added + tail
+
+
+MATRIX_PROJECT = "/project"  # the checkout of the matrix: every path of it is "." in the envelopes
+
+
+def authority_matrix(catalog: dict) -> list:
+    """The authority of every role and provider of ``catalog`` with ``access`` open and confined, on a reference machine:
+    the sandbox starts, every CLI lists the flags of its profile, the default options (every role isolated, ``prefer``,
+    no extra paths). One row per launch: ``{role, provider, access, guard, network, enforced_by, docker,
+    setting_sources, guarantee}`` (``orch.py roles matrix``; the table of docs/conductor.md "Sandboxes")."""
+    profiles =isolation_rules.load_profiles(isolation_rules.PROFILES_PATH)
+    defaults = opts.DEFAULT_INSTRUCTIONS
+    rows = []
+    for launch_role, providers in catalog["launch"].items():
+        role = "context-scout" if launch_role == "scout" else launch_role
+        for provider, entry in providers.items():
+            for access in ("open", "confined"):
+                argv = launch.build_argv(catalog, launch_role, provider, model="m", effort=entry["effort"],
+                                         cwd=MATRIX_PROJECT, access=access)
+                route = {"role": role, "provider": provider, "argv": argv}
+                profile = profiles.get(provider)
+                flags = profile["probe"]["flags"] if profile else []
+                isolation = isolation_rules.plan(
+                    role, route, isolated=role in defaults["isolate_roles"], mode=defaults["isolation"], profile=profile,
+                    probe={"listed": dict.fromkeys(flags, True), "failed": False, "confirmed": [], "drift": False,
+                           "unprobed": False})
+                doc = authority_rules.compute(
+                    role, route, access=access,
+                    sandbox={"mode": defaults["sandbox"], "available": True, "reason": None, "settings_listed": True},
+                    isolation=isolation, declared_network=sandbox_rules.declared_network(role),
+                    sandbox_domains=list(defaults["sandbox_domains"]), extra_paths=[], transcripts=None,
+                    project=MATRIX_PROJECT, home="/home/user", writes=writes(role),
+                    listed={"--setting-sources": True, "--settings": True})
+                rows.append({"role": role, "provider": provider, "access": access, "guard": doc["guard"],
+                             "network": doc["network"]["effective"], "enforced_by": doc["network"]["enforced_by"],
+                             "docker": doc["docker"],
+                             "setting_sources": ",".join(doc["setting_sources"]) if doc["setting_sources"] else None,
+                             "guarantee": doc["isolation"]["guarantee"]})
+    return rows
+
+
+def matrix_markdown(rows: list) -> str:
+    """The rows of :func:`authority_matrix` as a Markdown table."""
+    lines = ["| role | provider | access | guard | network | enforced by | docker | setting sources | isolation |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    lines += [f"| {row['role']} | {row['provider']} | {row['access']} | {row['guard']} | {row['network']} | "
+              f"{row['enforced_by'] or '-'} | {row['docker']} | {row['setting_sources'] or 'all'} | {row['guarantee']} |"
+              for row in rows]
+    return "\n".join(lines) + "\n"
 
 
 def granted_paths(self, item: Item, role: str) -> list:
@@ -206,14 +338,19 @@ def transcript_folder_name(project) -> str:
     return "".join(char if char.isascii() and char.isalnum() else "-" * (2 if ord(char) > 0xFFFF else 1) for char in str(project))
 
 
-def claude_transcripts(self) -> str:
+def transcripts_folder(self) -> str:
     """The folder where Claude Code keeps the transcripts of this project: ``~/.claude/projects/<path with every
     character outside [A-Za-z0-9] as -``. It is the one place besides the project that a resumable session needs. A
     path whose folder name would pass ``TRANSCRIPT_NAME_MAX`` gets a name with a hash suffix that is not known here: the
     whole ``~/.claude/projects`` is then writable for the executor (the transcripts of the other projects too)."""
     root = Path.home() / ".claude" / "projects"
     name = transcript_folder_name(self.project)
-    folder = root if len(name) > TRANSCRIPT_NAME_MAX else root / name
+    return str(root if len(name) > TRANSCRIPT_NAME_MAX else root / name)
+
+
+def claude_transcripts(self) -> str:
+    """:func:`transcripts_folder`, created when it is missing (the guard grants a folder that exists)."""
+    folder = Path(transcripts_folder(self))
     folder.mkdir(parents=True, exist_ok=True)
     return str(folder)
 

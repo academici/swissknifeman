@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {
+    "W1": {
+      "steps": {},
+      "retries_used": 0,
+      "authority": {"executor": "06c7ebc14344"}
+    }
+  },
+  "status": "running",
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

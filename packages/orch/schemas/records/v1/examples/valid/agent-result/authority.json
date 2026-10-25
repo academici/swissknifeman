@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": 0,
+  "decisions": [{"action": "fallback", "reason_codes": ["PROVIDER_QUOTA"], "route": {"provider": "codex", "model_class": "implementation"}}],
+  "duration_s": 312.4,
+  "stream": ".swissknifeman/state/orch/conductor/cnd-20261025T100000Z-a1b2c3/W1/streams/executor.1-a2.jsonl",
+  "lingered": false,
+  "authority": [
+    {"attempt": 1, "provider": "claude-code", "digest": "sha256:06c7ebc14344b46abcc3ef085ba7c728cabf3b0fbd21a7ab10e33a8e0e0507e7"},
+    {"attempt": 2, "provider": "codex", "digest": "sha256:b80272be0e7d19998cb9e6f46f8cbc66356d2a6b68c5cda73b87cd35d0f616dc"}
+  ]
+}

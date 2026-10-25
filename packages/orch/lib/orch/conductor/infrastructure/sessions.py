@@ -85,16 +85,21 @@ def slot_of(self, item: Item) -> Optional[dict]:
 
 
 def identity_inputs(self, item: Item, route: dict) -> dict:
-    """``{authority_digest, isolation_home}`` of the fingerprint: the digest of the authority envelope of the role (empty
-    until the envelope exists) and the home directory of the provider's isolation profile for an isolated executor
-    (``CODEX_HOME`` under the run folder for Codex: a session kept in another home cannot be continued; ``""`` for a
-    provider that keeps its own home, or an executor that is not isolated)."""
-    instructions = (getattr(item, "options", None) or {}).get("instructions") or {}
+    """``{authority_digest, isolation_home}`` of the fingerprint: the digest of the authority envelope a launch of the
+    executor on ``route`` would record (P6.2: computed quietly, nothing said or created; ``""`` for a route without a
+    command line or a piece without options) and the home directory of the provider's isolation profile for an isolated
+    executor (``CODEX_HOME`` under the run folder for Codex: a session kept in another home cannot be continued; ``""``
+    for a provider that keeps its own home, or an executor that is not isolated)."""
+    options = getattr(item, "options", None) or {}
+    instructions = options.get("instructions") or {}
     home = ""
     if "executor" in (instructions.get("isolate_roles") or ()) and instructions.get("isolation", "prefer") != "off":
         profile = isolation_rules.load_profiles(isolation_rules.PROFILES_PATH).get(route.get("provider") or "")
         home = isolation_rules.home_dir({"home": (profile or {}).get("home")}, self.directory)
-    return {"authority_digest": "", "isolation_home": home}
+    compute = getattr(self, "_authority", None)
+    authority = compute(item, "executor", route, admit=False, quiet=True)["digest"] \
+        if compute is not None and route.get("argv") and "instructions" in options else ""
+    return {"authority_digest": authority, "isolation_home": home}
 
 
 @lru_cache(maxsize=32)
@@ -343,7 +348,7 @@ def delta_mode(self, item: Item, key: str, role: str, route: dict, blocks: list,
     ``task_digest`` of the blocks now: a rebuilt input, other skills, stubs or rules make the prompt a full one)."""
     if role != "executor":
         return False, None, False, None
-    digest = prompts.task_digest(self.role_ports.routed_blocks(role, route, blocks))
+    digest = prompts.task_digest(self.role_ports.routed_blocks(role, route, blocks, item))
     decision = decide(self, item, key, role, route)
     resuming = decision is not None and decision["action"] == "resume"
     slot = slot_of(self, item) or {}

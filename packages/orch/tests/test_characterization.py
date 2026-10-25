@@ -641,8 +641,11 @@ COVERAGE = {
     "BRIEF_INVALID": "test:test_worksource.py", "REGISTER_REPORT_INVALID": "test:test_worksource.py",
     "ISOLATION_UNAVAILABLE": "test:test_isolation_profiles.py",
     "ISOLATION_PROFILES_INVALID": "test:test_isolation_profiles.py",
+    "AUTHORITY_RECORD_CONFLICT": "test:test_authority_envelope.py",
+    "AUTHORITY_RESUME_MISMATCH": "test:test_authority_envelope.py",
     # Beacons
     "ISOLATION_DRIFT": "test:test_isolation_profiles.py",
+    "AUTHORITY_CHANGED": "test:test_authority_envelope.py",
     "RUN_ORPHANED": "test:test_run_lease.py",
     "STAGE_SLOW": f"test:{C}", "STAGE_IDLE": f"test:{T}", "CHECK_SLOW": f"test:{T}", "RUN_SLOW": f"test:{T}",
     "BUDGET_OVER": f"test:{T}", "LIMIT_OVER": f"test:{T}", "RESULT_HEALED": f"test:{T}",

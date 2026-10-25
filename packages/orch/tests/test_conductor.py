@@ -28,7 +28,7 @@ from orch import launch
 from orch.conductor import checks as checks_mod, cli, engine, gates, options as opts, process, progress, records
 from orch.conductor.application import run_service
 from orch.conductor.infrastructure import clock, roles, work_source
-from orch.conductor.policies import isolation as isolation_rules, sandbox as sandbox_policy
+from orch.conductor.policies import authority as authority_rules, isolation as isolation_rules, sandbox as sandbox_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "conductor"
@@ -1843,9 +1843,38 @@ class SandboxTests(ConductorCase):
 
     @staticmethod
     def extra(preview: dict, role: str) -> list:
-        """The arguments the conductor adds to a role beside those of the Claude Code isolation profile."""
+        """The arguments the conductor adds to a role beside those of the Claude Code isolation profile and its setting
+        sources (P6.2: an isolated Claude Code role loads only the settings of the user), with the ``--settings`` of the
+        sandbox only: the permissions of orch that come with ``--setting-sources user`` are checked on their own."""
         profile = isolation_rules.load_profiles()["claude-code"]["args"]
-        return [arg for arg in preview["isolation_args"][role] if arg not in profile]
+        found = [arg for arg in preview["isolation_args"][role] if arg not in profile]
+        if found[:2] == ["--setting-sources", "user"]:
+            found = found[2:]
+        if "--settings" in found:
+            at = found.index("--settings")
+            settings = json.loads(found[at + 1])
+            assert settings.pop("permissions", None) == {"deny": authority_rules.ORCH_PERMISSION_RULES["deny"]}, settings
+            found = found[:at] + (["--settings", json.dumps(settings, sort_keys=True)] if settings else []) + found[at + 2:]
+        return found
+
+    def test_an_isolated_claude_role_loads_only_the_user_settings_with_the_deny_rules_of_orch(self):
+        """(d) the project settings that carried the ask/deny of git push, reset --hard and clean no longer reach the role:
+        the deny rules of orch come in the same --settings object as the sandbox block."""
+        self.stand_in()
+        preview = self.preview(self.UP)
+        args = preview["isolation_args"]["executor"]
+        self.assertEqual(args[args.index("--setting-sources") + 1], "user")
+        settings = json.loads(args[args.index("--settings") + 1])
+        self.assertEqual(sorted(settings), ["permissions", "sandbox"])
+        self.assertIn("Bash(git push*)", settings["permissions"]["deny"])
+        self.assertIn("Bash(git reset --hard*)", settings["permissions"]["deny"])
+        self.assertEqual(preview["authority"]["executor"]["setting_sources"], ["user"])
+        self.assertEqual(preview["authority"]["executor"]["git"]["push"], "denied")
+        down = self.preview(self.DOWN)["isolation_args"]["executor"]  # no sandbox: the deny rules still come
+        self.assertEqual(sorted(json.loads(down[down.index("--settings") + 1])), ["permissions"])
+        off = self.preview(self.UP, isolate_roles=[])["isolation_args"]["executor"]  # not isolated: the project settings
+        self.assertNotIn("--setting-sources", off)
+        self.assertNotIn("permissions", json.loads(off[off.index("--settings") + 1]))
 
     def preview(self, probe: dict, **instructions) -> dict:
         with mock.patch("orch.sandbox.probe", return_value=probe):

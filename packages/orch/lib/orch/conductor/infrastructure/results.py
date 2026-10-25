@@ -79,9 +79,8 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         handle = self._agent_start(item, key, "report-fixer", route, prompt_file, number,
                                   prompt_sha256=sha256_hex(prompt.encode("utf-8")))  # the parent is the role mended
         try:
-            run = process.run_role(self._role_argv(item, "report-fixer", route), prompt, transport=route["transport"],
-                                   cwd=self.project, timeout_s=route["timeout_s"], raw_path=raw,
-                                   env=self._role_env(item, "report-fixer", route), agent_directory=handle["directory"])
+            run = self._launch(item, handle, "report-fixer", route, prompt, attempt=number, raw=raw,
+                               timeout_s=route["timeout_s"])
             self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
             observe_isolation(self, item, key, "report-fixer", route, run.init, handle)
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)

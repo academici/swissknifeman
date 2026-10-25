@@ -7,6 +7,7 @@ import contextlib
 import json
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import types
 import unittest
@@ -19,7 +20,7 @@ from orch.conductor.application import review_plan
 from orch.conductor.infrastructure import sessions
 from orch.conductor.observer import metrics
 from orch.conductor.stages import execute
-from tests.test_conductor import GREEN, ConductorCase, executor_ok, report
+from tests.test_conductor import FIXTURES, GREEN, ROLES, ConductorCase, executor_ok, report
 from tests.test_conductor_questions import ASK, asking
 
 CLAUDE = {"provider": "claude-code", "model": "m", "effort": "high"}
@@ -524,6 +525,28 @@ class SessionRunTests(ConductorCase):
         started = [event.data["session"] for event in stored
                    if event.type == "orch.agent.started" and event.data["role"] == "executor"]
         self.assertEqual(started[1], {"resumed": False, "reason": "fingerprint_changed:authority_digest"})
+
+    def test_a_changed_authority_envelope_between_rounds_starts_a_fresh_session_without_a_stand_in(self):
+        """P6.2: the fingerprint carries the digest of the authority envelope of the executor launch itself: a provider
+        sandbox that starts for round 1 and not for round 2 changes the guard, so round 2 starts fresh (and says
+        AUTHORITY_CHANGED); identity_inputs is not replaced."""
+        marker = self.project.parent / "sandbox-gone"
+        argv = {role: [sys.executable, str(FIXTURES / "fake_role.py"), role] for role in ROLES}
+        argv["executor"] += ["--tools", "Bash,Read,Edit"]  # a Claude Code shell: the sandbox confines it when it starts
+        self.write_config(argv, extra=HANDOFF_CONFIG)
+        self.script({"executor": [dict(self.RED, write={str(marker): "x"}), executor_ok("W1")], "reviewer": [GREEN]})
+        up, down = {"available": True, "reason": None, "checked": []}, {"available": False, "reason": "gone", "checked": []}
+        with mock.patch.object(engine.sandbox, "probe", side_effect=lambda: down if marker.exists() else up):
+            code, _, err = self.run_items("W1")
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertNotIn("--resume", self.argv(2))
+        self.assertEqual(self.sessions(err)[1][0], "SESSION_FRESH")
+        self.assertIn("reason=fingerprint_changed:authority_digest", self.sessions(err)[1][1])
+        changed = [line for line in self.lines(err) if line.get("reason_code") == "AUTHORITY_CHANGED"]
+        self.assertEqual(len(changed), 1, err)
+        self.assertIn("guard", changed[0]["message"])
+        slot = self.state(err)["executor_sessions"]["W1"]
+        self.assertEqual(slot["fingerprint"]["authority_digest"], self.state(err)["items"]["W1"]["authority"]["executor"])
 
     def test_changed_instructions_between_rounds_start_a_fresh_session(self):
         marker = self.project.parent / "instructions-changed"

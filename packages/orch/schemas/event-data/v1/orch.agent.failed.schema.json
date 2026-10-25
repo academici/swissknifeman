@@ -122,6 +122,14 @@
       "type": "integer",
       "minimum": 0,
       "description": "Milliseconds the run took (aicore data has no floats)."
+    },
+    "authority_digests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      },
+      "description": "Digests of the authority envelopes of the processes the agent run started, in the order of the attempts (agents/<id>/authority/a<attempt>.json)."
     }
   },
   "required": [

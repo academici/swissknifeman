@@ -16,7 +16,7 @@ from typing import Optional
 
 from orch import adhoc, launch
 from orch.contracts import canonical_digest
-from orch.conductor import options as opts, process, records, review_batch
+from orch.conductor import options as opts, records, review_batch
 from orch.conductor.application import budget_service as token_budget
 from orch.conductor.domain.item import Item
 from orch.conductor.domain import fix_brief
@@ -79,9 +79,8 @@ def _run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, 
     prompt_file.write_text(prompt, encoding="utf-8")
     handle = self._agent_start(item, key, role, route, prompt_file, 1)
     try:
-        run = process.run_role(self._role_argv(item, role, route), prompt, transport=route["transport"], cwd=self.project,
-                               timeout_s=timeout_s, raw_path=raw, env=self._role_env(item, role, route),
-                               provider=route["provider"], agent_directory=handle["directory"])
+        run = self._launch(item, handle, role, route, prompt, attempt=1, raw=raw, timeout_s=timeout_s,
+                           provider=route["provider"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
         results.observe_isolation(self, item, key, role, route, run.init, handle)  # ISOLATION_DRIFT, result.json
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)

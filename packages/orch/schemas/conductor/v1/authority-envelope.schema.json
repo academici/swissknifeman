@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:authority-envelope:v1",
+  "title": "authority-envelope",
+  "description": "The authority of one launch of a role (policies/authority.py compute; <item>/agents/<agent_run_id>/authority/a<attempt>.json, written before the process starts and never rewritten): where it may write, the reads that may be masked, the settings of the provider it loads, the permission rules of orch, the network, Docker and git, its isolation and what is degraded. Names of environment variables and path templates only: the HOME of the machine is ~ and the checkout is '.'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "role", "provider", "access", "guard", "write_roots", "read_masks", "setting_sources",
+               "permission_mode", "permission_rules", "network", "docker", "git", "isolation", "degraded", "digest"],
+  "properties": {
+    "$schema": {"description": "Document contract.", "const": "urn:swissknifeman:orch:conductor:authority-envelope:v1"},
+    "role": {"description": "Role of the launch.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "provider": {"description": "Provider of the route of the launch.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+    "access": {"description": "[orch.launch] access of the run: the widest sandbox mode of the writers.", "enum": ["open", "confined"]},
+    "guard": {
+      "description": "What confines the writes of the launch: the Landlock guard (ro-run.py) granting folders or protecting the checkout, the Claude Code sandbox (it replaces the guard), the Codex sandbox, or nothing.",
+      "enum": ["landlock-rw", "landlock-protect", "claude-sandbox", "codex-sandbox", "none"]
+    },
+    "write_roots": {
+      "description": "Where writes may land, in the order the launch grants them.",
+      "type": "array",
+      "items": {
+        "description": "One write root.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "why"],
+        "properties": {
+          "path": {"description": "The folder: '.' (the checkout), './<rel>' under it, '~/...' under the HOME of the machine, '/' for an unconfined launch, else absolute.", "type": "string", "minLength": 1, "pattern": "^(\\.|\\./.+|~|~/.*|/.*)$"},
+          "why": {"description": "checkout, guard (another folder of the guard), extra_paths (scope.extra_paths), transcripts (the session of a guarded Claude Code executor) or unconfined.", "enum": ["checkout", "guard", "extra_paths", "transcripts", "unconfined"]}
+        }
+      }
+    },
+    "read_masks": {"description": "none, or provider-settings: read deny rules of the provider settings may become masks of the sandbox.", "enum": ["none", "provider-settings"]},
+    "setting_sources": {
+      "description": "The setting sources the provider loads (--setting-sources), null when the launch names none (all of them).",
+      "type": ["array", "null"],
+      "items": {"description": "A source.", "enum": ["user", "project", "local"]}
+    },
+    "permission_mode": {"description": "--permission-mode of the launch, null without one.", "type": ["string", "null"], "minLength": 1},
+    "permission_rules": {
+      "description": "The permission rules orch gives the launch (--settings permissions): ORCH_PERMISSION_RULES for a Claude Code role that loads only the settings of the user, else none.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deny", "ask"],
+      "properties": {
+        "deny": {"$ref": "#/$defs/rules", "description": "Rules the provider refuses."},
+        "ask": {"$ref": "#/$defs/rules", "description": "Rules the provider asks for."}
+      }
+    },
+    "network": {
+      "description": "What the commands of the launch may reach.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["declared", "effective", "enforced_by", "allowed_domains"],
+      "properties": {
+        "declared": {"description": "tools.network of the role manifest.", "type": "string", "minLength": 1},
+        "effective": {"description": "none, allowlist (only allowed_domains) or open.", "enum": ["none", "allowlist", "open"]},
+        "enforced_by": {"description": "What enforces it (claude-sandbox, codex-sandbox, claude-tools), null when nothing does.", "type": ["string", "null"], "enum": ["claude-sandbox", "codex-sandbox", "claude-tools", null]},
+        "allowed_domains": {"description": "The domains of the allowlist (instructions.sandbox_domains).", "type": "array", "items": {"description": "A domain.", "type": "string", "minLength": 1}}
+      }
+    },
+    "docker": {"description": "open (the docker socket and containers are reachable) or blocked.", "enum": ["open", "blocked"]},
+    "git": {
+      "description": "What the launch may do with git.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "push", "reset_hard", "clean", "dot_git_write"],
+      "properties": {
+        "commit": {"description": "Who commits: the conductor through the work source.", "const": "work-source"},
+        "push": {"$ref": "#/$defs/git-op", "description": "git push."},
+        "reset_hard": {"$ref": "#/$defs/git-op", "description": "git reset --hard."},
+        "clean": {"$ref": "#/$defs/git-op", "description": "git clean."},
+        "dot_git_write": {"description": "Whether the launch may write the .git folder of the checkout.", "type": "boolean"}
+      }
+    },
+    "isolation": {
+      "description": "The isolation profile of the provider the launch applies (policies/isolation.py plan), by names only.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "guarantee", "args", "env_keys", "home_var"],
+      "properties": {
+        "profile": {"description": "The provider whose profile applies, null when the role is not isolated.", "type": ["string", "null"], "pattern": "^[a-z][a-z0-9-]*$"},
+        "guarantee": {"description": "full, partial or none.", "enum": ["full", "partial", "none"]},
+        "args": {"description": "Arguments the profile adds.", "type": "array", "items": {"description": "One word.", "type": "string", "minLength": 1}},
+        "env_keys": {"description": "Names of the variables the profile sets (never their values).", "type": "array", "items": {"description": "A variable name.", "type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}},
+        "home_var": {"description": "The variable of the provider home moved under the run folder, null when the provider keeps its own.", "type": ["string", "null"], "pattern": "^[A-Z_][A-Z0-9_]*$"}
+      }
+    },
+    "degraded": {
+      "description": "What the launch could not have, with the reason.",
+      "type": "array",
+      "items": {
+        "description": "One degradation.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "detail"],
+        "properties": {
+          "code": {"description": "Reason code (SANDBOX_UNAVAILABLE, SETTINGS_UNSUPPORTED, SETTING_SOURCES_UNSUPPORTED, NETWORK_UNENFORCED, or one of the isolation plan).", "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+          "detail": {"description": "What it means here.", "type": "string", "minLength": 1}
+        }
+      }
+    },
+    "digest": {"description": "sha256 of the canonical JSON of the document without digest (keys sorted, no spaces).", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  },
+  "$defs": {
+    "rules": {
+      "description": "Permission rules of Claude Code.",
+      "type": "array",
+      "items": {"description": "One rule, e.g. Bash(git push*).", "type": "string", "minLength": 1}
+    },
+    "git-op": {
+      "description": "denied (a rule or a confinement refuses it) or unenforced (nothing in the launch refuses it).",
+      "enum": ["denied", "unenforced"]
+    }
+  }
+}

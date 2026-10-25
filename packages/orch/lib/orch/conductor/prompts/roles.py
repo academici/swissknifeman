@@ -77,18 +77,54 @@ def _conductor_checks(input_doc: dict, containers: bool = True, self_check: bool
     checks = (input_doc.get("acceptance") or {}).get("checks") or []
     if not checks:
         return ""
-    use = ("single test files of what you changed, container-based ones included, a syntax check, `git diff --check`)"
-           if containers else "single test files of what you changed, a syntax check, `git diff --check`)")
-    return ("\nThe conductor runs these acceptance checks itself right after your report:\n"
+    text = ("\nThe conductor runs these acceptance checks itself right after your report:\n"
             + "\n".join(f"- `{check['id']}`: {check.get('expect', '-')}" for check in checks)
             + "\n\nDo not run them, nor the whole suites they start"
             + (" (the self-check section below names the commands you do run)" if self_check else "")
-            + ("" if containers else ", and do not start containers or call docker or compose")
-            + f": prove your change with what is cheap ({use}. A proof that needs something your environment does not give "
-              "(" + ("" if containers else "a container, the docker socket, ")
-            + "write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you "
-              "could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
+            + _PROVE + _CHEAP_CONTAINERS + ". A proof that needs something your environment " + _PROOF_GAPS
+            + ", the network, a credential) is not a blocker: finish the work, name each "
+              "check you could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
               "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
+    return with_containers(text, containers)
+
+
+# The parts of the verification text that say whether the executor may use Docker (``with_containers``).
+_PROVE = ": prove your change with what is cheap ("
+_CHEAP_CONTAINERS = "single test files of what you changed, container-based ones included, a syntax check, `git diff --check`)"
+_CHEAP_PLAIN = "single test files of what you changed, a syntax check, `git diff --check`)"
+_NO_CONTAINERS = ", and do not start containers or call docker or compose"
+_PROOF_GAPS = "does not give (write access to `.git`"
+_PROOF_GAPS_DOCKER = "does not give (a container, the docker socket, write access to `.git`"
+# (the variant for Docker, the variant without) of each part, each found only at its place of the text
+_CONTAINER_PARTS = ((_PROVE + _CHEAP_CONTAINERS, _NO_CONTAINERS + _PROVE + _CHEAP_PLAIN), (_PROOF_GAPS, _PROOF_GAPS_DOCKER))
+
+
+def with_containers(text: str, containers: bool) -> str:
+    """The verification text ``text`` for an executor that may (``containers``) or may not use Docker: the same text
+    with the Docker parts of :func:`_conductor_checks` set to the variant asked (a text without them is left as it is).
+    A fallback to a route with another authority rebuilds its prompt with it (:func:`retarget`)."""
+    for docker, plain in _CONTAINER_PARTS:
+        text = text.replace(plain, docker)  # the variant for Docker first, then the one asked
+        if not containers:
+            text = text.replace(docker, plain)
+    return text
+
+
+def retarget(blocks: list, authority: str, containers: bool) -> list:
+    """``blocks`` of an executor prompt for the authority of another launch: the ``authority`` block replaced by
+    ``authority`` and the verification text set for ``containers`` (whether that launch may use Docker). A prompt without
+    an authority block (a role other than a writer, a delta prompt) is returned as it is."""
+    if not any(block.kind == "authority" for block in blocks):
+        return list(blocks)
+    found = []
+    for block in blocks:
+        sep = block.text[len(block.text.rstrip()):]
+        if block.kind == "authority":
+            block = replace(block, text=authority.rstrip() + sep)
+        elif block.kind == "verification" and block.origin == CONDUCTOR:
+            block = replace(block, text=with_containers(block.text, containers))
+        found.append(block)
+    return found
 
 
 def _self_check(commands) -> str:
@@ -180,11 +216,15 @@ def executor(input_doc: dict, *, item: str, step: str, scout_text: str = "", rul
              skill_texts=None, expected=None, answers=(), fix: str = "", scout_origin: str = "", batch: str = "",
              research=None, research_origin: str = "", fence: str = "plan", extra_paths=(),
              file_tools: bool = False, containers: bool = True, self_check=(), protected=(), staged: str = "",
-             generated=(), generator=(), correction_origin: str = CONDUCTOR) -> list:
+             generated=(), generator=(), correction_origin: str = CONDUCTOR, authority: str = "") -> list:
+    """The full prompt of a writer. ``authority`` is the section the authority envelope of its launch gives
+    (``policies/authority.prompt_block``): where it may write, the network, Docker and git; none when empty."""
     scout_from = f"scout-cache:{scout_origin}" if scout_origin else "scout-cache"
     if targeted_tests:  # the conductor runs the checks: the task shows what they expect, not the commands
         input_doc = role_render.withhold_commands(input_doc)
     parts = [_head(role, input_doc, roles_dir, list(skills), repo_rules, skill_texts, stub=stub)]
+    if authority:
+        parts.append([Block("authority", CONDUCTOR, authority)])
     if fence == "project" or extra_paths:
         parts.append([Block("run_rules", CONDUCTOR, _fence_rule(fence, extra_paths))])
     if file_tools:

@@ -13,7 +13,7 @@ from orch.conductor.prompts.contracts import _PROGRESS
 
 KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
          "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
-         "findings", "instruction", "research", "stub", "resumed", "interrupted", "changed")
+         "findings", "instruction", "research", "stub", "resumed", "interrupted", "changed", "authority")
 CONDUCTOR = "conductor"
 # The blocks of a full executor prompt that carry no task: what a round asks (correction, answers, interrupted, changed)
 # and what only names the round (``progress``) or the state of the batch (the ``batch`` run rule). The rest is the task

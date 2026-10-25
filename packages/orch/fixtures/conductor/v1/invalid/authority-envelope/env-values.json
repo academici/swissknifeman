@@ -1,0 +1,66 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:authority-envelope:v1",
+  "role": "executor",
+  "provider": "claude-code",
+  "access": "open",
+  "guard": "claude-sandbox",
+  "write_roots": [
+    {
+      "path": ".",
+      "why": "checkout"
+    }
+  ],
+  "read_masks": "provider-settings",
+  "setting_sources": [
+    "user"
+  ],
+  "permission_mode": "acceptEdits",
+  "permission_rules": {
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git config --global*)",
+      "Bash(sudo *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)"
+    ],
+    "ask": []
+  },
+  "network": {
+    "declared": "none",
+    "effective": "none",
+    "enforced_by": "claude-sandbox",
+    "allowed_domains": []
+  },
+  "docker": "blocked",
+  "git": {
+    "commit": "work-source",
+    "push": "denied",
+    "reset_hard": "denied",
+    "clean": "denied",
+    "dot_git_write": false
+  },
+  "isolation": {
+    "profile": "claude-code",
+    "guarantee": "full",
+    "args": [
+      "--safe-mode",
+      "--strict-mcp-config"
+    ],
+    "env_keys": [
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY",
+      "CLAUDE_CODE_DISABLE_CLAUDE_MDS"
+    ],
+    "home_var": null,
+    "env": {
+      "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"
+    }
+  },
+  "degraded": [],
+  "digest": "sha256:06c7ebc14344b46abcc3ef085ba7c728cabf3b0fbd21a7ab10e33a8e0e0507e7"
+}

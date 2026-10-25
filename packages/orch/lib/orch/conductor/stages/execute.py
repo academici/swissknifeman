@@ -16,6 +16,7 @@ from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evi
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock, sessions, work_source
 from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
+from orch.conductor.policies import authority as authority_rules
 from orch.conductor.stages import advice, decisions
 
 
@@ -61,6 +62,8 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         note = (item.state.get("interrupted_note") or {}).get(key, "")
         corrected = "\n\n".join(text for text in (correction, note) if text)
         answers = questions_mod.answers_text(self._questions(item))
+        # what the prompt promises (Docker, the network, where to write) is what the launch of this route records
+        envelope = self._authority(item, role, route, admit=False, quiet=True)
         prompt = prompts.executor(item.input_doc, item=item.ref, step=key, scout_text=scout_text,
                                   correction_origin=correction_origin(self, item, key),
                                   rules=item.options["rules"], correction=corrected, role=role, roles_dir=self.roles_dir,
@@ -78,7 +81,8 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   fence=self._scope_option(item, "fence", "plan"),
                                   extra_paths=self._scope_option(item, "extra_paths", []),
                                   file_tools=self._file_tools_rule(item),
-                                  containers=not self._codex_sandboxed(route),
+                                  containers=envelope["docker"] == "open",
+                                  authority=authority_rules.prompt_block(envelope),
                                   protected=self._write_protected(item),
                                   generated=self._write_generated(item), generator=self.conductor.get("generate") or (),
                                   staged=self._relative(work_source.protected_dir(item)))

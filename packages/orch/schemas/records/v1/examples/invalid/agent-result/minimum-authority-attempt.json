@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": 0,
+  "decisions": [],
+  "duration_s": 12.0,
+  "stream": null,
+  "lingered": false,
+  "authority": [
+    {"attempt": 0, "provider": "claude-code", "digest": "sha256:06c7ebc14344b46abcc3ef085ba7c728cabf3b0fbd21a7ab10e33a8e0e0507e7"}
+  ]
+}

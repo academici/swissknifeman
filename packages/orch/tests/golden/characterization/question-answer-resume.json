@@ -3,7 +3,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -11,7 +15,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -20,8 +28,12 @@
    "argv": [
     "--safe-mode",
     "--strict-mcp-config",
+    "--setting-sources",
+    "user",
     "--resume",
-    "executor-session-1"
+    "executor-session-1",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 2,
    "role": "executor"
@@ -989,7 +1001,7 @@
     ],
     "created_at": "<time>",
     "fingerprint": {
-     "authority_digest": "",
+     "authority_digest": "sha256:<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
      "project": "<project>",
@@ -1065,6 +1077,11 @@
       }
      }
     ],
+    "authority": {
+     "context-scout": "sha256:<digest>",
+     "executor": "sha256:<digest>",
+     "reviewer": "sha256:<digest>"
+    },
     "autofix_at": [],
     "check_fixes_at": [],
     "check_fixes_used": 0,

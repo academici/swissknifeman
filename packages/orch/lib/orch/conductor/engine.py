@@ -242,6 +242,8 @@ class Conductor:
     _route_fallback = beacon_events.route_fallback
     _event_route = staticmethod(roles.event_route)
     _role = roles.run_role
+    _launch = roles.launch
+    _authority = launch_plan.authority
     _denied = staticmethod(roles.denied)
     _role_body = roles.role_body
     _closed = staticmethod(results.closed)
@@ -277,7 +279,7 @@ class Conductor:
             provider_failure=self._provider_failure, routed_blocks=self._routed_blocks, budget=self._budget,
             unmetered=self._unmetered, admit_budget=self._admit_budget, stage_key=self._stage_key,
             stage_bucket=self._stage_bucket, remember_stage=self._remember_stage,
-            provider_disabled=self.provider_disabled, sandbox_args=self._sandbox_args, knows=self._knows,
+            provider_disabled=self.provider_disabled, launch_facts=self._launch_facts, knows=self._knows,
             note_isolation=self._note_isolation, skills_excluded=self._skills_excluded, run_clock=self._run_clock)
 
     @property
@@ -317,6 +319,7 @@ class Conductor:
     _claude_bash = staticmethod(sandbox_policy.claude_bash)
     declared_network = staticmethod(sandbox_policy.declared_network)
     _sandbox_args = route_service.sandbox_args
+    _launch_facts = route_service.launch_facts
     _knows = route_service.knows
     _note_isolation = route_service.note_plan
     _isolation_plan = launch_plan.isolation_plan
@@ -370,6 +373,10 @@ class Conductor:
     def role_argv(self, item: Item, role: str, route: dict) -> list:
         """The command line of a role as the dry run shows it: built, not refused (a launch refuses it)."""
         return self._role_argv(item, role, route, admit=False)
+
+    def authority(self, item: Item, role: str, route: dict) -> dict:
+        """The authority envelope of a launch of a role as the dry run shows it: computed, not refused."""
+        return self._authority(item, role, route, admit=False)
 
     def sandbox_mode(self, item: Item) -> str:
         return self._sandbox_mode(item)

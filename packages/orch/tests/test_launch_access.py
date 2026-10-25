@@ -49,6 +49,35 @@ class BuildArgvTests(unittest.TestCase):
                     self.assertEqual(one, two)
 
 
+class EnvelopeTests(unittest.TestCase):
+    """P6.2: the authority envelope of each launch records the access and what it gives (``roles matrix``)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from orch.conductor.infrastructure import launch_plan
+        cls.rows = launch_plan.authority_matrix(launch.load_catalog())
+
+    def row(self, role: str, provider: str, access: str) -> dict:
+        return next(row for row in self.rows if (row["role"], row["provider"], row["access"]) == (role, provider, access))
+
+    def test_an_open_codex_writer_is_unconfined_and_a_confined_one_is_in_its_sandbox(self):
+        for role, provider in sorted(WRITERS):
+            with self.subTest(role=role):
+                opened, confined = self.row(role, provider, "open"), self.row(role, provider, "confined")
+                self.assertEqual((opened["guard"], opened["network"], opened["docker"]), ("none", "open", "open"))
+                self.assertEqual((confined["guard"], confined["network"], confined["docker"]),
+                                 ("codex-sandbox", "none", "blocked"))
+
+    def test_the_access_changes_nothing_else_of_any_launch(self):
+        keys = ("guard", "network", "enforced_by", "docker", "setting_sources", "guarantee")
+        for row in self.rows:
+            if row["access"] != "open" or (row["role"], row["provider"]) in WRITERS:
+                continue
+            with self.subTest(role=row["role"], provider=row["provider"]):
+                other = self.row(row["role"], row["provider"], "confined")
+                self.assertEqual({key: row[key] for key in keys}, {key: other[key] for key in keys})
+
+
 class AccessSettingTests(SettingsCase):
     def test_the_default_is_open(self):
         self.assertEqual(self.load().launch["access"], "open")

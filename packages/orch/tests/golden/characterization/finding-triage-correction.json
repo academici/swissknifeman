@@ -3,7 +3,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -11,7 +15,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -20,8 +28,12 @@
    "argv": [
     "--safe-mode",
     "--strict-mcp-config",
+    "--setting-sources",
+    "user",
     "--resume",
-    "executor-session-1"
+    "executor-session-1",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 2,
    "role": "executor"
@@ -39,7 +51,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "triager"
@@ -488,6 +504,11 @@
      "tokens": 368
     },
     {
+     "kind": "authority",
+     "origin": "conductor",
+     "tokens": 120
+    },
+    {
      "kind": "run_rules",
      "origin": "conductor",
      "tokens": 150
@@ -524,7 +545,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 197
+     "tokens": 317
     },
     "task": {
      "limit": 0,
@@ -1201,7 +1222,7 @@
    "*": {
     "created_at": "<time>",
     "fingerprint": {
-     "authority_digest": "",
+     "authority_digest": "sha256:<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
      "project": "<project>",
@@ -1227,6 +1248,12 @@
   "items": {
    "W1": {
     "adopted": [],
+    "authority": {
+     "context-scout": "sha256:<digest>",
+     "executor": "sha256:<digest>",
+     "reviewer": "sha256:<digest>",
+     "triager": "sha256:<digest>"
+    },
     "autofix_at": [],
     "check_fixes_at": [],
     "check_fixes_used": 0,

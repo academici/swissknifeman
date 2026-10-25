@@ -14,18 +14,25 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import declare, ticker
+from orch.conductor.policies import authority as authority_rules
 from orch.conductor.policies.retry_policy import (CONDUCTOR_ON_ERROR, JITTER_BASE_S, JITTER_CAP_S, PROVIDER_STOP_CODES,
                                                   TRANSIENT_CLASSES, past_reset)
 
 WAIT_SLACK_S = 30  # a wait for the provider may overrun its end by this much before it counts as overdue
 
 
-def routed_blocks(self, role: str, route: dict, blocks: list) -> list:
-    """``blocks`` with the stub of the role for the actual route of the attempt (a fallback route has its own stub)."""
+def routed_blocks(self, role: str, route: dict, blocks: list, item: Optional[Item] = None) -> list:
+    """``blocks`` with the stub of the role for the actual route of the attempt (a fallback route has its own stub) and,
+    for a writer's prompt of ``item``, the ``authority`` block and the Docker lines of the verification text of the
+    authority envelope of that route: the one its launch records (a fallback from the Claude sandbox to an open Codex
+    may use Docker, the way back may not)."""
     origin, text = self._stub(role, route)
     routed = [block for block in blocks if block.kind != "stub"]
     if text:
         routed.insert(1, prompts.Block("stub", origin, text.rstrip() + "\n\n"))
+    if item is not None and any(block.kind == "authority" for block in routed):
+        envelope = self._authority(item, role, route, admit=False, quiet=True)
+        routed = prompts.retarget(routed, authority_rules.prompt_block(envelope), envelope["docker"] == "open")
     return routed
 
 
@@ -35,7 +42,7 @@ def prompt_for_route(self, item: Item, key: str, role: str, route: dict, blocks:
     """Rebuild only the stub for the actual attempt, preserving the other blocks and retry instructions. ``resumed``
     (the delta blocks of a round in a resumed session, when this attempt sends them) is what the role gets instead of the
     whole prompt; ``prompts/<key>.md`` keeps the full prompt of the step and ``<key>.resumed.md`` the delta one."""
-    routed = self._routed_blocks(role, route, blocks)
+    routed = self._routed_blocks(role, route, blocks, item)
     suffix = prompt[len(first_prompt):]
     sent = list(resumed) if resumed else routed
     first_prompt = prompts.render(sent)

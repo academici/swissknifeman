@@ -231,6 +231,12 @@
           }
         },
         "session_base": {"description": "Revision of the first brief of the piece: the base of the fingerprint of its executor session.", "type": "string"},
+        "authority": {
+          "description": "Digest of the authority envelope of the last launch of each role of the piece (P6.2); a launch with another digest says AUTHORITY_CHANGED.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {"^[a-z][a-z0-9-]*$": {"description": "sha256 digest of the envelope.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+        },
         "released": {"description": "Releases of the claim.", "type": "array", "items": {"type": "object"}},
         "tokens": {"$ref": "#/$defs/usage"},
         "stage_usage": {

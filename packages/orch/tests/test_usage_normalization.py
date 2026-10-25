@@ -195,6 +195,10 @@ class UsageAccountingTests(unittest.TestCase):
         self.engine._agent_end = mock.Mock()
         self.engine._role_argv = mock.Mock(return_value=["fake"])
         self.engine._role_env = mock.Mock(return_value={})
+        envelope = json.loads((FIXTURES.parents[2] / "fixtures" / "conductor" / "v1" / "valid" / "authority-envelope"
+                               / "claude-executor.json").read_text(encoding="utf-8"))
+        self.engine._authority = mock.Mock(return_value=envelope)  # the one launch records the authority first
+        self.engine._launch = lambda *args, **kwargs: roles.launch(self.engine, *args, **kwargs)
         self.engine._relative = str
         self.engine._tokens = lambda item, usage, **kw: roles.add_tokens(self.engine, item, usage, **kw)
         run = process.RoleRun(exit=0, duration_s=1, usage_complete=False)

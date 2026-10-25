@@ -3,6 +3,7 @@ beacons of a long or silent run. The launch plan, the session, the usage ledger,
 in are their own modules; what the role needs from the layers above comes in :class:`RolePorts`."""
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 import time
 from typing import Callable, NamedTuple, Optional
@@ -16,6 +17,7 @@ from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, results, sessions
+from orch.conductor.policies import authority as authority_rules
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import observe_tick
 from orch.conductor.infrastructure.launch_plan import claude_transcripts, strip_guard, transcript_folder_name  # noqa: F401 — re-export for callers
@@ -42,7 +44,7 @@ class RolePorts(NamedTuple):
     stage_bucket: Optional[Callable] = None  # application.budget_service.stage_bucket
     remember_stage: Optional[Callable] = None  # application.budget_service.remember_stage
     provider_disabled: Optional[Callable] = None  # application.route_service.provider_disabled
-    sandbox_args: Optional[Callable] = None  # application.route_service.sandbox_args
+    launch_facts: Optional[Callable] = None  # application.route_service.launch_facts
     knows: Optional[Callable] = None  # application.route_service.knows (ISOLATION_PARTIAL once per run)
     note_isolation: Optional[Callable] = None  # application.route_service.note_plan
     skills_excluded: Optional[Callable] = None  # stages.context.skills_excluded
@@ -72,6 +74,61 @@ def agent_start(self, item: Item, key: str, role: str, route: dict, prompt_file:
     return handle
 
 
+def launch(self, item: Item, handle: dict, role: str, route: dict, prompt: str, *, attempt: int, raw: Path,
+           timeout_s: int, decision: Optional[dict] = None, clean_env: bool = False, **run_kwargs):
+    """The one start of a provider process in the conductor (the attempts and fallbacks of a role, the report-fixer, the
+    batch roles): the authority envelope of this attempt's route (``launch_plan.authority``, which refuses a role
+    ``instructions.isolation = require`` does not admit) is written to ``agents/<id>/authority/a<attempt>.json`` of the
+    agent run in ``handle``, kept as the authority of the role in the piece (``AUTHORITY_CHANGED`` when it differs from
+    its last launch), and the command line and the environment are built from it; ``clean_env`` drops the launch
+    authority of the conductor from the environment (``detach.subprocess_env``). The record is written before the
+    process: a crash between the two leaves the record of a launch that did not happen, never a launch without one. The
+    command the attempt really runs (a catalog ``resume_argv`` when it continues a session) must have the authority of
+    the record: else ``AUTHORITY_RESUME_MISMATCH`` before anything is written."""
+    envelope = self._authority(item, role, route)
+    resume = sessions.resume_args(self, item, role, route, decision) if role == "executor" else []  # only it resumes
+    refused = launch_plan.resume_problem(self, item, role, route, resume, envelope)
+    if refused:
+        raise Stop("AUTHORITY_RESUME_MISMATCH", refused)
+    agents.write_authority(handle, attempt, envelope)
+    note_authority(self, item, role, route, envelope)
+    env = self._role_env(item, role, route)
+    return process.run_role(self._role_argv(item, role, route, decision, envelope=envelope, resume=resume), prompt,
+                            transport=route["transport"], cwd=self.project, timeout_s=timeout_s, raw_path=raw,
+                            env=detach.subprocess_env(env) if clean_env else env, agent_directory=handle["directory"],
+                            **run_kwargs)
+
+
+def note_authority(self, item: Item, role: str, route: dict, envelope: dict) -> None:
+    """``item.state.authority[role]``: the digest of the last launch of ``role`` in the piece, saved under the lock of
+    the run store (I2). A digest that differs from the one before is the info ``AUTHORITY_CHANGED`` with the keys that
+    changed (known while the conductor keeps the earlier envelope in memory)."""
+    known = self.__dict__.setdefault("_authority_seen", {})
+    store = getattr(self, "store", None)
+    with store.mutating() if store is not None else contextlib.nullcontext():
+        kept = item.state.setdefault("authority", {})
+        before = kept.get(role)
+        if before == envelope["digest"]:
+            known[(item.ref, role)] = envelope
+            return
+        kept[role] = envelope["digest"]
+        if store is not None:
+            self._save()
+    earlier = known.get((item.ref, role))
+    known[(item.ref, role)] = envelope
+    if before is None or getattr(self, "progress", None) is None:
+        return
+    keys = authority_rules.changed_keys(earlier, envelope) if earlier and earlier["digest"] == before else []
+    self.progress.emit("info", item=item.ref, role=role, route=label(route), reason_code="AUTHORITY_CHANGED",
+                       message=f"{item.ref} {role}: authority {short(before)} -> {short(envelope['digest'])} "
+                               f"({', '.join(keys) if keys else 'keys not known: the earlier envelope is on disk only'})")
+
+
+def short(digest: str) -> str:
+    """The first 12 hex digits of a ``sha256:`` digest."""
+    return digest.split(":", 1)[-1][:12]
+
+
 def event_route(item: Item, role: str, route: dict) -> dict:
     """``{provider, model_class?, model?, effort?}`` of an agent route for its events."""
     model_class = opts.stage_route(item.options, role).get("model_class") or route.get("model_class")
@@ -99,7 +156,8 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
                   stream=handle["stream"], lingered=handle["lingered"], isolation=handle.get("isolation"))
     failure = None if succeeded else trail.get("error") or error
     tokens = {key: value for key, value in handle["usage"].items() if value}
-    extra = {"tokens": handle["usage"] if tokens else None, "duration_ms": round((time.monotonic() - handle["began"]) * 1000)}
+    extra = {"tokens": handle["usage"] if tokens else None, "duration_ms": round((time.monotonic() - handle["began"]) * 1000),
+             "authority_digests": [entry["digest"] for entry in handle.get("authority") or []] or None}
     if failure:
         extra["error"] = {"class": failure.get("class") or "unknown",
                           **({"code": failure["code"]} if failure.get("code") else {})}
@@ -204,12 +262,10 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         attempt += 1
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
-        # role_argv refuses a role that instructions.isolation = require does not admit (ISOLATION_UNAVAILABLE)
-        run = process.run_role(self._role_argv(item, role, route, decision), prompt, transport=route["transport"], cwd=self.project,
-                               timeout_s=route["timeout_s"], raw_path=raw, env=detach.subprocess_env(self._role_env(item, role, route)),
-                               idle_timeout_s=route.get("idle_timeout_s", 0), cancel=cancel,
-                               on_tick=self._beacons(item, key, role, raw), provider=route["provider"],
-                               agent_directory=handle["directory"])
+        # the launch refuses a role that instructions.isolation = require does not admit (ISOLATION_UNAVAILABLE)
+        run = self._launch(item, handle, role, route, prompt, attempt=attempt, raw=raw, timeout_s=route["timeout_s"],
+                           decision=decision, clean_env=True, idle_timeout_s=route.get("idle_timeout_s", 0),
+                           cancel=cancel, on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
         self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
         results.observe_isolation(self, item, key, role, route, run.init, handle)
         self._keep_session(item, role, route, run, task_digest=digest, delta=delta, decision=decision)

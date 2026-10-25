@@ -760,8 +760,10 @@ The conductor stops only on:
 | `ROUTE_UNDERSHOOT` | the executor route is below the class or effort the work requires |
 | `CURRENT_INPUT_RECEIPT_UNSUPPORTED` | a stage sets `require_current_input_receipt: true` and no binding implements a verified pre-dispatch current-request input receipt: refused in preparation and preflight before any role is spawned (see *Current request input receipts*) |
 | `SANDBOX_UNAVAILABLE` | `instructions.sandbox` is `require` and a Claude Code role with Bash is on the route, or a Codex route carries `--sandbox`, and the sandbox cannot start (`orch.py doctor`, `orch.sandbox`); the run stops before any work |
-| `ISOLATION_UNAVAILABLE` | `instructions.isolation` is `require` and a required role of `isolate_roles` would start without the full isolation of its provider's profile (see Isolation profiles): a flag the CLI does not list, a surface not confirmed off for this CLI version (codex before a live probe, grok always), or an init event of an earlier role of the provider that showed what the profile keeps out (`ISOLATION_DRIFT`), or a route whose command is not a provider CLI the conductor can probe (a wrapper). Checked in the preflight before any work, and again when the command line of every role process is built (the roles of a piece, the report-fixer, the group reviewer and the review strategist). `ISOLATION_UNAVAILABLE: <role>/<provider>: <guarantee> isolation (<missing flags or surfaces>); set instructions.isolation = prefer in a trusted layer or remove the role from isolate_roles` |
+| `ISOLATION_UNAVAILABLE` | `instructions.isolation` is `require` and a required role of `isolate_roles` would start without the full isolation of its provider's profile (see Isolation profiles): a flag the CLI does not list, a surface not confirmed off for this CLI version (codex before a live probe, grok always), or an init event of an earlier role of the provider that showed what the profile keeps out (`ISOLATION_DRIFT`), or a route whose command is not a provider CLI the conductor can probe (a wrapper), or a Claude Code CLI that does not list `--setting-sources` and `--settings` (the project permissions would reach the role: `<role>/claude-code: the project permissions reach the role …`). Checked in the preflight before any work, and again when the command line of every role process is built (the roles of a piece, the report-fixer, the group reviewer and the review strategist). `ISOLATION_UNAVAILABLE: <role>/<provider>: <guarantee> isolation (<missing flags or surfaces>); set instructions.isolation = prefer in a trusted layer or remove the role from isolate_roles` |
 | `ISOLATION_PROFILES_INVALID` | `configs/isolation-profiles.json` cannot be read, is outside conductor/v1 `isolation-profiles` or declares a guarantee its surfaces contradict: `ISOLATION_PROFILES_INVALID: <path>: <first schema problem>`, before any role |
+| `AUTHORITY_RECORD_CONFLICT` | a launch would record another authority than the `agents/<id>/authority/a<attempt>.json` already written for that attempt of the agent run (a record is never rewritten); the process does not start: `<path> holds the authority <digest> of attempt <n>; the launch would record <digest>: an authority record is never rewritten` |
+| `AUTHORITY_RESUME_MISMATCH` | an attempt that continues a session would run the `resume_argv` of its launch entry, and that command has another authority than the route's own command (another guard, grant, sandbox mode, permission mode or setting sources): the process would get what no record and no session fingerprint names. Nothing is written and no process starts: `<role>/<provider>: the resume command of the launch catalog has another authority than its command (<keys>); …make resume_argv grant what argv grants` |
 | `PROVIDER_UNAVAILABLE`, `TRANSPORT_UNSUPPORTED`, `LAUNCH_UNKNOWN` | a role cannot start: checked for every required role before any work of a piece (an optional scout or report-fixer is skipped instead); a route with `transport: acp` stops with `TRANSPORT_UNSUPPORTED`. Wrapped commands check the provider after `--` as well as the launcher |
 | `LAUNCH_REFUSED` | the role/provider pair is explicitly refused in the launch catalog; the message is `<role>/<provider>: <reason>`. Required roles stop before work; optional scout/report-fixer roles are skipped |
 | `ROLE_FAILED`, `ROLE_OUTPUT_EMPTY`, `ROLE_OUTPUT_INVALID` | a role kept failing after healing, repair and `limits.retries` |
@@ -782,7 +784,7 @@ The conductor stops only on:
 | `STATE_CORRUPT` | a JSON file of the run folder is not JSON; it names the file |
 | `RUN_INVALID`, `STATE_INVALID` | `run.json` or `state.json` does not match its records/v1 schema (see *Run records*) when the run is loaded or saved: `CODE: <path>: <JSON pointer>: <message>` for the first three problems, then `settle or release the items of this run, or start a new run`. A file is never rewritten by a read; a state that would not match is not saved |
 | `QUESTIONS_INVALID` | `questions.json` of a piece is not JSON or does not match records/v1 `questions`: the run stops, `orch conduct answer` writes nothing and exits 1, `orch conduct questions` lists the other pieces and exits 1. The file is left as it is, so an answer in it is not lost |
-| `RECORD_INVALID` | another run record (`options.json`, `routes.json`, `risk.json` of a piece, `review-strategy.json`, an agent's `request.json`, `result.json`, `usage.json` or `process.json`, the machine's `provider-gates.json`) does not match its records/v1 schema; same message shape (`provider-gates.json`: `remove the file to reset the gates`). A lease record that does not match only makes its owner `unknown` in a busy message |
+| `RECORD_INVALID` | another run record (`options.json`, `routes.json`, `risk.json` of a piece, `review-strategy.json`, an agent's `request.json`, `result.json`, `usage.json` or `process.json`, the machine's `provider-gates.json`) does not match its records/v1 schema; an agent's `authority/a<n>.json` that a launch finds already written is not JSON, is outside conductor/v1 `authority-envelope` or holds a digest that is not the digest of its content (the file is left as it is and no process starts); same message shape (`provider-gates.json`: `remove the file to reset the gates`). A lease record that does not match only makes its owner `unknown` in a busy message |
 | `STUBS_INVALID` | a stub file cannot be used (a symlink, not a regular file, over 32 KiB, not UTF-8, a bad header or mode); the run stops before any role starts and names the file and the `STUB_*` code |
 
 With `on_blocked = "report"` a blocked piece that changed nothing is registered, its records are committed and the
@@ -844,6 +846,7 @@ The informational limits report long or costly work through `info` lines with a 
 | `ADVICE_HELD` | advice needs the owner, meets an effective gate or falls below the confidence threshold; also a recommendation outside a question's options | source `advisor` (needs_owner, model category or invalid option), `code` (security/public-api/scope-expansion with paths), or `confidence` (actual and minimum); all applicable gate reasons are named |
 | `ISOLATION_PARTIAL` | `instructions.isolation` is `prefer` and an isolated role's guarantee is not full: the provider CLI does not list a flag of its profile (asked with the help command of the profile, `codex exec --help` for Codex), a surface is not confirmed off (codex before a live probe of its version, grok), the command of the route is not a provider CLI it can probe (a wrapper), an earlier role drifted; or `instructions.sandbox` is `prefer` and the provider sandbox cannot start. Once per run, provider and reason (the keys said are `state.isolation_noted`; a resume does not repeat them) | `<cli> does not list <flags>; roles are isolated by the environment only`, `<role>/<provider>: partial isolation (<surfaces>)`, or the sandbox line; the commands of Claude Code roles run under the filesystem guard only |
 | `ISOLATION_DRIFT` | the first init event of the stream of an isolated role (claude-code, grok `system/init`) lists names in a field its profile keeps empty (`observe.empty`: claude-code `mcp_servers`, `plugins`; grok `mcp_servers`, `skills`) | `<role>/<provider> loaded <field> [<names>] although isolated`; the call goes on, the names are kept in `result.json` `isolation.observed`, and the provider is lowered for the run (`state.isolation_noted` `<provider>:ISOLATION_DRIFT`): under `require` its next role stops with `ISOLATION_UNAVAILABLE` |
+| `AUTHORITY_CHANGED` | a launch of a role of a piece records another authority envelope than the last launch of the same role of the piece (`state.items[ref].authority`): a fallback to another provider or guard, another access, a sandbox that stopped or started, a drift | `<item> <role>: authority <old 12 hex> -> <new 12 hex> (<changed keys>)`; the keys are named while the conductor holds the earlier envelope in memory (else `keys not known …`; the files are `agents/<id>/authority/a<n>.json`). The executor session of the piece starts fresh (`SESSION_FRESH fingerprint_changed:authority_digest`) |
 | `POLICY_STAGE_SKIPPED` | a stage of the run policy names a role the conductor does not run, and the stage is not a refusing required stage (once per run). The conductor's preparation binds a copy without that stage, rewriting a dependency on it, so a missing manifest does not become `ROLE_UNKNOWN`. Public `source prepare` and `orch prepare` of the original policy still check every stage | the scenario and the stage; the run continues |
 
 A person who runs the conductor sees them on stderr; an observer agent reads them from the journal and decides whether
@@ -1544,7 +1547,17 @@ run with the id `agent-<run suffix>-<n>` (`n` from `state.agents`, kept across a
 document when the failure was classified, else the code of the stop —, `decisions` of `retry.decide`, `duration_s`, `stream`,
 `lingered`; written however the run ends) and `usage.json` (`input`, `cached`, `output` of all its attempts and
 `usage_complete`, the report-fixer apart from the role it mended). The prompts and the streams stay in `prompts/` and `streams/`; the folder points at them. A
-folder without `result.json` is a role still running or one that died with the process. The `stage.end` lines and the
+folder without `result.json` is a role still running or one that died with the process.
+
+Every process an agent run starts (each attempt and fallback of a role, each repair of the report-fixer, a group reviewer
+or the review strategist) has its authority recorded first: `authority/a<attempt>.json` (conductor/v1 `authority-envelope`,
+see *Sandboxes*), computed for the route of that attempt, checked, written crash-safely right before the process starts and
+never rewritten (another digest for the same attempt is `AUTHORITY_RECORD_CONFLICT`). A crash between the record and the
+process leaves the record of a launch that did not happen, never a launch without one; a resume starts a new agent run and
+leaves the old files as they are. `result.json` lists the launches as `authority` (`[{attempt, provider, digest}]`, absent
+when no process started), the events `orch.agent.finished` and `orch.agent.failed` carry `authority_digests` (in the order of
+the attempts); `orch.agent.started` and `request.json` carry none (the route of an attempt is chosen after the agent run
+starts). The digest of the last launch of each role is `state.items[ref].authority[role]`. The `stage.end` lines and the
 `STAGE_SLOW`/`STAGE_IDLE` beacons carry the optional field `agent`; the observer report lists the tokens by agent run.
 
 Usage is normalized by the provider's payload shape. With an integer `cached_input_tokens` (Codex),
@@ -1686,9 +1699,11 @@ The **fingerprint** is the identity a session is built under: `provider`, `proje
 the git top level), `role`, `item`, `attempt_id` (of the claim), `instructions_digest` (canonical digest of
 `<run>/instructions.json`, without what the run fills in itself), `authority_digest`, `isolation_home` and `base` (the
 revision of the first brief of the piece, `session_base` of the piece state). `shared` leaves out `item`, `attempt_id` and `base`.
-`authority_digest` and `isolation_home` are empty (`sessions.identity_inputs`) until the authority envelope and the
-isolation profiles fill them in. The model and the effort are not part of it: a change resumes and says
-`SESSION_ROUTE_CHANGED`.
+`authority_digest` is the digest of the authority envelope a launch of the executor on the route would record (computed
+quietly by `sessions.identity_inputs`: nothing is said or created; see *Sandboxes*), `isolation_home` the home of an
+isolated provider (`CODEX_HOME` of the run). A slot kept before the envelope existed has an empty `authority_digest`: its
+next round starts fresh once (`fingerprint_changed:authority_digest`). The model and the effort are not part of it: a
+change resumes and says `SESSION_ROUTE_CHANGED`.
 
 Every executor attempt decides, once, whether to resume (`session_decision`), and says it in the journal. The info
 `SESSION_RESUMED` (`item`, `stage`, the session and `reuse=` one of `correction`, `retry`, `question`, `next_piece`,
@@ -1903,7 +1918,7 @@ step carries none. `skills_auto` and `skills_checked` hold the choice of each ro
 | `review-strategy` | `<run>/review-strategy.json` | `review_plan.decide`: mode, groups, reviewer effort, reason, source; a resume whose state lost the plan takes this file | `RECORD_INVALID` |
 | `process` | `<run>/<item>/agents/<id>/process.json` | `process.run_role`: `pid`, `pgid`, `start_ticks`, `started_at`; read by cold recovery before any signal | `RECORD_INVALID` (the resume stops) |
 | `agent-request` | `<run>/<item>/agents/<id>/request.json` | `agents.start` (see *Agent runs*) | `RECORD_INVALID` |
-| `agent-result` | `<run>/<item>/agents/<id>/result.json` | one of two variants: `agents.finish` (`exit`, `decisions`, `duration_s`, `stream`, `lingered`, `error` when it failed) or `agents.orphan` (only `error` `ORPHANED`); an empty or tag-only result is no result | `RECORD_INVALID` |
+| `agent-result` | `<run>/<item>/agents/<id>/result.json` | one of two variants: `agents.finish` (`exit`, `decisions`, `duration_s`, `stream`, `lingered`, `error` when it failed, `isolation`, `authority` of its launches) or `agents.orphan` (only `error` `ORPHANED`); an empty or tag-only result is no result | `RECORD_INVALID` |
 | `agent-usage` | `<run>/<item>/agents/<id>/usage.json` | `agents.finish`: `input`, `cached`, `output`, `usage_complete` | `RECORD_INVALID` |
 | `review-verdict` | `<artifacts>/review-verdict.json` | `verdict_file`, tag `"schema": "orch-conductor-review-verdict/v1"` (read outside orch as published) | `RECORD_INVALID` |
 | `provider-gates` | `<state>/orch/provider-gates.json` (machine) | `gates.set_gate`, `gates.clear` under `provider-gates.lock`, tag `"schema": "provider-gates/v1"` | `STATE_CORRUPT`, `RECORD_INVALID` |
@@ -1940,12 +1955,23 @@ for.
   --unshare-net --dev /dev --proc /proc true` (10 s, cached for the process; it changes nothing). On Ubuntu 24.04 and later
   `kernel.apparmor_restrict_unprivileged_userns = 1` stops it without an AppArmor profile for bwrap
   (`bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`); the profile is a change of the machine, made by its owner.
-- `instructions.sandbox`: `prefer` (default) adds `--settings '{"sandbox": {"enabled": true, "allowUnsandboxedCommands":
-  false, "failIfUnavailable": true, "network": {"strictAllowlist": true, "allowedDomains": <sandbox_domains>}}}'` to every
-  Claude Code role whose `--tools` include Bash (only the `sandbox` block; the provider merges it with the user's settings).
-  A role whose manifest declares `network: allowed` gets no `strictAllowlist` and no `allowedDomains`. When the sandbox cannot
-  start, `prefer` goes on without `--settings` and says `ISOLATION_PARTIAL` once; `require` stops with `SANDBOX_UNAVAILABLE`
-  before any work; `off` adds nothing. `strictAllowlist` with no domains also blocks the network of the project's own tests: put
+- `instructions.sandbox`: `prefer` (default) adds the block `"sandbox": {"enabled": true, "allowUnsandboxedCommands":
+  false, "failIfUnavailable": true, "network": {"strictAllowlist": true, "allowedDomains": <sandbox_domains>}}` to the
+  `--settings` object of every Claude Code role whose `--tools` include Bash (the provider merges it with the user's
+  settings). A role whose manifest declares `network: allowed` gets no `strictAllowlist` and no `allowedDomains`. When the
+  sandbox cannot start, `prefer` goes on without the block and says `ISOLATION_PARTIAL` once; `require` stops with
+  `SANDBOX_UNAVAILABLE` before any work; `off` adds no block.
+- **Setting sources.** An isolated Claude Code role (`instructions.isolate_roles`, isolation not `off`) starts with
+  `--setting-sources user` (the catalog value `user,project` of the writers is replaced): the project's
+  `.claude/settings*.json` no longer reach it, so their context-economy Read denies cannot become sandbox masks of
+  `skills.json`, lock files or `node_modules`. The ask and deny rules of git push, reset --hard and clean those files carried
+  come with the launch instead: the same `--settings` object holds `"permissions": {"deny": ORCH_PERMISSION_RULES}`
+  (`Bash(git push*)`, `Bash(git reset --hard*)`, `Bash(git clean*)`, `Bash(git config --global*)`, `Bash(sudo *)`,
+  `Read(.env)`, `Read(.env.*)`, `Read(**/*.pem)`, `Read(**/*.key)`, `Read(~/.ssh/**)`, `Read(~/.aws/**)`;
+  `policies/authority.py`), never one without the other. A CLI that does not list both `--setting-sources` and
+  `--settings` keeps the catalog argv (degraded `SETTING_SOURCES_UNSUPPORTED` in the envelope); under
+  `instructions.isolation = require` that is `ISOLATION_UNAVAILABLE`. Deny rules of the user's own settings still apply
+  (`read_masks: provider-settings` in the envelope of a sandboxed role). `strictAllowlist` with no domains also blocks the network of the project's own tests: put
   the domains they need into `sandbox_domains`.
 - **Extra paths reach every writer.** `scope.extra_paths` (`--allow-path`) is granted to the `executor` and the
   `bounded-implementer` on every provider: a route under the Landlock guard gets `--rw P` (grok, and Claude Code when the
@@ -1968,7 +1994,89 @@ for.
 - `orch conduct run --dry-run` also prints `sandbox: {available, reason}`, `network: {role: {declared, enforced, by}}` with `by` one
   of `claude-sandbox`, `codex-sandbox`, `claude-tools` (a Claude role without Bash has no command to confine) or `null`, and
   `warnings` for every role that declares `network: none` while nothing enforces it (the grok `reviewer`; every Claude role
-  when the sandbox is off or cannot start).
+  when the sandbox is off or cannot start), and `authority: {role: envelope}` (below). `routes[*].argv` stays the base route
+  template; `isolation_args` is what the launch adds to it (the `--rw` grants of the guard are inside the prefix).
+
+### The authority envelope
+
+The authority of each launch is one document, conductor/v1 `authority-envelope`, computed by one pure function
+(`policies/authority.compute`: it reads no provider file, creates nothing and starts no process; the probes are its
+arguments): `role`, `provider`, `access`, `guard` (`landlock-rw`, `landlock-protect`, `claude-sandbox`, `codex-sandbox`,
+`none`), `write_roots` (`{path, why}`: `.` the checkout, `./<rel>` under it, `~/…` under HOME, `/` unconfined; `why`
+`checkout`, `guard`, `extra_paths`, `transcripts`, `unconfined`; a Landlock guard grants its default writable `/tmp`,
+`/var/tmp`, `/dev` and `~/.grok` unless `--no-default-rw`, then its `--rw` folders), `read_masks`, `setting_sources`,
+`permission_mode`, `permission_rules`, `network` (`declared`, `effective` none/allowlist/open, `enforced_by`,
+`allowed_domains`), `docker` (open/blocked), `git` (`commit: work-source`; `push`/`reset_hard`/`clean` are `denied` only by
+a command deny layer — the permission rules of orch — or for a role without a shell, else `unenforced`: a filesystem guard
+filters no command, what it keeps out is `write_roots` and `dot_git_write`),
+`isolation` (`profile`, `guarantee`, `args`, `env_keys` — names only —, `home_var`), `degraded` (`{code, detail}`) and
+`digest` (`sha256:` of the canonical JSON without `digest`; the HOME of the machine is `~`, so the same authority on two
+machines has one digest). The command line of the launch is built from it (`launch_plan.argv_from`); the `resume_argv` an
+attempt runs to continue a session must have the same authority as the route's command (else `AUTHORITY_RESUME_MISMATCH`
+before anything is written). It is written to `agents/<id>/authority/a<attempt>.json` before the process starts (see
+*Agent runs*), the executor prompt gets an `authority` block from it (at most 12 lines: where to write — the extra paths and
+the transcripts folder are named, not listed —, the network, Docker, what git forbids, what to do when a check needs what it
+does not give; the Docker lines of the verification text follow `docker == open`), rebuilt with the stub for the route of
+every attempt (a fallback to another provider gets the authority of its own launch), its digest enters the fingerprint of
+the executor session, and `conduct run --dry-run` shows it per role.
+
+`orch.py roles matrix [--markdown|--json]` prints the authority of every role and provider of the shipped launch catalog with
+access open and confined, on a reference machine (the sandbox starts, the CLIs list the flags of their profiles, the default
+options). A machine without the sandbox falls back to the Landlock guard for the Claude Code writers (the dry run shows
+it). The table below is generated by it; a test keeps them equal:
+
+<!-- authority-matrix:begin -->
+| role | provider | access | guard | network | enforced by | docker | setting sources | isolation |
+|---|---|---|---|---|---|---|---|---|
+| context-scout | claude-code | open | none | none | claude-tools | blocked | user | full |
+| context-scout | claude-code | confined | none | none | claude-tools | blocked | user | full |
+| context-scout | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| context-scout | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| context-scout | grok | open | landlock-protect | open | - | open | all | partial |
+| context-scout | grok | confined | landlock-protect | open | - | open | all | partial |
+| executor | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| executor | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| executor | codex | open | none | open | - | open | all | partial |
+| executor | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| executor | grok | open | landlock-rw | open | - | open | all | partial |
+| executor | grok | confined | landlock-rw | open | - | open | all | partial |
+| bounded-implementer | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| bounded-implementer | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| bounded-implementer | codex | open | none | open | - | open | all | partial |
+| bounded-implementer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| bounded-implementer | grok | open | landlock-rw | open | - | open | all | partial |
+| bounded-implementer | grok | confined | landlock-rw | open | - | open | all | partial |
+| reviewer | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| reviewer | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| reviewer | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| reviewer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| reviewer | grok | open | landlock-protect | open | - | open | all | partial |
+| reviewer | grok | confined | landlock-protect | open | - | open | all | partial |
+| triager | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| triager | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| triager | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| triager | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| triager | grok | open | landlock-protect | open | - | open | all | partial |
+| triager | grok | confined | landlock-protect | open | - | open | all | partial |
+| registrar | claude-code | open | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| registrar | claude-code | confined | claude-sandbox | none | claude-sandbox | blocked | user | full |
+| registrar | codex | open | none | open | - | open | all | partial |
+| registrar | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| report-fixer | claude-code | open | none | none | claude-tools | blocked | user | full |
+| report-fixer | claude-code | confined | none | none | claude-tools | blocked | user | full |
+| report-fixer | codex | open | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| report-fixer | codex | confined | codex-sandbox | none | codex-sandbox | blocked | all | partial |
+| report-fixer | grok | open | landlock-protect | open | - | open | all | partial |
+| report-fixer | grok | confined | landlock-protect | open | - | open | all | partial |
+| researcher | claude-code | open | claude-sandbox | open | - | blocked | user | full |
+| researcher | claude-code | confined | claude-sandbox | open | - | blocked | user | full |
+| researcher | grok | open | landlock-protect | open | - | open | all | partial |
+| researcher | grok | confined | landlock-protect | open | - | open | all | partial |
+| advisor | claude-code | open | claude-sandbox | open | - | blocked | user | full |
+| advisor | claude-code | confined | claude-sandbox | open | - | blocked | user | full |
+| advisor | grok | open | landlock-protect | open | - | open | all | partial |
+| advisor | grok | confined | landlock-protect | open | - | open | all | partial |
+<!-- authority-matrix:end -->
 
 ## Isolation profiles
 

@@ -273,7 +273,7 @@ class LaunchPathTests(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
         patcher = mock.patch.object(cli_probe, "_run", side_effect=lambda args: "2.1.310" if args[-1] == "--version"
-                                    else "--safe-mode --strict-mcp-config --settings")
+                                    else "--safe-mode --strict-mcp-config --settings --setting-sources")
         patcher.start()
         self.addCleanup(patcher.stop)
         tmp = tempfile.TemporaryDirectory()
@@ -302,7 +302,7 @@ class LaunchPathTests(unittest.TestCase):
         return owner
 
     def item(self, *roles, mode="require"):
-        return mock.Mock(ref="W1", directory=self.base / "W1", options={
+        return mock.Mock(ref="W1", directory=self.base / "W1", state={}, options={
             "instructions": {"isolate_roles": list(roles), "isolation": mode}, "scope": {}})
 
     def test_f2_a_batch_role_is_observed_and_its_drift_refuses_the_next_launch(self):
@@ -336,7 +336,7 @@ class LaunchPathTests(unittest.TestCase):
             launch_plan.role_argv(owner, self.item("executor"), "executor", wrapper)
         self.assertEqual(stop.exception.code, "ISOLATION_UNAVAILABLE")
         self.assertIn("the command of the route is not a provider CLI the profile can probe", stop.exception.message)
-        self.assertEqual(launch_plan.role_argv(owner, self.item("executor", mode="prefer"), "executor", wrapper)[-2:],
+        self.assertEqual(launch_plan.role_argv(owner, self.item("executor", mode="prefer"), "executor", wrapper)[2:4],
                          ["--safe-mode", "--strict-mcp-config"])
         said = [call.kwargs["message"] for call in owner.progress.emit.call_args_list
                 if call.kwargs.get("reason_code") == "ISOLATION_PARTIAL"]
@@ -450,6 +450,7 @@ class ClaudeRunTests(IsolationRunCase):
     def test_f1_a_report_fixer_is_refused_after_a_drift_under_require(self):
         """F1: the repair of an executor that drifted would start a report-fixer of the same provider; the preflight
         does not see the optional report-fixer, its launch refuses it."""
+        os.environ["FAKE_CLI_HELP_CLAUDE"] += " --setting-sources"  # require: the CLI keeps the project settings out
         self.use_cli(executor="claude", report_fixer="claude")
         self.script({"executor": [{"init": {"mcp_servers": ["kb-server"]}, "text": "done, but no report block"}],
                      "report-fixer": [{"result": report("W1"), "tag": "stage-report"}], "reviewer": [GREEN]})
@@ -462,6 +463,7 @@ class ClaudeRunTests(IsolationRunCase):
                         err)
 
     def test_a_drift_under_require_refuses_the_next_role_of_the_provider(self):
+        os.environ["FAKE_CLI_HELP_CLAUDE"] += " --setting-sources"  # require: the CLI keeps the project settings out
         self.use_cli(executor="claude", reviewer="claude")
         self.script({"executor": [{**executor_ok("W1"), "init": {"mcp_servers": ["kb-server"]}}], "reviewer": [GREEN]})
         code, _, err = self.run_items("W1", extra=self.options(reviewer="claude-code/sonnet/high", instructions={

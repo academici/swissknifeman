@@ -11,7 +11,7 @@ alpha). A consumer ignores fields it does not know; a new optional field is a mi
 | `orch.run.finished` | run id | `run_id`, `submission_id`, `ref`, `attempt_id`, `outcome` (`done`, `done_with_deviations`, `blocked`, `refused`), `gate` (`pass`, `missing`, `red`, `stale`, `none`) | — |
 | `orch.run.refused` | submission id | `submission_id`, `step` (`claim`, `prepare`, `register`), `reason_codes` | `run_id`, `ref`, `policy_id`, `binding` |
 | `orch.agent.started` | `<run>/<item>/<agent run id>` | `run_id`, `work_id`, `agent_run_id`, `role`, `route` (`provider`; `model_class`, `model`, `effort`) | `item`, `step`, `attempt`, `prompt_sha256`, `config_digest`, `options_digest` |
-| `orch.agent.finished` | as above | as `orch.agent.started` | the optional data of `started`, `tokens` (`input`, `cached`, `output`), `duration_ms` |
+| `orch.agent.finished` | as above | as `orch.agent.started` | the optional data of `started`, `tokens` (`input`, `cached`, `output`), `duration_ms`, `authority_digests` (the `sha256:` digests of the authority envelopes of the processes the agent run started, in the order of the attempts: `agents/<id>/authority/a<attempt>.json`; absent when none started) |
 | `orch.agent.failed` | as above | as `orch.agent.started`, `error` (`class`; `code`) | the optional data of `finished` |
 | `orch.agent.questioned` | `<run>/<item>` | `run_id`, `work_id`, `step`, `question_id`, `blocking` | `item`, `revision` |
 | `orch.run.warning` | `<run>/<item>` | `run_id`, `reason_code` (`RUN_SLOW`, `LIMIT_OVER`, `REVIEW_DEBT`, `STAGE_SLOW`, `STAGE_IDLE`, `CHECK_SLOW`, `CHECK_IDLE`, `DISK_LOW`, `STALL_SUSPECTED`) | `work_id`, `item`, `step` |

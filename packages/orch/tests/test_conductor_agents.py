@@ -104,6 +104,23 @@ class AgentRunTests(ConductorCase):
         listed = json.loads(self.conduct("status", "--json")[1])["agents"]
         self.assertTrue(all(row["status"] == "ok" for row in listed), listed)
 
+    def test_every_agent_run_that_started_a_process_records_its_authority(self):
+        """P6.2: ``authority/a<attempt>.json`` of each process; ``result.json`` ``authority`` names exactly those files."""
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 0, err)
+        folder = self.run_dir(err) / "W1" / agents.AGENTS
+        for path in sorted(folder.iterdir()):
+            with self.subTest(agent=path.name):
+                result = json.loads((path / "result.json").read_text(encoding="utf-8"))
+                recorded = {int(file.stem[1:]): json.loads(file.read_text(encoding="utf-8"))
+                            for file in (path / agents.AUTHORITY).glob("a*.json")}
+                self.assertEqual(result["authority"], [{"attempt": n, "provider": doc["provider"], "digest": doc["digest"]}
+                                                       for n, doc in sorted(recorded.items())])
+                role = json.loads((path / "request.json").read_text(encoding="utf-8"))["role"]
+                self.assertTrue(all(doc["role"] == role for doc in recorded.values()))
+                self.assertTrue(all(contract.problems(doc, "authority-envelope") == [] for doc in recorded.values()))
+
     def test_the_counter_is_kept_in_the_state_and_the_id_follows_the_run(self):
         self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
         _, _, err = self.run_items("W1")

@@ -3,7 +3,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "context-scout"
@@ -11,7 +15,11 @@
   {
    "argv": [
     "--safe-mode",
-    "--strict-mcp-config"
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global*)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
    ],
    "n": 1,
    "role": "executor"
@@ -335,6 +343,11 @@
      "tokens": 368
     },
     {
+     "kind": "authority",
+     "origin": "conductor",
+     "tokens": 106
+    },
+    {
      "kind": "run_rules",
      "origin": "conductor",
      "tokens": 150
@@ -371,7 +384,7 @@
     },
     "supporting": {
      "limit": 30000,
-     "tokens": 197
+     "tokens": 303
     },
     "task": {
      "limit": 0,
@@ -608,6 +621,14 @@
    "reason_code": "ISOLATION_PARTIAL"
   },
   {
+   "event": "info",
+   "item": "W1",
+   "message": "W1 executor: authority ce4ee841b469 -> 7bf8c1a8a751 (degraded, git, isolation, permission_rules, provider, setting_sources)",
+   "reason_code": "AUTHORITY_CHANGED",
+   "role": "executor",
+   "route": "codex/gpt-6-sol/high"
+  },
+  {
    "agent": "agent-<run>-2",
    "event": "stage.end",
    "item": "W1",
@@ -810,7 +831,7 @@
     "created_at": "<time>",
     "error": "ROLE_FAILED",
     "fingerprint": {
-     "authority_digest": "",
+     "authority_digest": "sha256:<digest>",
      "instructions_digest": "sha256:<digest>",
      "isolation_home": "",
      "project": "<project>",
@@ -836,6 +857,11 @@
   "items": {
    "W1": {
     "adopted": [],
+    "authority": {
+     "context-scout": "sha256:<digest>",
+     "executor": "sha256:<digest>",
+     "reviewer": "sha256:<digest>"
+    },
     "autofix_at": [],
     "check_fixes_at": [],
     "check_fixes_used": 0,

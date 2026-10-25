@@ -4,6 +4,6 @@ exit: 2
 --- stderr ---
 usage: orch.py [-h] [--config FILE] [--project DIR]
                [--project-resolution {launcher,flag,environment,marker,git}]
-               {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,conformance,source,research,stubs,doctor}
+               {conduct,validate,launch,input,render-prompt,prepare,explain,policy,route,roles,conformance,source,research,stubs,doctor}
                ...
-orch.py: error: argument verb: invalid choice: 'no-such-subcommand' (choose from 'conduct', 'validate', 'launch', 'input', 'render-prompt', 'prepare', 'explain', 'policy', 'route', 'conformance', 'source', 'research', 'stubs', 'doctor')
+orch.py: error: argument verb: invalid choice: 'no-such-subcommand' (choose from 'conduct', 'validate', 'launch', 'input', 'render-prompt', 'prepare', 'explain', 'policy', 'route', 'roles', 'conformance', 'source', 'research', 'stubs', 'doctor')

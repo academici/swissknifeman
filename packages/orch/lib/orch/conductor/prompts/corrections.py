@@ -64,6 +64,9 @@ def _correction(correction: str, targeted_tests: bool, self_check=()) -> str:
                                                          + _self_check_again(self_check) if targeted_tests
                        else ", then run the acceptance checks again")
             + (". Do not rerun acceptance checks the conductor owns." if targeted_tests else ".")
+            + " Fix only what the focus names. A formatting, import-order or lint finding is fixed by running the "
+            "project's formatter or fixer on the files it names, not by redesign; keep what is already right and do "
+            "not re-diagnose beyond the named failures."
             + "\n\n" + _fence(correction, "text"))
 
 

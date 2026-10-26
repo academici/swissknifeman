@@ -329,7 +329,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2683
+     "tokens": 2868
     },
     {
      "kind": "input",
@@ -370,7 +370,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3807
+     "tokens": 3992
     },
     "retrieval": {
      "limit": 50000,
@@ -399,7 +399,7 @@
     {
      "kind": "role_text",
      "origin": "roles/reviewer.md",
-     "tokens": 652
+     "tokens": 907
     },
     {
      "kind": "input",
@@ -435,7 +435,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 916
+     "tokens": 1171
     },
     "retrieval": {
      "limit": 50000,
@@ -800,7 +800,7 @@
     "model_class": "implementation",
     "provider": "grok",
     "role": "reviewer",
-    "timeout_s": 3600,
+    "timeout_s": 1800,
     "transport": "jsonl"
    },
    "triager": {

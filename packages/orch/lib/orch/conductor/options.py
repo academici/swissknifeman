@@ -23,14 +23,15 @@ from orch.conductor import contract
 # STAGE_SLOW / STAGE_IDLE / CHECK_SLOW beacons and decides); rounds go past their target while they make progress, up to
 # ``ceiling_factor`` times it. The auxiliary roles have a wall (``role_timeout_s`` per role; the executor and the
 # bounded-implementer none), a check has one of two hours (``check_timeout_s``), and ``stage_timeout_s`` and
-# ``run_timeout_s`` stay off by default. Silence is a wall too: a role whose stream has not grown for 90 minutes, or a
+# ``run_timeout_s`` stay off by default. The reviewer wall (1800) is an emergency stop, not a budget: the reviewer role text
+# asks for a diff-scoped review that ends when the subject is covered. Silence is a wall too: a role whose stream has not grown for 90 minutes, or a
 # check whose log has not grown for an hour, is hung, and an unattended run must not wait for it forever. Explicit hard
 # token limits stop admission before every model call; they do not interrupt a running one. A model attempt that reports
 # no usage under a hard limit stops the piece (``unmetered`` ``stop``) or is charged ``unmetered_charge_tokens``.
 DEFAULT_LIMITS = {"review_rounds": 2, "corrections": 1, "check_fixes": 1, "retries": 1, "tokens_max": 0,
                   "tokens_hard_max": 0, "run_tokens_hard_max": 0, "unmetered": "stop", "unmetered_charge_tokens": 50000,
                   "role_timeout_s": {"context-scout": 900, "triager": 1800, "report-fixer": 600, "registrar": 600,
-                                     "reviewer": 3600, "advisor": 1800, "researcher": 2700},
+                                     "reviewer": 1800, "advisor": 1800, "researcher": 2700},
                   "stage_timeout_s": 0, "stage_idle_timeout_s": 5400, "check_timeout_s": 7200,
                   "check_idle_timeout_s": 3600, "ceiling_factor": 2,
                   "repairs": 1, "stage_warn_s": 2700, "stage_idle_warn_s": 600, "check_warn_s": 900, "provider_wait_max_s": 900,

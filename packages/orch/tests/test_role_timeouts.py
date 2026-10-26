@@ -77,7 +77,7 @@ class RoleTimeoutTests(ConductorCase):
         found = self.preview("--options", str(self.options_file(role_timeout_s={"report-fixer": 7, "executor": 9})))
         self.assertEqual(found["routes"]["report-fixer"]["timeout_s"], 7)
         self.assertEqual(found["routes"]["executor"]["timeout_s"], 9)
-        self.assertEqual(found["options"]["limits"]["role_timeout_s"]["reviewer"], 3600)
+        self.assertEqual(found["options"]["limits"]["role_timeout_s"]["reviewer"], 1800)
 
     def test_stage_timeout_wins_over_the_role_walls_and_zero_removes_one(self):
         found = self.preview("--options", str(self.options_file(stage_timeout_s=11)))

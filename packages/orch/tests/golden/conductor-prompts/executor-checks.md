@@ -21,6 +21,13 @@ choosing the next work belong to the coordinator and the registrar.
   files the input names (reads, hints, the write set and their tests); do not survey the whole package
   and do not read a file again that you already read in this session.
 - Implement `scope.include` and nothing else, editing only paths inside `scope.write_set`.
+- Work to finish, not to survey: find the nearest definitions of what you change and of its callers, make one
+  consistent change, then diagnose only the cases it affects. Close a small gap (a missing helper, an unclear
+  name) yourself with a search and a local fix inside the scope; do not ask the owner about it.
+- Finish any generation or setup step before you report. Do not start the acceptance suite a second time
+  "to be sure": the coordinator runs it once on your final tree.
+- A correction round continues your work: keep what is already right and change only what the correction names.
+  Do not start the piece again.
 - Honour every `constraints[*].text`, every loaded decision, `guidance` and `sections` as written.
   Prefer the input over your own preference; a conflict between them is an open issue.
 - Hand over finished work: review and acceptance are a safety net, not the way to find your mistakes.
@@ -166,7 +173,7 @@ Run every acceptance check of the input yourself, exactly as written, before you
 
 ## Correction
 
-Your previous attempt is in the working tree. The current correction focus below is the only assignment of this round. Earlier correction instructions are historical and are not a current assignment. The goal, the scope, the authority and the acceptance contract stay in force. Make exactly this correction, inside the same scope, then run the acceptance checks again.
+Your previous attempt is in the working tree. The current correction focus below is the only assignment of this round. Earlier correction instructions are historical and are not a current assignment. The goal, the scope, the authority and the acceptance contract stay in force. Make exactly this correction, inside the same scope, then run the acceptance checks again. Fix only what the focus names. A formatting, import-order or lint finding is fixed by running the project's formatter or fixer on the files it names, not by redesign; keep what is already right and do not re-diagnose beyond the named failures.
 
 ```text
 x

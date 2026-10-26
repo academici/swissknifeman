@@ -156,6 +156,29 @@ class AuditCase(unittest.TestCase):
         self.assertEqual(parity["settings_dup"], ["figma"])
         self.assertTrue(any(d["only_left"] == ["figma"] for d in parity["drifts"]))
 
+    def _carriers(self, p, claude, cursor, codex):
+        (p / ".mcp.json").write_text(json.dumps({"mcpServers": {n: {} for n in claude}}), encoding="utf-8")
+        (p / ".cursor").mkdir(parents=True, exist_ok=True)
+        (p / ".cursor" / "mcp.json").write_text(json.dumps({"mcpServers": {n: {} for n in cursor}}), encoding="utf-8")
+        (p / ".codex").mkdir(exist_ok=True)
+        (p / ".codex" / "config.toml").write_text(
+            "".join(f"[mcp_servers.{n}]\ncommand = \"x\"\n" for n in codex), encoding="utf-8")
+
+    def test_code_providers_exclude_code_graph_only_from_disallowed_surfaces(self):
+        p = _make_project(self.tmp)
+        self._carriers(p, ["maind", "codegraph"], ["maind", "codegraph"], ["maind"])
+        project = {"id": "proj", "local_path": str(p), "code_providers": ["claude-code", "cursor"]}
+        row = audit.audit_project(self.env, project, ("mcp",), self.code_st, config={})
+        self.assertEqual(row["mcp"]["parity"]["drifts"], [])
+
+    def test_code_providers_keep_drift_between_allowed_surfaces(self):
+        p = _make_project(self.tmp)
+        self._carriers(p, ["maind", "codegraph"], ["maind"], ["maind"])
+        project = {"id": "proj", "local_path": str(p), "code_providers": ["claude-code", "cursor"]}
+        row = audit.audit_project(self.env, project, ("mcp",), self.code_st, config={})
+        pairs = {(d["left"], d["right"]) for d in row["mcp"]["parity"]["drifts"]}
+        self.assertEqual(pairs, {("claude", "cursor")})
+
     def test_core_present_via_connect_buckets(self):
         # connect-channel: CORE comes with bucket plugins general+oss-dev (without physical. files)
         p = _make_project(self.tmp, plugins=["general", "oss-dev"])

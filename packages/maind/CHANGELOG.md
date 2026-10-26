@@ -63,6 +63,7 @@ versioning - [SemVer](https://semver.org/lang/ru/).
 - **`scripts/cache-brain-docs.sh`** moved to the brain module (`scripts/cache-brain-docs.sh`); it finds `maind` through `$MAIND_BIN` or `PATH`.
 
 ### Fixed
+- **MCP parity audit:** honor project `code_providers` exclusions for code-graph servers, avoiding false drift across provider surfaces.
 - **`validate_config` — section `memory` didn't know about `digest`.** Key `memory.digest` (P1.1: `budget_chars`/`item_max_chars`/`shared_max`) existed in runtime since 0.3.0, but the validator scheme considered it unknown and warned on every `maind health`/CLI-call. Added to valid section keys.
 
 ## [0.3.0] — 2026-07-12

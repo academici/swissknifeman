@@ -22,6 +22,11 @@ class TestMcpParity(unittest.TestCase):
         drifts = parity_drifts(surfaces)
         self.assertTrue(any(d["only_left"] == ["figma"] for d in drifts))
 
+    def test_excluded_server_is_ignored_only_in_pairs_with_its_excluded_surface(self):
+        surfaces = {"claude": {"maind", "cg"}, "cursor": {"maind"}, "codex": {"maind"}, "settings": set()}
+        drifts = parity_drifts(surfaces, excluded_ids_by_surface={"codex": {"cg"}})
+        self.assertEqual([(d["left"], d["right"]) for d in drifts], [("claude", "cursor")])
+
     def test_settings_duplicates(self):
         surfaces = {
             "claude": {"maind", "laravel-boost"},

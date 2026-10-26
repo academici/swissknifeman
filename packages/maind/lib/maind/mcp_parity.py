@@ -69,18 +69,25 @@ def collect_surfaces(project_root):
     }
 
 
-def parity_drifts(surfaces):
-    """Pairwise drift between JSON/Codex provider carriers (ignore missing files)."""
+def parity_drifts(surfaces, *, excluded_ids_by_surface=None):
+    """Pairwise drift between provider carriers.
+
+    ``excluded_ids_by_surface`` names the servers a surface intentionally does not carry (a project
+    that limits its code graph to some providers). Such a server is left out of every pair that
+    includes that surface; drift between the surfaces that do carry it stays visible."""
+    excluded = {name: set(ids) for name, ids in (excluded_ids_by_surface or {}).items()}
     carriers = {name: ids for name, ids in surfaces.items()
                 if name != "settings" and ids is not None}
     drifts = []
     names = sorted(carriers)
     for index, left in enumerate(names):
         for right in names[index + 1:]:
-            if carriers[left] != carriers[right]:
+            skip = excluded.get(left, set()) | excluded.get(right, set())
+            only_left = sorted(carriers[left] - carriers[right] - skip)
+            only_right = sorted(carriers[right] - carriers[left] - skip)
+            if only_left or only_right:
                 drifts.append({"left": left, "right": right,
-                               "only_left": sorted(carriers[left] - carriers[right]),
-                               "only_right": sorted(carriers[right] - carriers[left])})
+                               "only_left": only_left, "only_right": only_right})
     return drifts
 
 
@@ -102,13 +109,13 @@ def undeclared_servers(surfaces, expected_ids):
     return sorted(observed - set(expected_ids))
 
 
-def analyze(project_root, expected_ids=()):
+def analyze(project_root, expected_ids=(), *, excluded_ids_by_surface=None):
     """Full parity snapshot for audit/sync."""
     surfaces = collect_surfaces(project_root)
     return {
         "surfaces": {key: sorted(value) if value is not None else None
                      for key, value in surfaces.items()},
-        "drifts": parity_drifts(surfaces),
+        "drifts": parity_drifts(surfaces, excluded_ids_by_surface=excluded_ids_by_surface),
         "settings_dup": settings_duplicates(surfaces),
         "undeclared": undeclared_servers(surfaces, expected_ids),
     }

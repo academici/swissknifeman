@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- maind: MCP parity audit honors per-project code graph provider exclusions.
+
 ## [0.34.0] - 2026-10-25
 
 - orch: quota-resume deadlines now round up to whole seconds so autopilot waits through the provider gate before retrying.

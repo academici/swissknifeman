@@ -3,7 +3,7 @@
   "id": "planner",
   "title": "Planner: plans, phases, items and execution commands",
   "kind": "capability",
-  "version": "0.34.0",
+  "version": "0.34.1",
   "stability": "beta",
   "destination": "own-repo",
   "requires": [

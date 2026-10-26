@@ -192,6 +192,10 @@ def _settings_status(config, path):
         return "unavailable"
 
 
+# MCP carrier surface of mcp_parity -> provider id of `code_providers`
+_SURFACE_PROVIDER = {"claude": "claude-code", "codex": "codex", "cursor": "cursor"}
+
+
 def audit_project(env, project, dims, code_st, config=None):
     pid = project["id"]
     local = project.get("local_path")
@@ -205,7 +209,17 @@ def audit_project(env, project, dims, code_st, config=None):
         servers = _mcp_servers(path)
         expected = _expected_mcp_servers(env, config, project, code_st)
         known = HUB_MCP | {codegraph.server_name(project, code_st)} | set(expected)
-        parity = mcp_parity_analyze(path, expected)
+        excluded = {}
+        code_providers = project.get("code_providers")
+        if isinstance(code_providers, list):
+            allowed = set(code_providers)
+            code_ids = {codegraph.server_name(project, code_st), "codegraph"}
+            # Deploy leaves the code graph out only of the provider surfaces the project does not
+            # allow; drift between the allowed ones stays visible.
+            excluded = {surface: code_ids for surface, provider in _SURFACE_PROVIDER.items()
+                        if provider not in allowed}
+        parity = mcp_parity_analyze(path, expected,
+                                    excluded_ids_by_surface=excluded)
         row["mcp"] = {"servers": servers,
                       "review": [s for s in servers if s not in known],
                       "parity": parity}

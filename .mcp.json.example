@@ -7,6 +7,12 @@
         "--scope",
         "project:swissknifeman"
       ]
+    },
+    "perplexity": {
+      "command": "<HOME>/projects/packages/perplexity-web-mcp/start.sh",
+      "args": [
+        "--pool=default"
+      ]
     }
   }
 }

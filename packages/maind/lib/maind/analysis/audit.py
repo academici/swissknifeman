@@ -205,7 +205,20 @@ def audit_project(env, project, dims, code_st, config=None):
         servers = _mcp_servers(path)
         expected = _expected_mcp_servers(env, config, project, code_st)
         known = HUB_MCP | {codegraph.server_name(project, code_st)} | set(expected)
-        parity = mcp_parity_analyze(path, expected)
+        code_providers = project.get("code_providers")
+        excluded = {}
+        if isinstance(code_providers, list):
+            allowed = set(code_providers)
+            code_server = codegraph.server_name(project, code_st)
+            # Provider-specific code-graph opt-outs make literal server-set parity
+            # misleading. Exclude this server from the parity comparison when the
+            # project intentionally limits it to a subset of provider surfaces.
+            if not {"claude-code", "codex", "cursor"}.issubset(allowed):
+                code_ids = {code_server, "codegraph"}
+                excluded = {surface: code_ids
+                            for surface in ("claude", "codex", "cursor")}
+        parity = mcp_parity_analyze(path, expected,
+                                    excluded_ids_by_surface=excluded)
         row["mcp"] = {"servers": servers,
                       "review": [s for s in servers if s not in known],
                       "parity": parity}

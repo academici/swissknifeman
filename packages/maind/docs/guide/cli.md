@@ -73,6 +73,9 @@ maind analyze [--cwd | --project ID] [--session ID] [--no-health] [--json]
 maind version                          # git SHA + path to node
 ```
 
+The MCP audit compares provider surfaces while honoring project `code_providers` exclusions. A project that
+intentionally enables code graph only for Claude and Cursor is not reported as drifting from Codex for that server.
+
 `analyze` trusts legacy run-report only after verification project/session/provider identity.
 Absolute `files_changed` outside the selected project are also considered a conflict provenance. Like this
 report is excluded from RED-reasons and returns as `ATTENTION` with

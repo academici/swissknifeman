@@ -69,9 +69,11 @@ def collect_surfaces(project_root):
     }
 
 
-def parity_drifts(surfaces):
-    """Pairwise drift between JSON/Codex provider carriers (ignore missing files)."""
-    carriers = {name: ids for name, ids in surfaces.items()
+def parity_drifts(surfaces, *, excluded_ids_by_surface=None):
+    """Pairwise drift between provider carriers, honoring per-project exclusions."""
+    excluded_ids_by_surface = excluded_ids_by_surface or {}
+    carriers = {name: ids - set(excluded_ids_by_surface.get(name, ()))
+                for name, ids in surfaces.items()
                 if name != "settings" and ids is not None}
     drifts = []
     names = sorted(carriers)
@@ -102,13 +104,13 @@ def undeclared_servers(surfaces, expected_ids):
     return sorted(observed - set(expected_ids))
 
 
-def analyze(project_root, expected_ids=()):
+def analyze(project_root, expected_ids=(), *, excluded_ids_by_surface=None):
     """Full parity snapshot for audit/sync."""
     surfaces = collect_surfaces(project_root)
     return {
         "surfaces": {key: sorted(value) if value is not None else None
                      for key, value in surfaces.items()},
-        "drifts": parity_drifts(surfaces),
+        "drifts": parity_drifts(surfaces, excluded_ids_by_surface=excluded_ids_by_surface),
         "settings_dup": settings_duplicates(surfaces),
         "undeclared": undeclared_servers(surfaces, expected_ids),
     }

@@ -587,7 +587,7 @@ class Controller(LaunchFence):
             self.doc["waiting_runs"] = [row for row in self.doc["waiting_runs"] if row["run_id"] != run_id] + [
                 {"run_id": run_id, "items": action.get("items") or [], "since": clock_mod.utc_stamp(now)}]
         elif kind == "wait_quota":
-            self.doc["quota_wait"] = {"run_id": run_id, "until": clock_mod.utc_stamp(now + action["wait_s"])}
+            self.doc["quota_wait"] = {"run_id": run_id, "until": clock_mod.utc_stamp(int(now + action["wait_s"]) + (now + action["wait_s"] > int(now + action["wait_s"])))}
             self.say(f"run {run_id} waits for the provider quota until {self.doc['quota_wait']['until']}")
         elif kind == "resume":
             self.doc["recoveries"][run_id] = self.doc["recoveries"].get(run_id, 0) + 1

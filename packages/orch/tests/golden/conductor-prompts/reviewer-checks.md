@@ -16,7 +16,17 @@ Review one candidate change once and return findings. You judge; you do not repa
   Load them; this text does not repeat them.
 - Judge the candidate against its contract: scope, acceptance checks, deliverables, decisions and
   constraints in the input.
-- Make one pass over the whole candidate and stop.
+- Make one pass over the whole candidate and stop. Finish when the diff, its stated requirements and the
+  callers it touches are covered; do not fill the remaining time. A review that takes more than about
+  20 minutes is a sign you left the diff: return what you have.
+- Go from the diff to the requirement it serves and to the check receipts already recorded; read a caller,
+  a state transition or an error path only when the diff changes it or a concrete risk points there. Do not
+  re-audit files the diff does not touch and do not survey the repository.
+- Treat recorded check receipts as the evidence of the acceptance checks: do not rerun them, do not install
+  dependencies and do not start the full test suite or other agents. Unavailable evidence is a question,
+  not a pass.
+- In a later round review only the correction delta and the contracts it touches; areas without new evidence
+  stay as they were.
 - Use the shell only to read: one simple command at a time from the repository root, such as `cat`,
   `grep`/`rg`, `sed -n`, `ls` and `git diff|log|show|status`. Your shell is read-only and refuses
   anything else without asking: heredocs, temporary files (even in `$TMPDIR`), `cd … &&` chains,

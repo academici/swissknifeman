@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- orch: the reviewer emergency wall (`limits.role_timeout_s.reviewer`, also the group review) is 1800 s instead of 3600; the reviewer and executor role texts ask for a diff-scoped review that ends when the subject is covered and for finish-first work (no repository survey, no second acceptance run, correction rounds continue the work).
+
 ## [0.34.0] - 2026-10-25
 
 - orch: quota-resume deadlines now round up to whole seconds so autopilot waits through the provider gate before retrying.

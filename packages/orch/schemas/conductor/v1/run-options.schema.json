@@ -472,7 +472,7 @@
           "minimum": 0
         },
         "role_timeout_s": {
-          "description": "Wall in seconds on the whole run of a streaming role, by role id; a layer names only the walls it changes. Default: context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 3600, advisor 1800, researcher 2700; the executor and the bounded-implementer have none (silence is stopped by stage_idle_timeout_s); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT, then the retry rule of the step.",
+          "description": "Wall in seconds on the whole run of a streaming role, by role id; a layer names only the walls it changes. Default: context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 1800, advisor 1800, researcher 2700; the executor and the bounded-implementer have none (silence is stopped by stage_idle_timeout_s); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT, then the retry rule of the step.",
           "type": "object",
           "properties": {
             "context-scout": {"description": "Wall of the context-scout role in seconds; 0 removes it.", "type": "integer", "minimum": 0},

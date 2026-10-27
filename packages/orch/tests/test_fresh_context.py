@@ -164,6 +164,35 @@ class FreshContextTests(unittest.TestCase):
             with self.assertRaises(Stop): self.prepare()
             self.assertFalse((self.piece / "fresh-context").exists())
 
+    def test_fresh_context_can_narrow_fallback_budget_and_fence_without_resetting_history(self):
+        self.options["fallback_routes"] = [{"role": "reviewer", "provider": "claude-code", "model_class": "frontier"}]
+        records.write(self.piece / "options.json", {"options": self.options}, "item-options")
+        proposed = copy.deepcopy(records.options_layer(self.options))
+        proposed["fallback_routes"] = []
+        proposed["limits"]["retries"] = 0
+        proposed["scope"]["fence"] = "plan"
+        proposed["checks"]["parallel"] = 1
+        proposed["checks"]["reuse"] = False
+        self.new_options.write_text(json.dumps(proposed))
+        self.prepare()
+        item = self.current()
+        item.options = records.options_effective(proposed)
+        self.admission(item, self.agent(9))
+        self.assertEqual(item.state["retries_used"], 2)
+        self.assertEqual(len(launch_budget.inventory(self.piece)["launches"]), 9)
+
+    def test_fresh_context_refuses_wider_scope_and_new_fallback(self):
+        for field in ("scope", "fallback_routes"):
+            proposed = copy.deepcopy(records.options_layer(self.options))
+            if field == "scope":
+                proposed["scope"]["extra_paths"] = ["/tmp/unapproved"]
+            else:
+                proposed["fallback_routes"] = [{"role": "reviewer", "provider": "other", "model_class": "frontier"}]
+            self.new_options.write_text(json.dumps(proposed))
+            with self.assertRaises(Stop):
+                self.prepare()
+            self.assertFalse((self.piece / "fresh-context").exists())
+
     def test_plain_retry_still_keeps_its_idempotent_early_return(self):
         before = copy.deepcopy(self.owner.state)
         run_service.retry(self.owner, "W1")
@@ -185,7 +214,7 @@ class FreshContextLifecycleTests(ConductorCase):
 
     def test_native_resume_preserves_physical_history_and_rebuilds_one_fresh_executor(self):
         options_path = self.project.parent / "initial-options.json"
-        options_path.write_text(json.dumps({"session": {"executor": "per-item"}, "limits": {"retries": 0}, "fallback_routes": [], "stages": [{"role": "executor"}]}))
+        options_path.write_text(json.dumps({"session": {"executor": "per-item"}, "limits": {"retries": 0}, "stages": [{"role": "executor"}]}))
         self.script({"executor": [{"exit": 3}, executor_ok("W1")]})
         code, _, stopped = self.run_items("W1", extra=("--options", options_path))
         self.assertEqual((code, self.outcome(stopped)), (1, ("stopped", "ROLE_FAILED")), stopped)
@@ -194,8 +223,13 @@ class FreshContextLifecycleTests(ConductorCase):
         self.assertEqual(self.calls("executor"), 1)
         baseline = json.loads((directory / "W1" / "options.json").read_text())["options"]
         self.assertEqual(baseline.get("session", {}).get("executor"), "per-item", baseline)
-        self.assertFalse(baseline.get("fallback_routes"), baseline)
+        self.assertTrue(baseline.get("fallback_routes"), baseline)
         amended = records.options_layer({**baseline, "rules": ["fresh scoped instruction"]})
+        amended["fallback_routes"] = []
+        amended["limits"]["repairs"] = 0
+        amended["scope"]["fence"] = "plan"
+        amended["checks"]["parallel"] = 1
+        amended["checks"]["reuse"] = False
         next_options = self.project.parent / "fresh-options.json"
         next_options.write_text(json.dumps(amended))
         denied, _, denial = self.conduct("resume", "--run", directory.name, "--retry", "W1", "--fresh-context",

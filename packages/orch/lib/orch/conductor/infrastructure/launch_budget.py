@@ -60,9 +60,9 @@ def record_launch(owner, item, handle, role, route, attempt, envelope):
     baseline_doc = records.read(owner.directory / fresh["before"] / "item-options.json", "item-options")
     if baseline_doc is None:
         raise Stop("FRESH_CONTEXT_OPTIONS_CHANGED", "the frozen baseline options are missing")
-    baseline = records.options_effective(baseline_doc["options"])
-    if {k: v for k, v in item.options.items() if k != "rules"} != {k: v for k, v in baseline.items() if k != "rules"}:
-        raise Stop("FRESH_CONTEXT_OPTIONS_CHANGED", "budgets and authority options must retain their recorded values")
+    proposed = records.options_effective(json.loads(snapshot.read_bytes()))
+    if {k: v for k, v in item.options.items() if k != "rules"} != {k: v for k, v in proposed.items() if k != "rules"}:
+        raise Stop("FRESH_CONTEXT_OPTIONS_CHANGED", "effective options must match the frozen continuation options")
     found = inventory(item.directory, pending_since=fresh["since"], current=Path(handle["directory"]))
     if len(found["requests"]) != owner.state.get("agents", 0):
         raise Stop("MODEL_LAUNCH_HISTORY_UNKNOWN", "the agent counter and preserved request records disagree")

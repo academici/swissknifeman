@@ -351,7 +351,7 @@ def main(argv: list | None = None) -> int:
     resume.add_argument("--fresh-context", action="store_true",
                         help="opt-in fresh brief/session for one interrupted executor; preserves every physical launch and budget")
     resume.add_argument("--options", type=Path, metavar="FILE",
-                        help="with --fresh-context: full recorded effective options with only rules changed")
+                        help="with --fresh-context: full recorded effective options with rules or supported tightening changed")
     resume.add_argument("--model-launch-ceiling", type=int, metavar="TOTAL",
                         help="with --fresh-context: total historical plus future physical launch admissions; cannot raise a prior ceiling")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")

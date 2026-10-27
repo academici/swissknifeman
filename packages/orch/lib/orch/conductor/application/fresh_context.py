@@ -11,6 +11,41 @@ from orch.conductor.infrastructure import clock, launch_budget
 from orch.conductor.infrastructure.files import OPTIONS_COPY, safe
 
 
+def _tightens_only(baseline: dict, proposed: dict) -> bool:
+    """Allow explicitly bounded reductions; every unspecified option stays identical."""
+    from copy import deepcopy
+
+    expected = deepcopy(baseline)
+    expected["rules"] = proposed.get("rules")
+    for key in ("retries", "repairs", "corrections", "check_fixes"):
+        before, after = baseline["limits"][key], proposed["limits"][key]
+        if type(after) is not int or not 0 <= after <= before:
+            return False
+        expected["limits"][key] = after
+    if proposed.get("fallback_routes") not in (baseline.get("fallback_routes"), []):
+        return False
+    expected["fallback_routes"] = proposed.get("fallback_routes")
+    for key in ("outside", "outside_module"):
+        before, after = baseline["scope"][key], proposed["scope"][key]
+        if after != before and not (before == "deviation" and after == "block"):
+            return False
+        expected["scope"][key] = after
+    before, after = baseline["scope"]["fence"], proposed["scope"]["fence"]
+    if after != before and not (before == "project" and after == "plan"):
+        return False
+    expected["scope"]["fence"] = after
+    before, after = baseline["checks"]["parallel"], proposed["checks"]["parallel"]
+    if type(after) is not int or not 1 <= after <= before:
+        return False
+    expected["checks"]["parallel"] = after
+    for key, allowed in (("reuse", (True, False)), ("fail_fast", (False, True))):
+        before, after = baseline["checks"][key], proposed["checks"][key]
+        if type(after) is not bool or (after != before and (before, after) != allowed):
+            return False
+        expected["checks"][key] = after
+    return expected == proposed
+
+
 def _keep(path: Path, raw: bytes):
     if path.exists():
         if path.read_bytes() != raw:
@@ -45,8 +80,8 @@ def activate(owner):
 def prepare(owner, refs, options_file: Path, ceiling: int):
     """Prevalidate before writes, retain immutable before evidence, then invalidate only interrupted preparation.
 
-    This initial API deliberately supports a one-piece run with per-item sessions, no fallback, and a rules-only
-    invocation amendment. Changing route/budgets/authority requires their existing explicit owning contracts.
+    This API supports one piece with per-item sessions and no fallback. It admits only explicit monotonic
+    tightening of retry/check limits and scope; routes and all other authority remain unchanged.
     """
     if len(refs) != 1 or list(owner.run_doc.get("items") or []) != list(refs) or len(owner.state["items"]) != 1:
         raise Stop("FRESH_CONTEXT_UNSUPPORTED", "fresh-context currently requires one explicit item in a one-piece run")
@@ -71,9 +106,9 @@ def prepare(owner, refs, options_file: Path, ceiling: int):
     issues = opts.layer_problems(proposed)
     if issues:
         raise Stop("OPTIONS_INVALID", "; ".join(issues[:3]))
-    if {k: v for k, v in proposed.items() if k != "rules"} != {k: v for k, v in baseline.items() if k != "rules"}:
-        raise Stop("FRESH_CONTEXT_OPTIONS_CHANGED", "supply the full recorded effective options with only rules changed")
-    if baseline.get("session", {}).get("executor") != "per-item" or baseline.get("fallback_routes"):
+    if not _tightens_only(baseline, proposed):
+        raise Stop("FRESH_CONTEXT_OPTIONS_CHANGED", "only explicitly bounded tightening and rules changes are allowed")
+    if proposed.get("session", {}).get("executor") != "per-item" or proposed.get("fallback_routes"):
         raise Stop("FRESH_CONTEXT_UNSUPPORTED", "per-item fresh sessions and no fallback routes are required")
     found = launch_budget.inventory(directory)
     if len(found["requests"]) != owner.state.get("agents", 0) or not found["requests"]:

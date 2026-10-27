@@ -126,6 +126,17 @@ def _execution_input(doc: object) -> list[Issue]:
                     level = "warning"
         issues.append(Issue(path, "LIFECYCLE_LEAK", "lifecycle instruction is present in execution input", level))
     acceptance = doc.get("acceptance")
+    for index, entry in enumerate(doc.get("reads") or []):
+        if not isinstance(entry, dict) or entry.get("delivery") != "on-demand":
+            continue
+        path = entry.get("path")
+        if (not isinstance(path, str) or path.startswith(("@plan/", "/", "~")) or not path.endswith(".json")
+                or ".." in re.split(r"[\\/]", path)
+                or "section" in entry or "content" in entry or "included" in entry or entry.get("error")
+                or (entry.get("exists") is True and not entry.get("sha256"))
+                or (entry.get("required") is True and entry.get("exists") is not True)):
+            issues.append(Issue(f"/reads/{index}", "READ_DELIVERY_INVALID",
+                                "on-demand needs a whole repository JSON path and identity, without inline content"))
     for index, entry in enumerate(doc.get("context_refs") or []):
         if isinstance(entry, dict) and entry.get("delivery") == "supplement" and "content" not in entry:
             issues.append(Issue(f"/context_refs/{index}/content", "CONTEXT_MISSING",

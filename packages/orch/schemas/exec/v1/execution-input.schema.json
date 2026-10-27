@@ -606,6 +606,10 @@
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
             "description": "Selected source section."
           },
+          "delivery": {
+            "const": "on-demand",
+            "description": "Repository JSON remains a mandatory read; content is retrieved when needed instead of being inlined."
+          },
           "why": {
             "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
             "description": "Reason for reading."

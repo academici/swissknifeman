@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "8693d760c6e2",
-  "reason": "Record bounded interrupted executor continuation",
+  "captured_from": "fca39a1d485f",
+  "reason": "Combine scoped JSON delivery and bounded interrupted continuation",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

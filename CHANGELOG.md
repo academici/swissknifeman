@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - orch: explicit interrupted-executor fresh-context continuation preserves stopped evidence, candidate and counters while enforcing a durable ceiling on all historic and new physical launch admissions. It keeps the pinned route and budgets and requires a single per-item session with no fallback.
+- planner/orch: opt-in on-demand delivery for whole repository JSON reads retains the read requirement and SHA-256 identity, rejects invalid carriers and keeps legacy inline delivery as the default. Workers must verify the actual bytes when reading; the hash alone is not review evidence.
 
 ## [0.34.1] - 2026-10-26
 

@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "8693d760c6e2",
-  "reason": "Record bounded interrupted executor continuation",
+  "captured_from": "fca39a1d485f",
+  "reason": "Combine scoped JSON delivery and bounded interrupted continuation",
   "generators": [
     {
       "id": "skiller-registry",
@@ -259,13 +259,13 @@
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
     "packages/orch/lib/orch/_types/conductor.py": "78d94ab0a0308e5e8ae585a56fbe7de6563910b6291464cccb9e02413fe13e98",
-    "packages/orch/lib/orch/_types/exec.py": "c3d7cfccb40af94c891059c6cda9927ff684c54867cbb1c1db29d4e3f942da74",
+    "packages/orch/lib/orch/_types/exec.py": "1c1f6ba939dc0d8c076452676700622e000b0fd353a87b10a6c619eb6e6c32ab",
     "packages/orch/lib/orch/_types/records.py": "67ae82c931db212dc47d24ccb2f52c1b80451eff74a12055944ab8790150649e",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
     "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
-    "packages/planner/lib/planner/plan/_types.py": "6a76cb4e45a066debf19bbab5fa20a563d3531d6f63b9d5859467c0efa9e3d4e",
+    "packages/planner/lib/planner/plan/_types.py": "3387f88355863ebba3e702765a9135931f82c6b97333c4582bf48b7d91887033",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a",

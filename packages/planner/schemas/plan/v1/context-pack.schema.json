@@ -517,6 +517,10 @@
           "description": "Section within the file.",
           "minLength": 1
         },
+        "delivery": {
+          "const": "on-demand",
+          "description": "For a repository JSON path only: retain the read requirement and identity, but deliver its content when requested."
+        },
         "why": {
           "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
           "description": "Why read it."

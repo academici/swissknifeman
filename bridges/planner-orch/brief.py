@@ -171,7 +171,7 @@ def _read(plan: store.Plan, entry: dict, inline: bool, *, outside: bool = False)
         entry["error"] = "unreadable" if outside else str(exc)  # an OS message can carry the workspace path
         return entry
     entry["sha256"] = sha256_hex(data)
-    if inline and "content" not in entry and "error" not in entry:
+    if inline and entry.get("delivery") != "on-demand" and "content" not in entry and "error" not in entry:
         try:
             entry["content"] = data.decode("utf-8")
         except UnicodeDecodeError:
@@ -342,10 +342,10 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
                 missing.append(f"constraints: missing {source}[{index}]")
     if unit and unit.get("instructions") and {"text": unit["instructions"], "source": "unit.instructions"} not in constraints:
         missing.append("constraints: missing unit.instructions")
-    reads = {(r.get("path"), r.get("section")) for r in doc.get("reads", [])}
+    reads = {(r.get("path"), r.get("section"), r.get("delivery")) for r in doc.get("reads", [])}
     for read in (item.get("reads") or []) + ((unit or {}).get("reads") or []):
         read = context.normalize_read(plan, read)
-        if read.get("required") and (read.get("path"), read.get("section")) not in reads:
+        if read.get("required") and (read.get("path"), read.get("section"), read.get("delivery")) not in reads:
             missing.append(f"reads: missing {read.get('path') or read.get('ref')}"
                            + (f"#{read['section']}" if read.get("section") else ""))
     refs = {d.get("ref") for d in doc.get("decisions", [])}

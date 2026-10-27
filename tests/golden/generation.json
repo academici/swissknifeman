@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "4292d1d85205",
-  "reason": "release v0.34.1: planner version bump",
+  "captured_from": "252146040824",
+  "reason": "Add optional context supplement delivery to exec/v1; regenerate schema-derived Python types",
   "generators": [
     {
       "id": "skiller-registry",
@@ -259,7 +259,7 @@
     "packages/harness/docs/reference/provider-instructions.md": "bf6d2f3dbf985e8295eae3bc67cc82db25bf09a22f4112903145e66cfe09df3d",
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
     "packages/orch/lib/orch/_types/conductor.py": "78d94ab0a0308e5e8ae585a56fbe7de6563910b6291464cccb9e02413fe13e98",
-    "packages/orch/lib/orch/_types/exec.py": "9b2763bd1058b8e3b6085ae4d370342478d659e327d783b52b05fe59311e2e11",
+    "packages/orch/lib/orch/_types/exec.py": "c3d7cfccb40af94c891059c6cda9927ff684c54867cbb1c1db29d4e3f942da74",
     "packages/orch/lib/orch/_types/records.py": "2831079cd6954512badc3fd26668a9098f5f8d409f816604326f59ab65fdbcbf",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",

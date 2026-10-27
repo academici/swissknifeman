@@ -413,6 +413,20 @@ class ScopeTests(test_lifecycle.LifeCase):
     def set_mode(self, mode):
         ops.patch(self.load(), "plan", {"settings": {"context_pack": mode}})
 
+    def test_scoped_lessons_keep_item_upstream_and_explicit_phase_without_changing_history(self):
+        for target, summary in (("P1.1", "own"), ("P1.2", "unrelated-same-phase"),
+                                ("P2.1", "upstream-other-phase"), ("P1", "explicit-phase")):
+            lifecycle.log(self.root, target, "difficulty", summary)
+        before = self.tree()
+        plan = self.load()
+        plan.items["P1.1"]["depends_on"] = ["P2.1"]
+        self.assertEqual([x["summary"] for x in context.collect(plan, "P1.1")["lessons"]],
+                         ["own", "upstream-other-phase", "explicit-phase"])
+        plan.plan["settings"]["context_pack"] = "legacy"
+        self.assertEqual([x["summary"] for x in context.collect(plan, "P1.1")["lessons"]],
+                         ["own", "unrelated-same-phase", "upstream-other-phase", "explicit-phase"])
+        self.assertEqual(self.tree(), before)
+
     def ids(self, value, key):
         return [d["id"] for d in value[key]]
 

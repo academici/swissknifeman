@@ -17,6 +17,7 @@ import bridge_fixture  # noqa: E402  (skips the module without a planner)
 import partners  # noqa: E402
 
 _PLANNER = bridge_fixture.PLANNER
+_ORCH = partners.find_orch_root()
 _ENGINE_TESTS = str(_PLANNER / "tests" / "engine")
 if _ENGINE_TESTS not in sys.path:
     sys.path.insert(0, _ENGINE_TESTS)
@@ -347,6 +348,84 @@ class WorkspacePlanTests(BriefCase):
         text = brief.render(store.load_plan(self.moved), "P1.1", inline_reads=True)
         self.assertNotIn(str(self.ws), text)
         self.assertNotIn("workspace-secret-root", text)
+
+    @unittest.skipUnless(_ORCH, "orch not found")
+    def test_context_supplement_crosses_native_cli_without_losing_unique_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["goal"] = "sentinel-plan-goal"
+        plan.plan["links"] = {"related_plans": ["sentinel-related-plan"]}
+        plan.plan["rules"].append("sentinel-plan-rule")
+        plan.plan["contracts"] = {"consumed": [{"name": "sentinel-consumed-contract", "reaction": "preserve-owner-boundary"}]}
+        plan.brief["requirements"] = [{"id": "R1", "text": "sentinel-brief-requirement"}]
+        plan.phases["P1"]["contract"] = {"produces": ["sentinel-phase-contract"]}
+        plan.items["P1.1"]["task_files"][0]["note"] = "sentinel-item-file-note"
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "sentinel-active-decision",
+                                  "rationale": "reason", "question": "sentinel-decision-question", "applies_to": ["P1.1"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        legacy = brief.build(plan, "P1.1")
+        pack = next(x for x in doc["context_refs"] if x["kind"] == "pack")
+        self.assertEqual(pack["content"], brief._worker_context(legacy["context_refs"][0]["content"]))
+        self.assertEqual(pack["delivery"], "supplement")
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "input.json"
+            target.write_text(json.dumps(doc), encoding="utf-8")
+            validated = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "validate",
+                                        "execution-input", str(target)], cwd=self.repo, capture_output=True, text=True)
+            self.assertEqual(validated.returncode, 0, validated.stderr or validated.stdout)
+            result = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "render-prompt", "--input",
+                                     str(target), "--role", "executor"], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for sentinel in ("sentinel-plan-goal", "sentinel-brief-requirement", "sentinel-phase-contract",
+                         "sentinel-item-file-note", "sentinel-active-decision", "sentinel-related-plan",
+                         "sentinel-plan-rule", "sentinel-consumed-contract", "text-a", "text-b", "plain notes"):
+            self.assertIn(sentinel, result.stdout)
+        self.assertNotIn("sentinel-decision-question", result.stdout)
+        self.assertNotIn("workspace-secret-root", result.stdout)
+        self.assertEqual(brief.verify(plan, "P1.1", doc), [])
+
+    def test_context_supplement_allowlist_excludes_process_history_and_unknown_fields(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["orchestration"] = {"instructions": "run plan.py finish coordinator-process-sentinel"}
+        plan.plan["new_secret_field"] = "unknown-secret-sentinel"
+        plan.brief["messages"] = [{"text": "owner-history-sentinel"}]
+        plan.phases["P1"]["batches"] = [{"note": "batch-process-sentinel"}]
+        plan.items["P1.1"]["orchestration"] = {"options": {"rules": ["run-process-sentinel"]}}
+        plan.items["P1.1"]["result"] = {"notes": "old-result-history-sentinel"}
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "active-contract",
+                                  "rationale": "active-reason", "applies_to": ["P1.1"],
+                                  "context": "historical-launch-command-sentinel", "evidence": ["private-actor-path-sentinel"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        text = json.dumps(doc["context_refs"][0]["content"])
+        for forbidden in ("coordinator-process-sentinel", "unknown-secret-sentinel", "owner-history-sentinel",
+                          "batch-process-sentinel", "run-process-sentinel", "old-result-history-sentinel",
+                          "historical-launch-command-sentinel", "private-actor-path-sentinel"):
+            self.assertNotIn(forbidden, text)
+        self.assertIn("owner-history-sentinel", json.dumps(context.collect(plan, "P1.1")))
+
+    def test_context_supplement_still_refuses_lifecycle_in_worker_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.phases["P1"]["context"] = "Run plan.py finish now"
+        with self.assertRaises(PlanError) as caught:
+            brief.build(plan, "P1.1", context_delivery="supplement")
+        self.assertEqual(caught.exception.code, "BRIEF_INCOMPLETE")
+
+    def test_context_delivery_cli_and_environment_are_supported_and_default_unchanged(self):
+        import os
+        from unittest import mock
+        before = tree_hashes(self.moved)
+        for extra, env in ((("--context-delivery", "supplement"), {}),
+                           ((), {"PLANNER_ORCH_CONTEXT_DELIVERY": "supplement"})):
+            with mock.patch.dict(os.environ, {"SKM_PLANNER_BRIDGES__ROOTS": json.dumps([str(_BRIDGE.parent)]), **env}):
+                done = bridge_fixture.plan_py(self.repo, *BRIDGE, str(self.moved), "P1.1", *extra)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["context_refs"][0]["delivery"], "supplement")
+        self.assertNotIn("delivery", self.ws_brief()["context_refs"][0])
+        self.assertEqual(tree_hashes(self.moved), before)
+
+    def test_unknown_context_delivery_fails_closed(self):
+        with self.assertRaises(PlanError) as caught:
+            self.ws_brief(context_delivery="drop-required-content")
+        self.assertEqual(caught.exception.code, "CONTEXT_DELIVERY_INVALID")
 
     def test_a_legacy_plan_keeps_relative_paths_and_no_forced_content(self):
         import shutil

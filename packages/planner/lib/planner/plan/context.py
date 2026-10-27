@@ -303,7 +303,9 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
     for event in store.read_log(plan.root):
         target = event.get("item")
         phase = event.get("phase") or (item_phase(target) if target and ITEM_ID.fullmatch(target) else None)
-        if event.get("type") in LESSON_TYPES and (phase == phase_id or target in near):
+        relevant = (target == item_id or target in near or (not target and phase == phase_id)) if mode == "scoped" \
+            else (phase == phase_id or target in near)
+        if event.get("type") in LESSON_TYPES and relevant:
             lessons.append(event)
     name, source = execution.scenario(plan, item_id)
     result = {

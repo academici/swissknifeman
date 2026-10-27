@@ -672,7 +672,12 @@
             "description": "Context byte digest."
           },
           "content": {
-            "description": "Complete inline context pack for a plan outside the checkout; any JSON value."
+            "description": "Inline source context; any JSON value. Supplement delivery uses an explicit worker projection; reference-only mode may retain the coordinator pack."
+          },
+          "delivery": {
+            "type": "string",
+            "enum": ["supplement"],
+            "description": "Opt-in task delivery of all inline context fields, reusing exact text already visible in task sections. Omitted preserves reference-only rendering. Requires content."
           }
         },
         "required": [

@@ -126,6 +126,10 @@ def _execution_input(doc: object) -> list[Issue]:
                     level = "warning"
         issues.append(Issue(path, "LIFECYCLE_LEAK", "lifecycle instruction is present in execution input", level))
     acceptance = doc.get("acceptance")
+    for index, entry in enumerate(doc.get("context_refs") or []):
+        if isinstance(entry, dict) and entry.get("delivery") == "supplement" and "content" not in entry:
+            issues.append(Issue(f"/context_refs/{index}/content", "CONTEXT_MISSING",
+                                "supplement delivery requires inline content"))
     checks = acceptance.get("checks") if isinstance(acceptance, dict) else None
     if isinstance(checks, list):
         for index, check in enumerate(checks):

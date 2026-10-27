@@ -137,9 +137,7 @@ def resume(self, run_id: str, retry=(), raise_limits=(), *, fresh_context: bool 
             self.progress.emit("info", reason_code="SESSION_STATE_MIGRATED",
                                message="the executor session of an older state moved into the session slots; it resumes as before")
         if fresh_context:
-            if options_file is None or model_launch_ceiling is None:
-                raise Stop("OPTIONS_INVALID", "fresh-context requires options and a physical launch ceiling")
-            fresh.prepare(self, retry, options_file, model_launch_ceiling)
+            fresh.prepare_requested(self, retry, options_file, model_launch_ceiling)
         else:
             for ref in retry:
                 self._retry(ref)

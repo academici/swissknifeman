@@ -21,6 +21,12 @@ def _keep(path: Path, raw: bytes):
         stream.write(raw)
 
 
+def prepare_requested(owner, refs, options_file: Path | None, ceiling: int | None):
+    if options_file is None or ceiling is None:
+        raise Stop("OPTIONS_INVALID", "fresh-context requires options and a physical launch ceiling")
+    prepare(owner, refs, options_file, ceiling)
+
+
 def activate(owner):
     """Recover the run options pointer after a crash between state and run-record writes."""
     for item in owner.state.get("items", {}).values():

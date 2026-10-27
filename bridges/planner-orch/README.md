@@ -46,6 +46,7 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without
   files is read-only with no write authority.
 - `--inline-reads` embeds the full text of existing text reads; binary reads get `error`.
+- A plan item can explicitly set `"delivery": "on-demand"` on a whole repository JSON path read. The read stays required when declared required; the brief verifies presence and JSON syntax and carries the path and SHA-256, while the worker must inspect its content when needed. A hash is not review coverage. This explicit mode wins over `--inline-reads`; workspace `@plan/` content, references and selected sections cannot use it. Omitting the field preserves the legacy inline JSON behavior.
 - `--context-delivery supplement` opts workspace packs into actual task-prompt delivery. The invocation variable
   `PLANNER_ORCH_CONTEXT_DELIVERY=supplement` selects the same mode for this CLI and the conductor's work-source
   `brief` operation (the trusted plugin allowlist forwards it). Default `reference` retains the existing input and prompt.

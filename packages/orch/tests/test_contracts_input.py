@@ -50,6 +50,21 @@ def signed(doc):
 
 
 class InputContractTests(unittest.TestCase):
+    def test_on_demand_json_needs_accessible_identity_and_cannot_hide_inline_content(self):
+        doc = fixture("execution-input", "plan-bound")
+        entry = {"path": "fixtures/manifest.json", "why": "inspect provenance", "required": True,
+                 "exists": True, "sha256": "a" * 64, "delivery": "on-demand"}
+        doc["reads"] = [entry]
+        self.assertEqual([i for i in contracts.validate(signed(doc), "execution-input") if i.level == "error"], [])
+        for change in ({"included": "somewhere"}, {"path": "@plan/knowledge/private.json"}, {"path": "fixtures/manifest.md"},
+                       {"path": "../private.json"},
+                       {"sha256": None}, {"content": {}}, {"section": "rows"},
+                       {"exists": False}, {"error": "invalid JSON"}):
+            bad = copy.deepcopy(doc)
+            bad["reads"][0].update(change)
+            if change == {"sha256": None}:
+                del bad["reads"][0]["sha256"]
+            self.assertIn("READ_DELIVERY_INVALID", [i.code for i in contracts.validate(signed(bad), "execution-input")])
     def assert_code(self, kind, doc, code):
         issues = contracts.validate(doc, kind)
         self.assertIn(code, [issue.code for issue in issues], issues)

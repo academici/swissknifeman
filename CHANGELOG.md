@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- planner/orch: opt-in on-demand delivery for whole repository JSON reads retains the read requirement and SHA-256 identity, rejects invalid carriers and keeps legacy inline delivery as the default. Workers must verify the actual bytes when reading; the hash alone is not review evidence.
+
 ## [0.34.1] - 2026-10-26
 
 - orch: the reviewer emergency wall (`limits.role_timeout_s.reviewer`, also the group review) is 1800 s instead of 3600; the reviewer and executor role texts ask for a diff-scoped review that ends when the subject is covered and for finish-first work (no repository survey, no second acceptance run, correction rounds continue the work).

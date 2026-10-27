@@ -66,6 +66,15 @@ class RenderTests(unittest.TestCase):
         block = render.render_task_block(doc)
         self.assertIn('```json\n{\n  "a": [\n    1,\n    "дом"\n  ]\n}\n```', block)
 
+    def test_on_demand_read_never_treats_hash_as_coverage(self):
+        doc = fixture("plan-bound")
+        doc["reads"][0].update({"path": "fixtures/manifest.json", "delivery": "on-demand", "sha256": "a" * 64})
+        doc["reads"][0].pop("content", None)
+        block = render.render_task_block(doc)
+        self.assertIn("delivery: on-demand; inspect the source when needed", block)
+        self.assertIn("verify its bytes against sha256", block)
+        self.assertIn("A hash is identity, not evidence of reading.", block)
+
     def test_context_supplement_delivers_unique_fields_and_reuses_visible_text(self):
         doc = fixture("plan-bound")
         shared = "shared required section " * 100

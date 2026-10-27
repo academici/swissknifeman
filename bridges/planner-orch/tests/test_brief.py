@@ -244,6 +244,59 @@ class PhaseChecksTests(BriefCase):
         self.assertEqual(brief.verify(self.load(), "P1.2", self.brief("P1.2")), [])
 
 class ReadsTests(BriefCase):
+    def test_on_demand_repo_json_keeps_required_identity_without_inline_even_when_requested(self):
+        path = self.repo / "manifest.json"
+        raw = (json.dumps({"rows": list(range(50000))}) + "\n").encode()
+        path.write_bytes(raw)
+        read = {"path": "manifest.json", "why": "inspect fixture provenance", "required": True,
+                "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [read]})
+        for inline in (False, True):
+            item, = self.brief(inline_reads=inline)["reads"]
+            self.assertTrue(item["required"])
+            self.assertTrue(item["exists"])
+            self.assertEqual(item["sha256"], hashlib.sha256(raw).hexdigest())
+            self.assertEqual(item["delivery"], "on-demand")
+            self.assertNotIn("content", item)
+        altered = self.brief()
+        altered["reads"][0].pop("delivery")
+        self.assertTrue(any("reads: missing manifest.json" in error for error in brief.verify(self.load(), "P1.1", altered)))
+        ops.patch(self.root, "P1.1", {"reads": [{k: v for k, v in read.items() if k != "delivery"}]})
+        self.assertEqual(self.brief()["reads"][0]["content"], json.loads(raw))  # legacy default remains intact
+
+    def test_a_deferred_json_read_cannot_hide_a_later_inline_read_of_the_same_file(self):
+        (self.repo / "manifest.json").write_text('{"required": [1, 2]}\n', encoding="utf-8")
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "manifest.json", "why": "identity", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "why": "inline contract", "required": True},
+        ]})
+        first, second = self.brief()["reads"]
+        self.assertNotIn("content", first)
+        self.assertNotIn("included", first)
+        self.assertEqual(second["content"], {"required": [1, 2]})
+
+    def test_on_demand_rejects_unreachable_plan_sections_and_missing_or_invalid_required_json(self):
+        for invalid in (
+            {"ref": "knowledge/design", "why": "w", "required": True, "delivery": "on-demand"},
+            {"ref": "knowledge/design", "path": "manifest.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "@plan/knowledge/design.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "section": "rows", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "lib/x.py", "why": "w", "required": True, "delivery": "on-demand"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(PlanError):
+                ops.patch(self.root, "P1.1", {"reads": [invalid]})
+        valid = {"path": "missing.json", "why": "w", "required": True, "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [valid]})
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
+        (self.repo / "missing.json").write_text("{bad json", encoding="utf-8")
+        entry = context.read_entry(self.load(), valid)
+        self.assertIn("error", entry)
+        self.assertNotIn("content", entry)
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
     def test_existing_files_carry_sha256_and_missing_ones_do_not(self):
         ops.patch(self.root, "P1.1", {"reads": [
             {"path": "lib/x.py", "why": "source", "required": True},

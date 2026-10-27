@@ -102,6 +102,8 @@ def _reads(doc: dict) -> str:
                  f"- exists: {'yes' if item['exists'] else 'no'}"]
         if item.get("sha256"):
             lines.append(f"- sha256: `{item['sha256']}`")
+        if item.get("delivery") == "on-demand":
+            lines.append("- delivery: on-demand; inspect the source when needed and verify its bytes against sha256. A hash is identity, not evidence of reading.")
         if item.get("error"):
             lines.append(f"- error: {item['error']}")
         block = "\n".join([head, *lines])

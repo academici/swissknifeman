@@ -476,8 +476,8 @@ def main(argv: list | None = None) -> int:
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
             print("note: --batch now groups the pieces of a run; selecting the next ready pieces is --ready", file=sys.stderr)
-        if args.input and (args.items or args.ready or args.max_items or args.adopt):
-            parser.error("--input is one piece of work: it takes no --items, --ready, --max-items or --adopt")
+        if args.input and (args.items or args.ready or args.max_items):
+            parser.error("--input is one piece of work: it takes no --items, --ready or --max-items")
         if not args.input and not (args.items or args.ready):
             parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:

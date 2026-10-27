@@ -40,7 +40,7 @@ def run(self, *, plan: Optional[str], plans_root: Optional[str], items: list, ba
         source = None
         if input_file is not None:
             try:
-                found = read_input(input_file)
+                found = read_input(input_file, adopt=adopt)
             except WorkSourceError as error:
                 raise Stop(error.code, error.message) from None
             plan, plans_root, items, batch = str(Path(input_file).resolve()), None, [found["input_id"]], False

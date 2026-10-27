@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from pathlib import Path
 from typing import Mapping, Optional, cast
 
@@ -111,15 +112,22 @@ def announce_concurrent(self) -> None:
 
 
 @detach.refuse_errors
-def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
+def resume(self, run_id: str, retry=(), raise_limits=(), *, fresh_context: bool = False,
+           options_file: Optional[Path] = None, model_launch_ceiling: Optional[int] = None) -> int:
     store = RunStore(self.project, run_id)
     with detach.startup_fence(self.project, run_id), store.ownership("resume", checkout=True):
         run_doc, state = store.load()
         if run_doc.get("config_file") and not self.config_file:
             self.config_file = Path(run_doc["config_file"])
         self._open(run_id, run_doc, state, store)
+        from orch.conductor.application import fresh_context as fresh
+        if fresh_context and (not retry or options_file is None or not model_launch_ceiling or raise_limits):
+            raise Stop("OPTIONS_INVALID", "fresh-context requires --retry, --options and a positive --model-launch-ceiling; no limit raises")
+        if not fresh_context and (options_file is not None or model_launch_ceiling is not None):
+            raise Stop("OPTIONS_INVALID", "resume --options/--model-launch-ceiling require --fresh-context")
+        fresh.activate(self)
         changes = limit_raises(self, raise_limits)
-        if run_doc.get("lease") is True and progress.summarize(progress.read_lines(self.directory))["status"] == "running":
+        if fresh_context or (run_doc.get("lease") is True and progress.summarize(progress.read_lines(self.directory))["status"] == "running"):
             self._kill_orphaned_roles()
         stubs_changed(self, run_doc)
         catalogs_changed(self, run_doc)
@@ -128,8 +136,13 @@ def resume(self, run_id: str, retry=(), raise_limits=()) -> int:
             self._save()
             self.progress.emit("info", reason_code="SESSION_STATE_MIGRATED",
                                message="the executor session of an older state moved into the session slots; it resumes as before")
-        for ref in retry:
-            self._retry(ref)
+        if fresh_context:
+            if options_file is None or model_launch_ceiling is None:
+                raise Stop("OPTIONS_INVALID", "fresh-context requires options and a physical launch ceiling")
+            fresh.prepare(self, retry, options_file, model_launch_ceiling)
+        else:
+            for ref in retry:
+                self._retry(ref)
         self._reconcile_interrupted()
         if changes:
             state.setdefault("limit_raises", []).extend(changes)
@@ -338,7 +351,8 @@ def reblocked(item: Mapping) -> bool:
 ATTEMPT_DIRS = ("streams", "reports", "prompts", "checks")
 
 
-def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
+def archive_attempt(self, ref: str, item: dict, dropped: list, *, include_unfinished: bool = False,
+                    copy_files: bool = False) -> None:
     """Keep what a ``retry`` is about to repeat: the record of the dropped steps in ``item["attempts"]`` and their
     files (stream, report, prompt, checks) under ``<piece>/attempts/<n>/``. The count of reviews a piece went through is
     the reviews of its attempts and of its current steps; a step key alone is not a history."""
@@ -350,11 +364,13 @@ def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
     record = {}
     for key in dropped:
         step = steps[key]
-        if step.get("status") != "done":
+        if step.get("status") != "done" and not include_unfinished:
             continue  # attempt summaries describe results; unfinished steps have none
         result = step.get("result") if isinstance(step.get("result"), dict) else {}
         report = result.get("report") if isinstance(result.get("report"), dict) else {}
         row = {name: step[name] for name in ("verdict", "role", "route", "ended") if step.get(name)}
+        if include_unfinished:
+            row["original_step"] = dict(step)
         if report.get("status"):
             row["report_status"] = report["status"]
         moved = []
@@ -369,7 +385,13 @@ def archive_attempt(self, ref: str, item: dict, dropped: list) -> None:
                     continue  # a file of a longer step key that stays (``executor.1-q1`` beside a dropped ``executor.1``)
                 target = directory / "attempts" / str(number) / folder / name
                 target.parent.mkdir(parents=True, exist_ok=True)
-                path.replace(target)
+                if copy_files:
+                    if path.is_dir():
+                        shutil.copytree(path, target, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(path, target)
+                else:
+                    path.replace(target)
                 moved.append(f"{folder}/{name}")
         if moved:
             row["files"] = moved

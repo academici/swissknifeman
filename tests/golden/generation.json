@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "4292d1d85205",
-  "reason": "release v0.34.1: planner version bump",
+  "captured_from": "252146040824",
+  "reason": "Owner-authorized exact gpt-6.1-terra admission for AgenTools PLAN2; regenerated model-role reference",
   "generators": [
     {
       "id": "skiller-registry",
@@ -263,7 +263,7 @@
     "packages/orch/lib/orch/_types/records.py": "2831079cd6954512badc3fd26668a9098f5f8d409f816604326f59ab65fdbcbf",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
-    "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
+    "packages/planner/docs/reference/provider-model-roles.md": "e6a31813814aacde3ef8a14252f794c645316de975e7cab553f5dc4a7b9d8655",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
     "packages/planner/lib/planner/plan/_types.py": "6a76cb4e45a066debf19bbab5fa20a563d3531d6f63b9d5859467c0efa9e3d4e",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",

@@ -43,7 +43,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 
 - `verified_at`: `2026-10-22`
 - `source`: https://developers.openai.com/api/docs/models/gpt-6-luna and the local Codex model cache on 2026-10-22; earlier docs/provider-support.md and Codex provider thread state
-- `verification`: gpt-6-luna confirmed on the official OpenAI model page and in the local Codex model cache on 2026-10-22 as economy/explore. No launch of the model was run for this record. Earlier frozen mapping remains: gpt-6-sol observed in provider thread state; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles).
+- `verification`: gpt-6-luna confirmed on the official OpenAI model page and in the local Codex model cache on 2026-10-22 as economy/explore. No launch of the model was run for this record. Earlier frozen mapping remains: gpt-6-sol observed in provider thread state; 2026-10-01 pool extended by owner (gpt-6.1-sol frontier, overlapping roles). 2026-10-30 owner extended the pool with the exact gpt-6.1-terra implementation/review selector for AgenTools PLAN2; admission only, without a live model launch or a capability comparison.
 
 | Model id | Roles | Notes |
 |:--|:--|:--|
@@ -53,6 +53,7 @@ Fixed commands and launch-blocks pin **one** default selector per class. The mod
 | `gpt-5.6-sol` | frontier, implementation, review, design, audit | — |
 | `gpt-6-astra` | frontier, implementation, review, design, audit | patterns=`gpt-6(\.\d+)*-astra` |
 | `gpt-6-sol` | implementation, review | — |
+| `gpt-6.1-terra` | implementation, review | status=owner-authorized; Exact owner-selected route admitted on 2026-10-30 for AgenTools PLAN2. No family pattern or default class pin change. |
 | `gpt-6.1-sol` | frontier, implementation, review, design, audit | patterns=`gpt-6\.[1-9]\d*-sol` |
 
 ### `cursor`

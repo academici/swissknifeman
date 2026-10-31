@@ -290,26 +290,43 @@ def retry(self, ref: str) -> None:
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} is not a blocked piece of this run")
     steps = item.get("steps", {})
     completed = done_steps(steps)
-    # the state file is sorted by key, so the order of the steps is the order of their ``ended`` stamps
+    # State keys are sorted, and completion stamps have only second precision. Executor round numbers break ties
+    # without treating executor.10 as earlier than executor.2 (or repeating a completed policy continuation).
+    def executor_order(key: str) -> tuple:
+        return (steps[key].get("ended", ""), tuple(int(part) for part in re.findall(r"[0-9]+", key)))
+
     blocked = min((key for key in completed if key.startswith("executor.") and key not in continued(completed) and
                    (((steps[key].get("result") or {}).get("report") or {}).get("status") == "blocked")),
-                  key=lambda key: steps[key].get("ended", ""), default=None)
+                  key=executor_order, default=None)
     held = any(name.startswith("orch-advice-") for name in (self.state.get("questions") or {}).get(ref, {}))
     if blocked is None and not held:
         # blocked by the conductor itself (red checks past the limit, a review limit, a path outside the scope with
         # ``scope.outside: block``): no round reported ``blocked``, so the last executor round is where the piece goes on
         rounds = [key for key in completed if key.startswith("executor.") and key not in continued(completed)]
-        blocked = max(rounds, key=lambda key: steps[key].get("ended", ""), default=None)
+        blocked = max(rounds, key=executor_order, default=None)
     if blocked is None and not held:
         raise Stop("RETRY_NOT_BLOCKED", f"{ref} has no executor round to go on from")
     # the input is built again too: the plan was amended (that is why the piece was blocked and reopened), and the
     # executor must see the amended write set, not the one of the first brief. A piece held on advice (red checks or a
     # rejected finding, the question ``orch-advice-<n>`` waits for the owner) reported no blocked round: its closed rounds,
     # checks, reviews and advice stay and only the opening and closing steps are repeated.
-    since = steps[blocked].get("ended", "") if blocked else None
+    boundary = executor_order(blocked) if blocked else None
+
+    def follows_executor(key: str) -> bool:
+        if boundary is None:
+            return False  # advice holds keep their completed rounds
+        ended = steps[key].get("ended", "")
+        if ended != boundary[0]:
+            return ended > boundary[0]
+        # checks.N consumes executor.N, including its policy continuations. Equal stamps do not make that result
+        # reusable; checks and executor continuations of earlier rounds in the same second still belong to history.
+        if key.startswith("checks."):
+            return int(key.split(".", 1)[1]) >= boundary[1][0]
+        return key.startswith("executor.") and executor_order(key) > boundary
+
     dropped = [key for key in steps if steps[key].get("status") != "done" or key == blocked
                or key in ("brief", "prepare", "scout", "close", "register", "commit")
-               or (since is not None and steps[key].get("ended", "") > since)]
+               or follows_executor(key)]
     archive_attempt(self, ref, item, dropped)  # the repeated steps write the same files again: the first attempt is kept aside
     for key in dropped:
         steps.pop(key)

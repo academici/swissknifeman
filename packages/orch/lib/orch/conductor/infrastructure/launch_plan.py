@@ -151,7 +151,8 @@ def agy_guarded(argv: list, project: str, writing: bool) -> bool:
     tail = argv[len(prefix) + 1:] if prefix else []
     trusted_bridge = str(ORCH_ROOT / "scripts" / "agy-transport.py")
     return bool(len(tail) >= 2 and tail[0] == "python3" and os.path.realpath(tail[1]) == os.path.realpath(trusted_bridge) and
-                prefix and len(prefix) >= 2 and os.path.realpath(prefix[1]) == os.path.realpath(trusted_guard) and
+                prefix and len(prefix) >= 2 and prefix[0] == "python3" and
+                os.path.realpath(prefix[1]) == os.path.realpath(trusted_guard) and
                 "--no-default-rw" in prefix and (wanted, project) in pairs and
                 "/dev" in roots and all(root in permitted for root in roots))
 
@@ -224,8 +225,9 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
     if route.get("provider") == "antigravity" and launch.agy_executor_opted_in(role):
         doc["degraded"].append({"code": "AGY_UNSAFE_EXECUTOR_OPT_IN",
-                                "detail": "Explicit local opt-in: network, Docker IPC and host reads are not isolated; "
-                                          "model class for gemini-4-argon-high is unverified."})
+                                "detail": "Explicit local opt-in: network, IPC (including Docker) and host reads are not isolated; "
+                                          "/dev including /dev/shm is writable; Landlock ABI below 3 does not prevent "
+                                          "truncation outside writable roots; model class for gemini-4-argon-high is unverified."})
         doc["digest"] = authority_rules.digest(doc)
     refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
     if refused:

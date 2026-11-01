@@ -88,6 +88,7 @@ class TranslationTests(unittest.TestCase):
         assert agy_guarded(common + ["--protect", root] + tail, root, False)
         assert not agy_guarded(common + ["--rw", root] + tail, root, False)
         assert not agy_guarded(common + ["--rw", root, "--rw", "/"] + tail, root, True)
+        assert not agy_guarded(["untrusted-interpreter", *common[1:], "--rw", root] + tail, root, True)
         assert not agy_guarded(["python3", "bridge"], root, True)
 
     def test_each_agent_uses_its_own_home(self):
@@ -190,8 +191,12 @@ class TranslationTests(unittest.TestCase):
             self.assertEqual((doc["network"]["effective"], doc["docker"], doc["read_masks"]), ("open", "open", "none"))
             self.assertEqual(doc["digest"], rules.digest(doc))
             self.assertTrue(any(row["code"] == "AGY_UNSAFE_EXECUTOR_OPT_IN" for row in doc["degraded"]))
+            detail = next(row["detail"] for row in doc["degraded"] if row["code"] == "AGY_UNSAFE_EXECUTOR_OPT_IN")
+            self.assertIn("/dev/shm", detail)
+            self.assertIn("ABI below 3", detail)
+            self.assertIn("IPC (including Docker)", detail)
             prompt = rules.prompt_block(doc)
-            for word in ("push", "publish", "tags", "remote settings", "not technically enforced", "host reads"):
+            for word in ("push", "publish", "tags", "remote settings", "not technically enforced", "host reads", "/dev/shm", "ABI below 3"):
                 self.assertIn(word, prompt)
             self.assertNotIn(launch.AGY_OPT_IN, launch_plan.role_env(owner, item, "executor", route))
             with self.assertRaises(Stop):

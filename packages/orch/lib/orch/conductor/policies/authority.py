@@ -307,5 +307,6 @@ def prompt_block(doc: dict) -> str:
              "entry of kind `pending` and go on."]
     if any(row.get("code") == "AGY_UNSAFE_EXECUTOR_OPT_IN" for row in doc["degraded"]):
         lines.append("- Owner instruction: do not push, publish, create tags, or change remote settings. "
-                     "This instruction is not technically enforced. Network, Docker IPC and host reads are not isolated.")
+                     "This instruction is not technically enforced. Network, IPC (including Docker) and host reads are not isolated. "
+                     "/dev, including /dev/shm, is writable; Landlock ABI below 3 cannot prevent outside truncation.")
     return "\n".join(lines[:PROMPT_LINES])

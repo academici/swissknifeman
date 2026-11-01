@@ -63,7 +63,7 @@ def registrar_problem(route: dict, *, project: str, access: str) -> Optional[str
     if route.get("role") != "registrar":
         return None
     provider = route.get("provider")
-    guard = "landlock-protect" if provider == "claude-code" else "codex-sandbox" \
+    guard = "landlock-protect" if provider in ("claude-code", "antigravity") else "codex-sandbox" \
         if provider == "codex" and access == "confined" else None
     if guard is None:
         return None
@@ -156,6 +156,8 @@ def route(*, role: str, item_options: dict, chosen: dict, entry: dict, conductor
     resolved) and its launch ``entry``: the command line (``[orch.conductor.argv]`` or the ``launch_catalog`` with
     ``access``, given when :func:`builds_argv`), the resume command line and the walls of the role."""
     provider, model, effort, model_class = chosen["provider"], chosen["model"], chosen["effort"], chosen["model_class"]
+    if provider == "antigravity" and effort not in ("low", "medium", "high"):
+        raise Stop("ROUTE_UNDERSHOOT", f"{role} needs effort {effort}, which antigravity cannot start")
     values = {"model": model or "", "effort": effort, "cwd": str(project), "orch": str(ORCH_ROOT)}
     argv_override = (conductor_cfg.get("argv") or {}).get(role)
     resume_argv = None

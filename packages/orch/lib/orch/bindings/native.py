@@ -13,6 +13,9 @@ class Native(Binding):
     binding = "native"
 
     def project(self, input_doc: dict, base: dict, manifest: dict, cap: dict, resolved: dict) -> dict:
+        if base["provider"] == "antigravity":
+            code, reason = launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)
+            raise Unmet("authority", reason, code)
         role = LAUNCH_ROLES.get(manifest["role_id"], manifest["role_id"])
         try:
             entry = self.catalog.launch_entry(role, base["provider"])

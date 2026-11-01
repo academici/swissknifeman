@@ -84,7 +84,7 @@
         },
         "effort_selectors": {
           "type": "object",
-          "description": "Effort values by level, in preference order.",
+          "description": "Effort selectors by level; xhigh is required by the catalog loader for every provider except antigravity.",
           "properties": {
             "low": {
               "type": "array",
@@ -130,8 +130,7 @@
           "required": [
             "low",
             "medium",
-            "high",
-            "xhigh"
+            "high"
           ],
           "additionalProperties": false
         },

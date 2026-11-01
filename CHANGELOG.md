@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Antigravity: повторная проверка границ.** Native projection и ранний выбор маршрута отказывают до запуска; transport изолирует сырые события и подтверждает terminal только после EOF/exit, timeout сохраняет observed model/session/tools. Добавлены исполняемые unittest и воспроизводимый canary; live-пробы ограничены auth/quota/location, безопасный запуск conductor пока не доказан.
+
 ## [0.34.1] - 2026-10-26
 
 - orch: the reviewer emergency wall (`limits.role_timeout_s.reviewer`, also the group review) is 1800 s instead of 3600; the reviewer and executor role texts ask for a diff-scoped review that ends when the subject is covered and for finish-first work (no repository survey, no second acceptance run, correction rounds continue the work).

@@ -26,8 +26,8 @@ def _pairs(doc: dict):
 
 
 class CapabilitySeedTests(unittest.TestCase):
-    def test_seven_seeds(self):
-        self.assertEqual(len(SEEDS), 7)
+    def test_eight_seeds(self):
+        self.assertEqual(len(SEEDS), 8)
 
     def test_seeds_are_valid_declared_and_named_after_binding_provider(self):
         for path in SEEDS:

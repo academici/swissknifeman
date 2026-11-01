@@ -72,6 +72,15 @@ def load_model_catalog(path: Optional[Path] = None) -> ModelCatalog:
     if issues:
         first = issues[0]
         raise ModelCatalogError(first.path, first.code, first.message)
+    # The portable schema profile has no conditionals. Preserve the prior xhigh
+    # requirement for every existing provider, while refusing an invented AGY
+    # selector until its CLI has actually admitted that effort.
+    for index, record in enumerate(doc["providers"]):
+        has_xhigh = "xhigh" in record["effort_selectors"]
+        if record["provider_id"] == "antigravity" and has_xhigh:
+            raise ModelCatalogError(f"/providers/{index}/effort_selectors/xhigh", "unsupported", "antigravity xhigh is unverified")
+        if record["provider_id"] != "antigravity" and not has_xhigh:
+            raise ModelCatalogError(f"/providers/{index}/effort_selectors/xhigh", "required", "xhigh is required")
     providers = []
     for record in doc["providers"]:
         providers.append(ProviderModels(

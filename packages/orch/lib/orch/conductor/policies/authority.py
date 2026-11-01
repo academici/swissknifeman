@@ -207,16 +207,20 @@ def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: di
            "dot_git_write": not kept_out and any(root["why"] in ("checkout", "unconfined") for root in roots)}
     # (7) the isolation of the profile, by names only
     home_vars = list(((isolation.get("home") or {}).get("vars") or {}))
+    env_keys = set(isolation.get("env") or {})
+    if provider == "antigravity" and tmpdir:
+        home_vars = ["HOME"]
+        env_keys.update(("HOME", "TMPDIR", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME"))
     degraded = list(isolation.get("degraded") or []) + degraded
     doc = {"$schema": SCHEMA, "role": role, "provider": provider, "access": access, "guard": guard,
            "write_roots": roots, "read_masks": "provider-settings" if guard == "claude-sandbox" else "none",
-           "setting_sources": setting_sources, "permission_mode": _value(argv, "--permission-mode"),
+           "setting_sources": setting_sources, "permission_mode": "always-proceed" if provider == "antigravity" else _value(argv, "--permission-mode"),
            "permission_rules": {"deny": list(rules["deny"]), "ask": list(rules["ask"])},
            "network": network, "docker": docker, "git": git,
            "isolation": {"profile": provider if isolation.get("isolated") and isolation.get("guarantee") != "none"
                          else None,
                          "guarantee": isolation.get("guarantee") or "none", "args": list(isolation.get("args") or []),
-                         "env_keys": sorted(isolation.get("env") or {}), "home_var": home_vars[0] if home_vars else None},
+                         "env_keys": sorted(env_keys), "home_var": home_vars[0] if home_vars else None},
            "degraded": degraded}
     doc["digest"] = digest(doc)
     return doc

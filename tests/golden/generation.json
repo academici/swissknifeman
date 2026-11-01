@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "4292d1d85205",
-  "reason": "release v0.34.1: planner version bump",
+  "captured_from": "252146040824",
+  "reason": "Record experimental Antigravity executor catalog entries; execution remains fail closed",
   "generators": [
     {
       "id": "skiller-registry",

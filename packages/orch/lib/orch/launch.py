@@ -9,7 +9,11 @@ import re
 
 ROLES = ("scout", "executor", "bounded-implementer", "reviewer", "triager", "registrar", "report-fixer",
          "researcher", "advisor")
-PROVIDERS = ("claude-code", "codex", "grok")
+ANTIGRAVITY_AUTHORITY_PROBLEM = (
+    "AGY_AUTHORITY_UNPROVEN: Antigravity tool network, IPC and host read isolation "
+    "has no verified enforcement; HOME and Landlock write guards are insufficient"
+)
+PROVIDERS = ("claude-code", "codex", "grok", "antigravity")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")
 TRANSPORTS = ("text", "jsonl", "acp")

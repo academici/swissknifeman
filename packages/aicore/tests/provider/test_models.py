@@ -17,14 +17,29 @@ class TestPackagedCatalog(unittest.TestCase):
 
     def test_providers_and_order(self):
         self.assertEqual([item.provider_id for item in self.catalog.providers],
-                         ["claude-code", "codex", "cursor", "grok"])
+                         ["claude-code", "codex", "cursor", "grok", "antigravity"])
 
     def test_every_provider_has_selectors(self):
         for item in self.catalog.providers:
             for model_class in CLASSES:
                 self.assertIsNotNone(models.select_model(self.catalog, item.provider_id, model_class))
             for effort in EFFORTS:
-                self.assertIsNotNone(models.select_effort(self.catalog, item.provider_id, effort))
+                if (item.provider_id, effort) == ("antigravity", "xhigh"):
+                    self.assertIsNone(models.select_effort(self.catalog, item.provider_id, effort))
+                else:
+                    self.assertIsNotNone(models.select_effort(self.catalog, item.provider_id, effort))
+
+    def test_antigravity_lists_gemini_without_claiming_an_unverified_class(self):
+        provider = self.catalog.provider("antigravity")
+        entries = {item["id"]: item for item in provider.model_inventory["entries"]}
+        for model in ("gemini-4-argon", "gemini-3.8-flash"):
+            with self.subTest(model=model):
+                self.assertEqual(entries[model]["status"], "listed-unverified")
+                self.assertIsNone(models.admitted_class(self.catalog, "antigravity", model))
+
+    def test_antigravity_xhigh_has_no_effort_selector(self):
+        self.assertIsNone(models.select_effort(self.catalog, "antigravity", "xhigh"))
+        self.assertEqual(models.select_effort(self.catalog, "antigravity", "high"), "high")
 
     def test_first_selector_is_the_default(self):
         self.assertEqual(models.select_model(self.catalog, "codex", "frontier"), "gpt-6-astra")
@@ -128,6 +143,13 @@ class TestBrokenCatalogs(unittest.TestCase):
         with self.assertRaises(models.ModelCatalogError) as caught:
             self.load(doc)
         self.assertEqual((caught.exception.path, caught.exception.code), ("/providers/0/extra", "additional"))
+
+    def test_antigravity_xhigh_claim_is_rejected(self):
+        doc = copy.deepcopy(self.good)
+        agy = next(item for item in doc["providers"] if item["provider_id"] == "antigravity")
+        agy["effort_selectors"]["xhigh"] = ["xhigh"]
+        with self.assertRaisesRegex(models.ModelCatalogError, "antigravity xhigh is unverified"):
+            self.load(doc)
 
     def test_other_defects(self):
         cases = {}

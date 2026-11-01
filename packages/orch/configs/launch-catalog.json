@@ -45,6 +45,9 @@
       "effort": "high",
       "timeout_s": 3600,
       "providers": {
+        "antigravity": {
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--no-default-rw", "--rw", "{cwd}", "--rw", "/dev", "--", "python3", "{orch}/scripts/agy-transport.py", "--model", "{model}", "--effort", "{effort}"]
+        },
         "claude-code": {
           "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
         },
@@ -63,6 +66,9 @@
       "effort": "medium",
       "timeout_s": 1800,
       "providers": {
+        "antigravity": {
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--no-default-rw", "--rw", "{cwd}", "--rw", "/dev", "--", "python3", "{orch}/scripts/agy-transport.py", "--model", "{model}", "--effort", "{effort}"]
+        },
         "claude-code": {
           "argv": ["@ro-run.rw", "@claude.stream", "@claude.model", "@claude.write-tools", "@claude.quiet"]
         },
@@ -164,13 +170,20 @@
     }
   },
   "refusals": {
+    "scout": {"antigravity": "AGY text-only scout transport has not been verified"},
+    "reviewer": {"antigravity": "AGY read-only network and IPC boundary is not verified"},
+    "triager": {"antigravity": "AGY read-only network and IPC boundary is not verified"},
+    "report-fixer": {"antigravity": "AGY tool-free report fixing has not been verified"},
     "advisor": {
+      "antigravity": "AGY research access is not yet bounded",
       "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
     },
     "registrar": {
+      "antigravity": "AGY registrar authority outside the checkout is not yet bounded",
       "grok": "registrar writes the plan workspace and the project state outside {cwd}; the launch placeholders cannot grant that area to Landlock without granting the checkout, and grok shell allow rules (--allow) are not wired into the launch contract"
     },
     "researcher": {
+      "antigravity": "AGY research access is not yet bounded",
       "codex": "codex --sandbox read-only has no network and the research sources run networked commands; workspace-write would grant writes to the checkout"
     }
   }

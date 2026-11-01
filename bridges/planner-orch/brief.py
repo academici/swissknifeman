@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 from pathlib import Path
 import re
 import sys
@@ -49,6 +50,47 @@ _DECISION_KEYS = ("title", "status", "decision", "rationale")
 _FOREIGN_KEYS = ("ref", "loaded", *_DECISION_KEYS, "question_key", "question_digest", "source", "reason")
 _PACK_PROCESS_KEYS = ("batch", "orchestration", "ready_units", "policy")  # lifecycle and run policy: never the executor's
 _LESSON_KEYS = ("type", "summary", "ts", "item", "impact", "next")
+# Supplemental delivery is a worker view, not the coordinator pack. New source fields never gain delivery implicitly.
+_WORKER_FIELDS = {
+    "plan": ("id", "short_id", "title", "repository", "goal", "context", "non_goals", "rules", "links", "contracts", "sections"),
+    "brief": ("requirements", "constraints", "environment", "out_of_scope", "sections"),
+    "phase": ("id", "title", "goal", "context", "contract", "scope", "pitfalls", "validation", "deliverables",
+              "assurance", "supporting", "sections"),
+    "item": ("id", "title", "summary", "why", "scope", "depends_on", "related", "decisions", "skills", "task_files",
+             "artifacts", "rules", "guidance", "examples", "validation", "deliverables", "authority", "sections"),
+    "decision": ("id", "ref", "loaded", "title", "status", "decision", "rationale", "reason"),
+    "document": ("id", "title", "sections", "applies_to", "global"),
+}
+
+
+def _worker_context(pack: dict) -> dict:
+    """Missing worker contracts only; lifecycle, messages, actor records and other-item unit/run state stay with coordinator.
+
+    Reads, lessons, route/review/research settings and the current unit's instructions already have their closed exec/v1
+    projections. Their raw coordinator records must not acquire a second, wider authority through supplemental delivery.
+    """
+    def select(kind, value):
+        return {key: copy.deepcopy(value[key]) for key in _WORKER_FIELDS[kind] if key in value}
+
+    result = {kind: select(kind, pack[kind]) for kind in ("plan", "brief", "phase", "item")}
+    # Runtime input declarations are coordinator provenance, not additional worker reads.
+    if "artifacts" in result["item"]:
+        result["item"]["artifacts"] = [a for a in result["item"]["artifacts"]
+                                        if not (a.get("role") == "input" and str(a.get("path", "")).startswith("@plan/inputs/"))]
+    item = pack["item"]
+    if item.get("route"):
+        result["item"]["route"] = _route_minimum(item["route"])
+    if _research(item):
+        result["item"]["research"] = _research(item)
+    review = item.get("review") or {}
+    if review:
+        result["item"]["review"] = {key: copy.deepcopy(review[key]) for key in ("mode", "covers") if key in review}
+    result["decisions"] = [select("decision", value) for value in pack.get("decisions", [])]
+    result["documents"] = [select("document", value) for value in pack.get("documents", [])]
+    result["phase_dependencies"] = [select("phase", value) for value in pack.get("phase_dependencies", [])]
+    # The existing scoped outcome includes unresolved deviations/pending/escalations, never a fabricated green summary.
+    result["upstream"] = [context._project_upstream(value) for value in pack.get("upstream", [])]
+    return result
 
 
 def canonical_digest(doc: dict) -> str:
@@ -129,7 +171,7 @@ def _read(plan: store.Plan, entry: dict, inline: bool, *, outside: bool = False)
         entry["error"] = "unreadable" if outside else str(exc)  # an OS message can carry the workspace path
         return entry
     entry["sha256"] = sha256_hex(data)
-    if inline and "content" not in entry and "error" not in entry:
+    if inline and entry.get("delivery") != "on-demand" and "content" not in entry and "error" not in entry:
         try:
             entry["content"] = data.decode("utf-8")
         except UnicodeDecodeError:
@@ -219,10 +261,14 @@ def _phase_checks(plan: store.Plan, item_id: str, taken: set) -> list[dict]:
     return [dict(copy.deepcopy(check), cadence="phase") for check in broad]
 
 
-def _context_refs(plan: store.Plan, pack: dict, plan_dir: str, outside: bool = False) -> list[dict]:
+def _context_refs(plan: store.Plan, pack: dict, plan_dir: str, outside: bool = False,
+                  context_delivery: str = "reference") -> list[dict]:
     refs = [{"kind": "pack", "ref": pack["ref"], "path": f"{plan_dir}/{context.PACK_DIR}/{pack['item']['id']}.json"}]
     if outside:  # the executor cannot open the pack file: it travels in the brief
-        refs[0]["content"] = _json_safe({k: v for k, v in pack.items() if k not in _PACK_PROCESS_KEYS})
+        refs[0]["content"] = _json_safe(_worker_context(pack) if context_delivery == "supplement"
+                                      else {k: v for k, v in pack.items() if k not in _PACK_PROCESS_KEYS})
+        if context_delivery == "supplement":
+            refs[0]["delivery"] = "supplement"
     for doc in pack["documents"]:
         ref = {"kind": "document", "ref": f"knowledge/{doc['id']}", "path": f"{plan_dir}/knowledge/{doc['id']}.json"}
         source = plan.path("document", doc["id"])
@@ -296,10 +342,10 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
                 missing.append(f"constraints: missing {source}[{index}]")
     if unit and unit.get("instructions") and {"text": unit["instructions"], "source": "unit.instructions"} not in constraints:
         missing.append("constraints: missing unit.instructions")
-    reads = {(r.get("path"), r.get("section")) for r in doc.get("reads", [])}
+    reads = {(r.get("path"), r.get("section"), r.get("delivery")) for r in doc.get("reads", [])}
     for read in (item.get("reads") or []) + ((unit or {}).get("reads") or []):
         read = context.normalize_read(plan, read)
-        if read.get("required") and (read.get("path"), read.get("section")) not in reads:
+        if read.get("required") and (read.get("path"), read.get("section"), read.get("delivery")) not in reads:
             missing.append(f"reads: missing {read.get('path') or read.get('ref')}"
                            + (f"#{read['section']}" if read.get("section") else ""))
     refs = {d.get("ref") for d in doc.get("decisions", [])}
@@ -330,8 +376,10 @@ def verify(plan: store.Plan, item_id: str, doc: dict, *, unit_id: str | None = N
 
 
 def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,
-          repos=None) -> dict:
+          repos=None, context_delivery: str = "reference") -> dict:
     """Execution-input of ``item_id`` (or of its unit ``unit_id``). ``repos`` maps repository names to roots (``refs.resolve``)."""
+    if context_delivery not in ("reference", "supplement"):
+        raise PlanError("CONTEXT_DELIVERY_INVALID", f"unknown context delivery {context_delivery!r}")
     if not isinstance(item_id, str) or not ITEM_ID.fullmatch(item_id):
         raise PlanError("REF_INVALID", f"invalid item id {item_id!r}")
     if item_id not in plan.items:
@@ -390,7 +438,7 @@ def build(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_
         "reads": [_read(plan, _plan_content(plan, r) if outside else r,
                         inline_reads or (outside and str(r.get("path", "")).startswith("@plan/")), outside=outside)
                   for r in reads],
-        "context_refs": _context_refs(plan, pack, plan_dir, outside), "upstream": _upstream(pack),
+        "context_refs": _context_refs(plan, pack, plan_dir, outside, context_delivery), "upstream": _upstream(pack),
         "lessons": [{key: e[key] for key in _LESSON_KEYS if key in e} for e in pack["lessons"]],
         "hints": [{"text": _hint(entry), "source": "scout"} for entry in (pack.get("scout") or {}).get("entries", [])],
         "research": _research(item),
@@ -425,8 +473,8 @@ def _review_route(item: dict) -> dict:
 
 
 def render(plan: store.Plan, item_id: str, *, unit_id: str | None = None, inline_reads: bool = False,
-           repos=None) -> str:
-    doc = build(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos)
+           repos=None, context_delivery: str = "reference") -> str:
+    doc = build(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos, context_delivery=context_delivery)
     return json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
 
 
@@ -445,10 +493,11 @@ def check_out(plan: store.Plan, out: str | Path) -> Path:
 
 
 def write(plan: store.Plan, item_id: str, out: str | Path, *, unit_id: str | None = None,
-          inline_reads: bool = False, repos=None) -> Path:
+          inline_reads: bool = False, repos=None, context_delivery: str = "reference") -> Path:
     """Build, then atomically write the brief to ``out``; every refusal happens before anything is written."""
     target = check_out(plan, out)
-    store.atomic_write(target, render(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos))
+    store.atomic_write(target, render(plan, item_id, unit_id=unit_id, inline_reads=inline_reads, repos=repos,
+                                     context_delivery=context_delivery))
     return target
 
 
@@ -466,6 +515,9 @@ def main(argv=None) -> int:
     parser.add_argument("item")
     parser.add_argument("--unit", metavar="U#", help="brief one unit of the item")
     parser.add_argument("--inline-reads", action="store_true", help="embed the full text of existing text reads")
+    parser.add_argument("--context-delivery", choices=("reference", "supplement"),
+                        default=os.environ.get("PLANNER_ORCH_CONTEXT_DELIVERY", "reference"),
+                        help="workspace pack delivery (default: reference; env PLANNER_ORCH_CONTEXT_DELIVERY)")
     parser.add_argument("--out", type=Path, help="write the document to FILE instead of stdout")
     parser.add_argument("--repo", action="append", default=[], type=_repo_mapping, metavar="NAME=PATH",
                         help="repository root of references to another repository (repeatable)")
@@ -474,11 +526,12 @@ def main(argv=None) -> int:
     try:
         plan = store.load_plan(store.resolve_plan_dir(args.plan, args.plans_root))
         if args.out is None:
-            print(render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads, repos=dict(args.repo)),
+            print(render(plan, args.item, unit_id=args.unit, inline_reads=args.inline_reads, repos=dict(args.repo),
+                         context_delivery=args.context_delivery),
                   end="")
         else:
             print(write(plan, args.item, args.out, unit_id=args.unit, inline_reads=args.inline_reads,
-                        repos=dict(args.repo)))
+                        repos=dict(args.repo), context_delivery=args.context_delivery))
     except PlanError as exc:
         print(f"{exc.code}: {exc.message}", file=sys.stderr)
         return 1

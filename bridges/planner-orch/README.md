@@ -21,7 +21,7 @@ validates `bridge.json` and lists the verbs.
 ## brief
 
 ```text
-plan.py bridge planner-orch brief <plan> <item> [--unit U#] [--inline-reads] [--out FILE] [--repo NAME=PATH] [--plans-root DIR]
+plan.py bridge planner-orch brief <plan> <item> [--unit U#] [--inline-reads] [--context-delivery reference|supplement] [--out FILE] [--repo NAME=PATH] [--plans-root DIR]
 ```
 
 Returns the worker's `exec/v1` execution-input as JSON (`$schema`
@@ -46,6 +46,26 @@ Returns the worker's `exec/v1` execution-input as JSON (`$schema`
 - `--unit U#` briefs one unit: its goal, files (write set), checks and instructions. A unit without
   files is read-only with no write authority.
 - `--inline-reads` embeds the full text of existing text reads; binary reads get `error`.
+- A plan item can explicitly set `"delivery": "on-demand"` on a whole repository JSON path read. The read stays required when declared required; the brief verifies presence and JSON syntax and carries the path and SHA-256, while the worker must inspect its content when needed. A hash is not review coverage. This explicit mode wins over `--inline-reads`; workspace `@plan/` content, references and selected sections cannot use it. Omitting the field preserves the legacy inline JSON behavior.
+- `--context-delivery supplement` opts workspace packs into actual task-prompt delivery. The invocation variable
+  `PLANNER_ORCH_CONTEXT_DELIVERY=supplement` selects the same mode for this CLI and the conductor's work-source
+  `brief` operation (the trusted plugin allowlist forwards it). Default `reference` retains the existing input and prompt.
+  `delivery: supplement` tells a compatible Orch renderer to show the worker projection in `context_refs[].content`.
+  The explicit `_WORKER_FIELDS` allowlist retains plan goals/context/non-goals/rules/links/contracts/sections,
+  brief requirements/constraints/environment/out-of-scope/sections, phase scope/contracts/deliverables/assurance,
+  item task contracts/file notes/examples/authority, active decision id/title/status/decision/rationale and applicable knowledge
+  sections. Route/research/review get bounded worker fields; upstream keeps the existing scoped outcome, including
+  unresolved deviations. Coordinator settings, orchestration, batches, owner messages, actor records, old item results,
+  other units and runtime input declarations are excluded. New fields never acquire worker delivery implicitly.
+  Reads, selected lessons and the current unit already have their closed top-level exec/v1 projections. The original
+  coordinator context/log is unchanged and is pinned by `provenance.source_digest`; the default reference mode still
+  carries the legacy full inline pack. Only exact long strings already visible in another task section become a
+  human-readable `Already supplied in Reads …` reference. Unique worker contracts and applicable knowledge sections
+  remain inline; the worker needs no access to `@plan`. There is no text budget or truncation in this projection. Structured
+  check commands remain withheld when the conductor owns checks. This optional exec/v1 field requires the matching
+  Orch consumer; an older consumer rejects the new field rather than silently ignoring required context. No model is
+  needed to use or test the mode. Reducing source applicability and coordinator history is a separate plan decision:
+  supplement delivery may increase a prompt by adding context that reference-only rendering previously omitted.
 - Cross-plan decisions resolve in the current repository or through repeatable `--repo NAME=PATH` /
   `SKM_PLAN_REPOS`; an unresolved required decision refuses with `REF_UNRESOLVED`.
 - Read refs become paths. A ref with no source path refuses with `REF_UNRESOLVED`, including optional

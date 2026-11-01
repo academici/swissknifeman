@@ -53,7 +53,7 @@ def title_of(doc: Mapping[str, Any]) -> str:
     return line if len(line) <= TITLE_LIMIT else line[:TITLE_LIMIT - 1].rstrip() + "…"
 
 
-def read_input(path: str | Path) -> dict:
+def read_input(path: str | Path, *, adopt: bool = False) -> dict:
     """The execution-input of ``path``; ``WorkSourceError`` ``INPUT_INVALID`` when it is unreadable or outside exec/v1."""
     try:
         doc = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -68,6 +68,9 @@ def read_input(path: str | Path) -> dict:
     if errors:
         raise WorkSourceError("INPUT_INVALID", f"the input {path} is outside exec/v1: "
                               + "; ".join(f"{issue.path or '/'} {issue.code}: {issue.message}" for issue in errors[:3]))
+    if adopt and (doc.get("provenance", {}).get("kind") != "review_followup"
+                  or not doc.get("scope", {}).get("write_set") or doc.get("scope", {}).get("read_only")):
+        raise WorkSourceError("ADOPT_INPUT_REFUSED", "file adoption requires a writable review_followup with an explicit write set")
     return doc
 
 

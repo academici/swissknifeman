@@ -5,6 +5,7 @@ acceptance checks (commands stay verbatim inside fenced code).
 """
 from __future__ import annotations
 
+import copy
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -101,6 +102,8 @@ def _reads(doc: dict) -> str:
                  f"- exists: {'yes' if item['exists'] else 'no'}"]
         if item.get("sha256"):
             lines.append(f"- sha256: `{item['sha256']}`")
+        if item.get("delivery") == "on-demand":
+            lines.append("- delivery: on-demand; inspect the source when needed and verify its bytes against sha256. A hash is identity, not evidence of reading.")
         if item.get("error"):
             lines.append(f"- error: {item['error']}")
         block = "\n".join([head, *lines])
@@ -119,7 +122,66 @@ def _context(doc: dict) -> str:
         if item.get("sha256"):
             line += f" (`{item['sha256']}`)"
         lines.append(line)
+        if item.get("delivery") == "supplement":
+            if "content" not in item:
+                raise RenderError("CONTEXT_MISSING", "supplement delivery requires inline content")
+            content, _ = _context_supplement(doc, item["content"])
+            lines[-1] += ("\n\nSource context; scope and result-contract authority still apply. "
+                          "Already supplied values refer to text in this same task, never to an external plan file.\n\n"
+                          + _json_block(content))
     return _bullets(lines)
+
+
+def _context_supplement(doc: dict, content: object) -> tuple[object, list]:
+    """Retain all context fields; reuse only exact strings already visible in another task section.
+
+    The input and its full pack stay unchanged. The private provenance pairs let tests reconstruct every replaced
+    value; workers see ordinary section labels, not a JSON-pointer protocol or an inaccessible ``@plan`` dependency.
+    """
+    visible_sections = {name: build(doc) for name, build in SECTIONS if name != "Context"}
+    headings = {"goal": "Goal", "why": "Why", "scope": "Scope", "constraints": "Constraints",
+                "decisions": "Decisions", "guidance": "Guidance", "sections": "Sections", "reads": "Reads",
+                "upstream": "Upstream", "lessons": "Lessons", "hints": "Hints", "acceptance": "Acceptance",
+                "escalation": "Escalation", "result_contract": "Result contract"}
+
+    def walk(value, path):
+        if isinstance(value, str):
+            yield path, value
+        elif isinstance(value, dict):
+            for key, child in value.items():
+                yield from walk(child, (*path, key))
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                yield from walk(child, (*path, index))
+
+    supplied = {}
+    for key, title in headings.items():
+        for path, value in walk(doc.get(key), (key,)):
+            label = title
+            if key in ("reads", "decisions") and len(path) > 1:
+                entry = doc[key][path[1]]
+                label += " — " + str(entry.get("path") or entry.get("ref"))
+                if entry.get("section"):
+                    label += " · " + entry["section"]
+            note = f"Already supplied in {label} (identical text)."
+            # No semantic matching, substring cutting, budget truncation or reference to text the renderer omitted.
+            visible = visible_sections[title]
+            if len(value) > len(note) and (value in visible or json.dumps(value, ensure_ascii=False)[1:-1] in visible):
+                supplied.setdefault(value, (path, note))
+    reused = []
+
+    def project(value, path=()):
+        if isinstance(value, str) and value in supplied:
+            source, note = supplied[value]
+            reused.append((path, source))
+            return note
+        if isinstance(value, dict):
+            return {key: project(child, (*path, key)) for key, child in value.items()}
+        if isinstance(value, list):
+            return [project(child, (*path, index)) for index, child in enumerate(value)]
+        return value
+
+    return project(content), reused
 
 
 def _upstream(doc: dict) -> str:
@@ -172,7 +234,31 @@ def withhold_commands(doc: dict) -> dict:
     procedure (``withheld``): for a role that must not run them, so its prompt carries no command to try."""
     checks = [{key: value for key, value in check.items() if key not in ("cmd", "procedure", "cwd")} | {"withheld": True}
               for check in (doc.get("acceptance") or {}).get("checks") or []]
-    return {**doc, "acceptance": {**(doc.get("acceptance") or {}), "checks": checks}}
+    result = {**doc, "acceptance": {**(doc.get("acceptance") or {}), "checks": checks}}
+    # A supplemental source pack can repeat typed validation checks. It must not reintroduce commands withheld above.
+    def withhold(value):
+        if isinstance(value, dict):
+            if {"id", "kind", "expect"} <= value.keys() and ("cmd" in value or "procedure" in value):
+                return {key: child for key, child in value.items()
+                        if key not in ("cmd", "procedure", "cwd")} | {"withheld": True}
+            return {key: withhold(child) for key, child in value.items()}
+        return [withhold(child) for child in value] if isinstance(value, list) else value
+    if any(item.get("delivery") == "supplement" for item in doc.get("context_refs") or []):
+        result["context_refs"] = copy.deepcopy(doc["context_refs"])
+        for item in result["context_refs"]:
+            if item.get("delivery") == "supplement" and "content" in item:
+                content = item["content"]
+                if isinstance(content, str):
+                    try:
+                        decoded = json.loads(content)  # bridges may carry non-canonical numeric JSON as text
+                    except ValueError:
+                        pass
+                    else:
+                        if isinstance(decoded, (dict, list)):
+                            content = json.dumps(withhold(decoded), ensure_ascii=False, sort_keys=True,
+                                                 separators=(",", ":"))
+                item["content"] = withhold(content)
+    return result
 
 
 def _deliverables(doc: dict) -> str:

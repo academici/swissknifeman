@@ -113,6 +113,10 @@ and the scoped preview. `design-done` prints the same numbers per item of the ph
 they never block. Switch a legacy plan after clearing `context_unbound`:
 `plan.py set <plan> plan --json '{"settings": {"context_pack": "scoped"}}'`.
 
+Scoped packs select lessons belonging to the current item, its direct dependencies/related items, and explicit
+phase lessons (events with a phase and no item). Lessons of unrelated items in the same phase remain in the durable
+coordinator log. Legacy packs retain the previous phase-wide lesson selection; neither mode truncates selected lessons.
+
 ## Scout
 
 An optional, opt-in context map (decision D3): a weak model of the current provider reads the deterministic

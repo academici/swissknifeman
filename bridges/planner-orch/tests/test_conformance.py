@@ -56,6 +56,14 @@ class BriefConformance(unittest.TestCase):
         code, out = self.validate({**self.doc, "digest": "0" * 64})
         self.assertEqual(code, 1, out)
 
+    def test_supplement_delivery_requires_content(self):
+        doc = {**self.doc, "context_refs": [{"kind": "pack", "ref": "p", "delivery": "supplement"}]}
+        doc["digest"] = brief.canonical_digest(doc)
+        doc["input_id"] = doc["input_id"].rsplit("@", 1)[0] + "@" + doc["digest"][:12]
+        code, out = self.validate(doc)
+        self.assertEqual(code, 1, out)
+        self.assertIn("CONTEXT_MISSING", out)
+
     def test_provenance_names_the_demo_plan(self):
         self.assertEqual(self.doc["provenance"]["kind"], "plan")
         self.assertEqual(self.doc["provenance"]["item"], "P1.2")

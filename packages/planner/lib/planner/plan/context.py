@@ -175,14 +175,20 @@ def missing_reads(plan: store.Plan, item_id: str) -> list[str]:
         exists = path is not None and _exists(plan, path)
         if path is None or (not exists and _pending_producer(plan, item_id, path) is None):
             missing.append(path or read["ref"])
-        elif read.get("ref") and exists and read_entry(plan, read).get("error"):
+        elif (read.get("ref") or read.get("delivery") == "on-demand") and exists and read_entry(plan, read).get("error"):
             # An existing JSON source does not guarantee that its required section is readable.
-            missing.append(read["ref"] + (f"#{read['section']}" if read.get("section") else ""))
+            missing.append((read.get("ref") or path) + (f"#{read['section']}" if read.get("section") else ""))
     return missing
 
 
 def read_entry(plan: store.Plan, read: dict) -> dict:
     """Inline requested supporting sections, with no reading quota or content truncation."""
+    if read.get("delivery") is not None:
+        path = read.get("path")
+        if (read.get("delivery") != "on-demand" or not isinstance(path, str)
+                or path.startswith(("@plan/", "/", "~")) or not path.endswith(".json")
+                or "ref" in read or "section" in read):
+            raise PlanError("PATH_INVALID", "on-demand is only for whole repository JSON path reads")
     read = normalize_read(plan, read)
     path = read.get("path")
     if path is None:  # a ref that names no readable source
@@ -205,7 +211,8 @@ def read_entry(plan: store.Plan, read: dict) -> dict:
                 if not selected:
                     entry["error"] = "section not found"
                 value = {**value, "sections": selected}
-            entry["content"] = value
+            if read.get("delivery") != "on-demand":
+                entry["content"] = value
         elif read.get("section") and path.endswith(".md"):
             value = extract_section(target.read_text(encoding="utf-8"), read["section"])
             if value is None:
@@ -267,6 +274,8 @@ def duplicate_target(plan: store.Plan, item_id: str, pack: dict, index: int) -> 
     """Where ``pack["reads"][index]`` already lives in the pack: a pack key, ``reads/<j>`` (the first read of the same
     path and section), or None. A read of a dependency file is an explicit request for the full record and stays."""
     entry = pack["reads"][index]
+    if entry.get("delivery") == "on-demand":
+        return None  # a deferred read does not carry content for itself or a later inline read
     path = entry.get("path")
     if not isinstance(path, str):
         return None
@@ -275,7 +284,7 @@ def duplicate_target(plan: store.Plan, item_id: str, pack: dict, index: int) -> 
         return key
     for earlier in range(index):
         other = pack["reads"][earlier]
-        if other.get("path") == path and other.get("section") == entry.get("section"):
+        if other.get("path") == path and other.get("section") == entry.get("section") and "content" in other:
             return f"reads/{earlier}"
     return None
 
@@ -303,7 +312,9 @@ def collect(plan: store.Plan, item_id: str, *, with_scout: bool = True, repos=No
     for event in store.read_log(plan.root):
         target = event.get("item")
         phase = event.get("phase") or (item_phase(target) if target and ITEM_ID.fullmatch(target) else None)
-        if event.get("type") in LESSON_TYPES and (phase == phase_id or target in near):
+        relevant = (target == item_id or target in near or (not target and phase == phase_id)) if mode == "scoped" \
+            else (phase == phase_id or target in near)
+        if event.get("type") in LESSON_TYPES and relevant:
             lessons.append(event)
     name, source = execution.scenario(plan, item_id)
     result = {

@@ -348,6 +348,12 @@ def main(argv: list | None = None) -> int:
     resume.add_argument("--retry", nargs="+", default=[], metavar="ITEM",
                         help="also continue these blocked pieces: their steps from the blocked executor round on are "
                              "repeated (the source must have reopened them); finished steps are kept")
+    resume.add_argument("--fresh-context", action="store_true",
+                        help="opt-in fresh brief/session for one interrupted executor; preserves every physical launch and budget")
+    resume.add_argument("--options", type=Path, metavar="FILE",
+                        help="with --fresh-context: full recorded effective options with rules or supported tightening changed")
+    resume.add_argument("--model-launch-ceiling", type=int, metavar="TOTAL",
+                        help="with --fresh-context: total historical plus future physical launch admissions; cannot raise a prior ceiling")
     resume.add_argument("--model-catalog", dest="model_catalog", type=Path, metavar="FILE")
     resume.add_argument("--frozen", action="store_true", help="as for run: a new snapshot of the committed orchestrator")
     for sub in (run, resume):
@@ -470,8 +476,8 @@ def main(argv: list | None = None) -> int:
         if args.batch is True and not (args.items or args.ready or args.input):
             args.ready = True  # `--batch` used to select the next ready pieces
             print("note: --batch now groups the pieces of a run; selecting the next ready pieces is --ready", file=sys.stderr)
-        if args.input and (args.items or args.ready or args.max_items or args.adopt):
-            parser.error("--input is one piece of work: it takes no --items, --ready, --max-items or --adopt")
+        if args.input and (args.items or args.ready or args.max_items):
+            parser.error("--input is one piece of work: it takes no --items, --ready or --max-items")
         if not args.input and not (args.items or args.ready):
             parser.error("one of --items or --ready is required with --plan")
         if args.commit and not args.input:
@@ -574,7 +580,9 @@ def main(argv: list | None = None) -> int:
             return conductor.continue_run(args.run, items=[args.item])
         if args.verb == "continue":
             return conductor.continue_run(args.run, items=args.item, partial=args.partial, raise_limits=args.raise_limit)
-        return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit)
+        return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit,
+                                fresh_context=args.fresh_context, options_file=args.options,
+                                model_launch_ceiling=args.model_launch_ceiling)
     except engine.Stop as stop:
         detach.refuse(stop.code, stop.message)
         print(f"{stop.code}: {stop.message}", file=sys.stderr)

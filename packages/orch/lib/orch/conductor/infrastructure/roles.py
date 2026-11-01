@@ -16,7 +16,7 @@ from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import beacon_events, clock, detach, launch_plan, results, sessions
+from orch.conductor.infrastructure import beacon_events, clock, detach, launch_budget, launch_plan, results, sessions
 from orch.conductor.policies import authority as authority_rules
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure.heartbeat import observe_tick
@@ -91,7 +91,11 @@ def launch(self, item: Item, handle: dict, role: str, route: dict, prompt: str, 
     refused = launch_plan.resume_problem(self, item, role, route, resume, envelope)
     if refused:
         raise Stop("AUTHORITY_RESUME_MISMATCH", refused)
-    agents.write_authority(handle, attempt, envelope)
+    if launch_budget.latest(item):
+        with self.store.mutating():
+            launch_budget.record_launch(self, item, handle, role, route, attempt, envelope)
+    else:
+        agents.write_authority(handle, attempt, envelope)
     note_authority(self, item, role, route, envelope)
     env = self._role_env(item, role, route)
     run = process.run_role(self._role_argv(item, role, route, decision, envelope=envelope, resume=resume), prompt,

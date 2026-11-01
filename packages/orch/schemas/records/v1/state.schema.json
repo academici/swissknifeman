@@ -205,6 +205,31 @@
         "stop": {"$ref": "#/$defs/stop"},
         "partial": {"description": "The blocked piece left changes in the tree.", "type": "boolean"},
         "retried": {"description": "UTC time of the last retry.", "type": "string"},
+        "fresh_contexts": {
+          "description": "Explicit interrupted-executor continuations; physical history and ceilings never reset.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["since", "stage", "ceiling", "route", "tree_mark", "baseline", "admissions", "before", "snapshot", "options_sha256"],
+            "properties": {
+              "since": {"type": "string"},
+              "stage": {"type": "string", "pattern": "^executor\\.[0-9]+(-q[0-9]+)?$"},
+              "ceiling": {"type": "integer", "minimum": 1},
+              "route": {
+                "type": "object", "additionalProperties": false,
+                "required": ["provider", "model"],
+                "properties": {"provider": {"type": "string"}, "model": {"type": "string"}, "effort": {"type": "string"}}
+              },
+              "tree_mark": {"type": "string"},
+              "baseline": {"type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+              "admissions": {"type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+              "before": {"type": "string"},
+              "snapshot": {"type": "string"},
+              "options_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            }
+          }
+        },
         "waiting": {
           "description": "The piece is blocked on questions that wait for an answer: their ids and since when (UTC). Removed by a retry.",
           "type": "object",

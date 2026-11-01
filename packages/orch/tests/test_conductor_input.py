@@ -50,6 +50,40 @@ class InputCase(ConductorCase):
 
 
 class FileSourceRunTests(InputCase):
+    def followup_with_write_set(self):
+        path = self.write_input(adhoc.support_provenance("review_followup", plan="T", item="P1.1"))
+        doc = json.loads(path.read_text())
+        doc["scope"]["write_set"] = ["out/**"]
+        doc["digest"] = canonical_digest(doc)
+        doc["input_id"] = "adhoc@" + doc["digest"][:12]
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        self.input_doc = doc
+        return path
+
+    def test_review_followup_adopts_only_owned_prior_work(self):
+        path = self.followup_with_write_set()
+        (self.project / "out").mkdir()
+        (self.project / "out/adhoc.txt").write_text("prior candidate\n")
+        self.script({"executor": [EXECUTOR], "reviewer": [GREEN]})
+        code, _, err = self.run_input(path, "--adopt")
+        self.assertEqual(code, 0, err)
+        self.assertIn("out/adhoc.txt", self.prompt("executor", 1))
+
+    def test_review_followup_adoption_refuses_foreign_dirty_paths(self):
+        path = self.followup_with_write_set()
+        (self.project / "outside.txt").write_text("unrelated")
+        code, _, err = self.run_input(path, "--adopt")
+        self.assertEqual((code, self.outcome(err)), (1, ("stopped", "WORKTREE_DIRTY")), err)
+        self.assertEqual(self.calls("executor"), 0)
+
+    def test_file_adoption_requires_review_followup_and_explicit_scope(self):
+        for provenance in (None, adhoc.support_provenance("review_followup", plan="T", item="P1.1")):
+            path = self.write_input(provenance)
+            code, _, err = self.run_input(path, "--adopt")
+            self.assertEqual(code, 1, err)
+            self.assertIn("ADOPT_INPUT_REFUSED", err)
+            self.assertEqual(self.calls("executor"), 0)
+
     def test_an_input_runs_without_a_plan_and_keeps_its_records_in_orch_artifacts(self):
         path = self.write_input()
         self.script({"executor": [EXECUTOR], "reviewer": [GREEN]})

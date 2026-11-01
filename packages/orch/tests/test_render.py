@@ -66,6 +66,89 @@ class RenderTests(unittest.TestCase):
         block = render.render_task_block(doc)
         self.assertIn('```json\n{\n  "a": [\n    1,\n    "дом"\n  ]\n}\n```', block)
 
+    def test_on_demand_read_never_treats_hash_as_coverage(self):
+        doc = fixture("plan-bound")
+        doc["reads"][0].update({"path": "fixtures/manifest.json", "delivery": "on-demand", "sha256": "a" * 64})
+        doc["reads"][0].pop("content", None)
+        block = render.render_task_block(doc)
+        self.assertIn("delivery: on-demand; inspect the source when needed", block)
+        self.assertIn("verify its bytes against sha256", block)
+        self.assertIn("A hash is identity, not evidence of reading.", block)
+
+    def test_context_supplement_delivers_unique_fields_and_reuses_visible_text(self):
+        doc = fixture("plan-bound")
+        shared = "shared required section " * 100
+        doc["reads"][0]["content"] = {"sections": [{"id": "selected", "text": shared}]}
+        pack = {"plan": {"goal": "unique-plan-goal"}, "brief": {"requirements": ["unique-brief-rule"]},
+                "phase": {"contract": {"produces": ["unique-phase-contract"]}},
+                "item": {"extra": "unique-item-extension"},
+                "documents": [{"sections": [{"id": "selected", "text": shared},
+                                               {"id": "other", "text": "unique-other-applicable-section"}]}]}
+        doc["context_refs"] = [{"kind": "pack", "ref": "PLAN1.P1.1", "path": "@plan/context/P1.1.json",
+                                "content": pack, "delivery": "supplement"}]
+        before = copy.deepcopy(doc)
+        block = render.render_task_block(doc)
+        for sentinel in ("unique-plan-goal", "unique-brief-rule", "unique-phase-contract", "unique-item-extension",
+                         "unique-other-applicable-section"):
+            self.assertIn(sentinel, block)
+        self.assertEqual(block.count(shared), 1)
+        self.assertIn("Already supplied in Reads", block)
+        projection, reused = render._context_supplement(doc, pack)
+        self.assertTrue(reused)
+        # Every omitted literal can be restored from a value actually delivered in the same prompt, not an @plan file.
+        for destination, source in reused:
+            current = projection
+            for key in destination[:-1]:
+                current = current[key]
+            original = doc
+            for key in source:
+                original = original[key]
+            self.assertIn(json.dumps(original, ensure_ascii=False)[1:-1], block)
+            current[destination[-1]] = original
+        self.assertEqual(projection, pack)
+        self.assertEqual(doc, before)
+
+    def test_context_content_keeps_legacy_rendering_without_opt_in(self):
+        doc = fixture("plan-bound")
+        expected = render.render_task_block(doc)
+        doc["context_refs"][0]["content"] = {"unique": "legacy-content-not-delivered"}
+        self.assertEqual(render.render_task_block(doc), expected)
+
+    def test_context_reuse_never_points_to_a_field_omitted_by_its_section_renderer(self):
+        doc = fixture("plan-bound")
+        value = "unique long required source " * 10
+        doc["decisions"][0]["question_key"] = value  # not rendered in Decisions
+        doc["reads"][0]["content"] = value
+        projection, reused = render._context_supplement(doc, {"text": value})
+        self.assertIn("Already supplied in Reads", projection["text"])
+        self.assertEqual(reused[0][1], ("reads", 0, "content"))
+
+    def test_context_supplement_is_complete_fenced_and_never_silently_trimmed(self):
+        doc = fixture("plan-bound")
+        content = {"text": "start-unique-```\n" + "x" * 90000 + "\nend-unique", "extension": {"number": 7}}
+        doc["context_refs"] = [{"kind": "pack", "ref": "p", "delivery": "supplement", "content": content}]
+        block = render.render_task_block(doc)
+        self.assertIn(json.dumps(content, ensure_ascii=False, indent=2), block)
+        self.assertIn("````json\n", block)
+        self.assertIn("end-unique", block)
+
+    def test_context_supplement_cannot_reintroduce_withheld_check_commands(self):
+        doc = fixture("plan-bound")
+        check = copy.deepcopy(doc["acceptance"]["checks"][0])
+        check["cmd"] = "sensitive-acceptance-command"
+        doc["acceptance"]["checks"] = [check]
+        doc["context_refs"] = [{"kind": "pack", "ref": "p", "delivery": "supplement",
+                                "content": {"item": {"validation": [check]},
+                                            "phase": {"validation": [check]}}}]
+        block = render.render_task_block(render.withhold_commands(doc))
+        self.assertNotIn(check["cmd"], block)
+        self.assertIn(check["expect"], block)
+        self.assertIn("sensitive-acceptance-command", json.dumps(doc))  # caller's canonical input is unchanged
+        doc["context_refs"][0]["content"] = json.dumps({"item": {"validation": [check]}, "default": 0.6})
+        block = render.render_task_block(render.withhold_commands(doc))
+        self.assertNotIn(check["cmd"], block)
+        self.assertIn("0.6", block)
+
     def test_section_helper_matches_block(self):
         doc = fixture("plan-bound")
         block = render.render_task_block(doc)

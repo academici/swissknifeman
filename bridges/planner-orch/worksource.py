@@ -485,7 +485,8 @@ def op_brief(fields: dict) -> dict:
     item, _, unit = ref.partition("/")
     try:
         plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
-        doc = brief.build(plan, item, unit_id=unit or None)
+        doc = brief.build(plan, item, unit_id=unit or None,
+                          context_delivery=os.environ.get("PLANNER_ORCH_CONTEXT_DELIVERY", "reference"))
     except brief.PlanError as error:
         raise Blocked(error.code, error.message) from None
     project = plan.repo_root

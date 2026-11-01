@@ -17,6 +17,7 @@ import bridge_fixture  # noqa: E402  (skips the module without a planner)
 import partners  # noqa: E402
 
 _PLANNER = bridge_fixture.PLANNER
+_ORCH = partners.find_orch_root()
 _ENGINE_TESTS = str(_PLANNER / "tests" / "engine")
 if _ENGINE_TESTS not in sys.path:
     sys.path.insert(0, _ENGINE_TESTS)
@@ -243,6 +244,59 @@ class PhaseChecksTests(BriefCase):
         self.assertEqual(brief.verify(self.load(), "P1.2", self.brief("P1.2")), [])
 
 class ReadsTests(BriefCase):
+    def test_on_demand_repo_json_keeps_required_identity_without_inline_even_when_requested(self):
+        path = self.repo / "manifest.json"
+        raw = (json.dumps({"rows": list(range(50000))}) + "\n").encode()
+        path.write_bytes(raw)
+        read = {"path": "manifest.json", "why": "inspect fixture provenance", "required": True,
+                "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [read]})
+        for inline in (False, True):
+            item, = self.brief(inline_reads=inline)["reads"]
+            self.assertTrue(item["required"])
+            self.assertTrue(item["exists"])
+            self.assertEqual(item["sha256"], hashlib.sha256(raw).hexdigest())
+            self.assertEqual(item["delivery"], "on-demand")
+            self.assertNotIn("content", item)
+        altered = self.brief()
+        altered["reads"][0].pop("delivery")
+        self.assertTrue(any("reads: missing manifest.json" in error for error in brief.verify(self.load(), "P1.1", altered)))
+        ops.patch(self.root, "P1.1", {"reads": [{k: v for k, v in read.items() if k != "delivery"}]})
+        self.assertEqual(self.brief()["reads"][0]["content"], json.loads(raw))  # legacy default remains intact
+
+    def test_a_deferred_json_read_cannot_hide_a_later_inline_read_of_the_same_file(self):
+        (self.repo / "manifest.json").write_text('{"required": [1, 2]}\n', encoding="utf-8")
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "manifest.json", "why": "identity", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "why": "inline contract", "required": True},
+        ]})
+        first, second = self.brief()["reads"]
+        self.assertNotIn("content", first)
+        self.assertNotIn("included", first)
+        self.assertEqual(second["content"], {"required": [1, 2]})
+
+    def test_on_demand_rejects_unreachable_plan_sections_and_missing_or_invalid_required_json(self):
+        for invalid in (
+            {"ref": "knowledge/design", "why": "w", "required": True, "delivery": "on-demand"},
+            {"ref": "knowledge/design", "path": "manifest.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "@plan/knowledge/design.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "section": "rows", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "lib/x.py", "why": "w", "required": True, "delivery": "on-demand"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(PlanError):
+                ops.patch(self.root, "P1.1", {"reads": [invalid]})
+        valid = {"path": "missing.json", "why": "w", "required": True, "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [valid]})
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
+        (self.repo / "missing.json").write_text("{bad json", encoding="utf-8")
+        entry = context.read_entry(self.load(), valid)
+        self.assertIn("error", entry)
+        self.assertNotIn("content", entry)
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
     def test_existing_files_carry_sha256_and_missing_ones_do_not(self):
         ops.patch(self.root, "P1.1", {"reads": [
             {"path": "lib/x.py", "why": "source", "required": True},
@@ -347,6 +401,84 @@ class WorkspacePlanTests(BriefCase):
         text = brief.render(store.load_plan(self.moved), "P1.1", inline_reads=True)
         self.assertNotIn(str(self.ws), text)
         self.assertNotIn("workspace-secret-root", text)
+
+    @unittest.skipUnless(_ORCH, "orch not found")
+    def test_context_supplement_crosses_native_cli_without_losing_unique_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["goal"] = "sentinel-plan-goal"
+        plan.plan["links"] = {"related_plans": ["sentinel-related-plan"]}
+        plan.plan["rules"].append("sentinel-plan-rule")
+        plan.plan["contracts"] = {"consumed": [{"name": "sentinel-consumed-contract", "reaction": "preserve-owner-boundary"}]}
+        plan.brief["requirements"] = [{"id": "R1", "text": "sentinel-brief-requirement"}]
+        plan.phases["P1"]["contract"] = {"produces": ["sentinel-phase-contract"]}
+        plan.items["P1.1"]["task_files"][0]["note"] = "sentinel-item-file-note"
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "sentinel-active-decision",
+                                  "rationale": "reason", "question": "sentinel-decision-question", "applies_to": ["P1.1"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        legacy = brief.build(plan, "P1.1")
+        pack = next(x for x in doc["context_refs"] if x["kind"] == "pack")
+        self.assertEqual(pack["content"], brief._worker_context(legacy["context_refs"][0]["content"]))
+        self.assertEqual(pack["delivery"], "supplement")
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "input.json"
+            target.write_text(json.dumps(doc), encoding="utf-8")
+            validated = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "validate",
+                                        "execution-input", str(target)], cwd=self.repo, capture_output=True, text=True)
+            self.assertEqual(validated.returncode, 0, validated.stderr or validated.stdout)
+            result = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "render-prompt", "--input",
+                                     str(target), "--role", "executor"], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for sentinel in ("sentinel-plan-goal", "sentinel-brief-requirement", "sentinel-phase-contract",
+                         "sentinel-item-file-note", "sentinel-active-decision", "sentinel-related-plan",
+                         "sentinel-plan-rule", "sentinel-consumed-contract", "text-a", "text-b", "plain notes"):
+            self.assertIn(sentinel, result.stdout)
+        self.assertNotIn("sentinel-decision-question", result.stdout)
+        self.assertNotIn("workspace-secret-root", result.stdout)
+        self.assertEqual(brief.verify(plan, "P1.1", doc), [])
+
+    def test_context_supplement_allowlist_excludes_process_history_and_unknown_fields(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["orchestration"] = {"instructions": "run plan.py finish coordinator-process-sentinel"}
+        plan.plan["new_secret_field"] = "unknown-secret-sentinel"
+        plan.brief["messages"] = [{"text": "owner-history-sentinel"}]
+        plan.phases["P1"]["batches"] = [{"note": "batch-process-sentinel"}]
+        plan.items["P1.1"]["orchestration"] = {"options": {"rules": ["run-process-sentinel"]}}
+        plan.items["P1.1"]["result"] = {"notes": "old-result-history-sentinel"}
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "active-contract",
+                                  "rationale": "active-reason", "applies_to": ["P1.1"],
+                                  "context": "historical-launch-command-sentinel", "evidence": ["private-actor-path-sentinel"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        text = json.dumps(doc["context_refs"][0]["content"])
+        for forbidden in ("coordinator-process-sentinel", "unknown-secret-sentinel", "owner-history-sentinel",
+                          "batch-process-sentinel", "run-process-sentinel", "old-result-history-sentinel",
+                          "historical-launch-command-sentinel", "private-actor-path-sentinel"):
+            self.assertNotIn(forbidden, text)
+        self.assertIn("owner-history-sentinel", json.dumps(context.collect(plan, "P1.1")))
+
+    def test_context_supplement_still_refuses_lifecycle_in_worker_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.phases["P1"]["context"] = "Run plan.py finish now"
+        with self.assertRaises(PlanError) as caught:
+            brief.build(plan, "P1.1", context_delivery="supplement")
+        self.assertEqual(caught.exception.code, "BRIEF_INCOMPLETE")
+
+    def test_context_delivery_cli_and_environment_are_supported_and_default_unchanged(self):
+        import os
+        from unittest import mock
+        before = tree_hashes(self.moved)
+        for extra, env in ((("--context-delivery", "supplement"), {}),
+                           ((), {"PLANNER_ORCH_CONTEXT_DELIVERY": "supplement"})):
+            with mock.patch.dict(os.environ, {"SKM_PLANNER_BRIDGES__ROOTS": json.dumps([str(_BRIDGE.parent)]), **env}):
+                done = bridge_fixture.plan_py(self.repo, *BRIDGE, str(self.moved), "P1.1", *extra)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["context_refs"][0]["delivery"], "supplement")
+        self.assertNotIn("delivery", self.ws_brief()["context_refs"][0])
+        self.assertEqual(tree_hashes(self.moved), before)
+
+    def test_unknown_context_delivery_fails_closed(self):
+        with self.assertRaises(PlanError) as caught:
+            self.ws_brief(context_delivery="drop-required-content")
+        self.assertEqual(caught.exception.code, "CONTEXT_DELIVERY_INVALID")
 
     def test_a_legacy_plan_keeps_relative_paths_and_no_forced_content(self):
         import shutil

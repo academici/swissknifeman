@@ -145,6 +145,10 @@
             "description": "Section within the file.",
             "minLength": 1
           },
+          "delivery": {
+            "const": "on-demand",
+            "description": "For a repository JSON path only: retain the read requirement and identity, but deliver its content when requested."
+          },
           "why": {
             "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
             "description": "Why read it."
@@ -163,13 +167,45 @@
             "description": "A repository or plan file by path.",
             "required": [
               "path"
-            ]
+            ],
+            "not": {
+              "required": [
+                "delivery"
+              ]
+            }
+          },
+          {
+            "description": "An on-demand whole repository JSON file, never a workspace plan file or a section.",
+            "required": [
+              "path",
+              "delivery"
+            ],
+            "not": {
+              "not": {
+                "properties": {
+                  "path": {
+                    "pattern": "^(?!@plan/)(?!/).+\\.json$"
+                  },
+                  "ref": {
+                    "not": {}
+                  },
+                  "section": {
+                    "not": {}
+                  }
+                }
+              }
+            }
           },
           {
             "description": "Plan data by reference.",
             "required": [
               "ref"
-            ]
+            ],
+            "not": {
+              "required": [
+                "delivery"
+              ]
+            }
           }
         ],
         "additionalProperties": false

@@ -6,6 +6,7 @@ never touched.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -1241,6 +1242,59 @@ class ProtocolTests(Case):
         self.assertEqual(result.status, "ok", result.error)
         self.valid(result.output, "output")
         self.assertEqual((result.output["outcome"], result.output["next"]["items"]), ("ok", ["P1.1"]))
+
+    def test_context_supplement_opt_in_survives_real_plugin_environment_and_brief_lifecycle(self):
+        self.plan_root = self.project / "plans" / self.plan
+        ReadyRuntimeTests.workspace(self)
+        self.env = dict(os.environ, PLANNER_ORCH_CONTEXT_DELIVERY="supplement")
+        self.env["SKM_WORKSPACES"] = self.env["SKM_WORKSPACES_ROOT"]  # canonical variable survives plugin isolation
+        config = Path(self.env["SKM_HOME"]) / "config/config.toml"
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text("schema_version = 1\n[aicore.plugins.planner-orch]\n"
+                          f"manifest = {json.dumps(str(_BRIDGE / 'extension.json'))}\ntrusted = true\n")
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        result = plugins.invoke_one(registration, "orch:work-source", {
+            "op": "brief", "plan": str(self.plan_root), "ref": "P1.1", "run_id": "run-p"},
+            env=self.env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        declaration = self.item("P1.1")["artifacts"][-1]
+        saved = self.plan_root / declaration["path"].removeprefix("@plan/")
+        stored = json.loads(saved.read_bytes())
+        self.assertEqual(stored["provenance"]["plan_dir"], "@plan")
+        self.assertEqual(stored["context_refs"][0]["delivery"], "supplement")
+        self.assertEqual(stored["context_refs"][0]["content"]["item"]["id"], "P1.1")
+        self.assertEqual(stored["digest"], result.output["digest"])
+        self.assertEqual(declaration["role"], "input")
+        self.assertEqual(saved.name, result.output["input_ref"]["digest"].removeprefix("sha256:"))
+        self.assertEqual(saved.read_bytes(), blobs.read_bytes(result.output["input_ref"], project=self.project))
+
+    def test_on_demand_required_json_survives_real_workspace_source_lifecycle(self):
+        self.plan_root = self.project / "plans" / self.plan
+        ReadyRuntimeTests.workspace(self)
+        self.env = dict(os.environ)
+        self.env["SKM_WORKSPACES"] = self.env["SKM_WORKSPACES_ROOT"]
+        config = Path(self.env["SKM_HOME"]) / "config/config.toml"
+        config.parent.mkdir(parents=True, exist_ok=True)
+        config.write_text("schema_version = 1\n[aicore.plugins.planner-orch]\n"
+                          f"manifest = {json.dumps(str(_BRIDGE / 'extension.json'))}\ntrusted = true\n")
+        raw = (json.dumps({"fixtures": list(range(10000))}) + "\n").encode()
+        (self.project / "fixtures.json").write_bytes(raw)
+        ops = partners.planner_engine("plan.ops")
+        ops.patch(self.plan_root, "P1.1", {"reads": [{"path": "fixtures.json", "why": "fixture provenance",
+                                                      "required": True, "delivery": "on-demand"}]})
+        registration = plugins.find_registration("planner-orch", self.project, env=self.env)
+        result = plugins.invoke_one(registration, "orch:work-source", {
+            "op": "brief", "plan": str(self.plan_root), "ref": "P1.1", "run_id": "run-p"},
+            env=self.env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        stored = json.loads(blobs.read_bytes(result.output["input_ref"], project=self.project))
+        entry, = stored["reads"]
+        self.assertEqual((entry["path"], entry["required"], entry["exists"], entry["delivery"]),
+                         ("fixtures.json", True, True, "on-demand"))
+        self.assertEqual(entry["sha256"], hashlib.sha256(raw).hexdigest())
+        self.assertNotIn("content", entry)
 
     def test_an_unknown_op_is_a_protocol_error(self):
         registration = plugins.find_registration("planner-orch", self.project, env=self.env)

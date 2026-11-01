@@ -50,6 +50,7 @@ errors return exit 1. `--quiet` suppresses stdout while preserving diagnostics a
 | `route` | * | `minimum` route: class and effort, never bypassed |
 | `result_contract` | * | report fields, `write_authority`, `commit_owner: coordinator`, `plan_mutation: forbidden` |
 | `why`, `guidance`, `sections`, `constraints`, `decisions`, `reads`, `context_refs`, `upstream`, `lessons`, `hints`, `escalation` | | full item context, never truncated |
+| `context_refs[].delivery` | | optional `supplement`: requires inline `content`; renders every context field while reusing exact strings already visible in task sections. The canonical content stays complete; workers see section/source labels, not a JSON-pointer protocol. Absent retains reference-only rendering. Withheld structured validation commands stay withheld inside supplemental content. |
 | `research` | | `{need: none\|optional\|required, notes?}`: the research need the plan designer decided for the work (a plan item's `rag.need` and `rag.notes`, carried by the `planner-orch` brief); under `orch.research.policy = conditional` the conductor adds a research stage only for `required` (see [Research](research.md)) |
 | `provenance.commit` | | commit that the references of a `plan` input are pinned to |
 | `condensed` | | `{produced_by (route), required_digest, parts: [{kind: research\|rationale\|rejected\|other, source: {path, sha256?, section?}, summary}]}`: the optional part condensed by a stage, with references to the originals |

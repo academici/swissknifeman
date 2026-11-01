@@ -1077,7 +1077,7 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
            commits: Iterable[str] = (), decision: str | None = None, actor: Mapping | None = None,
            executed_by: Mapping | None = None, attempt_id: str | None = None,
            evidence: Mapping[str, str] | None = None, owner_session: str | None = None,
-           review_receipt: str | None = None) -> FinishResult:
+           review_receipt: str | None = None, strict_route: bool = False) -> FinishResult:
     """Record the outcome of ``item_id``; closes the phase, and the plan, when it was the last open piece.
 
     ``actor`` is the registrar; ``executed_by`` (route-checked) replaces ``result.executor``. A repeat of the
@@ -1196,7 +1196,8 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             continued = continued if isinstance(continued, dict) else None
             correcting = continued is not None and same_actor(executed_by, continued.get("executor"))
             need = _correction_route(item) if correcting else item.get("route") or {}
-            _route_verdict(p, [item_id], executed_by, routes={item_id: need} if correcting else None)
+            _route_verdict(p, [item_id], executed_by, strict_route=strict_route,
+                           routes={item_id: need} if correcting else None)
             validate_route(need, executed_by, item_id)
 
         review = _load_review_receipt(p, item_id, review_receipt, attempt_id, status) if review_receipt else None

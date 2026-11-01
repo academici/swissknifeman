@@ -481,7 +481,8 @@ def cmd_finish(args) -> int:
         _plan_dir(args), args.item, args.status, notes=args.notes or "", checks=dict(args.check),
         deviations=args.deviation, pending=args.pending, escalation=args.escalation, commits=args.commit,
         decision=args.decision, actor=args.actor, executed_by=args.executed_by, attempt_id=args.attempt_id,
-        evidence=_evidence_map(args.evidence), owner_session=args.owner_session, review_receipt=args.review_receipt)
+        evidence=_evidence_map(args.evidence), owner_session=args.owner_session, review_receipt=args.review_receipt,
+        strict_route=args.strict_route)
     if args.json:
         _print_json({"item": result.item, "status": result.status, "phase_closed": result.phase_closed,
                      "plan_done": result.plan_done, "next": result.next.as_dict(),
@@ -944,6 +945,7 @@ def build_parser() -> argparse.ArgumentParser:
     actor_arg(p, text="PROVIDER/MODEL[/EFFORT] registering the outcome (default: the item executor)")
     p.add_argument("--executed-by", type=_actor, metavar="PROVIDER/MODEL[/EFFORT]",
                    help="who executed the item; route-checked, replaces result.executor")
+    p.add_argument("--strict-route", action="store_true", help="refuse a model absent from the routing pool")
     p.add_argument("--attempt-id", metavar="ID", help="registration attempt; a repeat of it is a no-op")
     p.add_argument("--owner-session", metavar="SESSION",
                    help="refuse with ITEM_OWNED unless the item's executor session is SESSION (fencing)")

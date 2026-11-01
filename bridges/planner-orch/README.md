@@ -83,7 +83,7 @@ code through unchanged, also under `plan.py --output json`.
 ```text
 plan.py bridge planner-orch register <plan> <item>[/<U#>] --report REPORT.json --status STATUS --actor P/M[/E]
         [--executed-by P/M[/E]] [--attempt-id ID] [--evidence V#=PATH …] [--owner-session SESSION]
-        [--gate evidence] [--plans-root DIR] [--dry-run]
+        [--gate evidence] [--strict-route] [--plans-root DIR] [--dry-run]
 ```
 
 The orch registrar role classifies the report and hands it here; the bridge maps every field into the plan
@@ -224,7 +224,9 @@ trusted = true   # passes declared partner variables and explicit per-process AG
 ```
 
 Only a trusted registration receives `SKM_ORCH_AGY_UNSAFE_EXECUTOR` when explicitly set in its invocation
-environment. It is not a persistent setting or a sandbox guarantee. `worksource.py` answers
+environment. The work source passes `--strict-route` at claim and item registration; the exact AGY opt-in must
+be present on both invocations for the admitted selector to finish under unknown-model refusal. It is not a
+persistent setting or a sandbox guarantee. `worksource.py` answers
 `op: describe` and `op: invoke` with one plugin-response; the input and output of every op follow orch's
 `schemas/work-source/v1`, and the plan is written only through `plan.py`.
 

@@ -61,6 +61,11 @@ def flag_values(argv: list[str], flag: str) -> list[str]:
 
 
 class PlanCallsTests(unittest.TestCase):
+    def test_strict_route_is_forwarded_only_for_item_finish(self):
+        self.assertIn("--strict-route", register.plan_calls(report(), args(strict_route=True))[-1])
+        self.assertNotIn("--strict-route", register.plan_calls(report(), args())[-1])
+        self.assertNotIn("--strict-route", register.plan_calls(report(), args(ref="P2.1/U1", strict_route=True))[-1])
+
     def test_review_receipt_is_forwarded_to_finish(self):
         calls = register.plan_calls(report(), args(review_receipt="artifacts/review-receipt.json"))
         self.assertEqual(flag_values(calls[-1], "--review-receipt"), ["artifacts/review-receipt.json"])

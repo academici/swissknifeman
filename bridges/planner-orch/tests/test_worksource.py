@@ -1332,6 +1332,64 @@ class ProtocolTests(Case):
         self.assertEqual(result.status, "ok", result.error)
         self.assertEqual((result.output["status"], result.output["reason_code"]), ("blocked", "ROUTE_MODEL_UNKNOWN"))
 
+    def test_agy_claim_and_register_with_configured_refusal(self):
+        key = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
+        value = "accept-unisolated-network-docker-host-reads"
+        actor = {"provider": "antigravity", "model": "gemini-4-argon-high", "effort": "high"}
+        config = Path(self.env["SKM_HOME"]) / "config/config.toml"
+        with config.open("a", encoding="utf-8") as stream:
+            stream.write('\n[planner.routing]\nunknown_model = "refuse"\n')
+        env = {k: v for k, v in self.env.items() if k != key}
+        registration = plugins.find_registration("planner-orch", self.project, env=env)
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "high"}}))
+        request = {"op": "claim", "plan": self.plan, "items": ["P1.1"], "run_id": "agy",
+                   "submission_id": "sub-agy", "actor": actor, "actor_source": "options",
+                   "actor_fields": ["provider", "model", "effort"]}
+        claimed = plugins.invoke_one(registration, "orch:work-source", request,
+                                     env={**env, key: value}, project=self.project)
+        self.assertEqual(claimed.status, "ok", claimed.error)
+        self.assertEqual(claimed.output["status"], "claimed", claimed.output)
+        request = {"op": "register", "plan": self.plan, "ref": "P1.1", "run_id": "agy",
+                   "attempt_id": claimed.output["attempt_id"], "status": "done", "report": {"summary": "done"},
+                   "evidence": {"V1": self.evidence()}, "registrar": ACTOR, "executed_by": actor}
+        # Configured refusal remains effective outside the strict conductor path, even with opt-in.
+        with mock.patch.dict(os.environ, {key: value}):
+            direct = run(self.project, "finish", self.plan, "P1.1", "--status", "done", "--check", "V1=0",
+                         "--executed-by", "antigravity/gemini-4-argon-high/high", check=False)
+        self.assertEqual(direct.returncode, 1, direct.stdout)
+        self.assertIn("ROUTE_MODEL_UNKNOWN", direct.stderr)
+        for setting, candidate, reason in ((None, actor, "ROUTE_MODEL_UNKNOWN"),
+                                           ("yes", actor, "ROUTE_MODEL_UNKNOWN"),
+                                           (value, {**actor, "model": "gemini-4-argon"}, "ROUTE_MODEL_UNKNOWN"),
+                                           (value, {**actor, "provider": "other"}, "ROUTE_MODEL_UNKNOWN"),
+                                           (value, {**actor, "effort": "low"}, "ROUTE_UNDERSHOOT")):
+            with self.subTest(setting=setting, actor=candidate):
+                source_env = {**env, **({key: setting} if setting is not None else {})}
+                result = plugins.invoke_one(registration, "orch:work-source", {**request, "executed_by": candidate},
+                                            env=source_env, project=self.project)
+                self.assertEqual(result.status, "ok", result.error)
+                self.assertEqual((result.output["outcome"], result.output["reason_code"]), ("refused", reason),
+                                 result.output)
+                self.assertEqual(self.item("P1.1")["status"], "in_progress")
+        config.write_text(config.read_text().replace("trusted = true", "trusted = false"), encoding="utf-8")
+        untrusted = plugins.find_registration("planner-orch", self.project, env=env)
+        refused = plugins.invoke_one(untrusted, "orch:work-source", request,
+                                     env={**env, key: value}, project=self.project)
+        self.assertEqual(refused.status, "ok", refused.error)
+        self.assertEqual((refused.output["outcome"], refused.output["reason_code"]),
+                         ("refused", "ROUTE_MODEL_UNKNOWN"), refused.output)
+        config.write_text(config.read_text().replace("trusted = false", "trusted = true"), encoding="utf-8")
+        result = plugins.invoke_one(registration, "orch:work-source", request,
+                                    env={**env, key: value}, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.valid(result.output, "output")
+        self.assertEqual(result.output["outcome"], "recorded", result.output)
+        item = self.item("P1.1")
+        self.assertEqual(item["status"], "done")
+        self.assertEqual(item["result"]["executor"], actor)
+        self.assertIsNone(partners.planner_engine("plan.lifecycle").admitted_class(actor["provider"], actor["model"]))
+
     def test_invoke_answers_readiness(self):
         registration = plugins.find_registration("planner-orch", self.project, env=self.env)
         result = plugins.invoke_one(registration, "orch:work-source", {"op": "readiness", "collection": self.plan},

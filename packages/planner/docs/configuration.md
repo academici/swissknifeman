@@ -50,7 +50,7 @@ Add `--json` for machine-readable output. Code reads settings only through `plan
 | `new_item.review_mode` | `none`, `self`, `requested` | `none` | `review.mode` of a new item |
 | `policy.review_rounds_max` | integer 1–3 | 2 | finished review rounds per item |
 | `policy.corrections_max` | integer 1–2 | 1 | corrections by the owner for review findings |
-| `routing.unknown_model` | `refuse`, `warn` | `warn` | admission of a model absent from the routing pool; `start --strict-route` always refuses it |
+| `routing.unknown_model` | `refuse`, `warn` | `warn` | admission of a model absent from the routing pool; `--strict-route` refuses it except for the explicit AGY opt-in below |
 | `views.templates_dir` | string (project file and `--config` only) | empty | folder of view templates that replace the built-in ones by file name; a relative path starts at the file of its layer and `~` is expanded |
 | `orchestration.default_scenario` | name `^[a-z][a-z0-9-]*$` | `solo` | execution scenario when nothing more specific is set |
 | `orchestration.by_class.economy`, `.implementation`, `.frontier` | name or empty | empty | scenario for a route class; empty means `default_scenario` |
@@ -65,8 +65,10 @@ configurable. A view template named in `views.templates_dir` that the planner do
 With `routing.unknown_model = "warn"`, interactive `start` records `ROUTE_MODEL_UNKNOWN` in the start event and
 result; unit dispatch records it in the delegate event. With `"refuse"`, these admissions fail with
 `ROUTE_MODEL_UNKNOWN` before writing. The same configuration applies when a different executor is registered at
-item finish or unit return. The work-source bridge always passes `start --strict-route` for claims and retry
-registration, so conductor work requires a known pool model regardless of the interactive default.
+item finish or unit return. The work-source bridge passes `--strict-route` for claims, retry starts and item
+finish. An explicit per-invocation `SKM_ORCH_AGY_UNSAFE_EXECUTOR=accept-unisolated-network-docker-host-reads`
+permits only `antigravity/gemini-4-argon-high` on this strict path; it does not assign a model class. The opt-in
+must also be present at registration, and a plugin receives it only through a trusted registration.
 
 ## Execution scenario
 

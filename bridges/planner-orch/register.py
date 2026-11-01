@@ -248,6 +248,8 @@ def plan_calls(report: dict, args) -> list[list[str]]:
         finish += ["--escalation", "; ".join(escalations)]
     if getattr(args, "owner_session", None):  # fencing again under the plan lock, at the write that closes the item
         finish += ["--owner-session", args.owner_session]
+    if getattr(args, "strict_route", False):
+        finish += ["--strict-route"]
     return calls + [finish + _tail(args)]
 
 
@@ -434,6 +436,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--status", choices=STATUSES, help="item outcome; a unit return takes none")
     p.add_argument("--actor", required=True, metavar="P/M[/E]", help="the registrar")
     p.add_argument("--executed-by", metavar="P/M[/E]", help="the worker that produced the report")
+    p.add_argument("--strict-route", action="store_true", help="apply strict routing when finishing an item")
     p.add_argument("--attempt-id", metavar="ID", help="delivery attempt; required with open_issues")
     p.add_argument("--evidence", action="append", default=[], type=_evidence_arg, metavar="V#=PATH",
                    help="check-evidence file; its exit is the check result (repeatable)")

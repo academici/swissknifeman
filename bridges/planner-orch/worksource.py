@@ -639,7 +639,7 @@ def _register(fields: dict, again: bool = False) -> dict:
         argv = [sys.executable, str(partners.BRIDGE / "register.py"), fields["plan"], fields["ref"],
                 "--report", str(report), "--status", fields["status"], "--actor", actor_text(fields["registrar"]),
                 "--executed-by", actor_text(fields["executed_by"]), "--attempt-id", fields["attempt_id"],
-                "--owner-session", run_id, "--gate", "evidence"]
+                "--owner-session", run_id, "--gate", "evidence", "--strict-route"]
         for check_id, path in sorted(fields.get("evidence", {}).items()):
             argv += ["--evidence", f"{check_id}={path}"]
         if fields.get("review_receipt"):

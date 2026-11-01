@@ -11,6 +11,10 @@ import json
 
 SNAPSHOT_FIELDS = ("class_selectors", "effort_selectors", "model_inventory")
 _INLINE_LISTS = frozenset({"argv"})
+# This transport currently has no planner command projection; keeping it out
+# does not make it a supported provider for planner commands. Unknown providers
+# still cause a mismatch rather than being silently ignored.
+_ORCH_ONLY_PROVIDERS = frozenset({"antigravity"})
 
 
 def routing_snapshot(routing: dict) -> dict:
@@ -19,12 +23,14 @@ def routing_snapshot(routing: dict) -> dict:
 
     catalog = load_model_catalog()
     mappings = routing.get("mappings") or {}
-    ids = [item.provider_id for item in catalog.providers]
+    ids = [item.provider_id for item in catalog.providers if item.provider_id not in _ORCH_ONLY_PROVIDERS]
     if sorted(ids) != sorted(mappings):
         raise ValueError(f"MODEL_SNAPSHOT_PROVIDERS: catalog providers {ids} differ from routing mappings "
                          f"{list(mappings)}")
     snapshot = copy.deepcopy(routing)
     for provider in catalog.providers:
+        if provider.provider_id in _ORCH_ONLY_PROVIDERS:
+            continue
         mapping = snapshot["mappings"][provider.provider_id]
         mapping["class_selectors"] = {key: list(value) for key, value in provider.class_selectors.items()}
         mapping["effort_selectors"] = {key: list(value) for key, value in provider.effort_selectors.items()}

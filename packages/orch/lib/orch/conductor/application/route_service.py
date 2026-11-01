@@ -333,16 +333,22 @@ def named_model_class(self, item: Item, role: str, target: dict, chosen: dict) -
     """``chosen`` with the class the model catalog knows for a model the layers name (``admitted_class``), when that is
     lower than the label of the stage or of the launch entry: the route minimum then sees the model, not the label. A
     model the catalog does not know keeps the label and is said once per role (``ROUTE_MODEL_UNKNOWN``, info)."""
-    if not target["model"]:
+    model = chosen.get("model") if chosen["provider"] == "antigravity" else target["model"]
+    if not model:
+        if chosen["provider"] == "antigravity":
+            raise Stop("AGY_MODEL_CLASS_UNVERIFIED", f"{role}: Antigravity model ID is missing")
         return chosen
-    known = admitted_class(self._catalog_get().models, chosen["provider"], target["model"])
+    known = admitted_class(self._catalog_get().models, chosen["provider"], model)
     if known is None:
+        if chosen["provider"] == "antigravity":
+            raise Stop("AGY_MODEL_CLASS_UNVERIFIED",
+                       f"{role}: {model} has no verified Antigravity model class")
         noted = self.__dict__.setdefault("_model_unknown_noted", set())
-        mark = (item.ref, role, chosen["provider"], target["model"])
+        mark = (item.ref, role, chosen["provider"], model)
         if mark not in noted and self.progress is not None:
             noted.add(mark)
             self.progress.emit("info", item=item.ref, role=role, reason_code="ROUTE_MODEL_UNKNOWN",
-                               message=f"{role}: {chosen['provider']}/{target['model']} is not in the model catalog; the "
+                               message=f"{role}: {chosen['provider']}/{model} is not in the model catalog; the "
                                        f"class {chosen['model_class']} of its stage or launch entry is taken as is")
         return chosen
     lowered = route_rules.lowered_class(chosen["model_class"], known)

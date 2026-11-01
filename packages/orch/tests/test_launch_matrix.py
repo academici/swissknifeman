@@ -99,6 +99,11 @@ class LaunchMatrixTests(unittest.TestCase):
                                     or (denied and {"Edit", "Write"} <= set(denied[0].split(","))))
                 elif provider == "codex":
                     self.assertEqual(flag_values(argv, "--sandbox"), ["read-only"])
+                elif provider == "antigravity":
+                    guard = argv[:argv.index("--")]
+                    self.assertIn("--no-default-rw", guard)
+                    self.assertEqual(flag_values(guard, "--protect"), ["{cwd}"])
+                    self.assertEqual(flag_values(guard, "--rw"), ["~/.gemini/antigravity-cli", "/dev"])
                 else:
                     self.assert_grok_read_only(argv)
         self.assertEqual(used_exceptions, READ_ONLY_EXCEPTIONS)

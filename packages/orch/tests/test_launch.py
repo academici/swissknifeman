@@ -33,7 +33,7 @@ class LaunchCatalogTests(unittest.TestCase):
 
     def test_repository_catalog_is_valid_and_complete(self):
         rows = [(role, provider) for role, providers in self.catalog["launch"].items() for provider in providers]
-        self.assertEqual(len(rows), 24)
+        self.assertEqual(len(rows), 26)
         self.assertEqual({provider for role, provider in rows if role == "triager"}, {"claude-code", "codex", "grok"})
         self.assertEqual({role for role, _ in rows}, set(launch.ROLES))
         self.assertIn(("scout", "grok"), rows)
@@ -207,7 +207,8 @@ class LaunchCatalogTests(unittest.TestCase):
     def test_refused_pairs_preserve_the_exact_reason_in_entry_and_build_argv(self):
         self.assertEqual({(role, provider) for role, providers in self.catalog["refusals"].items()
                           for provider in providers},
-                         {("registrar", "grok"), ("researcher", "codex"), ("advisor", "codex")})
+                         {("registrar", "grok"), ("researcher", "codex"), ("advisor", "codex"),
+                          *((role, "antigravity") for role in ("scout", "registrar", "report-fixer", "researcher", "advisor", "reviewer", "triager"))})
         for role, providers in self.catalog["refusals"].items():
             for provider, reason in providers.items():
                 for lookup in (launch.entry, launch.build_argv):

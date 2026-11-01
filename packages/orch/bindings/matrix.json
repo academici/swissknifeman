@@ -24,7 +24,10 @@
       "id": "run",
       "native": {
         "support": "supported",
-        "note": "Plan 2"
+        "note": "Plan 2",
+        "by_provider": {
+          "antigravity": "unsupported"
+        }
       },
       "cao": {
         "support": "adapted",
@@ -56,7 +59,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "supported"
+          "grok": "supported",
+          "antigravity": "unknown"
         },
         "note": "process group SIGTERM then SIGKILL; independent of transport"
       },
@@ -75,7 +79,8 @@
         "by_provider": {
           "claude-code": "adapted",
           "codex": "adapted",
-          "grok": "adapted"
+          "grok": "adapted",
+          "antigravity": "unsupported"
         },
         "note": "native session resume with hash check"
       },
@@ -108,7 +113,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "supported"
+          "grok": "supported",
+          "antigravity": "supported"
         },
         "note": "claude --model, codex --model, grok --model"
       },
@@ -128,7 +134,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "adapted",
-          "grok": "unknown"
+          "grok": "unknown",
+          "antigravity": "adapted"
         },
         "note": "claude system/init, codex events"
       },
@@ -147,7 +154,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "supported"
+          "grok": "supported",
+          "antigravity": "adapted"
         },
         "note": "claude --effort, codex -c model_reasoning_effort, grok --effort"
       },
@@ -171,7 +179,8 @@
         "by_provider": {
           "claude-code": "native_plugin_dir",
           "codex": "isolated_home",
-          "grok": "unknown"
+          "grok": "unknown",
+          "antigravity": "unsupported"
         },
         "note": "claude --plugin-dir; codex CODEX_HOME with copied auth (adapted)"
       },
@@ -191,7 +200,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "supported"
+          "grok": "supported",
+          "antigravity": "unsupported"
         },
         "note": "claude --tools/--disallowedTools; codex --sandbox; grok --disallowed-tools and ro-run Landlock"
       },
@@ -208,7 +218,10 @@
       "id": "plan_write_prevention",
       "native": {
         "support": "adapted",
-        "note": "tools and sandbox; shell can still write"
+        "note": "tools and sandbox; shell can still write",
+        "by_provider": {
+          "antigravity": "unsupported"
+        }
       },
       "cao": {
         "support": "adapted"
@@ -224,7 +237,8 @@
         "by_provider": {
           "claude-code": "supported",
           "codex": "supported",
-          "grok": "supported"
+          "grok": "supported",
+          "antigravity": "supported"
         },
         "note": "claude result, codex turn.completed, grok streaming-messages-json result"
       },

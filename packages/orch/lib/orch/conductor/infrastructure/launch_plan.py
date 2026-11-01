@@ -136,6 +136,37 @@ def prepare_home(run_dir: Path, provider: str, home: dict, original_env: dict) -
     return found
 
 
+def agy_guarded(argv: list, project: str, writing: bool) -> bool:
+    """Check the narrow guard before a permission-skipping AGY launch.
+
+    This verifies only the argv boundary. Kernel support and descendant enforcement
+    are checked by ro-run; it does not attest provider plugins or remote tools.
+    """
+    prefix = authority_rules.guard_prefix(argv)
+    wanted = "--rw" if writing else "--protect"
+    pairs = list(zip(prefix or [], (prefix or [])[1:]))
+    permitted = {os.path.realpath(project), "/dev"}
+    roots = [os.path.realpath(os.path.expanduser(value)) for flag, value in pairs if flag == "--rw"]
+    trusted_guard = str(ORCH_ROOT / "scripts" / "ro-run.py")
+    tail = argv[len(prefix) + 1:] if prefix else []
+    trusted_bridge = str(ORCH_ROOT / "scripts" / "agy-transport.py")
+    return bool(len(tail) >= 2 and tail[0] == "python3" and os.path.realpath(tail[1]) == os.path.realpath(trusted_bridge) and
+                prefix and len(prefix) >= 2 and os.path.realpath(prefix[1]) == os.path.realpath(trusted_guard) and
+                "--no-default-rw" in prefix and (wanted, project) in pairs and
+                "/dev" in roots and all(root in permitted for root in roots))
+
+
+def agy_authority_problem(doc: dict) -> Optional[str]:
+    """Fail closed until the role's network, IPC and host read restrictions are enforced."""
+    if doc["network"]["declared"] == "none" and doc["network"]["effective"] != "none":
+        return "AGY role declares no network but its tools have network access"
+    if doc["docker"] != "blocked":
+        return "AGY tools can reach the Docker daemon through IPC"
+    if doc["read_masks"] == "none":
+        return "AGY tools have no enforced host secret read masks"
+    return None
+
+
 def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, quiet: bool = False) -> dict:
     """The ``authority-envelope`` of a launch of ``role`` on ``route`` (:func:`policies.authority.compute`) over the
     facts probed here: the isolation plan, the Claude sandbox, the flags of the CLI, the transcripts folder of a guarded
@@ -158,6 +189,9 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
     if admit and refused:
         raise Stop("LAUNCH_REFUSED", refused.split(": ", 1)[1])
     protected = route.get("provider") == "claude-code" and not writes(role)
+    if admit and route.get("provider") == "antigravity":
+        if not writes(role) or not agent_tmpdir(self) or not agy_guarded(argv, str(self.project), True):
+            raise Stop("AGY_GUARD_REQUIRED", "antigravity requires an isolated home and narrow Landlock writer guard")
     protection = protection_facts(self.project) if protected else None
     if protection is not None and admit and not protection["available"]:
         raise Stop("PROTECT_UNAVAILABLE", f"{role}/{route['provider']}: the checkout cannot be made read-only "
@@ -177,6 +211,9 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         extra_paths=list(self._scope_option(item, "extra_paths", [])), transcripts=transcripts,
         project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
         listed=listed, tmpdir=agent_tmpdir(self), protection=protection)
+    agy_problem = agy_authority_problem(doc) if route.get("provider") == "antigravity" else None
+    if admit and agy_problem:
+        raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
     refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
     if refused:
         raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
@@ -450,6 +487,10 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     base = {**original, **isolation["env"]}
     if scratch:
         base["TMPDIR"] = scratch
+        if route.get("provider") == "antigravity":
+            base.update({"HOME": scratch, "XDG_CONFIG_HOME": scratch + "/.config",
+                         "XDG_CACHE_HOME": scratch + "/.cache", "XDG_DATA_HOME": scratch + "/.local/share",
+                         "XDG_STATE_HOME": scratch + "/.local/state"})
     run_dir = getattr(self, "directory", Path())
     if isolation["home"] and run_dir != Path():  # a run that is not opened (the dry run) makes no folders
         base.update(prepare_home(run_dir, isolation["provider"], isolation["home"], original))

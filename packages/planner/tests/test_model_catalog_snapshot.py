@@ -45,6 +45,11 @@ class ModelCatalogSnapshotTests(unittest.TestCase):
                     self.assertEqual(mapping[field], self.routing["mappings"][provider][field])
         self.assertEqual(stale["mappings"]["codex"]["class_selectors"], {})
 
+    def test_orch_only_provider_does_not_create_a_planner_route(self):
+        from aicore.provider.models import load_model_catalog
+        self.assertIsNotNone(load_model_catalog().provider("antigravity"))
+        self.assertNotIn("antigravity", self.models.routing_snapshot(self.routing)["mappings"])
+
     def test_provider_set_mismatch_is_refused(self):
         broken = json.loads(self.raw)
         del broken["mappings"]["grok"]

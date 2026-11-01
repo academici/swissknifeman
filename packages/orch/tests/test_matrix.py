@@ -70,11 +70,12 @@ class MatrixTests(unittest.TestCase):
             with self.subTest(binding=binding, capability=capability, provider=provider):
                 self.assertEqual(self.rows[capability][binding]["by_provider"][provider], value)
 
-    def test_native_cancel_is_supported_for_every_provider(self):
+    def test_native_cancel_preserves_known_support_and_agy_unknown(self):
         cell = self.rows["cancel"]["native"]
         self.assertEqual(cell["support"], "supported")
-        self.assertEqual(set(cell["by_provider"].values()), {"supported"})
-        self.assertEqual(set(cell["by_provider"]), {"claude-code", "codex", "grok"})
+        self.assertEqual({key: value for key, value in cell["by_provider"].items() if key != "antigravity"},
+                         {"claude-code": "supported", "codex": "supported", "grok": "supported"})
+        self.assertEqual(cell["by_provider"]["antigravity"], "unknown")
 
     def test_docs_mention_every_capability(self):
         text = (ROOT / "docs/engine-port.md").read_text(encoding="utf-8")

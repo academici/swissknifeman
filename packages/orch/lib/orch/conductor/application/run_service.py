@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
 from pathlib import Path
 from typing import Mapping, Optional, cast
 
@@ -16,7 +15,7 @@ from orch.conductor import debug_mode, options as opts, progress, questions as q
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, detach, sessions
+from orch.conductor.infrastructure import attempt_files, clock, detach, sessions
 from orch.conductor.infrastructure.lease import launcher
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
 from orch.conductor.application.budget_service import effective_limit
@@ -363,9 +362,6 @@ def reblocked(item: Mapping) -> bool:
                for key in completed)
 
 
-ATTEMPT_DIRS = ("streams", "reports", "prompts", "checks")
-
-
 def archive_attempt(self, ref: str, item: dict, dropped: list, *, include_unfinished: bool = False,
                     copy_files: bool = False) -> None:
     """Keep what a ``retry`` is about to repeat: the record of the dropped steps in ``item["attempts"]`` and their
@@ -388,26 +384,7 @@ def archive_attempt(self, ref: str, item: dict, dropped: list, *, include_unfini
             row["original_step"] = dict(step)
         if report.get("status"):
             row["report_status"] = report["status"]
-        moved = []
-        for folder in ATTEMPT_DIRS:
-            for path in sorted((directory / folder).glob("*")) if (directory / folder).is_dir() else []:
-                name = path.name
-                # the logs of step ``checks.N`` are the folder ``checks/N`` (one log per check and the jobs line)
-                round_dir = folder == "checks" and key.startswith("checks.") and name == key.split(".", 1)[1]
-                if not (round_dir or name == key or name.startswith((key + ".", key + "-"))):
-                    continue
-                if any(name == other or name.startswith((other + ".", other + "-")) for other in kept if len(other) > len(key)):
-                    continue  # a file of a longer step key that stays (``executor.1-q1`` beside a dropped ``executor.1``)
-                target = directory / "attempts" / str(number) / folder / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                if copy_files:
-                    if path.is_dir():
-                        shutil.copytree(path, target, dirs_exist_ok=True)
-                    else:
-                        shutil.copy2(path, target)
-                else:
-                    path.replace(target)
-                moved.append(f"{folder}/{name}")
+        moved = attempt_files.archive(directory, key, kept, number, copy_files=copy_files)
         if moved:
             row["files"] = moved
         record[key] = row

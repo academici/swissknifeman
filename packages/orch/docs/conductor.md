@@ -13,7 +13,8 @@ orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --re
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...] [--detach | --frozen] [--quiet | --json-lines]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...]
+           [--fresh-context --options FILE --model-launch-ceiling TOTAL] [--detach | --frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]  (without `--by`: the shell user at a terminal, `cli:USER` without one — an agent's answer is never recorded as the owner's)
 orch conduct questions [--run RUN] [--json]
@@ -470,7 +471,9 @@ new snapshot of the orchestrator from the current commit: that is how a mechanis
 `run --input FILE` conducts one piece of work without a plan: `FILE` is an `exec/v1` execution-input (`orch.py input adhoc`,
 with `--provenance` for support work, or written by hand) served by the built-in file source
 (`orch.worksource_file.FileWorkSource`, the same `work-source/v1` contract as the plugin). `--input` excludes `--plan`,
-`--items`, `--ready`, `--max-items` and `--adopt`; the scenario is `--scenario`, else `default_profile`, and `--options` layers on top.
+`--items`, `--ready` and `--max-items`; the scenario is `--scenario`, else `default_profile`, and `--options` layers on top.
+`--input FILE --adopt` accepts only a writable `review_followup` input with an explicit `scope.write_set`
+(`ADOPT_INPUT_REFUSED` otherwise). Existing changes must all belong to that write set (`WORKTREE_DIRTY` otherwise).
 For a plan run `--scenario S` is passed to every claim (`orch source claim --scenario S`) and wins over the scenario the plan resolves for
 the piece (`orchestration` of the item, phase, plan, overlays); the claim answer names it `scenario_source: invocation:--scenario`, and
 an unknown scenario blocks the claim (`SCENARIO_UNKNOWN`) before the piece starts. Without the flag the plan's scenario applies.
@@ -1170,6 +1173,20 @@ code and exit 1. If other work starts, the message is only a beacon. `orch condu
 `open` with a `resolution` on disk; resume with retry merges and consumes it (`answered` records are also recognized).
 
 `resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`; a piece held on advice for the owner, whose question `advice-<n>` is answered, needs no executor round that reported `blocked`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
+
+For one stopped, unfinished executor in a one-piece run, an explicit fresh continuation is available:
+
+```sh
+orch conduct resume --run RUN --retry ITEM --fresh-context --options FILE --model-launch-ceiling TOTAL
+```
+
+`FILE` contains the full recorded effective options. Rules may change; supported retry/check limits and scope may
+only tighten. The executor must use `session.executor = per-item`, with no fallback routes. The candidate and pinned
+route stay fixed. `TOTAL` counts every historical and future physical launch admission, including reservations before
+a process starts, and cannot increase an earlier continuation ceiling (`MODEL_LAUNCH_CEILING`). Missing or changed
+historical request/authority evidence refuses continuation. Preparation archives the old brief, options and stopped
+attempt, rebuilds the input and retains token usage, retry counters and all previous attempts. Ordinary resume keeps
+its existing behavior.
 
 `run --adopt` starts the first piece on a tree that already holds an earlier attempt of it (all changed paths inside its
 write set, else `WORKTREE_DIRTY`): the executor is told to check and finish that work, not to start over. The artifact

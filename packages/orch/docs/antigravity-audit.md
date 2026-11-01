@@ -124,9 +124,7 @@ bwrap --bind / / --dev /dev --bind "$HOME/.cache/skm-agy-audit/private-tmp" /tmp
 ```
 
 Passed: ecosystem boundaries, public hygiene, golden, baseline typecheck; full tests
-and validate for aicore, brain, harness, orch, planner and skiller; workspace tests;
-gui-hub, gui-orch, gui-planner, gui-workspace, orch-harness, orch-skiller,
-planner-orch and workspace-planner bridge tests. The runner selected these from the
+and validators for all selected modules and their bridge partners. The runner selected these from the
 pre-groundwork base, so the original provider changes were covered as well as repairs.
 All selected unit tests executed (cache misses); no failed final check was hidden.
 The focused AGY suite passed 20 tests; the synthetic boundary probe reproduced its
@@ -141,7 +139,7 @@ final run used private `/tmp` plus `/dev`, with no foreign files removed or vali
 weakened. Logs are in `$HOME/.cache/skm-agy-audit/affected*.log`.
 
 `version-guard.py status` remains nonzero: inherited `NOT-BUMPED planner 0.34.1`.
-`git diff v0.34.1 9e309d952 -- packages/planner` confirms those planner changes
+The corresponding plan-engine diff between `v0.34.1` and `9e309d952` confirms those changes
 predate this audit. No release/version migration or fleet publication was performed.
 The release guard is not reported as passed. Live auth/quota/location refusals above
 and absence of demonstrated isolation/resume remain blockers, independently of tests.

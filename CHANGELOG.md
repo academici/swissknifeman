@@ -3,8 +3,11 @@
 ## [Unreleased]
 
 - **Antigravity: повторная проверка границ.** Native projection и ранний выбор маршрута отказывают до запуска; transport изолирует сырые события и подтверждает terminal только после EOF/exit, timeout сохраняет observed model/session/tools. Добавлены исполняемые unittest и воспроизводимый canary; live-пробы ограничены auth/quota/location, безопасный запуск conductor пока не доказан.
-- orch: explicit interrupted-executor fresh-context continuation preserves stopped evidence, candidate and counters while enforcing a durable ceiling on all historic and new physical launch admissions. It keeps the pinned route and budgets and requires a single per-item session with no fallback.
-- planner/orch: opt-in on-demand delivery for whole repository JSON reads retains the read requirement and SHA-256 identity, rejects invalid carriers and keeps legacy inline delivery as the default. Workers must verify the actual bytes when reading; the hash alone is not review evidence.
+- **Orch: ограниченное продолжение с новым контекстом.** Явный `resume --fresh-context` сохраняет незавершённую попытку, кандидата и счётчики, ограничивает общее число исторических и новых физических запусков. Маршрут закреплён; разрешено только сужение поддерживаемых лимитов и scope, одна per-item сессия без fallback.
+- **Planner/orch: доставка контекста.** Режим supplement передаёт исполнителю scoped-контекст без повторов и данных координатора. Опциональное чтение целого JSON по запросу сохраняет обязательность и SHA-256, проверяет носитель; прежняя inline-доставка остаётся по умолчанию. Хеш не заменяет чтение и проверку содержимого.
+- **Orch: исправления после ревью.** `run --input FILE --adopt` принимает только writable `review_followup` с явным write set; чужие незакоммиченные изменения останавливают запуск.
+- **Aicore/planner: допуск Terra.** Точный `gpt-6.1-terra` объединён с существовавшими локальными ролями frontier, implementation, review, design и audit; селекторы по умолчанию и отсутствие family-pattern сохранены. Живой запуск не заявляется.
+- **Orch: повтор проверок.** Исправлен retry при одинаковом времени завершения проверок; исходные попытки и их результаты сохраняются.
 
 ## [0.34.1] - 2026-10-26
 

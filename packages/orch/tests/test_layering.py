@@ -47,7 +47,9 @@ class LayeringTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(SCRIPT), "--check"], cwd=self.root.parent,
                                 capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(result.stdout, "layering: OK\n")
+        lines = result.stdout.splitlines()
+        self.assertEqual(lines[-1:], ["layering: OK"])
+        self.assertTrue(all(line.startswith("layering: info ") for line in lines[:-1]), result.stdout)
 
     def test_upward_call_owner_sites_and_cycle(self):
         measured = json.loads(self.run_script("--json").stdout)

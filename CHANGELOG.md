@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Orch: явный локальный запуск Antigravity.** Opt-in разрешает только executor с раскрытием отсутствующей изоляции сети, IPC и чтения; по умолчанию отказ сохраняется. Planner и bridge согласуют маршрут и регистрацию.
+
 ## [0.35.0] - 2026-11-01
 
 - **Antigravity: повторная проверка границ.** Native projection и ранний выбор маршрута отказывают до запуска; transport изолирует сырые события и подтверждает terminal только после EOF/exit, timeout сохраняет observed model/session/tools. Добавлены исполняемые unittest и воспроизводимый canary; live-пробы ограничены auth/quota/location, безопасный запуск conductor пока не доказан.

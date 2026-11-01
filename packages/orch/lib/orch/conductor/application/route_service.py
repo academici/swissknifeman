@@ -143,8 +143,10 @@ def route_problem(self, route: dict) -> str | None:
     disabled = self.provider_disabled(route["provider"])
     if disabled:
         return disabled
-    if route["provider"] == "antigravity":
+    if route["provider"] == "antigravity" and not launch.agy_executor_opted_in(route.get("role")):
         return launch.ANTIGRAVITY_AUTHORITY_PROBLEM
+    if route["provider"] == "antigravity" and route.get("transport") != "jsonl":
+        return "TRANSPORT_UNSUPPORTED: Antigravity executor requires jsonl"
     if route["transport"] == "acp":
         return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
     refused = route_rules.registrar_problem(route, project=str(getattr(self, "project", "")), access=self._launch_access())
@@ -264,9 +266,13 @@ def preflight(self, item: Item) -> None:
         policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)
     required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
-    if any(route.get("provider") == "antigravity" for route in required.values()):
+    if any(route.get("provider") == "antigravity" and not launch.agy_executor_opted_in(role)
+           for role, route in required.items()):
         code, reason = launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)
         raise Stop(code, reason)
+    if any(route.get("provider") == "antigravity" and route.get("transport") != "jsonl"
+           for route in required.values()):
+        raise Stop("TRANSPORT_UNSUPPORTED", "Antigravity executor requires jsonl")
     codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
     claude = self._sandbox_mode(item) == "require" and any(self._claude_bash(route) for route in required.values())
     blocked = []
@@ -346,6 +352,9 @@ def named_model_class(self, item: Item, role: str, target: dict, chosen: dict) -
     known = admitted_class(self._catalog_get().models, chosen["provider"], model)
     if known is None:
         if chosen["provider"] == "antigravity":
+            if (launch.agy_executor_opted_in(role) and model == "gemini-4-argon-high"
+                    and target.get("model") == model):
+                return chosen
             raise Stop("AGY_MODEL_CLASS_UNVERIFIED",
                        f"{role}: {model} has no verified Antigravity model class")
         noted = self.__dict__.setdefault("_model_unknown_noted", set())

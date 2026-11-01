@@ -305,4 +305,7 @@ def prompt_block(doc: dict) -> str:
              + ("; " + ", ".join(f"git {name}" for name in forbidden) + " are denied." if forbidden else "."),
              "- A check that needs what this authority does not give is not a blocker: name it in an `open_issues` "
              "entry of kind `pending` and go on."]
+    if any(row.get("code") == "AGY_UNSAFE_EXECUTOR_OPT_IN" for row in doc["degraded"]):
+        lines.append("- Owner instruction: do not push, publish, create tags, or change remote settings. "
+                     "This instruction is not technically enforced. Network, Docker IPC and host reads are not isolated.")
     return "\n".join(lines[:PROMPT_LINES])

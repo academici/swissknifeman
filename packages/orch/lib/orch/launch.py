@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import copy
 import json
+import os
 from pathlib import Path
 import re
 
@@ -13,6 +14,13 @@ ANTIGRAVITY_AUTHORITY_PROBLEM = (
     "AGY_AUTHORITY_UNPROVEN: Antigravity tool network, IPC and host read isolation "
     "has no verified enforcement; HOME and Landlock write guards are insufficient"
 )
+AGY_OPT_IN = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
+AGY_OPT_IN_VALUE = "accept-unisolated-network-docker-host-reads"
+
+
+def agy_executor_opted_in(role: str) -> bool:
+    """A per-process, explicit owner opt-in, never an implicit provider capability."""
+    return role == "executor" and os.environ.get(AGY_OPT_IN) == AGY_OPT_IN_VALUE
 PROVIDERS = ("claude-code", "codex", "grok", "antigravity")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")

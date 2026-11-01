@@ -9,6 +9,9 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / "lib"), str(ROOT.parent / "aicore" / "lib")]
+
 spec = spec_from_file_location("agy_transport", Path(__file__).resolve().parents[1] / "scripts/agy-transport.py")
 module = module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -57,13 +60,14 @@ class TranslationTests(unittest.TestCase):
         executable = tmp_path / "agy"
         executable.write_text(
             "#!" + sys.executable + "\nimport json,sys\n"
+            'assert sys.argv[1:] == ["--dangerously-skip-permissions", "--model", "gemini-4-argon-high", "--effort", "high", "--input-format", "stream-json", "--output-format", "stream-json", "--print", ""]\n'
             'msg = json.loads(sys.stdin.readline())\n'
             'assert msg["message"]["content"] == "content with \\n and quotes"\n'
-            'print(json.dumps({"event":"init","conversation_id":"s","init":{"model":"claude-sonnet-5-5"}}))\n'
+            'print(json.dumps({"event":"init","conversation_id":"s","init":{"model":"gemini-4-argon-high"}}))\n'
             'print(json.dumps({"event":"result","result":{"conversation_id":"s","status":"SUCCESS","response":"ok"}}))\n')
         executable.chmod(0o755)
         env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"])
-        command = [sys.executable, str(Path(module.__file__)), "--model", "claude-sonnet-5-5", "--effort", "high"]
+        command = [sys.executable, str(Path(module.__file__)), "--model", "gemini-4-argon-high", "--effort", "high"]
         result = subprocess.run(command, input="content with \n and quotes", env=env, text=True, capture_output=True,
                                 check=True)
         rows = [json.loads(row) for row in result.stdout.splitlines()]
@@ -133,6 +137,72 @@ class TranslationTests(unittest.TestCase):
             chosen = {"provider": "antigravity", "model": model, "model_class": "frontier"}
             with self.assertRaisesRegex(Stop, "model ID is missing"):
                 named_model_class(object(), object(), "executor", {"model": None}, chosen)
+
+    def test_explicit_opt_in_is_executor_only_and_exact_model_only(self):
+        from orch import launch
+        from aicore.provider.models import load_model_catalog
+        from orch.conductor.application.route_service import named_model_class, route_problem
+        from orch.conductor.domain.stop import Stop
+
+        owner = SimpleNamespace(_catalog_get=lambda: SimpleNamespace(models=load_model_catalog()),
+                                provider_disabled=lambda provider: None, _launch_access=lambda: "confined",
+                                _codex_sandboxed=lambda route: False)
+        chosen = {"provider": "antigravity", "model": "gemini-4-argon-high", "model_class": "implementation"}
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}):
+            self.assertEqual(named_model_class(owner, object(), "executor", {"model": chosen["model"]}, chosen), chosen)
+            for role, requested in (("reviewer", chosen["model"]), ("executor", None)):
+                with self.assertRaises(Stop):
+                    named_model_class(owner, object(), role, {"model": requested}, chosen)
+            for role in ("reviewer", "bounded-implementer", "triager"):
+                self.assertTrue(route_problem(owner, {"provider": "antigravity", "role": role}).startswith("AGY_AUTHORITY_UNPROVEN"))
+            self.assertTrue(route_problem(owner, {"provider": "antigravity", "role": "executor", "transport": "text"}).startswith("TRANSPORT_UNSUPPORTED"))
+            with patch("orch.conductor.application.route_service.process.available", return_value=True), \
+                 patch("orch.conductor.application.route_service.gates.blocked", return_value=None):
+                self.assertIsNone(route_problem(owner, {"provider": "antigravity", "role": "executor",
+                                                        "transport": "jsonl", "argv": ["python3"]}))
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: "yes"}):
+            with self.assertRaises(Stop):
+                named_model_class(owner, object(), "executor", {"model": chosen["model"]}, chosen)
+
+    def test_opt_in_envelope_and_prompt_are_honest(self):
+        from orch import launch
+        from orch.conductor import contract
+        from orch.conductor.infrastructure import launch_plan
+        from orch.conductor.policies import authority as rules
+        from orch.conductor.domain.stop import Stop
+
+        root = str(self.root)
+        argv = ["python3", str(launch_plan.ORCH_ROOT / "scripts/ro-run.py"), "--no-default-rw", "--rw", root,
+                "--rw", "/dev", "--", "python3", str(launch_plan.ORCH_ROOT / "scripts/agy-transport.py"),
+                "--model", "gemini-4-argon-high", "--effort", "high"]
+        route = {"role": "executor", "provider": "antigravity", "transport": "jsonl", "argv": argv,
+                 "model": "gemini-4-argon-high", "effort": "high"}
+        owner = SimpleNamespace(project=self.root, env=None, directory=self.root,
+                                _local=SimpleNamespace(agent={"directory": self.root / "agent"}),
+                                role_ports=SimpleNamespace(note_isolation=lambda *a: None,
+                                    launch_facts=lambda *a, **k: {"sandbox": {}, "access": "confined", "declared_network": "none"}),
+                                _scope_option=lambda *a: [])
+        item = SimpleNamespace(options={})
+        isolation = {"mode": "off", "isolated": False, "guarantee": "none", "env": {}, "home": None, "degraded": []}
+        with patch.object(launch_plan, "isolation_plan", return_value=isolation), patch.dict(os.environ, {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}):
+            doc = launch_plan.authority(owner, item, "executor", route)
+            self.assertEqual(contract.problems(doc, "authority-envelope"), [])
+            self.assertEqual((doc["network"]["effective"], doc["docker"], doc["read_masks"]), ("open", "open", "none"))
+            self.assertEqual(doc["digest"], rules.digest(doc))
+            self.assertTrue(any(row["code"] == "AGY_UNSAFE_EXECUTOR_OPT_IN" for row in doc["degraded"]))
+            prompt = rules.prompt_block(doc)
+            for word in ("push", "publish", "tags", "remote settings", "not technically enforced", "host reads"):
+                self.assertIn(word, prompt)
+            self.assertNotIn(launch.AGY_OPT_IN, launch_plan.role_env(owner, item, "executor", route))
+            with self.assertRaises(Stop):
+                launch_plan.authority(owner, item, "executor", {**route, "argv": ["custom"]})
+            with self.assertRaises(Stop):
+                launch_plan.authority(owner, item, "executor", {**route, "model": "other"})
+            with self.assertRaises(Stop):
+                launch_plan.authority(owner, item, "executor", {**route, "resume_argv": ["custom"]})
+        with patch.object(launch_plan, "isolation_plan", return_value=isolation), patch.dict(os.environ, {launch.AGY_OPT_IN: ""}):
+            with self.assertRaises(Stop):
+                launch_plan.authority(owner, item, "executor", route)
 
 
 

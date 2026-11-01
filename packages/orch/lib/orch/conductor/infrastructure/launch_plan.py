@@ -190,7 +190,15 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         raise Stop("LAUNCH_REFUSED", refused.split(": ", 1)[1])
     protected = route.get("provider") == "claude-code" and not writes(role)
     if admit and route.get("provider") == "antigravity":
-        if not writes(role) or not agent_tmpdir(self) or not agy_guarded(argv, str(self.project), True):
+        if not launch.agy_executor_opted_in(role):
+            raise Stop("AGY_AUTHORITY_UNPROVEN", launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)[1])
+        bridge = ["python3", str(ORCH_ROOT / "scripts" / "agy-transport.py"), "--model", route.get("model"),
+                  "--effort", route.get("effort")]
+        prefix = authority_rules.guard_prefix(argv)
+        tail = argv[len(prefix) + 1:] if prefix else []
+        if (route.get("transport") != "jsonl" or not writes(role) or not agent_tmpdir(self)
+                or not agy_guarded(argv, str(self.project), True) or tail != bridge
+                or route.get("resume_argv") or self._scope_option(item, "extra_paths", [])):
             raise Stop("AGY_GUARD_REQUIRED", "antigravity requires an isolated home and narrow Landlock writer guard")
     protection = protection_facts(self.project) if protected else None
     if protection is not None and admit and not protection["available"]:
@@ -212,8 +220,13 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
         listed=listed, tmpdir=agent_tmpdir(self), protection=protection)
     agy_problem = agy_authority_problem(doc) if route.get("provider") == "antigravity" else None
-    if admit and agy_problem:
+    if admit and agy_problem and not launch.agy_executor_opted_in(role):
         raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
+    if route.get("provider") == "antigravity" and launch.agy_executor_opted_in(role):
+        doc["degraded"].append({"code": "AGY_UNSAFE_EXECUTOR_OPT_IN",
+                                "detail": "Explicit local opt-in: network, Docker IPC and host reads are not isolated; "
+                                          "model class for gemini-4-argon-high is unverified."})
+        doc["digest"] = authority_rules.digest(doc)
     refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
     if refused:
         raise Stop("ISOLATION_UNAVAILABLE", refused.split(": ", 1)[1])
@@ -481,10 +494,11 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     (:func:`isolation_plan`): a Codex role gets its own CODEX_HOME and HOME under the run folder (:func:`prepare_home`)."""
     isolation = isolation_plan(self, item, role, route)
     scratch = agent_tmpdir(self)
-    if not isolation["env"] and not isolation["home"] and not scratch:
+    original = dict(os.environ if self.env is None else self.env)
+    if not isolation["env"] and not isolation["home"] and not scratch and launch.AGY_OPT_IN not in original:
         return self.env
-    original = dict(os.environ if self.env is None else self.env)  # the environment of the conductor, before any change
     base = {**original, **isolation["env"]}
+    base.pop(launch.AGY_OPT_IN, None)
     if scratch:
         base["TMPDIR"] = scratch
         if route.get("provider") == "antigravity":

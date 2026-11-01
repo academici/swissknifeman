@@ -208,6 +208,29 @@ class TranslationTests(unittest.TestCase):
         with patch.object(launch_plan, "isolation_plan", return_value=isolation), patch.dict(os.environ, {launch.AGY_OPT_IN: ""}):
             with self.assertRaises(Stop):
                 launch_plan.authority(owner, item, "executor", route)
+            owner.env = {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}
+            doc = launch_plan.authority(owner, item, "executor", route)
+            self.assertTrue(any(row["code"] == "AGY_UNSAFE_EXECUTOR_OPT_IN" for row in doc["degraded"]))
+            self.assertNotIn(launch.AGY_OPT_IN, launch_plan.role_env(owner, item, "executor", route))
+        with patch.object(launch_plan, "isolation_plan", return_value=isolation), patch.dict(os.environ, {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}):
+            owner.env = {}
+            with self.assertRaises(Stop):
+                launch_plan.authority(owner, item, "executor", route)
+
+    def test_route_and_authority_use_the_run_environment(self):
+        from orch import launch
+        from orch.conductor.application.route_service import route_problem
+        route = {"provider": "antigravity", "role": "executor", "transport": "jsonl", "argv": ["python3"]}
+        owner = SimpleNamespace(env={}, provider_disabled=lambda provider: None,
+                                _codex_sandboxed=lambda route: False)
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}):
+            self.assertTrue(route_problem(owner, route).startswith("AGY_AUTHORITY_UNPROVEN"))
+        owner.env = {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: ""}), \
+                patch("orch.conductor.application.route_service.process.available", return_value=True), \
+                patch("orch.conductor.application.route_service.gates.blocked", return_value=None):
+            owner._launch_access = lambda: "confined"
+            self.assertIsNone(route_problem(owner, route))
 
 
 

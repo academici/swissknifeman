@@ -2082,6 +2082,10 @@ authority evidence records the explicit opt-in and that network, IPC (including 
 isolated. The `/dev` write grant includes `/dev/shm`, and Landlock ABI below 3 does not prevent
 truncation outside the writable roots. The executor prompt forbids push, publication, tags and remote settings changes; those
 instructions are not technically enforced. The opt-in is removed from the child environment.
+The registered planner-orch bridge must be trusted to receive that invocation's opt-in for the
+Planner claim. When the bridge is in a hub checkout, it resolves Planner and Orch from that same
+checkout before PATH; explicit partner environment variables take precedence. Other invocations
+do not inherit the opt-in from this run.
 It also permits the exact explicitly selected `gemini-4-argon-high` selector to use the requested
 stage class as a routing assumption; its class remains unverified. A later guarded bridge request
 returned `OK` with matching init and terminal session `95071000-24a8-441e-8eb0-5a3da9486894`;

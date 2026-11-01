@@ -25,8 +25,14 @@ def probe(env: dict) -> tuple:
 
 
 class DoctorProbe(unittest.TestCase):
-    def test_missing_partners_are_a_fail_that_names_the_variables(self):
+    @unittest.skipUnless(partners._hub_partner("planner", "scripts/plan.py") and
+                         partners._hub_partner("orch", "scripts/orch.py"), "bridge has no hub partners")
+    def test_bridge_uses_its_hub_without_path_or_root_variables(self):
         code, row = probe({})
+        self.assertEqual((code, row["status"]), (0, "ok"))
+
+    def test_missing_partners_are_a_fail_that_names_the_variables(self):
+        code, row = probe({"PLANNER_ROOT": "/missing-planner", "SKM_ORCH_ROOT": "/missing-orch"})
         self.assertEqual((code, row["check_id"], row["status"]), (0, "planner-orch.partners", "fail"))
         self.assertIn("PLANNER_ROOT", row["observed"])
         self.assertIn("SKM_ORCH_ROOT", row["observed"])

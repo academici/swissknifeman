@@ -18,9 +18,9 @@ AGY_OPT_IN = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
 AGY_OPT_IN_VALUE = "accept-unisolated-network-docker-host-reads"
 
 
-def agy_executor_opted_in(role: str) -> bool:
+def agy_executor_opted_in(role: str, env=None) -> bool:
     """A per-process, explicit owner opt-in, never an implicit provider capability."""
-    return role == "executor" and os.environ.get(AGY_OPT_IN) == AGY_OPT_IN_VALUE
+    return role == "executor" and (os.environ if env is None else env).get(AGY_OPT_IN) == AGY_OPT_IN_VALUE
 PROVIDERS = ("claude-code", "codex", "grok", "antigravity")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")

@@ -191,7 +191,7 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         raise Stop("LAUNCH_REFUSED", refused.split(": ", 1)[1])
     protected = route.get("provider") == "claude-code" and not writes(role)
     if admit and route.get("provider") == "antigravity":
-        if not launch.agy_executor_opted_in(role):
+        if not launch.agy_executor_opted_in(role, self.env):
             raise Stop("AGY_AUTHORITY_UNPROVEN", launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)[1])
         bridge = ["python3", str(ORCH_ROOT / "scripts" / "agy-transport.py"), "--model", route.get("model"),
                   "--effort", route.get("effort")]
@@ -221,9 +221,9 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
         listed=listed, tmpdir=agent_tmpdir(self), protection=protection)
     agy_problem = agy_authority_problem(doc) if route.get("provider") == "antigravity" else None
-    if admit and agy_problem and not launch.agy_executor_opted_in(role):
+    if admit and agy_problem and not launch.agy_executor_opted_in(role, self.env):
         raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
-    if route.get("provider") == "antigravity" and launch.agy_executor_opted_in(role):
+    if route.get("provider") == "antigravity" and launch.agy_executor_opted_in(role, self.env):
         doc["degraded"].append({"code": "AGY_UNSAFE_EXECUTOR_OPT_IN",
                                 "detail": "Explicit local opt-in: network, IPC (including Docker) and host reads are not isolated; "
                                           "/dev including /dev/shm is writable; Landlock ABI below 3 does not prevent "

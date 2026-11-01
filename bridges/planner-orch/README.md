@@ -220,10 +220,11 @@ work source of orch. The machine enables it in its configuration:
 ```toml
 [aicore.plugins.planner-orch]
 manifest = "<hub>/bridges/planner-orch/extension.json"
-trusted = true   # passes PLANNER_ROOT, PLANNER_PLAN_PY, SKM_ORCH_ROOT, AICORE_ROOT, SKM_AICORE_EVENTS__DELIVERY
+trusted = true   # passes declared partner variables and explicit per-process AGY opt-in
 ```
 
-Untrusted, the plugin finds the planner and orch through `planner` and `orch` on `PATH`. `worksource.py` answers
+Only a trusted registration receives `SKM_ORCH_AGY_UNSAFE_EXECUTOR` when explicitly set in its invocation
+environment. It is not a persistent setting or a sandbox guarantee. `worksource.py` answers
 `op: describe` and `op: invoke` with one plugin-response; the input and output of every op follow orch's
 `schemas/work-source/v1`, and the plan is written only through `plan.py`.
 
@@ -275,10 +276,11 @@ overlays before the field. orch merges them over its configuration and the run-p
 `partners.find_orch_root()` looks for a directory with `scripts/orch.py`:
 
 1. `SKM_ORCH_ROOT`;
-2. an `orch` command on `PATH` (its real path, two levels up).
+2. the validated `orch` unit in the hub containing this bridge;
+3. an `orch` command on `PATH` (its real path, two levels up).
 
-There is no search by neighbouring folders. The planner is found the same way (`PLANNER_PLAN_PY`, `PLANNER_ROOT`,
-a `planner` command on `PATH`; the dispatcher sets the first two) and the foundation by `AICORE_ROOT`, then
+The planner is found the same way (`PLANNER_PLAN_PY`, `PLANNER_ROOT`, the validated planner unit in the bridge's
+hub, then a `planner` command on `PATH`; the dispatcher sets the first two) and the foundation by `AICORE_ROOT`, then
 `_vendor/aicore`, then `packages/aicore` of the hub that holds the bridge. The bridge never imports orch; it calls `python3 <orch>/scripts/orch.py validate <kind> <file>`. When orch
 is required and missing, `require_orch()` prints `BRIDGE_PARTNER_UNAVAILABLE: orch not found (set
 SKM_ORCH_ROOT)` and exits 3. `doctor.py` is the same lookup as a doctor row (`planner-orch.partners`, `swissknifeman doctor`). Check-evidence: the Task core checks its own field contract

@@ -143,7 +143,7 @@ def route_problem(self, route: dict) -> str | None:
     disabled = self.provider_disabled(route["provider"])
     if disabled:
         return disabled
-    if route["provider"] == "antigravity" and not launch.agy_executor_opted_in(route.get("role")):
+    if route["provider"] == "antigravity" and not launch.agy_executor_opted_in(route.get("role"), getattr(self, "env", None)):
         return launch.ANTIGRAVITY_AUTHORITY_PROBLEM
     if route["provider"] == "antigravity" and route.get("transport") != "jsonl":
         return "TRANSPORT_UNSUPPORTED: Antigravity executor requires jsonl"
@@ -266,7 +266,7 @@ def preflight(self, item: Item) -> None:
         policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)
     required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
-    if any(route.get("provider") == "antigravity" and not launch.agy_executor_opted_in(role)
+    if any(route.get("provider") == "antigravity" and not launch.agy_executor_opted_in(role, getattr(self, "env", None))
            for role, route in required.items()):
         code, reason = launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)
         raise Stop(code, reason)
@@ -352,7 +352,7 @@ def named_model_class(self, item: Item, role: str, target: dict, chosen: dict) -
     known = admitted_class(self._catalog_get().models, chosen["provider"], model)
     if known is None:
         if chosen["provider"] == "antigravity":
-            if (launch.agy_executor_opted_in(role) and model == "gemini-4-argon-high"
+            if (launch.agy_executor_opted_in(role, getattr(self, "env", None)) and model == "gemini-4-argon-high"
                     and target.get("model") == model):
                 return chosen
             raise Stop("AGY_MODEL_CLASS_UNVERIFIED",

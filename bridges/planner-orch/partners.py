@@ -1,7 +1,7 @@
 """Find the partners and the foundation of the planner-orch bridge.
 
 The bridge reaches the planner and orch only as processes (``plan.py``, ``orch.py``), found by an explicit
-environment variable or a command on PATH; it never looks at a neighbouring folder. The planner engine library and
+environment variable, its own hub, or a command on PATH. The planner engine library and
 the foundation (aicore) are located the same way and put on ``sys.path`` before they are imported.
 """
 from __future__ import annotations
@@ -49,10 +49,20 @@ def _command_root(command: str, marker: str) -> Path | None:
     return candidate if (candidate / marker).is_file() else None
 
 
+def _hub_partner(name: str, marker: str) -> Path | None:
+    """Use a partner from this bridge's hub only when its unit identifies it."""
+    root = BRIDGE.parent.parent / "packages" / name
+    try:
+        unit = json.loads((root / "unit.json").read_text(encoding="utf-8"))
+        return root.resolve() if unit.get("id") == name and (root / marker).is_file() else None
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
 # ------------------------------------------------------------------------------------------------ planner
 
 def planner_root() -> Path | None:
-    """``PLANNER_ROOT``, the root of ``PLANNER_PLAN_PY``, then the root behind a ``planner`` command on PATH."""
+    """Explicit roots, this bridge's hub, then the root behind a ``planner`` command on PATH."""
     env = os.environ.get("PLANNER_ROOT")
     if env:
         root = Path(env)
@@ -61,11 +71,11 @@ def planner_root() -> Path | None:
     if script:
         root = Path(script).resolve().parent.parent
         return root if (root / "scripts" / "plan.py").is_file() else None
-    return _command_root("planner", "scripts/plan.py")
+    return _hub_partner("planner", "scripts/plan.py") or _command_root("planner", "scripts/plan.py")
 
 
 def plan_argv() -> list[str] | None:
-    """Command line of ``plan.py``: ``PLANNER_PLAN_PY``, ``PLANNER_ROOT/scripts/plan.py``, a ``planner`` command."""
+    """Command line of ``plan.py`` from an explicit path, this hub, or PATH, in that order."""
     script = os.environ.get("PLANNER_PLAN_PY")
     if script:
         return [sys.executable, script] if Path(script).is_file() else None
@@ -73,6 +83,9 @@ def plan_argv() -> list[str] | None:
     if root:
         plan = Path(root) / "scripts" / "plan.py"
         return [sys.executable, str(plan)] if plan.is_file() else None
+    local = _hub_partner("planner", "scripts/plan.py")
+    if local:
+        return [sys.executable, str(local / "scripts/plan.py")]
     command = shutil.which("planner")
     return [command] if command else None
 
@@ -108,11 +121,11 @@ def _is_orch_root(path: Path) -> bool:
 
 
 def find_orch_root() -> Path | None:
-    """``SKM_ORCH_ROOT``, then an ``orch`` command on PATH."""
+    """``SKM_ORCH_ROOT``, this bridge's hub, then an ``orch`` command on PATH."""
     env = os.environ.get("SKM_ORCH_ROOT")
     if env:
         return Path(env).resolve() if _is_orch_root(Path(env)) else None
-    return _command_root("orch", "scripts/orch.py")
+    return _hub_partner("orch", "scripts/orch.py") or _command_root("orch", "scripts/orch.py")
 
 
 def require_orch() -> Path:

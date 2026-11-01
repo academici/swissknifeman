@@ -1273,6 +1273,65 @@ class ProtocolTests(Case):
         self.valid(result.output, "output")
         self.assertEqual((result.output["status"], result.output["ref"]), ("claimed", "P1.1"))
 
+    def test_agy_opt_in_is_per_invocation_through_registered_bridge(self):
+        key = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
+        value = "accept-unisolated-network-docker-host-reads"
+        actor = {"provider": "antigravity", "model": "gemini-4-argon-high", "effort": "high"}
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "high"}}))
+        env = {k: v for k, v in self.env.items()
+               if k not in (key, "PLANNER_ROOT", "PLANNER_PLAN_PY", "SKM_ORCH_ROOT")}
+        env["PATH"] = str(Path(sys.executable).parent)
+        registration = plugins.find_registration("planner-orch", self.project, env=env)
+
+        def claim(run_id, source_env, candidate=actor):
+            result = plugins.invoke_one(registration, "orch:work-source", {
+                "op": "claim", "plan": self.plan, "items": ["P1.1"], "run_id": run_id,
+                "submission_id": "sub-" + run_id, "actor": candidate,
+                "actor_source": "options", "actor_fields": ["provider", "model", "effort"]},
+                env=source_env, project=self.project)
+            self.assertEqual(result.status, "ok", result.error)
+            self.valid(result.output, "output")
+            return result.output
+
+        for setting, candidate, reason in ((None, actor, "ROUTE_MODEL_UNKNOWN"),
+                                           ("yes", actor, "ROUTE_MODEL_UNKNOWN"),
+                                           (value, {**actor, "model": "gemini-4-argon"}, "ROUTE_MODEL_UNKNOWN"),
+                                           (value, {**actor, "effort": "low"}, "ROUTE_UNDERSHOOT")):
+            source_env = dict(env)
+            if setting is not None:
+                source_env[key] = setting
+            answer = claim("rejected", source_env, candidate)
+            self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", reason))
+        answer = claim("opted", {**env, key: value})
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"], {**actor, "session": "opted"})
+        store = partners.planner_engine("plan.store")
+        starts = [event for event in store.read_log(self.project / "plans" / self.plan) if event["type"] == "start"]
+        self.assertEqual(starts[-1]["data"]["route"], "ROUTE_MODEL_UNKNOWN")
+        # An independent invocation cannot acquire the exception from the previous one.
+        run(self.project, "set", self.plan, "P1.2", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "high"}}))
+        result = plugins.invoke_one(registration, "orch:work-source", {
+            "op": "claim", "plan": self.plan, "items": ["P1.2"], "run_id": "other",
+            "submission_id": "sub-other", "actor": actor, "actor_source": "options",
+            "actor_fields": ["provider", "model", "effort"]}, env=env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.assertEqual((result.output["status"], result.output["reason_code"]), ("blocked", "ROUTE_MODEL_UNKNOWN"))
+
+    def test_untrusted_bridge_does_not_receive_agy_opt_in(self):
+        config = Path(self.env["SKM_HOME"]) / "config/config.toml"
+        config.write_text("schema_version = 1\n[aicore.plugins.planner-orch]\n"
+                          f"manifest = {json.dumps(str(_BRIDGE / 'extension.json'))}\ntrusted = false\n")
+        env = {**self.env, "SKM_ORCH_AGY_UNSAFE_EXECUTOR": "accept-unisolated-network-docker-host-reads"}
+        registration = plugins.find_registration("planner-orch", self.project, env=env)
+        result = plugins.invoke_one(registration, "orch:work-source", {
+            "op": "claim", "plan": self.plan, "items": ["P1.1"], "run_id": "untrusted",
+            "submission_id": "sub-untrusted", "actor": {"provider": "antigravity",
+                "model": "gemini-4-argon-high", "effort": "high"}}, env=env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.assertEqual((result.output["status"], result.output["reason_code"]), ("blocked", "ROUTE_MODEL_UNKNOWN"))
+
     def test_invoke_answers_readiness(self):
         registration = plugins.find_registration("planner-orch", self.project, env=self.env)
         result = plugins.invoke_one(registration, "orch:work-source", {"op": "readiness", "collection": self.plan},

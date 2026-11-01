@@ -2095,13 +2095,13 @@ returned `OK` with matching init and terminal session `95071000-24a8-441e-8eb0-5
 this does not prove a conductor or Planner run. Other
 unknown AGY models still fail closed. This is not a verified sandbox or backend attestation.
 
-For an owner-directed AzGuard run, create a local options file with the executor explicitly selected:
+For an owner-directed run, create a local options file with the executor explicitly selected:
 
 ```json
 {"stages": [{"role": "executor", "provider": "antigravity", "model": "gemini-4-argon-high", "model_class": "implementation", "effort": "high"}]}
 ```
 
-From the AzGuard checkout, substitute the actual plan ID, item and options file path. Inspect the dry run first;
+From the project checkout, substitute the actual plan ID, item and options file path. Inspect the dry run first;
 the second command starts the real run and can change the checkout and plan:
 
 ```sh

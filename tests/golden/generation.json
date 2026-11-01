@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "3dc32b6d8f6e",
-  "reason": "Объединены Antigravity и точный Terra selector с сохранением локальных ролей",
+  "captured_from": "a8694359c684",
+  "reason": "Release 0.35.0 planner version",
   "generators": [
     {
       "id": "skiller-registry",
@@ -276,7 +276,7 @@
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "5cd53630f036c8ec4ff05a0801b7e64c7d6816f60e2af33cc858b3e2ae90af09",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
-    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "9d61941e9cbc12099aa0890fd8a536e8d6d0ca040bb3efccccd99f23198d3de2",
+    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "c952732fe3a2364c3efae2273ef6f58088e1cb2a9bfbe1239afc48b91528f359",
     "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
     "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "dd59120751e6a94f72849d690566e0ec04042d653f674f142ee4a459172d2280",
     "packages/skiller/adapters/codex/core/publication-lock.json": "f54d35dc75aeb6ae0781dee2ec864f2f1d2facab7d862f173aacdfdfffb57593",

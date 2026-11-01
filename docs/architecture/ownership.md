@@ -21,7 +21,7 @@
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |
 | orch-harness | bridge | 0.1.0 | hub | alpha | aicore, orch, harness |
 | orch-skiller | bridge | 0.1.0 | hub | alpha | aicore, orch, skiller |
-| planner | capability | 0.34.1 | own-repo | beta | aicore |
+| planner | capability | 0.35.0 | own-repo | beta | aicore |
 | planner-orch | bridge | 0.1.0 | hub | alpha | aicore, planner, orch |
 | skiller | capability | 0.20.1 | own-repo | beta | aicore |
 | workspace | capability | 0.1.0 | hub | development | aicore |

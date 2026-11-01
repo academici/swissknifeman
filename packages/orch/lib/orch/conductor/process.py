@@ -571,7 +571,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             data = raw_path.read_text(encoding="utf-8", errors="replace")
             parsed = parse_stream(transport, data, guard=guard)
             usage = partial_usage(data) if transport == "jsonl" else parsed["usage"]
-            return RoleRun(exit=process.returncode, error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
+            return RoleRun(exit=process.returncode, session=parsed["session"], model=parsed["model"], init=parsed.get("init"),
+                           error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
                            duration_s=time.monotonic() - started, raw=str(raw_path),
                            usage=usage, usage_complete=parsed["usage_complete"], env_denials=parsed["env_denials"])
     duration = time.monotonic() - started

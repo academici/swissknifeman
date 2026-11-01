@@ -252,6 +252,7 @@ export default withMermaid(defineConfig({
             { text: 'Quickstart', link: '/orch/quickstart' },
             { text: 'How work flows (diagrams)', link: '/orch/flows' },
             { text: 'Conductor', link: '/orch/conductor' },
+            { text: 'Antigravity audit', link: '/orch/antigravity-audit' },
             { text: 'Agent mode', link: '/orch/agent-mode' },
             { text: 'Work source', link: '/orch/work-source' },
             { text: 'Run-policy packs', link: '/orch/run-policies' },

@@ -143,6 +143,8 @@ def route_problem(self, route: dict) -> str | None:
     disabled = self.provider_disabled(route["provider"])
     if disabled:
         return disabled
+    if route["provider"] == "antigravity":
+        return launch.ANTIGRAVITY_AUTHORITY_PROBLEM
     if route["transport"] == "acp":
         return "TRANSPORT_UNSUPPORTED: the conductor does not drive acp roles"
     refused = route_rules.registrar_problem(route, project=str(getattr(self, "project", "")), access=self._launch_access())
@@ -262,6 +264,9 @@ def preflight(self, item: Item) -> None:
         policy_stage_unavailable(self, item, preview=False)
     self._refuse_acp(item)
     required = {role: route for role, route in item.routes.items() if role not in OPTIONAL_ROLES}
+    if any(route.get("provider") == "antigravity" for route in required.values()):
+        code, reason = launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)
+        raise Stop(code, reason)
     codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
     claude = self._sandbox_mode(item) == "require" and any(self._claude_bash(route) for route in required.values())
     blocked = []

@@ -1,130 +1,315 @@
 """AGY translation must not turn mismatched or interrupted runs into success."""
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import json
+import os
+import sys
+import tempfile
+import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 spec = spec_from_file_location("agy_transport", Path(__file__).resolve().parents[1] / "scripts/agy-transport.py")
 module = module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-def test_success_keeps_observed_model_session_and_usage():
-    state = {}
-    init = {"event": "init", "conversation_id": "s", "init": {"model": "claude-sonnet-5-5"}}
-    end = {"event": "result", "result": {"conversation_id": "s", "status": "SUCCESS", "response": "ok",
-           "usage": {"input_tokens": 100, "cache_read_tokens": 80, "output_tokens": 3}}}
-    assert module.event(init, "claude-sonnet-5-5", state)["model"] == "claude-sonnet-5-5"
-    result = module.event(end, "claude-sonnet-5-5", state)
-    assert result["session_id"] == "s" and result["is_error"] is False
-    assert result["usage"]["cached_input_tokens"] == 80
+class TranslationTests(unittest.TestCase):
+    def setUp(self):
+        self.scratch = tempfile.TemporaryDirectory(prefix="agy-translation-")
+        self.addCleanup(self.scratch.cleanup)
+        self.root = Path(self.scratch.name)
+
+    def test_success_keeps_observed_model_session_and_usage(self):
+        state = {}
+        init = {"event": "init", "conversation_id": "s", "init": {"model": "claude-sonnet-5-5"}}
+        end = {"event": "result", "result": {"conversation_id": "s", "status": "SUCCESS", "response": "ok",
+               "usage": {"input_tokens": 100, "cache_read_tokens": 80, "output_tokens": 3}}}
+        assert module.event(init, "claude-sonnet-5-5", state)["model"] == "claude-sonnet-5-5"
+        result = module.event(end, "claude-sonnet-5-5", state)
+        assert result["session_id"] == "s" and result["is_error"] is False
+        assert result["usage"]["cached_input_tokens"] == 80
+
+    def test_mismatched_model_or_session_cannot_emit_success(self):
+        state = {}
+        assert module.event({"event": "init", "conversation_id": "s", "init": {"model": "other"}},
+                            "claude-sonnet-5-5", state) is None
+        assert module.event({"event": "result", "result": {"conversation_id": "s", "status": "SUCCESS",
+                             "response": "ok"}}, "claude-sonnet-5-5", state) is None
+        assert state["invalid"]
+
+    def test_error_and_terminal_without_init(self):
+        state = {}
+        result = {"event": "result", "result": {"conversation_id": "s", "status": "ERROR", "response": ""}}
+        assert module.event(result, "claude-sonnet-5-5", state) is None
+        state = {}
+        module.event({"event": "init", "conversation_id": "s", "init": {"model": "claude-sonnet-5-5"}},
+                     "claude-sonnet-5-5", state)
+        assert module.event(result, "claude-sonnet-5-5", state)["is_error"] is True
+
+    def test_bridge_delivers_prompt_and_preserves_provider_events(self):
+        tmp_path = self.root
+        import json
+        import os
+        import subprocess
+        import sys
+
+        executable = tmp_path / "agy"
+        executable.write_text(
+            "#!" + sys.executable + "\nimport json,sys\n"
+            'msg = json.loads(sys.stdin.readline())\n'
+            'assert msg["message"]["content"] == "content with \\n and quotes"\n'
+            'print(json.dumps({"event":"init","conversation_id":"s","init":{"model":"claude-sonnet-5-5"}}))\n'
+            'print(json.dumps({"event":"result","result":{"conversation_id":"s","status":"SUCCESS","response":"ok"}}))\n')
+        executable.chmod(0o755)
+        env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"])
+        command = [sys.executable, str(Path(module.__file__)), "--model", "claude-sonnet-5-5", "--effort", "high"]
+        result = subprocess.run(command, input="content with \n and quotes", env=env, text=True, capture_output=True,
+                                check=True)
+        rows = [json.loads(row) for row in result.stdout.splitlines()]
+        assert json.loads(rows[0]["line"])["event"] == "init"
+        assert rows[1]["type"] == "system"
+        assert json.loads(rows[2]["line"])["event"] == "result"
+        assert rows[3]["type"] == "result"
+
+    def test_guard_requires_expected_mode_and_narrow_roots(self):
+        tmp_path = self.root
+        from orch.conductor.infrastructure.launch_plan import ORCH_ROOT, agy_guarded
+
+        self.enterContext(patch.dict(os.environ, HOME=str(tmp_path)))
+        root = str(tmp_path / "work")
+        common = ["python3", str(ORCH_ROOT / "scripts" / "ro-run.py"), "--no-default-rw"]
+        tail = ["--rw", "/dev", "--", "python3", str(ORCH_ROOT / "scripts" / "agy-transport.py")]
+        assert agy_guarded(common + ["--rw", root] + tail, root, True)
+        assert agy_guarded(common + ["--protect", root] + tail, root, False)
+        assert not agy_guarded(common + ["--rw", root] + tail, root, False)
+        assert not agy_guarded(common + ["--rw", root, "--rw", "/"] + tail, root, True)
+        assert not agy_guarded(["python3", "bridge"], root, True)
+
+    def test_each_agent_uses_its_own_home(self):
+        tmp_path = self.root
+        from types import SimpleNamespace
+        from orch.conductor.infrastructure import launch_plan
+
+        self.enterContext(patch.object(launch_plan, "isolation_plan", lambda *args, **kwargs: {"env": {}, "home": None}))
+        owner = SimpleNamespace(env={"HOME": "/personal", "XDG_CONFIG_HOME": "/personal/config"},
+                                directory=tmp_path, _local=SimpleNamespace(agent={"directory": tmp_path / "agent-a"}))
+        one = launch_plan.role_env(owner, object(), "executor", {"provider": "antigravity"})
+        owner._local.agent = {"directory": tmp_path / "agent-b"}
+        two = launch_plan.role_env(owner, object(), "executor", {"provider": "antigravity"})
+        assert one["HOME"] != two["HOME"]
+        assert one["HOME"] == str(tmp_path / "agent-a" / "tmp")
+        assert one["XDG_CONFIG_HOME"].startswith(one["HOME"] + "/")
+        assert two["HOME"] == str(tmp_path / "agent-b" / "tmp")
+
+    def test_authority_refuses_network_docker_and_unmasked_host_reads(self):
+        from orch.conductor.infrastructure.launch_plan import agy_authority_problem
+        doc = {"network": {"declared": "none", "effective": "open"}, "docker": "open", "read_masks": "none"}
+        assert "network" in agy_authority_problem(doc)
+        doc["network"]["effective"] = "none"
+        assert "Docker" in agy_authority_problem(doc)
+        doc["docker"] = "blocked"
+        assert "read masks" in agy_authority_problem(doc)
+        doc["read_masks"] = "provider-settings"
+        assert agy_authority_problem(doc) is None
+
+    def test_unknown_agy_model_class_does_not_inherit_stage_class(self):
+        from types import SimpleNamespace
+        from aicore.provider.models import load_model_catalog
+        from orch.conductor.application.route_service import named_model_class
+        from orch.conductor.domain.stop import Stop
+
+        owner = SimpleNamespace(_catalog_get=lambda: SimpleNamespace(models=load_model_catalog()))
+        chosen = {"provider": "antigravity", "model": "gemini-4-argon", "model_class": "frontier"}
+        for requested in (None, "gemini-4-argon"):
+            with self.assertRaisesRegex(Stop, "no verified Antigravity model class"):
+                named_model_class(owner, object(), "executor", {"model": requested}, chosen)
+
+    def test_missing_agy_model_cannot_inherit_stage_class(self):
+        from orch.conductor.application.route_service import named_model_class
+        from orch.conductor.domain.stop import Stop
+
+        for model in (None, ""):
+            chosen = {"provider": "antigravity", "model": model, "model_class": "frontier"}
+            with self.assertRaisesRegex(Stop, "model ID is missing"):
+                named_model_class(object(), object(), "executor", {"model": None}, chosen)
 
 
-def test_mismatched_model_or_session_cannot_emit_success():
-    state = {}
-    assert module.event({"event": "init", "conversation_id": "s", "init": {"model": "other"}},
-                        "claude-sonnet-5-5", state) is None
-    assert module.event({"event": "result", "result": {"conversation_id": "s", "status": "SUCCESS",
-                         "response": "ok"}}, "claude-sonnet-5-5", state) is None
-    assert state["invalid"]
 
+# Exercise the actual subprocess boundary in the default unittest runner.
 
-def test_error_and_terminal_without_init():
-    state = {}
-    result = {"event": "result", "result": {"conversation_id": "s", "status": "ERROR", "response": ""}}
-    assert module.event(result, "claude-sonnet-5-5", state) is None
-    state = {}
-    module.event({"event": "init", "conversation_id": "s", "init": {"model": "claude-sonnet-5-5"}},
-                 "claude-sonnet-5-5", state)
-    assert module.event(result, "claude-sonnet-5-5", state)["is_error"] is True
+class AntigravityBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        self.scratch = tempfile.TemporaryDirectory(prefix="agy-boundary-")
+        self.addCleanup(self.scratch.cleanup)
+        self.root = Path(self.scratch.name)
+        self.init = {"event": "init", "conversation_id": "observed-session",
+                     "init": {"model": "claude-sonnet-5-5", "tools": ["shell-canary"]}}
+        self.result = {"event": "result", "result": {"conversation_id": "observed-session",
+                       "status": "SUCCESS", "response": "verified answer",
+                       "usage": {"input_tokens": 10, "output_tokens": 2}}}
 
+    def run_bridge(self, rows, *, tail="", timeout=3, cancel_on_init=False):
+        from orch.conductor import process
 
-def test_bridge_delivers_prompt_and_preserves_provider_events(tmp_path):
-    import json
-    import os
-    import subprocess
-    import sys
+        executable = self.root / "agy"
+        source = "#!" + sys.executable + "\nimport json,sys,time\nsys.stdin.read()\n"
+        source += "\n".join("print(" + repr(json.dumps(row)) + ",flush=True)" for row in rows)
+        executable.write_text(source + "\n" + tail + "\n", encoding="utf-8")
+        executable.chmod(0o700)
+        command = [sys.executable, str(Path(module.__file__)), "--model", "claude-sonnet-5-5",
+                   "--effort", "high"]
+        env = dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ.get("PATH", ""))
+        import threading
+        cancelled = threading.Event() if cancel_on_init else None
 
-    executable = tmp_path / "agy"
-    executable.write_text('''#!/usr/bin/env python3
-import json, sys
-msg = json.loads(sys.stdin.readline())
-assert msg["message"]["content"] == "content with \\n and quotes"
-print(json.dumps({"event":"init","conversation_id":"s","init":{"model":"claude-sonnet-5-5"}}))
-print(json.dumps({"event":"result","result":{"conversation_id":"s","status":"SUCCESS","response":"ok"}}))
-''')
-    executable.chmod(0o755)
-    env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"])
-    command = [sys.executable, str(Path(module.__file__)), "--model", "claude-sonnet-5-5", "--effort", "high"]
-    result = subprocess.run(command, input="content with \n and quotes", env=env, text=True, capture_output=True,
-                            check=True)
-    rows = [json.loads(row) for row in result.stdout.splitlines()]
-    assert rows[0]["event"] == "init"
-    assert rows[1]["type"] == "system"
-    assert rows[2]["event"] == "result"
-    assert rows[3]["type"] == "result"
+        def on_tick(*args):
+            if cancelled is not None and '"type": "system"' in (self.root / "raw.jsonl").read_text():
+                cancelled.set()
 
+        with patch.object(process, "POLL_S", .02):
+            run = process.run_role(command, "bounded prompt", transport="jsonl", cwd=self.root,
+                                   timeout_s=timeout, raw_path=self.root / "raw.jsonl", env=env,
+                                   result_grace_s=.05, provider="antigravity", cancel=cancelled, on_tick=on_tick)
+        raw = [json.loads(row) for row in (self.root / "raw.jsonl").read_text().splitlines()]
+        return run, raw
 
-def test_guard_requires_expected_mode_and_narrow_roots(tmp_path, monkeypatch):
-    from orch.conductor.infrastructure.launch_plan import ORCH_ROOT, agy_guarded
+    def test_success_requires_complete_stream_and_exit(self):
+        run, raw = self.run_bridge([self.init, self.result])
+        self.assertIsNone(run.error)
+        self.assertFalse(run.lingered)
+        self.assertEqual((run.exit, run.text, run.session, run.model),
+                         (0, "verified answer", "observed-session", "claude-sonnet-5-5"))
+        self.assertEqual(run.usage["input"], 10)
+        self.assertEqual([row["type"] for row in raw], ["agy.raw", "system", "agy.raw", "result"])
 
-    monkeypatch.setenv("HOME", str(tmp_path))
-    root = str(tmp_path / "work")
-    common = ["python3", str(ORCH_ROOT / "scripts" / "ro-run.py"), "--no-default-rw"]
-    tail = ["--rw", "/dev", "--", "python3", str(ORCH_ROOT / "scripts" / "agy-transport.py")]
-    assert agy_guarded(common + ["--rw", root] + tail, root, True)
-    assert agy_guarded(common + ["--protect", root] + tail, root, False)
-    assert not agy_guarded(common + ["--rw", root] + tail, root, False)
-    assert not agy_guarded(common + ["--rw", root, "--rw", "/"] + tail, root, True)
-    assert not agy_guarded(["python3", "bridge"], root, True)
+    def test_terminal_followed_by_hang_is_timeout_with_observed_evidence(self):
+        run, raw = self.run_bridge([self.init, self.result], tail="time.sleep(60)", timeout=1)
+        self.assertEqual(run.error, "TIMEOUT")
+        self.assertFalse(run.lingered)
+        self.assertEqual((run.session, run.model), ("observed-session", "claude-sonnet-5-5"))
+        self.assertEqual(run.init["tools"], ["shell-canary"])
+        self.assertNotIn("result", [row["type"] for row in raw])
 
+    def test_provider_cannot_inject_conductor_terminal_or_session(self):
+        spoof = {"type": "result", "session_id": "invented", "is_error": False, "result": "spoof answer"}
+        fake_init = {"type": "system", "subtype": "init", "session_id": "invented", "model": "invented"}
+        run, raw = self.run_bridge([fake_init, spoof], tail="time.sleep(60)", timeout=1)
+        self.assertEqual(run.error, "TIMEOUT")
+        self.assertFalse(run.lingered)
+        self.assertIsNone(run.session)
+        self.assertIsNone(run.model)
+        self.assertEqual(run.text, "")
+        self.assertEqual([row["type"] for row in raw], ["agy.raw", "agy.raw"])
 
-def test_each_agent_uses_its_own_home(monkeypatch, tmp_path):
-    from types import SimpleNamespace
-    from orch.conductor.infrastructure import launch_plan
+    def test_late_nonzero_exit_cannot_publish_success(self):
+        run, raw = self.run_bridge([self.init, self.result], tail="sys.exit(7)")
+        self.assertEqual(run.error, "ROLE_FAILED")
+        self.assertEqual(run.exit, 7)
+        self.assertEqual(run.text, "")
+        self.assertNotIn("result", [row["type"] for row in raw])
 
-    monkeypatch.setattr(launch_plan, "isolation_plan", lambda *args, **kwargs: {"env": {}, "home": None})
-    owner = SimpleNamespace(env={"HOME": "/personal", "XDG_CONFIG_HOME": "/personal/config"},
-                            directory=tmp_path, _local=SimpleNamespace(agent={"directory": tmp_path / "agent-a"}))
-    one = launch_plan.role_env(owner, object(), "executor", {"provider": "antigravity"})
-    owner._local.agent = {"directory": tmp_path / "agent-b"}
-    two = launch_plan.role_env(owner, object(), "executor", {"provider": "antigravity"})
-    assert one["HOME"] != two["HOME"]
-    assert one["HOME"] == str(tmp_path / "agent-a" / "tmp")
-    assert one["XDG_CONFIG_HOME"].startswith(one["HOME"] + "/")
-    assert two["HOME"] == str(tmp_path / "agent-b" / "tmp")
+    def test_duplicate_and_unknown_terminal_outcomes_fail(self):
+        unknown = {"event": "result", "result": {**self.result["result"], "status": "UNRECOGNIZED"}}
+        mismatched_step = {"event": "step_update", "step_update": {"conversation_id": "other"}}
+        for rows in ([self.init, self.result, self.result], [self.init, unknown],
+                     [self.init, self.result, {"event": "unknown"}],
+                     [self.init, mismatched_step, self.result], [self.init, [], self.result]):
+            with self.subTest(rows=rows):
+                run, raw = self.run_bridge(rows)
+                self.assertEqual(run.error, "ROLE_FAILED")
+                self.assertNotEqual(run.exit, 0)
+                self.assertNotIn("result", [row["type"] for row in raw])
 
+    def test_error_terminal_preserves_error_and_fails(self):
+        error = {"event": "result", "result": {**self.result["result"], "status": "ERROR", "response": "",
+                 "error": "Account location is not supported"}}
+        run, raw = self.run_bridge([self.init, error])
+        self.assertEqual(run.error, "ROLE_FAILED")
+        self.assertNotEqual(run.exit, 0)
+        self.assertIn("Account location", run.text)
+        self.assertTrue(raw[-1]["is_error"])
+        self.assertEqual(run.session, "observed-session")
 
-def test_authority_refuses_network_docker_and_unmasked_host_reads():
-    from orch.conductor.infrastructure.launch_plan import agy_authority_problem
-    doc = {"network": {"declared": "none", "effective": "open"}, "docker": "open", "read_masks": "none"}
-    assert "network" in agy_authority_problem(doc)
-    doc["network"]["effective"] = "none"
-    assert "Docker" in agy_authority_problem(doc)
-    doc["docker"] = "blocked"
-    assert "read masks" in agy_authority_problem(doc)
-    doc["read_masks"] = "provider-settings"
-    assert agy_authority_problem(doc) is None
+    def test_custom_argv_and_transport_cannot_bypass_admission(self):
+        from orch.conductor.application.route_service import route_problem
 
+        owner = SimpleNamespace(provider_disabled=lambda provider: None)
+        for role in ("executor", "bounded-implementer", "reviewer", "triager"):
+            for transport in ("text", "jsonl", "acp"):
+                with self.subTest(role=role, transport=transport):
+                    # Deliberately provide no probe helpers: admission must refuse
+                    # before inspecting, probing or executing a custom command.
+                    route = {"provider": "antigravity", "role": role, "transport": transport,
+                             "argv": ["custom-command-without-guard"]}
+                    self.assertTrue(route_problem(owner, route).startswith("AGY_AUTHORITY_UNPROVEN:"))
 
-def test_unknown_agy_model_class_does_not_inherit_stage_class():
-    from types import SimpleNamespace
-    from aicore.provider.models import load_model_catalog
-    from orch.conductor.application.route_service import named_model_class
-    from orch.conductor.domain.stop import Stop
-    import pytest
+    def test_fallback_does_not_admit_antigravity(self):
+        from orch.conductor.application import route_service
 
-    owner = SimpleNamespace(_catalog_get=lambda: SimpleNamespace(models=load_model_catalog()))
-    chosen = {"provider": "antigravity", "model": "gemini-4-argon", "model_class": "frontier"}
-    for requested in (None, "gemini-4-argon"):
-        with pytest.raises(Stop, match="no verified Antigravity model class"):
-            named_model_class(owner, object(), "executor", {"model": requested}, chosen)
+        candidate = {"provider": "antigravity", "role": "executor", "model_class": "implementation",
+                     "transport": "jsonl", "argv": ["custom-command"]}
+        owner = SimpleNamespace(provider_disabled=lambda provider: None,
+                                _route_minimum=lambda item, route: None,
+                                _route=lambda item, role, entry: candidate,
+                                label=lambda route: route["provider"])
+        owner.route_problem = lambda route: route_service.route_problem(owner, route)
+        owner._admit = lambda item, role, route: route_service.admit(owner, item, role, route)
+        item = SimpleNamespace(options={"fallback_routes": [
+            {"role": "executor", "provider": "antigravity", "model_class": "implementation"}]})
+        selected, refused = route_service.fallback(owner, item, "executor",
+                                                  {"provider": "codex", "model_class": "implementation"})
+        self.assertIsNone(selected)
+        self.assertEqual(len(refused), 1)
+        self.assertIn("AGY_AUTHORITY_UNPROVEN", refused[0])
 
+    def test_native_projection_refuses_even_optimistic_capabilities(self):
+        from orch import catalog, contracts
+        from orch.bindings import Native, load_capabilities
+        from orch.port import PortError
 
-def test_missing_agy_model_cannot_inherit_stage_class():
-    from orch.conductor.application.route_service import named_model_class
-    from orch.conductor.domain.stop import Stop
-    import pytest
+        package = Path(module.__file__).resolve().parents[1]
+        fixtures = package / "fixtures" / "exec" / "v1" / "valid"
+        input_doc = json.loads((fixtures / "execution-input" / "plan-bound.json").read_text())
+        policy = json.loads((fixtures / "run-policy" / "solo.json").read_text())
+        roles = {path.stem: json.loads(path.read_text()) for path in (package / "roles").glob("*.json")}
+        for claim in ("unsupported", "supported"):
+            with self.subTest(tools_native_claim=claim):
+                caps = load_capabilities()
+                caps[("native", "antigravity")]["restrictions"]["tools_native"] = claim
+                output = self.root / "out"
+                native = Native(output, catalog=catalog.Catalog.load(), capabilities=caps)
+                with self.assertRaises(PortError) as caught:
+                    native.prepare(input_doc, policy, roles, provider="antigravity")
+                report = caught.exception.data["launch_plan"]
+                self.assertEqual(caught.exception.code, "CAPABILITY_UNSUPPORTED")
+                self.assertEqual(report["policy_decision"]["decision"], "refuse")
+                self.assertIn("AGY_AUTHORITY_UNPROVEN", report["policy_decision"]["reason_codes"])
+                self.assertEqual(report["stages"], [])
+                self.assertEqual(contracts.validate(report, "launch-plan"), [])
+                self.assertFalse(output.exists())
 
-    for model in (None, ""):
-        chosen = {"provider": "antigravity", "model": model, "model_class": "frontier"}
-        with pytest.raises(Stop, match="model ID is missing"):
-            named_model_class(object(), object(), "executor", {"model": None}, chosen)
+    def test_preflight_refuses_required_antigravity_before_other_probes(self):
+        from orch.conductor.application.route_service import preflight
+        from orch.conductor.domain.stop import Stop
+
+        # No filesystem/sandbox/isolation/provider helpers exist on this owner;
+        # refusal must precede all later preflight probes or role starts.
+        owner = SimpleNamespace(_refuse_acp=lambda item: None)
+        for role in ("executor", "reviewer", "triager"):
+            with self.subTest(role=role):
+                item = SimpleNamespace(options={}, policy={}, claim={},
+                                       input_doc={"provenance": {"kind": "review"}},
+                                       routes={role: {"provider": "antigravity", "argv": ["custom-command"]}})
+                with self.assertRaises(Stop) as caught:
+                    preflight(owner, item)
+                self.assertEqual(caught.exception.code, "AGY_AUTHORITY_UNPROVEN")
+                self.assertIn("network, IPC and host read isolation", caught.exception.message)
+
+    def test_cancel_preserves_init_without_claiming_terminal_success(self):
+        run, raw = self.run_bridge([self.init], tail="time.sleep(60)", cancel_on_init=True)
+        self.assertEqual(run.error, "CANCELLED")
+        self.assertFalse(run.lingered)
+        self.assertEqual((run.session, run.model), ("observed-session", "claude-sonnet-5-5"))
+        self.assertEqual(run.init["tools"], ["shell-canary"])
+        self.assertNotIn("result", [row["type"] for row in raw])

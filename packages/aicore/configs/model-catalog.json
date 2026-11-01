@@ -393,8 +393,8 @@
       },
       "model_inventory": {
         "verified_at": "2026-11-01",
-        "source": "agy 1.4.12 models and live CLI probes",
-        "verification": "agy models lists Claude and Gemini families; Sonnet and Opus high CLI replies were observed; Gemini Argon low was rejected by backend due to account location, Gemini Argon high and Flash low/high timed out. CLI model selectors do not attest the inference backend.",
+        "source": "agy 1.4.12 models; bounded independent CLI probes on 2026-11-01",
+        "verification": "All four families are listed with low/medium/high. Independent recheck: Sonnet isolated-HOME authentication failed; Opus high returned quota exhaustion; Argon low and Flash low returned location restriction. No successful inference or resume was established in this recheck. Existing Claude class selectors are routing policy, not availability or backend attestation.",
         "entries": [
           {
             "id": "claude-sonnet-5-5",
@@ -416,13 +416,13 @@
             "id": "gemini-4-argon",
             "roles": [],
             "status": "listed-unverified",
-            "notes": "agy lists low, medium and high; low request was rejected due to account location. Model class and successful response are unverified."
+            "notes": "agy lists low, medium and high; independent low request returned location restriction on 2026-11-01. Model class and successful response are unverified."
           },
           {
             "id": "gemini-3.8-flash",
             "roles": [],
             "status": "listed-unverified",
-            "notes": "agy lists low, medium and high; observed low/high requests timed out. Model class and successful response are unverified."
+            "notes": "agy lists low, medium and high; independent low request returned location restriction on 2026-11-01. Model class and successful response are unverified."
           }
         ]
       }

@@ -101,6 +101,17 @@ class TestAdmittedClass(unittest.TestCase):
         self.assertIsNone(models.admitted_class(self.catalog, "claude-code", ""))
         self.assertIsNone(models.admitted_class(self.catalog, "cursor", "auto"))  # routing-assist is no class
 
+    def test_exact_terra_route_keeps_local_roles_and_default_pins(self):
+        self.assertEqual(models.admitted_class(self.catalog, "codex", "gpt-6.1-terra"), "frontier")
+        terra = next(entry for entry in models.inventory(self.catalog, "codex")["entries"]
+                     if entry["id"] == "gpt-6.1-terra")
+        self.assertEqual(terra["roles"], ["frontier", "implementation", "review", "design", "audit"])
+        for model in ("gpt-6.2-terra", "gpt-6.1-terra-preview"):
+            with self.subTest(model=model):
+                self.assertIsNone(models.admitted_class(self.catalog, "codex", model))
+        self.assertEqual(models.select_model(self.catalog, "codex", "implementation"), "gpt-6-sol")
+        self.assertEqual(models.select_model(self.catalog, "codex", "frontier"), "gpt-6-astra")
+
     def inventory(self, *entries):
         item = models.ProviderModels("p", {}, {}, models._freeze({"entries": list(entries)}))
         return models.ModelCatalog("1", (item,))

@@ -186,6 +186,15 @@ class ClaimTests(Case):
         self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", "ROUTE_MODEL_UNKNOWN"), answer)
         self.assertEqual(self.item("P1.1")["status"], "todo")
 
+    def test_claim_admits_exact_owner_terra_route_without_replacing_actor(self):
+        actor = {"provider": "codex", "model": "gpt-6.1-terra", "effort": "high"}
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", **actor}}))
+        answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"], run_id="run-terra",
+                         submission_id="sub-terra", actor=actor)
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"], {**actor, "session": "run-terra"})
+
     def test_interactive_config_refuses_unknown_model_through_cli(self):
         with mock.patch.dict(os.environ, {"SKM_PLANNER_ROUTING__UNKNOWN_MODEL": "refuse"}):
             answer = run(self.project, "start", self.plan, "P1.1", "--actor", "claude-code/mystery-model/high",

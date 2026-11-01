@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "607ad27bfc51",
-  "reason": "Объединены Antigravity, scoped delivery и bounded fresh continuation",
+  "captured_from": "3dc32b6d8f6e",
+  "reason": "Объединены Antigravity и точный Terra selector с сохранением локальных ролей",
   "generators": [
     {
       "id": "skiller-registry",
@@ -263,7 +263,7 @@
     "packages/orch/lib/orch/_types/records.py": "67ae82c931db212dc47d24ccb2f52c1b80451eff74a12055944ab8790150649e",
     "packages/orch/lib/orch/_types/work_source.py": "b8a46a247d4aaea211a5694171279a8cbfa9699fb00fe7e1ee30e84b8f6515cc",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
-    "packages/planner/docs/reference/provider-model-roles.md": "778fde1f9478be0d1c768f552b74ebedba360483f9fe972f84fc23c132d9f11b",
+    "packages/planner/docs/reference/provider-model-roles.md": "877ac0f5c46c850971b324ac4bf23480ae1fe5df6c10476d2826f7360871693a",
     "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
     "packages/planner/lib/planner/plan/_types.py": "3387f88355863ebba3e702765a9135931f82c6b97333c4582bf48b7d91887033",
     "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",

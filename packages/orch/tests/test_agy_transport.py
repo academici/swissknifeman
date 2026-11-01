@@ -364,6 +364,37 @@ class AntigravityBoundaryTests(unittest.TestCase):
                 self.assertEqual(contracts.validate(report, "launch-plan"), [])
                 self.assertFalse(output.exists())
 
+    def test_native_prepare_opt_in_is_executor_only(self):
+        from orch import catalog, contracts, launch
+        from orch.bindings import Native, load_capabilities
+        from orch.port import PortError
+
+        package = Path(module.__file__).resolve().parents[1]
+        fixtures = package / "fixtures" / "exec" / "v1" / "valid"
+        input_doc = json.loads((fixtures / "execution-input" / "plan-bound.json").read_text())
+        policy = json.loads((fixtures / "run-policy" / "solo.json").read_text())
+        roles = {path.stem: json.loads(path.read_text()) for path in (package / "roles").glob("*.json")}
+        engine = Native(self.root / "prepared", catalog=catalog.Catalog.load())
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: launch.AGY_OPT_IN_VALUE}):
+            plan = engine.prepare(input_doc, policy, roles, provider="antigravity")
+            self.assertEqual(contracts.validate(plan, "launch-plan"), [])
+            (stage,) = plan["stages"]
+            self.assertEqual((stage["role"], stage["transport"]), ("executor", "jsonl"))
+            self.assertIn(str(package / "scripts" / "agy-transport.py"), stage["argv"])
+            # Optimistic read-only capabilities cannot grant a different role the exception.
+            caps = load_capabilities()
+            caps[("native", "antigravity")]["restrictions"]["tools_native"] = "supported"
+            other = json.loads(json.dumps(policy))
+            next(stage for stage in other["stages"] if stage["kind"] == "primary")["role"] = "bounded-implementer"
+            with self.assertRaises(PortError) as caught:
+                Native(self.root / "other", catalog=catalog.Catalog.load(), capabilities=caps).prepare(
+                    input_doc, other, roles, provider="antigravity")
+            self.assertIn("AGY_AUTHORITY_UNPROVEN", caught.exception.data["launch_plan"]["policy_decision"]["reason_codes"])
+        with patch.dict(os.environ, {launch.AGY_OPT_IN: "yes"}):
+            with self.assertRaises(PortError) as caught:
+                engine.prepare(input_doc, policy, roles, provider="antigravity")
+            self.assertIn("AGY_AUTHORITY_UNPROVEN", caught.exception.data["launch_plan"]["policy_decision"]["reason_codes"])
+
     def test_preflight_refuses_required_antigravity_before_other_probes(self):
         from orch.conductor.application.route_service import preflight
         from orch.conductor.domain.stop import Stop

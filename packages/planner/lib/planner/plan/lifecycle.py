@@ -345,7 +345,13 @@ def _route_verdict(plan: store.Plan, items: list[str], actor: dict, *, strict_ro
     of an item (a correction continuation is checked against ``route.correction``).
     """
     admitted = admitted_class(actor["provider"], actor["model"])
-    if admitted is None and settings.refuse_unknown_model(plan, strict_route=strict_route):
+    # This owner-accepted exception admits only the explicitly named executor
+    # selector; it does not assign a verified model class or alter the pool.
+    agy_exception = (strict_route and actor["provider"] == "antigravity"
+                     and actor["model"] == "gemini-4-argon-high"
+                     and os.environ.get("SKM_ORCH_AGY_UNSAFE_EXECUTOR")
+                     == "accept-unisolated-network-docker-host-reads")
+    if admitted is None and not agy_exception and settings.refuse_unknown_model(plan, strict_route=strict_route):
         raise PlanError("ROUTE_MODEL_UNKNOWN", f"{actor['provider']}/{actor['model']} is not in the model pool")
     for item_id in items:
         need = (routes or {}).get(item_id) or plan.items[item_id].get("route") or {}

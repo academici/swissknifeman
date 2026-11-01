@@ -195,6 +195,35 @@ class ClaimTests(Case):
         self.assertEqual(answer["status"], "claimed", answer)
         self.assertEqual(self.item("P1.1")["result"]["executor"], {**actor, "session": "run-terra"})
 
+    def test_claim_agy_explicit_opt_in_keeps_class_unverified(self):
+        actor = {"provider": "antigravity", "model": "gemini-4-argon-high", "effort": "high"}
+        key = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
+        value = "accept-unisolated-network-docker-host-reads"
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"route": {"class": "implementation", "effort": "high"}}))
+        for setting, candidate, reason in (
+                ("", actor, "ROUTE_MODEL_UNKNOWN"),
+                ("yes", actor, "ROUTE_MODEL_UNKNOWN"),
+                (value, {**actor, "model": "gemini-4-argon"}, "ROUTE_MODEL_UNKNOWN"),
+                (value, {**actor, "effort": "low"}, "ROUTE_UNDERSHOOT")):
+            with self.subTest(setting=setting, actor=candidate), mock.patch.dict(os.environ, {key: setting}):
+                answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"],
+                                 run_id="agy", submission_id="sub-agy", actor=candidate,
+                                 actor_source="options", actor_fields=["provider", "model", "effort"])
+                self.assertEqual((answer["status"], answer["reason_code"]), ("blocked", reason), answer)
+                self.assertEqual(self.item("P1.1")["status"], "todo")
+        with mock.patch.dict(os.environ, {key: value}):
+            answer = self.op(worksource.op_claim, op="claim", plan=self.plan, items=["P1.1"],
+                             run_id="agy", submission_id="sub-agy", actor=actor,
+                             actor_source="options", actor_fields=["provider", "model", "effort"])
+        self.assertEqual(answer["status"], "claimed", answer)
+        self.assertEqual(self.item("P1.1")["result"]["executor"], {**actor, "session": "agy"})
+        lifecycle = partners.planner_engine("plan.lifecycle")
+        self.assertIsNone(lifecycle.admitted_class(actor["provider"], actor["model"]))
+        store = partners.planner_engine("plan.store")
+        starts = [event for event in store.read_log(self.project / "plans" / self.plan) if event["type"] == "start"]
+        self.assertEqual(starts[-1]["data"]["route"], "ROUTE_MODEL_UNKNOWN")
+
     def test_interactive_config_refuses_unknown_model_through_cli(self):
         with mock.patch.dict(os.environ, {"SKM_PLANNER_ROUTING__UNKNOWN_MODEL": "refuse"}):
             answer = run(self.project, "start", self.plan, "P1.1", "--actor", "claude-code/mystery-model/high",

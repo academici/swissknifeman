@@ -136,6 +136,10 @@
         "artifacts_dir": {
           "description": "Repository-relative folder where a run keeps the committed artifacts of the piece of work (stage-report, review verdict, check evidence).",
           "$ref": "#/$defs/text"
+        },
+        "output_write_dirs": {
+          "description": "Canonical absolute directories for declared outputs of this item outside the checkout.",
+          "type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/text"}
         }
       },
       "required": ["op", "input_ref", "input_id", "digest", "reused", "artifact_id"],

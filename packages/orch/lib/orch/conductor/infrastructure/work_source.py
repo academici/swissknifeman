@@ -313,6 +313,7 @@ def brief(self, item: Item) -> dict:
     except RuntimeError as error:
         raise Stop("PROJECT_NOT_GIT", str(error)) from None
     return {"input_path": str(path), "input_id": answer.get("input_id"), "artifacts_dir": artifacts,
+            **({"output_write_dirs": answer["output_write_dirs"]} if "output_write_dirs" in answer else {}),
             "base": base}
 
 
@@ -375,11 +376,13 @@ def prepare(self, item: Item) -> dict:
                          for item_ in plan.get("refusals", [])]}
 
 
-def refresh_input(self, item: Item) -> None:
+def refresh_input(self, item: Item, *, required: bool = False) -> None:
     """A plan amended during the piece (a wider write set, a fixed check) reaches the next executor round: the brief
     is asked again and, when its digest changed, replaces the input of every later step."""
     code, answer, err = self._orch("source", "brief", "--run", item.orch_run)
     if code != 0 or not isinstance(answer, dict) or not answer.get("input_ref"):
+        if required or getattr(item, "output_write_dirs", []):
+            raise Stop("BRIEF_REFUSED", "cannot refresh workspace output authority")
         self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
                            message=f"the brief could not be asked again ({(err or 'no answer').splitlines()[0][:160]}); "
                                    "the next round keeps the earlier input")
@@ -387,15 +390,26 @@ def refresh_input(self, item: Item) -> None:
     try:
         doc = json.loads(blobs.read_bytes(answer["input_ref"], project=self.project))
     except (OSError, ValueError, KeyError):
+        if required or getattr(item, "output_write_dirs", []):
+            raise Stop("BRIEF_UNAVAILABLE", "cannot refresh workspace output authority") from None
         self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
                            message="the re-asked brief cannot be read; the next round keeps the earlier input")
         return
     errors = input_errors(doc)
     if errors:
+        if required or getattr(item, "output_write_dirs", []):
+            raise Stop("BRIEF_INVALID", "cannot refresh workspace output authority")
         self.progress.emit("info", item=item.ref, reason_code="INPUT_REFRESH_FAILED",
                            message=f"the re-asked brief is outside exec/v1 ({errors[0][:160]}); the next round keeps "
                                    "the earlier input")
         return
+    if required and ("output_write_dirs" not in answer or source_problems(answer, "output")):
+        raise Stop("BRIEF_INVALID", "cannot verify workspace output authority")
+    output_dirs = answer.get("output_write_dirs", [])
+    if output_dirs != getattr(item, "output_write_dirs", []):
+        item.output_write_dirs = output_dirs
+        item.state["steps"]["brief"]["result"]["output_write_dirs"] = output_dirs
+        self._save()
     if doc.get("digest") and doc.get("digest") != item.input_doc.get("digest"):
         check_brief_size(item, doc)
         write_json(item.directory / "input.json", doc)
@@ -512,12 +526,17 @@ def commit(self, item: Item, paths: list, role: Optional[str] = None, stage: Opt
 
 def open_artifacts(self, item: Item, brief: dict) -> None:
     """The artifact folder of the piece, as the brief named it."""
+    item.output_write_dirs = brief.get("output_write_dirs", [])
     folder = (self.project / brief["artifacts_dir"]).resolve()
     try:
         folder.relative_to(self.project.resolve())
     except ValueError:
         raise Stop("ARTIFACTS_OUTSIDE_PROJECT", f"artifacts_dir {brief['artifacts_dir']!r} of {item.ref} leads outside the project") from None
     item.artifacts = self.project / brief["artifacts_dir"]
+    if "output_write_dirs" in brief:
+        steps = item.state.get("steps", {})
+        if (steps.get("executor.1") or {}).get("status") != "done":
+            refresh_input(self, item, required=True)
 
 
 def write_artifact(self, item: Item, name: str, doc) -> Path:

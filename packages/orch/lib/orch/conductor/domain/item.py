@@ -32,6 +32,7 @@ class Item:
     claim: dict
     input_doc: dict = field(default_factory=dict)
     artifacts: Optional[Path] = None
+    output_write_dirs: list = field(default_factory=list)
     policy: dict = field(default_factory=dict)
     options: dict = field(default_factory=dict)
     sources: dict = field(default_factory=dict)

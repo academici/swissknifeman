@@ -3,6 +3,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -22,6 +23,66 @@ class TranslationTests(unittest.TestCase):
         self.scratch = tempfile.TemporaryDirectory(prefix="agy-translation-")
         self.addCleanup(self.scratch.cleanup)
         self.root = Path(self.scratch.name)
+
+    def test_workspace_output_grant_matches_envelope_and_landlock(self):
+        from orch.conductor.infrastructure import launch_plan
+        from orch.conductor.policies import authority as rules
+        if launch_plan.landlock_abi() < 3:
+            self.skipTest("Landlock ABI 3 required for truncation confinement")
+        project = self.root / "project"
+        output = self.root / "workspace/plans/one/artifacts/item"
+        other = self.root / "workspace/plans/two/artifacts/item"
+        for path in (project, output, other):
+            path.mkdir(parents=True)
+        argv = ["python3", str(launch_plan.ORCH_ROOT / "scripts/ro-run.py"), "--no-default-rw",
+                "--rw", str(project), "--rw", "/dev", "--", "python3",
+                str(launch_plan.ORCH_ROOT / "scripts/agy-transport.py"), "--model", "m", "--effort", "high"]
+        route = {"provider": "antigravity", "argv": argv}
+        env = rules.compute("executor", route, access="confined", sandbox={}, isolation={}, declared_network="none",
+                            sandbox_domains=[], extra_paths=[], transcripts=None, project=str(project),
+                            home=str(self.root), writes=True, output_dirs=[str(output)])
+        self.assertIn({"path": str(output), "why": "output"}, env["write_roots"])
+        self.assertEqual(launch_plan.agy_output_dirs(SimpleNamespace(output_write_dirs=[str(output)])), [str(output)])
+        from orch.conductor.domain.stop import Stop
+        for invalid in ("/", "relative", str(output / "missing")):
+            with self.assertRaises(Stop):
+                launch_plan.agy_output_dirs(SimpleNamespace(output_write_dirs=[invalid]))
+        with self.assertRaises(Stop):
+            launch_plan.agy_output_dirs(SimpleNamespace(output_write_dirs=[str(output)], input_doc={"scope": {"read_only": True}}))
+        built = launch_plan.argv_from(env, route, [], shared=False, project=str(project))
+        self.assertEqual(built[built.index("--rw-strict") + 1], str(output))
+        self.assertFalse(launch_plan.agy_guarded(argv[:2] + ["--rw-strict", str(other)] + argv[2:], str(project), True))
+        command = built[:built.index("--") + 1] + [sys.executable, "-c",
+            "from pathlib import Path; import sys; Path(sys.argv[1]).write_text('ok'); "
+            "\ntry: Path(sys.argv[2]).write_text('bad')\nexcept PermissionError: pass\nelse: sys.exit(9)",
+            str(output / "result"), str(other / "result")]
+        done = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual((output / "result").read_text(), "ok")
+        self.assertFalse((other / "result").exists())
+        output.rename(output.with_name("original"))
+        output.symlink_to(other, target_is_directory=True)
+        refused = subprocess.run(command, capture_output=True, text=True)
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn("RO_RUN_RW_ESCAPE", refused.stderr)
+
+    def test_refresh_replaces_output_authority_and_refuses_stale_grants(self):
+        from orch.conductor.infrastructure import work_source
+        from orch.conductor.domain.stop import Stop
+        item = SimpleNamespace(orch_run="run", ref="P1.1", output_write_dirs=["/old"],
+                               input_doc={"digest": "same"}, state={"steps": {"brief": {"result": {}}}})
+        saved = []
+        owner = SimpleNamespace(project=self.root, _save=lambda: saved.append(True),
+                                _orch=lambda *a: (0, {"input_ref": "ref", "output_write_dirs": ["/new"]}, ""))
+        with patch.object(work_source.blobs, "read_bytes", return_value=b'{"digest":"same"}'), \
+             patch.object(work_source, "input_errors", return_value=[]):
+            work_source.refresh_input(owner, item)
+        self.assertEqual(item.output_write_dirs, ["/new"])
+        self.assertEqual(item.state["steps"]["brief"]["result"]["output_write_dirs"], ["/new"])
+        self.assertEqual(saved, [True])
+        owner._orch = lambda *a: (1, None, "failed")
+        with self.assertRaises(Stop):
+            work_source.refresh_input(owner, item)
 
     def test_success_keeps_observed_model_session_and_usage(self):
         state = {}

@@ -153,7 +153,7 @@ def agy_guarded(argv: list, project: str, writing: bool) -> bool:
     return bool(len(tail) >= 2 and tail[0] == "python3" and os.path.realpath(tail[1]) == os.path.realpath(trusted_bridge) and
                 prefix and len(prefix) >= 2 and prefix[0] == "python3" and
                 os.path.realpath(prefix[1]) == os.path.realpath(trusted_guard) and
-                "--no-default-rw" in prefix and (wanted, project) in pairs and
+                "--no-default-rw" in prefix and "--rw-strict" not in prefix and (wanted, project) in pairs and
                 "/dev" in roots and all(root in permitted for root in roots))
 
 
@@ -166,6 +166,24 @@ def agy_authority_problem(doc: dict) -> Optional[str]:
     if doc["read_masks"] == "none":
         return "AGY tools have no enforced host secret read masks"
     return None
+
+
+def agy_output_dirs(item: Item) -> list:
+    """Validate work-source output grants before recording or applying them."""
+    paths = getattr(item, "output_write_dirs", [])
+    input_doc = getattr(item, "input_doc", {})
+    if paths and (input_doc.get("scope", {}).get("read_only") or
+                  input_doc.get("result_contract", {}).get("write_authority") == "none"):
+        raise Stop("AGY_GUARD_REQUIRED", "read-only work cannot receive output write directories")
+    for path in paths:
+        try:
+            directory = Path(path)
+            if not directory.is_absolute() or directory == Path("/") or directory.resolve(strict=True) != directory \
+                    or not directory.is_dir():
+                raise ValueError("not an existing canonical directory")
+        except (OSError, RuntimeError, TypeError, ValueError):
+            raise Stop("AGY_GUARD_REQUIRED", f"invalid output write directory: {path!r}") from None
+    return list(paths)
 
 
 def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, quiet: bool = False) -> dict:
@@ -219,7 +237,8 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         sandbox_domains=((item.options or {}).get("instructions") or {}).get("sandbox_domains") or [],
         extra_paths=list(self._scope_option(item, "extra_paths", [])), transcripts=transcripts,
         project=str(getattr(self, "project", None) or ""), home=os.path.expanduser("~"), writes=writes(role),
-        listed=listed, tmpdir=agent_tmpdir(self), protection=protection)
+        listed=listed, tmpdir=agent_tmpdir(self), protection=protection,
+        output_dirs=agy_output_dirs(item) if route.get("provider") == "antigravity" and role == "executor" else [])
     agy_problem = agy_authority_problem(doc) if route.get("provider") == "antigravity" else None
     if admit and agy_problem and not launch.agy_executor_opted_in(role, self.env):
         raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
@@ -315,6 +334,10 @@ def argv_from(envelope: dict, route: dict, resume: list, *, shared: bool, projec
     if guarded and authority_rules.guard_prefix(argv) is not None:
         at = argv.index("--")
         argv = argv[:at] + [part for path in guarded for part in ("--rw", path)] + argv[at:]
+    output_dirs = authority_rules.extra_roots(envelope, "output")
+    if output_dirs and authority_rules.guard_prefix(argv) is not None:
+        at = argv.index("--")
+        argv = argv[:at] + [part for path in output_dirs for part in ("--rw-strict", path)] + argv[at:]
     if granted and route.get("provider") == "codex":  # a confined Codex writes beside the project only where it is told
         argv = codex_add_dirs(argv, granted)
     sources = []

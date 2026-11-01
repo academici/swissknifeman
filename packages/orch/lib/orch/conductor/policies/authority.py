@@ -100,7 +100,7 @@ def _root(path: str, project: str, home: str) -> str:
 def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: dict, declared_network: str,
             sandbox_domains: list, extra_paths: list, transcripts: Optional[str], project: str, home: str,
             writes: bool, listed: Optional[dict] = None, tmpdir: Optional[str] = None,
-            protection: Optional[dict] = None) -> dict:
+            protection: Optional[dict] = None, output_dirs: Optional[list] = None) -> dict:
     """The ``authority-envelope`` of a launch of ``role`` on ``route``. ``access`` is ``[orch.launch] access``,
     ``sandbox`` the probed facts of the Claude sandbox (:func:`sandbox_applies`), ``isolation`` the plan of
     ``policies/isolation.plan``, ``declared_network`` ``tools.network`` of the role manifest, ``sandbox_domains`` and
@@ -168,6 +168,8 @@ def compute(role: str, route: dict, *, access: str, sandbox: dict, isolation: di
         roots += [{"path": tilde(_expand(path, home), home), "why": "extra_paths"} for path in extra_paths]
     if transcripts:
         roots.append({"path": tilde(transcripts, home), "why": "transcripts"})
+    if provider == "antigravity" and role == "executor":
+        roots += [{"path": path, "why": "output"} for path in output_dirs or []]
     if tmpdir and not protected:
         roots.append({"path": tilde(tmpdir, home), "why": "tmpdir"})
     # (3) the setting sources: an isolated Claude Code role loads only the settings of the user, not those of the project

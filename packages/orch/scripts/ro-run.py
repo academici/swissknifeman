@@ -79,7 +79,11 @@ def _parse(argv: list[str]) -> tuple[list[str], list[str], list[str]]:
     index = 0
     while index < len(options):
         option = options[index]
-        if option == "--rw" and index + 1 < len(options):
+        if option in ("--rw", "--rw-strict") and index + 1 < len(options):
+            if option == "--rw-strict":
+                writable.append(("strict", options[index + 1]))
+                index += 2
+                continue
             writable.append(os.path.expanduser(options[index + 1]))
             explicit.append(os.path.expanduser(options[index + 1]))
             index += 2
@@ -91,6 +95,8 @@ def _parse(argv: list[str]) -> tuple[list[str], list[str], list[str]]:
         else:
             _die("USAGE", f"unknown option {option!r}", 2)
     if protected:
+        if any(isinstance(path, tuple) for path in writable):
+            _die("RO_RUN_RW_ESCAPE", "--rw-strict cannot be combined with --protect", 3)
         writable = _protect(writable, protected, explicit, defaults)
     return writable, command, [os.path.realpath(path) for path in protected]
 
@@ -118,6 +124,26 @@ def restrict(writable: list[str], protected: list[str] | tuple[str, ...] = ()) -
     if ruleset < 0:
         _die("LANDLOCK_FAILED", f"create ruleset: {os.strerror(ctypes.get_errno())}")
     for path in writable:
+        if isinstance(path, tuple):
+            path = path[1]
+            if not os.path.isabs(path) or os.path.normpath(path) != path:
+                _die("RO_RUN_RW_ESCAPE", path, 3)
+            fd = os.open("/", os.O_PATH | os.O_DIRECTORY | os.O_CLOEXEC)
+            try:
+                for part in path.split("/")[1:]:
+                    child = os.open(part, os.O_PATH | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd)
+                    os.close(fd)
+                    fd = child
+            except OSError:
+                os.close(fd)
+                _die("RO_RUN_RW_ESCAPE", path, 3)
+            try:
+                rule = struct.pack("=Qi", handled, fd)
+                if libc.syscall(SYS_ADD_RULE, ruleset, RULE_PATH_BENEATH, rule, 0) != 0:
+                    _die("LANDLOCK_FAILED", f"allow writes under {path}: {os.strerror(ctypes.get_errno())}")
+            finally:
+                os.close(fd)
+            continue
         if not os.path.isdir(path):
             continue
         fd = os.open(path, os.O_PATH | os.O_CLOEXEC)

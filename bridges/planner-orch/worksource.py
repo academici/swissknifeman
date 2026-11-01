@@ -47,6 +47,7 @@ from hashlib import sha256
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 import tempfile
@@ -474,6 +475,62 @@ def check_brief(doc: dict) -> None:
                   + ("; ".join(lines[:3]) or f"orch validate exited {code} without a verdict"))
 
 
+def output_write_dirs(plan, item_id: str) -> list[str]:
+    """Directories of this item's declared workspace outputs, never a plan or workspace root."""
+    root = Path(plan.root).absolute()
+    if root.resolve() != root:
+        raise Blocked("ARTIFACT_REFUSED", "plan directory contains a symlink")
+    result = []
+    for entry in plan.items[item_id].get("artifacts") or []:
+        path = entry.get("path") if isinstance(entry, dict) and entry.get("role") == "output" else None
+        if not isinstance(path, str) or not path.startswith("@plan/artifacts/"):
+            continue
+        rel = path.removeprefix("@plan/")
+        parts = rel.split("/")
+        if any(part in ("", ".", "..") for part in parts[:-1]) or "\\" in rel or parts[-1] in (".", ".."):
+            raise Blocked("ARTIFACT_REFUSED", f"invalid output path {path!r}")
+        target = root / rel
+        directory = target if path.endswith("/") else target.parent
+        fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            for part in root.parts[1:]:
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                os.close(fd)
+                fd = child
+            for part in directory.relative_to(root).parts:
+                try:
+                    os.mkdir(part, dir_fd=fd)
+                except FileExistsError:
+                    pass
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                os.close(fd)
+                fd = child
+            if not path.endswith("/"):
+                try:
+                    info = os.stat(target.name, dir_fd=fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    pass
+                else:
+                    if stat.S_ISLNK(info.st_mode):
+                        raise OSError("output is a symlink")
+                    if stat.S_ISDIR(info.st_mode):
+                        child = os.open(target.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                        try:
+                            opened = os.fstat(child)
+                            if (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+                                raise OSError("output directory changed during validation")
+                        finally:
+                            os.close(child)
+                        directory = target
+        except OSError as error:
+            raise Blocked("ARTIFACT_REFUSED", f"unsafe output path {path!r}: {error}") from None
+        finally:
+            os.close(fd)
+        if str(directory) not in result:
+            result.append(str(directory))
+    return result
+
+
 def op_brief(fields: dict) -> dict:
     import brief  # the planner engine is located and imported only when a brief is built
     from aicore.state import blobs
@@ -507,6 +564,8 @@ def op_brief(fields: dict) -> dict:
     if plan.root.resolve().is_relative_to(Path(project).resolve()):
         # a plan in a workspace has no repository-relative folder: orch keeps the records in its fallback folder
         answer["artifacts_dir"] = plan.root.resolve().relative_to(Path(project).resolve()).as_posix() + "/artifacts/" + ref
+    else:
+        answer["output_write_dirs"] = [] if doc.get("scope", {}).get("read_only") else output_write_dirs(plan, item)
     return answer
 
 

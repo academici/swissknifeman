@@ -2077,7 +2077,10 @@ initial probes. Do not treat a routed, catalogued or listed model as a completed
 For a local checkout, the owner can opt in for the conductor process by setting
 `SKM_ORCH_AGY_UNSAFE_EXECUTOR=accept-unisolated-network-docker-host-reads` on its command line.
 This permits only the JSONL AGY executor through the shipped bridge, with an agent-specific HOME,
-the narrow Landlock write guard, no additional write paths and no resume command. The per-attempt
+the narrow Landlock write guard and no resume command. For workspace plans, the trusted work source supplies only
+directories of the current item's declared `@plan/artifacts/` outputs. The guard opens those canonical directories
+without following symlinks, and the per-attempt authority evidence lists them as output write roots. A missing or
+symlinked output directory is refused at launch; other plans are not granted by this mechanism. The per-attempt
 authority evidence records the explicit opt-in and that network, IPC (including Docker) and host reads are not
 isolated. The `/dev` write grant includes `/dev/shm`, and Landlock ABI below 3 does not prevent
 truncation outside the writable roots. The executor prompt forbids push, publication, tags and remote settings changes; those

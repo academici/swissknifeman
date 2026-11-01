@@ -29,9 +29,6 @@ ORCH = partners.find_orch_root()
 if ORCH is None:
     raise unittest.SkipTest("orch not found (set SKM_ORCH_ROOT)")
 partners.use_aicore()
-if str(ORCH / "lib") not in sys.path:
-    sys.path.insert(0, str(ORCH / "lib"))
-
 from aicore.ext import plugins  # noqa: E402
 from aicore.state import blobs  # noqa: E402
 from aicore.util import digest, schema  # noqa: E402
@@ -1140,8 +1137,6 @@ class ReadyRuntimeTests(Case):
         self.assertEqual(list(outside.iterdir()), [])
 
     def test_existing_directory_output_gets_no_parent_or_sibling_grant(self):
-        from orch.conductor.infrastructure import launch_plan
-        from orch.conductor.policies import authority
         self.workspace()
         one = self.plan_root / "artifacts/one"
         two = self.plan_root / "artifacts/two"
@@ -1151,41 +1146,8 @@ class ReadyRuntimeTests(Case):
         self.ops.add_artifact(self.plan_root, "P1.1", "@plan/artifacts/one", "output")
         answer = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
         self.assertEqual(answer["output_write_dirs"], [str(one)])
-        guard = partners.require_orch() / "scripts/ro-run.py"
-        argv = ["python3", str(guard), "--no-default-rw", "--rw", str(self.project), "--rw", "/dev", "--", "true"]
-        route = {"provider": "antigravity", "argv": argv}
-        envelope = authority.compute("executor", route, access="confined", sandbox={}, isolation={},
-                                     declared_network="none", sandbox_domains=[], extra_paths=[], transcripts=None,
-                                     project=str(self.project), home=os.environ["HOME"], writes=True,
-                                     output_dirs=answer["output_write_dirs"])
-        self.assertIn({"path": str(one), "why": "output"}, envelope["write_roots"])
-        built = launch_plan.argv_from(envelope, route, [], shared=False, project=str(self.project))
-        self.assertEqual(built[built.index("--rw-strict") + 1], str(one))
-        if launch_plan.landlock_abi() < 3:
-            self.skipTest("Landlock ABI 3 required for truncation confinement")
-        script = ("from pathlib import Path; import sys\n"
-                  "Path(sys.argv[1]).write_text('ok')\n"
-                  "for path in sys.argv[2:]:\n"
-                  " try: Path(path).write_text('bad')\n"
-                  " except PermissionError: continue\n"
-                  " raise SystemExit(9)\n")
-        command = built[:built.index("--") + 1] + [sys.executable, "-c", script, str(one / "ok"),
-                                                   str(two / "bad"), str(other_plan / "bad")]
-        done = subprocess.run(command, capture_output=True, text=True)
-        self.assertEqual(done.returncode, 0, done.stderr)
-        self.assertFalse((two / "bad").exists())
-        one.rename(one.with_name("saved"))
-        one.symlink_to(other_plan, target_is_directory=True)
-        done = subprocess.run(command, capture_output=True, text=True)
-        self.assertNotEqual(done.returncode, 0)
-        self.assertIn("RO_RUN_RW_ESCAPE", done.stderr)
 
-    def test_resumed_first_executor_refreshes_revoked_and_replaced_output(self):
-        from types import SimpleNamespace
-        from orch.conductor.domain.stop import Stop
-        from orch.conductor.infrastructure import launch_plan, work_source as conductor_source
-        from orch.conductor.policies import authority
-
+    def test_refreshed_brief_revokes_or_replaces_output(self):
         self.workspace()
         old = self.plan_root / "artifacts/old"
         new = self.plan_root / "artifacts/new"
@@ -1193,66 +1155,15 @@ class ReadyRuntimeTests(Case):
             directory.mkdir(parents=True)
         self.ops.add_artifact(self.plan_root, "P1.1", "@plan/artifacts/old/", "output")
         initial = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
-        body = blobs.read_bytes(initial["input_ref"], project=self.project)
-        cached = {"artifacts_dir": ".swissknifeman/orch-artifacts/run/P1.1",
-                  "output_write_dirs": initial["output_write_dirs"]}
-        saved = {"steps": {"brief": {"status": "done", "result": cached}, "executor.1": {"status": "started"}}}
-        state_path = Path(self.tmp.name) / "saved-state.json"
+        self.assertEqual(initial["output_write_dirs"], [str(old)])
 
         for replacement in (None, "@plan/artifacts/new/"):
             with self.subTest(replacement=replacement):
-                state_path.write_text(json.dumps(saved), encoding="utf-8")
-                item = SimpleNamespace(ref="P1.1", orch_run="run-a", directory=self.project,
-                                       input_doc=json.loads(body), state=json.loads(state_path.read_text()), policy={})
                 artifacts = [{"role": "output", "path": replacement}] if replacement else []
                 changed = run(self.project, "set", self.plan, "P1.1", "--json", json.dumps({"artifacts": artifacts}))
                 self.assertEqual(changed.returncode, 0, changed.stderr)
-                calls = []
-
-                def ask(*args):
-                    calls.append(args)
-                    return 0, self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a"), ""
-
-                owner = SimpleNamespace(project=self.project, _orch=ask,
-                                        _save=lambda: state_path.write_text(json.dumps(item.state), encoding="utf-8"))
-                with mock.patch.object(conductor_source.blobs, "read_bytes", return_value=body):
-                    conductor_source.open_artifacts(owner, item, item.state["steps"]["brief"]["result"])
-                expected = [str(new)] if replacement else []
-                self.assertEqual(len(calls), 1)
-                self.assertEqual(item.output_write_dirs, expected)
-                self.assertEqual(json.loads(state_path.read_text())["steps"]["brief"]["result"]["output_write_dirs"], expected)
-                guard = partners.require_orch() / "scripts/ro-run.py"
-                argv = ["python3", str(guard), "--no-default-rw", "--rw", str(self.project), "--rw", "/dev", "--", "true"]
-                route = {"provider": "antigravity", "argv": argv}
-                envelope = authority.compute("executor", route, access="confined", sandbox={}, isolation={},
-                                             declared_network="none", sandbox_domains=[], extra_paths=[], transcripts=None,
-                                             project=str(self.project), home=os.environ["HOME"], writes=True,
-                                             output_dirs=item.output_write_dirs)
-                self.assertNotIn(str(old), [root["path"] for root in envelope["write_roots"]])
-                built = launch_plan.argv_from(envelope, route, [], shared=False, project=str(self.project))
-                self.assertNotIn(str(old), built)
-                self.assertEqual([built[i + 1] for i, arg in enumerate(built[:-1]) if arg == "--rw-strict"], expected)
-                if launch_plan.landlock_abi() >= 3:
-                    code = ("from pathlib import Path; import sys\n"
-                            "try: Path(sys.argv[1]).write_text('bad')\n"
-                            "except PermissionError: pass\n"
-                            "else: raise SystemExit(9)\n"
-                            "if len(sys.argv)>2: Path(sys.argv[2]).write_text('ok')\n")
-                    args = [str(old / "bad")] + ([str(new / "ok")] if replacement else [])
-                    done = subprocess.run(built[:built.index("--") + 1] + [sys.executable, "-c", code, *args],
-                                          capture_output=True, text=True)
-                    self.assertEqual(done.returncode, 0, done.stderr)
-                    self.assertFalse((old / "bad").exists())
-                failed = SimpleNamespace(project=self.project, _orch=lambda *args: (1, None, "refused"))
-                retry = SimpleNamespace(ref="P1.1", orch_run="run-a", state=json.loads(json.dumps(saved)))
-                with self.assertRaises(Stop):
-                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
-                retry.state["steps"]["brief"]["result"]["output_write_dirs"] = []
-                with self.assertRaises(Stop):
-                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
-                failed._orch = lambda *args: (0, {"input_ref": "invalid"}, "")
-                with mock.patch.object(conductor_source.blobs, "read_bytes", return_value=body), self.assertRaises(Stop):
-                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
+                refreshed = self.op(worksource.op_brief, op="brief", plan=self.plan, ref="P1.1", run_id="run-a")
+                self.assertEqual(refreshed["output_write_dirs"], [str(new)] if replacement else [])
 
     def assert_ready(self, digest):
         p = self.store.load_plan(self.plan_root)

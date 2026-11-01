@@ -7,6 +7,8 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -435,6 +437,106 @@ class RegisterReportTests(unittest.TestCase):
         self.assertEqual(code({"summary": "s", "open_issues": [{"text": "t", "kind": "note", "why": "x"}, {"kind": "note"}]}),
                          "REGISTER_REPORT_INVALID")
         self.assertEqual(code({"summary": " ", "open_issues": [{"kind": "note"}]}), "REGISTER_REPORT_INVALID")
+
+
+class WorkspaceOutputAuthorityTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.base = Path(tmp.name)
+        self.project = self.base / "project"
+        self.project.mkdir()
+        self.one = self.base / "workspace/plan/artifacts/one"
+        self.two = self.base / "workspace/plan/artifacts/two"
+        self.other = self.base / "workspace/other-plan/artifacts/two"
+        for directory in (self.one, self.two, self.other):
+            directory.mkdir(parents=True)
+
+    def command(self, output_dirs):
+        from orch.conductor.infrastructure import launch_plan
+        from orch.conductor.policies import authority
+        guard = ROOT / "scripts/ro-run.py"
+        argv = ["python3", str(guard), "--no-default-rw", "--rw", str(self.project), "--rw", "/dev", "--", "true"]
+        route = {"provider": "antigravity", "argv": argv}
+        envelope = authority.compute("executor", route, access="confined", sandbox={}, isolation={},
+                                     declared_network="none", sandbox_domains=[], extra_paths=[], transcripts=None,
+                                     project=str(self.project), home=str(self.base), writes=True, output_dirs=output_dirs)
+        built = launch_plan.argv_from(envelope, route, [], shared=False, project=str(self.project))
+        return envelope, built
+
+    def test_output_grant_excludes_siblings_and_refuses_symlink_escape(self):
+        from orch.conductor.infrastructure import launch_plan
+        envelope, built = self.command([str(self.one)])
+        self.assertIn({"path": str(self.one), "why": "output"}, envelope["write_roots"])
+        self.assertEqual(built[built.index("--rw-strict") + 1], str(self.one))
+        if launch_plan.landlock_abi() < 3:
+            self.skipTest("Landlock ABI 3 required for truncation confinement")
+        script = ("from pathlib import Path; import sys\n"
+                  "Path(sys.argv[1]).write_text('ok')\n"
+                  "for path in sys.argv[2:]:\n"
+                  " try: Path(path).write_text('bad')\n"
+                  " except PermissionError: continue\n"
+                  " raise SystemExit(9)\n")
+        command = built[:built.index("--") + 1] + [sys.executable, "-c", script, str(self.one / "ok"),
+                                                   str(self.two / "bad"), str(self.other / "bad")]
+        done = subprocess.run(command, capture_output=True, text=True)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertFalse((self.two / "bad").exists())
+        self.one.rename(self.one.with_name("saved"))
+        self.one.symlink_to(self.other, target_is_directory=True)
+        done = subprocess.run(command, capture_output=True, text=True)
+        self.assertNotEqual(done.returncode, 0)
+        self.assertIn("RO_RUN_RW_ESCAPE", done.stderr)
+
+    def test_resumed_first_executor_refreshes_revoked_and_replaced_output(self):
+        from orch.conductor.domain.stop import Stop
+        from orch.conductor.infrastructure import launch_plan, work_source as conductor_source
+
+        doc = json.loads(INPUT.read_text(encoding="utf-8"))
+        stored = blobs.put_json(doc, sensitivity="normal", name="brief-W1", project=self.project)
+        cached = {"artifacts_dir": ".swissknifeman/orch-artifacts/run/W1", "output_write_dirs": [str(self.one)]}
+        saved = {"steps": {"brief": {"status": "done", "result": cached}, "executor.1": {"status": "started"}}}
+        state_path = self.base / "saved-state.json"
+        for replacement in (False, True):
+            with self.subTest(replacement=replacement):
+                state_path.write_text(json.dumps(saved), encoding="utf-8")
+                item = SimpleNamespace(ref="W1", orch_run="run-a", directory=self.project, input_doc=doc,
+                                       state=json.loads(state_path.read_text()), policy={})
+                expected = [str(self.two)] if replacement else []
+                answer = {"op": "brief", "input_ref": stored, "input_id": "brief@123", "digest": "a" * 64,
+                          "reused": False, "artifact_id": "brief-W1-123456789abc", "output_write_dirs": expected}
+                ask = mock.Mock(return_value=(0, answer, ""))
+                owner = SimpleNamespace(project=self.project, _orch=ask,
+                                        _save=lambda: state_path.write_text(json.dumps(item.state), encoding="utf-8"))
+                conductor_source.open_artifacts(owner, item, item.state["steps"]["brief"]["result"])
+                self.assertEqual(ask.call_count, 1)
+                self.assertEqual(item.output_write_dirs, expected)
+                self.assertEqual(json.loads(state_path.read_text())["steps"]["brief"]["result"]["output_write_dirs"], expected)
+                envelope, built = self.command(item.output_write_dirs)
+                self.assertNotIn(str(self.one), [root["path"] for root in envelope["write_roots"]])
+                self.assertNotIn(str(self.one), built)
+                self.assertEqual([built[i + 1] for i, arg in enumerate(built[:-1]) if arg == "--rw-strict"], expected)
+                if launch_plan.landlock_abi() >= 3:
+                    code = ("from pathlib import Path; import sys\n"
+                            "try: Path(sys.argv[1]).write_text('bad')\n"
+                            "except PermissionError: pass\n"
+                            "else: raise SystemExit(9)\n"
+                            "if len(sys.argv)>2: Path(sys.argv[2]).write_text('ok')\n")
+                    args = [str(self.one / "bad")] + ([str(self.two / "ok")] if replacement else [])
+                    done = subprocess.run(built[:built.index("--") + 1] + [sys.executable, "-c", code, *args],
+                                          capture_output=True, text=True)
+                    self.assertEqual(done.returncode, 0, done.stderr)
+                    self.assertFalse((self.one / "bad").exists())
+                failed = SimpleNamespace(project=self.project, _orch=lambda *args: (1, None, "refused"))
+                retry = SimpleNamespace(ref="W1", orch_run="run-a", state=json.loads(json.dumps(saved)))
+                with self.assertRaises(Stop):
+                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
+                retry.state["steps"]["brief"]["result"]["output_write_dirs"] = []
+                with self.assertRaises(Stop):
+                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
+                failed._orch = lambda *args: (0, {"input_ref": "invalid"}, "")
+                with mock.patch.object(conductor_source.blobs, "read_bytes", return_value=json.dumps(doc).encode()), self.assertRaises(Stop):
+                    conductor_source.open_artifacts(failed, retry, retry.state["steps"]["brief"]["result"])
 
 
 class ConductorBriefTests(unittest.TestCase):

@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import threading
 import time
 import unittest
 from unittest import mock
@@ -493,7 +494,7 @@ class HealthyRunTests(FaultCase):
             f"released = Path({str(self.gate / 'check-released')!r})\n"
             f"Path({str(self.gate / 'check.pid')!r}).write_text(str(os.getpid()))\n"
             "started.touch()\n"
-            "while not released.exists(): pass\n", encoding="utf-8")
+            "while not released.exists() and released.parent.exists() and os.getppid() != 1: pass\n", encoding="utf-8")
         self.checks = [{"id": "V1", "cmd": shlex.join([sys.executable, str(check_script)]),
                         "expect": "exit 0", "kind": "acceptance"}]
         self.set_items()
@@ -519,10 +520,9 @@ class HealthyRunTests(FaultCase):
             self.assertTrue(step)
         finally:
             (self.gate / "check-released").touch()
-            pid_file = self.gate / "check.pid"
-            if (self.gate / "check-started").exists():
-                pid = int(pid_file.read_text())
-                eventually(self, lambda: not alive(pid), "the quiet check exited")
+            # Wait for the launcher even if the start marker was never observed: it may
+            # already have spawned the detached check, which can write the marker later.
+            conductor.wait(timeout=DEADLINE_S)
         self.assertEqual(0, conductor.wait(timeout=DEADLINE_S))
         self.assertTrue(self.finished(directory))
 
@@ -539,10 +539,72 @@ class QuietCheckCleanupTests(unittest.TestCase):
         with mock.patch.object(case, "supervise", side_effect=fail_supervisor):
             result = unittest.TestResult()
             case.run(result)
+        self.assertEqual([], result.errors)
         self.assertEqual(1, len(result.failures), result.errors)
         self.assertIn("injected supervisor assertion", result.failures[0][1])
         self.assertEqual(1, len(pids))
         self.assertFalse(alive(pids[0]), "the detached quiet check must exit on assertion failure")
+
+    def test_quiet_check_exits_when_start_marker_wait_fails(self):
+        case = HealthyRunTests("test_d_a_quiet_check_that_works_is_neither_hung_nor_killed")
+        original = eventually
+        pids = []
+        resume_threads = []
+
+        def fail_start_wait(test, condition, what, seconds=DEADLINE_S):
+            if what == "the check runs" and not pids:
+                original(test, condition, what, seconds)
+                pids.append(int((case.gate / "check.pid").read_text()))
+                os.kill(pids[0], signal.SIGSTOP)
+
+                def resume_after_release():
+                    try:
+                        deadline = time.monotonic() + DEADLINE_S
+                        while not (case.gate / "check-released").exists() and time.monotonic() < deadline:
+                            time.sleep(0.01)
+                    finally:
+                        try:
+                            os.kill(pids[0], signal.SIGCONT)
+                        except ProcessLookupError:
+                            pass
+
+                thread = threading.Thread(target=resume_after_release)
+                thread.start()
+                resume_threads.append(thread)
+                (case.gate / "check-started").unlink()
+                raise AssertionError("injected start timeout")
+            return original(test, condition, what, seconds)
+
+        with mock.patch.object(sys.modules[__name__], "eventually", side_effect=fail_start_wait):
+            result = unittest.TestResult()
+            case.run(result)
+        for thread in resume_threads:
+            thread.join()
+        self.assertEqual([], result.errors)
+        self.assertEqual(1, len(result.failures))
+        self.assertIn("injected start timeout", result.failures[0][1])
+        self.assertEqual(1, len(pids))
+        self.assertFalse(alive(pids[0]), "the detached quiet check must exit after a start timeout")
+
+    def test_nested_cleanup_errors_are_not_ignored(self):
+        def broken_run(case, result):
+            try:
+                raise AssertionError("injected supervisor assertion")
+            except AssertionError:
+                result.addFailure(case, sys.exc_info())
+            try:
+                raise RuntimeError("injected cleanup error")
+            except RuntimeError:
+                result.addError(case, sys.exc_info())
+            return result
+
+        outer = QuietCheckCleanupTests("test_quiet_check_exits_when_supervisor_assertion_fails")
+        with mock.patch.object(HealthyRunTests, "run", broken_run):
+            result = unittest.TestResult()
+            outer.run(result)
+        self.assertEqual([], result.errors)
+        self.assertEqual(1, len(result.failures))
+        self.assertIn("injected cleanup error", result.failures[0][1])
 
 
 if __name__ == "__main__":

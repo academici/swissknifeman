@@ -289,7 +289,7 @@ starts a run per lane. It never calls a model and never reads the streams of the
 inside the run (questions, advisor, panel), a decision the run leaves to the owner is a stop with one action in its message.
 
 ```text
-orch conduct autopilot start --plan P [--phase Pn] [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
+orch conduct autopilot start --plan P [--phase Pn] [--wait-blocked] [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
 orch conduct autopilot status [--json]
 orch conduct autopilot pause | resume | drain | stop
 orch conduct autopilot explain [--plan P] [--json]
@@ -315,6 +315,12 @@ failures retain their normal codes. The phase is recorded in `autopilot.json`, s
 retained on restart, including recovery and answered runs. An unfinished session cannot change its phase or adopt unbounded
 work with a new phase (`AUTOPILOT_PHASE_CONFLICT`); a stopped session with no outstanding run can explicitly start a different
 phase. Omitting the flag on restart retains an existing boundary. Without the flag on a new session the existing behavior applies.
+
+With `--phase Pn --wait-blocked`, a phase waiting or blocked result keeps the controller alive and records `phase_wait` in
+its state. It polls at `poll_s`; each saved run must confirm its relevant items are no longer blocked, and the source must select a ready lane of the same phase before a new run starts. Other blocked items remain outstanding across lanes, including while a later run waits for answers or becomes blocked itself; their run references survive recovery.
+An answered run also needs a clear run blocker and phase readiness before continuation. Source refusals stop with
+`AUTOPILOT_NOT_READY`; phase boundaries, requests and budgets remain in force. The option and outstanding wait survive
+detach and recovery. A stopped session with an outstanding wait retains its phase boundary.
 
 **Policy.** `[orch.autopilot]` (see [configuration](configuration.md)): `allowed` (default `false`) is set by the machine
 only: a project file that sets it is refused by the configuration (`CONFIG_LAYER_FORBIDDEN`), the project layer is then left

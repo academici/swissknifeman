@@ -16,6 +16,8 @@ refused (``RUN_BUSY``/``WORKTREE_BUSY`` -> ``AUTOPILOT_CHECKOUT_LOST``). Before 
 from __future__ import annotations
 
 import functools
+import hashlib
+import json
 import os
 from pathlib import Path
 import secrets
@@ -68,7 +70,7 @@ class Controller(LaunchFence):
     def __init__(self, project: Path, plan: str, settings, *, flags: Optional[dict] = None, config_file: Optional[Path] = None,
                  clock=None, launcher=None, readiness: Optional[Callable] = None, dirty: Optional[Callable] = None,
                  recover: Optional[Callable] = None, say: Optional[Callable] = None, label: Optional[str] = None,
-                 note: str = "", phase: Optional[str] = None):
+                 note: str = "", phase: Optional[str] = None, wait_blocked: bool = False):
         self.project, self.plan, self.settings = Path(project), plan, settings
         self.config_file = Path(config_file).resolve() if config_file else None  # children run in the project folder
         config_file = self.config_file
@@ -82,6 +84,9 @@ class Controller(LaunchFence):
         self.say = say or (lambda text: print(f"[autopilot] {text}", file=sys.stderr, flush=True))
         self.label, self.note = label, note
         self.phase = phase
+        self.wait_blocked = wait_blocked
+        self._phase_ready = None
+        self._phase_wait_resolved = False
         self.doc: dict = {}  # autopilot.json of the session, once ``start`` holds the lock
         self.grace_s = supervisor.Policy.build(settings).grace_s  # how long a child gets to end after SIGINT
 
@@ -103,11 +108,13 @@ class Controller(LaunchFence):
             if prior and prior.get("plan") == self.plan:
                 saved = prior.get("phase")
                 prior["waiting_runs"] = [row for row in prior.get("waiting_runs") or [] if still_waiting(self.root, row)]
-                pending = prior.get("stop") is None or prior.get("current") or prior.get("waiting_runs") or prior.get("quota_wait")
+                pending = prior.get("stop") is None or prior.get("current") or prior.get("waiting_runs") or prior.get("quota_wait") or prior.get("phase_wait")
                 if pending and self.phase and self.phase != saved:
                     return self._refuse("AUTOPILOT_PHASE_CONFLICT", "the existing session has unfinished work under a different phase boundary")
                 if saved and (pending or not self.phase):
                     self.phase = saved
+                if pending and prior.get("wait_blocked"):
+                    self.wait_blocked = True
             self.doc = self._session(prior)
             self._save()
             if self.label:
@@ -132,9 +139,11 @@ class Controller(LaunchFence):
         same = prior.get("plan") == self.plan
         if same and prior.get("stop") is None:  # a restart after a crash: the session, its counters and deadline go on
             return {"recoveries": {}, "quota_wait": None, **prior, **me, "project": str(self.project), "updated_at": stamp,
-                    "limits": limits}
+                    "limits": limits, **({"wait_blocked": True} if self.wait_blocked else {})}
         return {"$schema": records.TAGS["autopilot-state"][1], "plan": self.plan, "project": str(self.project), **me,
                 **({"phase": self.phase} if self.phase else {}),
+                **({"wait_blocked": True} if self.wait_blocked else {}),
+                **({"phase_wait": prior["phase_wait"]} if same and prior.get("phase_wait") else {}),
                 "started_at": stamp, "updated_at": stamp, "deadline_at": clock_mod.utc_stamp(now + self.policy["max_wall_s"]),
                 "mode": "running", "limits": limits, "counters": dict.fromkeys(COUNTERS, 0), "recoveries": {},
                 "current": prior.get("current") if same else None,
@@ -171,6 +180,85 @@ class Controller(LaunchFence):
     def _wait(self) -> None:
         self.clock.sleep(self.policy["poll_s"])
 
+    @staticmethod
+    def _snapshot(readiness: dict) -> str:
+        return hashlib.sha256(json.dumps(readiness, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+    def _phase_hold(self, code: str, message: str, run_id: Optional[str] = None, readiness: Optional[dict] = None,
+                    items: Optional[list] = None) -> Optional[int]:
+        if not self.wait_blocked:
+            return self._finish(code, message)
+        readiness = readiness if readiness is not None else self.readiness()
+        hold = self.doc.get("phase_wait")
+        if hold:
+            if items and run_id:
+                rows = hold.setdefault("blockers", [])
+                row = next((row for row in rows if row["run_id"] == run_id), None)
+                if row:
+                    row["items"] = list(dict.fromkeys(row["items"] + items))
+                else:
+                    rows.append({"run_id": run_id, "items": items})
+        else:
+            self.doc["phase_wait"] = {"code": code, "message": message, "snapshot": self._snapshot(readiness),
+                                      **({"run_id": run_id} if run_id else {}), **({"items": items} if items else {})}
+        if readiness.get("outcome") != "ok":
+            return self._finish("AUTOPILOT_NOT_READY", f"{readiness.get('reason_code') or 'READINESS_UNKNOWN'}: {readiness.get('message') or 'the work source tells no readiness'}")
+        self._save()
+        self._wait()
+        return None
+
+    def _poll_phase_wait(self) -> Optional[int]:
+        hold = self.doc["phase_wait"]
+        readiness = self.readiness()
+        if readiness.get("outcome") != "ok":
+            return self._finish("AUTOPILOT_NOT_READY", f"{readiness.get('reason_code') or 'READINESS_UNKNOWN'}: {readiness.get('message') or 'the work source tells no readiness'}")
+        kept = [row for row in self.doc["waiting_runs"] if still_waiting(self.root, row)]
+        if kept != self.doc["waiting_runs"]:
+            self.doc["waiting_runs"] = kept
+            self._save()
+        answered = answered_run(self.root, kept)
+        check = rules.check_phase_readiness(readiness, self.phase)
+        resolved = self._snapshot(readiness) != hold["snapshot"]
+        remaining, completed, known, tracked = set(), set(), False, set()
+        rows = ([hold] if hold.get("items") else []) + [row for row in hold.get("blockers", []) if row.get("items")]
+        if rows:
+            known = True
+            for row in rows:
+                run_id = row.get("run_id")
+                tracked.update(row["items"])
+                if not run_id or RunLease.held(self.root / run_id) is not False:
+                    known = False
+                    continue
+                view, _ = self.view(run_id)
+                blocked = {row["item"] for row in view.get("blocked") or []}
+                known = known and (view.get("status") in ("finished", "stopped", "waiting")
+                                   and set(row["items"]).issubset(view.get("items") or []))
+                remaining.update(blocked.intersection(row["items"]))
+                completed.update(view.get("closed") or [])
+            resolved = known and not remaining
+        if answered:
+            view, _ = self.view(answered)
+            if not view.get("blocked") and not check:
+                if rows:
+                    self._phase_ready = readiness
+                else:
+                    self.doc["phase_wait"] = None
+                    self._save()
+                return None
+        elif (resolved or known) and not self.doc["waiting_runs"]:
+            choice = rules.choose_phase_next(readiness, self.phase, self.policy)
+            lane = set(choice.get("items") or [])
+            if (choice["action"] == "run" and not check and not lane.intersection(remaining | completed)
+                    and (resolved or lane.intersection(tracked - remaining - completed))):
+                self._phase_ready = readiness
+                self._phase_wait_resolved = resolved
+                return None
+            if resolved and choice.get("code") in ("AUTOPILOT_PHASE_BOUNDARY", "AUTOPILOT_PHASE_COMPLETE"):
+                self.doc["phase_wait"] = None
+                return self._finish(choice["code"], choice["message"])
+        self._wait()
+        return None
+
     # ------------------------------------------------------------------------------------------------ the loop
 
     def _loop(self) -> int:
@@ -201,6 +289,7 @@ class Controller(LaunchFence):
                                 + (f"; run {waiting['run_id']} waits for the quota reset: orch conduct resume --run "
                                    f"{waiting['run_id']} after {waiting['until']}" if waiting else ""))
         if self.doc["mode"] == "paused":  # a quota wait stays and resumes only after a resume request
+            self._phase_ready = None
             self._wait()
             return None
         if waiting:
@@ -212,12 +301,15 @@ class Controller(LaunchFence):
         if self.doc["counters"]["runs"] >= self.policy["max_runs"]:
             return self._finish("AUTOPILOT_MAX_RUNS", f"{self.doc['counters']['runs']} run(s) started (max_runs "
                                 f"{self.policy['max_runs']})")
+        if self.doc.get("phase_wait") and self._phase_ready is None:
+            return self._poll_phase_wait()
         kept = [row for row in self.doc["waiting_runs"] if still_waiting(self.root, row)]
         if kept != self.doc["waiting_runs"]:  # continued and ended by hand: it waits for nothing any more
             self.doc["waiting_runs"] = kept
             self._save()
         answered = answered_run(self.root, self.doc["waiting_runs"])
-        readiness = None if answered else self.readiness()
+        readiness = None if answered else (self._phase_ready or self.readiness())
+        self._phase_ready = None
         if self.phase and not answered:
             choice = rules.choose_phase_next(readiness, self.phase, self.policy, len(self.doc["waiting_runs"]))
         else:
@@ -228,10 +320,20 @@ class Controller(LaunchFence):
         if choice["action"] == "run":
             self._write_options()
             self.doc["counters"]["runs"] += 1
+            if self._phase_wait_resolved:
+                self.doc.pop("phase_wait", None)
+            elif self.doc.get("phase_wait"):
+                hold = self.doc["phase_wait"]
+                for row in [hold] + hold.get("blockers", []):
+                    if row.get("items"):
+                        row["items"] = [item for item in row["items"] if item not in choice["items"]]
+            self._phase_wait_resolved = False
             return self._launch("run", clock_mod.new_run_id(), items=choice["items"])
         if choice["action"] == "wait_answers":
             self._wait()
             return None
+        if self.phase and choice.get("code") == "AUTOPILOT_PHASE_WAITING":
+            return self._phase_hold(choice["code"], choice["message"], readiness=readiness)
         return self._finish(choice["code"], choice["message"])
 
     def _take_request(self) -> Optional[str]:
@@ -252,6 +354,8 @@ class Controller(LaunchFence):
         if request is None:  # replaced between the rename and the read: nothing to do
             return None
         action = request["action"]
+        if action in ("pause", "resume"):
+            self._phase_ready = None
         if action != "stop":
             self.doc["mode"] = {"pause": "paused", "resume": "running", "drain": "draining"}[action]
             self._save()
@@ -297,7 +401,10 @@ class Controller(LaunchFence):
             view, _ = self.view(run_id)
             if view.get("blocked"):
                 blocker = view["blocked"][0]
-                return self._finish("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})")
+                if self.wait_blocked:
+                    self.doc["current"] = None
+                return self._phase_hold("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})", run_id,
+                                        items=[row["item"] for row in view["blocked"]])
             check = rules.check_phase_readiness(self.readiness(), self.phase)
             if check:
                 return self._finish(check["code"], check["message"])
@@ -544,12 +651,17 @@ class Controller(LaunchFence):
             waiting = {"action": "waiting", "items": [row["item"] for row in view.get("waiting") or []]}
             self._apply(run_id, waiting)
         if self.phase and view.get("blocked"):
+            if self.wait_blocked and action.get("code") in ("AUTOPILOT_BUDGET", "AUTOPILOT_DECISIONS_EXCEEDED",
+                                                              "AUTOPILOT_OWNER_NEEDED", "AUTOPILOT_CHECKOUT_LOST",
+                                                              "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED"):
+                return self._apply(run_id, action)
             blocker = view["blocked"][0]
-            return self._finish("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})")
+            return self._phase_hold("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})", run_id,
+                                    items=[row["item"] for row in view["blocked"]])
         if self.phase and exit_code == 4:
             if action["action"] == "stop":
                 return self._apply(run_id, action)
-            return self._finish("AUTOPILOT_PHASE_WAITING", f"phase {self.phase}: run {run_id} waits for answers")
+            return self._phase_hold("AUTOPILOT_PHASE_WAITING", f"phase {self.phase}: run {run_id} waits for answers", run_id)
         self.say(f"run {run_id} ended {view['status']} (exit {exit_code}): {action['action']}"
                  + (f" {action['code']}" if action.get("code") else ""))
         return self._apply(run_id, action)

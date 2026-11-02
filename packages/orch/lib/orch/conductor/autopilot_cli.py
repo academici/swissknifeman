@@ -33,6 +33,7 @@ def add_parsers(verbs) -> None:
     start = commands.add_parser("start", help="run the controller (in the foreground; --detach: in a session of its own)")
     start.add_argument("--plan", required=True, help="collection of the work source, such as a plan id")
     start.add_argument("--phase", help="restrict this session to the named phase")
+    start.add_argument("--wait-blocked", action="store_true", help="wait for blocked phase work to become ready")
     start.add_argument("--max-runs", dest="max_runs", type=int, default=None, metavar="N",
                        help="runs this session may start: it can only lower [orch.autopilot] max_runs")
     start.add_argument("--max-wall-s", dest="max_wall_s", type=int, default=None, metavar="S",
@@ -61,6 +62,8 @@ def check(parser: argparse.ArgumentParser, args) -> None:
         return
     if args.phase is not None and not args.phase.strip():
         parser.error("--phase must not be empty")
+    if args.wait_blocked and not args.phase:
+        parser.error("--wait-blocked requires --phase")
     if any(value is not None and value < 1 for value in (args.max_runs, args.max_wall_s)) \
             or args.run_tokens_hard_max is not None and args.run_tokens_hard_max < 0 \
             or args.poll_s is not None and not args.poll_s >= 0.05:
@@ -121,7 +124,7 @@ def _start(args, project: Path) -> int:
     previous = signal.signal(signal.SIGTERM, terminated)
     try:
         return autopilot.Controller(project, args.plan, current, flags=flags, config_file=args.config, say=say,
-                                    label=args.run_id, note=note, phase=args.phase).start()
+                                    label=args.run_id, note=note, phase=args.phase, wait_blocked=args.wait_blocked).start()
     finally:
         signal.signal(signal.SIGTERM, previous)
 
@@ -147,6 +150,8 @@ def _status(args, project: Path) -> int:
           f"closed, deadline {state['deadline_at']}" + (" (no controller holds the lock)" if doc["status"] == "dead" else ""))
     if state.get("phase"):
         print(f"  phase: {state['phase']}")
+    if state.get("phase_wait"):
+        print(f"  phase wait: {state['phase_wait']['code']}: {state['phase_wait']['message']}")
     if state["current"]:
         current = state["current"]
         print(f"  current: {current['kind']} {current['run_id']} ({current['state']}"

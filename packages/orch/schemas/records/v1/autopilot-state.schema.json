@@ -11,6 +11,17 @@
     "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:autopilot-state:v1"},
     "plan": {"description": "Collection of the work source the session works through.", "type": "string", "minLength": 1},
     "phase": {"description": "Persistent phase boundary of this session, if restricted.", "type": "string", "minLength": 1},
+    "wait_blocked": {"description": "Wait for phase work instead of stopping at a blocker.", "type": "boolean"},
+    "phase_wait": {"description": "Current phase blocker and source snapshot.", "type": ["object", "null"], "additionalProperties": false,
+      "required": ["code", "message", "snapshot"], "properties": {
+        "code": {"enum": ["AUTOPILOT_PHASE_WAITING", "AUTOPILOT_PHASE_BLOCKED"]},
+        "message": {"type": "string"}, "snapshot": {"type": "string"},
+        "run_id": {"$ref": "#/$defs/run_id"},
+        "items": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "blockers": {"description": "Additional blocked runs retained while other lanes wait.", "type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["run_id", "items"], "properties": {
+            "run_id": {"$ref": "#/$defs/run_id"},
+            "items": {"type": "array", "items": {"type": "string", "minLength": 1}}}}}}},
     "project": {"description": "Absolute path of the project.", "type": "string", "minLength": 1},
     "pid": {"description": "Process id of the controller.", "type": "integer", "minimum": 1},
     "start_ticks": {"description": "Start time of the controller process in clock ticks since boot (/proc/<pid>/stat), null when unknown.", "type": ["integer", "null"], "minimum": 0},

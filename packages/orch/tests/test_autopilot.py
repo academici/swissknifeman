@@ -406,6 +406,297 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_wait_blocked_polls_until_source_changes_and_keeps_phase_boundary(self):
+        source = [ready()]
+        controller = self.controller(lambda: ready("P2", items=("W3",)) if len(self.launcher.started) == 2 else source[0],
+                                     outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        observed = []
+        def advance(clock):
+            state = self.state()
+            if state.get("phase_wait"):
+                observed.append((state["mode"], state["stop"], len(self.launcher.started)))
+                if len(observed) == 2:
+                    store = RunStore(self.project, state["phase_wait"]["run_id"])
+                    _, run_state = store.load()
+                    run_state["items"]["W1"]["outcome"] = "stopped"
+                    store.save(run_state)
+                    source[0] = ready(phases=[{"id": "P1", "status": "ready", "digest": "sha256:" + "b" * 64}])
+            if len(self.launcher.started) == 2:
+                source[0] = ready("P2", items=("W3",))
+        self.clock.hooks = [advance]
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_PHASE_BOUNDARY"), (code, state["stop"]["code"]))
+        self.assertEqual([["W1"], ["W1"]], [row["items"] for row in self.launcher.started])
+        self.assertEqual([("running", None, 1)] * 2, observed[:2])
+
+    def test_wait_blocked_ignores_other_phase_changes_until_blocker_clears(self):
+        source = [ready(phases=[{"id": "P1", "status": "ready", "digest": DIGEST},
+                                {"id": "P2", "status": "ready", "digest": DIGEST}])]
+        controller = self.controller(lambda: ready("P2") if len(self.launcher.started) == 2 else source[0],
+                                     outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        looks = []
+        def change(clock):
+            state = self.state()
+            if state.get("phase_wait"):
+                looks.append(len(self.launcher.started))
+                source[0]["phases"][1]["digest"] = "sha256:" + "b" * 64
+                if len(looks) == 3:
+                    store = RunStore(self.project, state["phase_wait"]["run_id"])
+                    _, run_state = store.load()
+                    run_state["items"]["W1"]["outcome"] = "stopped"
+                    store.save(run_state)
+        self.clock.hooks = [change]
+        _, _, state = self.start(controller)
+        self.assertEqual([1, 1, 1], looks[:3])
+        self.assertEqual("AUTOPILOT_PHASE_BOUNDARY", state["stop"]["code"])
+        self.assertEqual([["W1"], ["W1"]], [row["items"] for row in self.launcher.started])
+
+    def test_wait_blocked_external_completion_allows_next_lanes(self):
+        source = [ready()]
+        def readiness():
+            if len(self.launcher.started) == 2:
+                return ready(items=("W3",))
+            if len(self.launcher.started) >= 3:
+                return ready("P2", items=("W4",))
+            return source[0]
+        controller = self.controller(readiness, outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        def complete(clock):
+            state = self.state()
+            if state.get("phase_wait"):
+                store = RunStore(self.project, state["phase_wait"]["run_id"])
+                _, run_state = store.load()
+                run_state["items"]["W1"]["outcome"] = "done"
+                store.save(run_state)
+                source[0] = ready(items=("W2",))
+                self.clock.hooks = []
+        self.clock.hooks = [complete]
+        _, _, state = self.start(controller)
+        self.assertEqual([["W1"], ["W2"], ["W3"]], [row["items"] for row in self.launcher.started])
+        self.assertEqual("AUTOPILOT_PHASE_BOUNDARY", state["stop"]["code"])
+
+    def test_wait_blocked_clears_multiple_items_across_lanes(self):
+        source = [ready(items=("W1", "W2"))]
+        controller = self.controller(lambda: ready("P2") if len(self.launcher.started) == 3 else source[0],
+                                     outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED", "W2": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        old_run = []
+        def resolve_one(clock):
+            state = self.state()
+            if not state.get("phase_wait"):
+                return
+            if not old_run:
+                old_run.append(state["phase_wait"]["run_id"])
+            store = RunStore(self.project, old_run[0])
+            _, run_state = store.load()
+            if len(self.launcher.started) == 1:
+                run_state["items"]["W1"]["outcome"] = "stopped"
+                source[0] = ready(items=("W1",))
+            else:
+                run_state["items"]["W1"]["outcome"] = "done"
+                run_state["items"]["W2"]["outcome"] = "stopped"
+                source[0] = ready(items=("W2",))
+            store.save(run_state)
+        self.clock.hooks = [resolve_one]
+        _, _, state = self.start(controller)
+        self.assertEqual([["W1", "W2"], ["W1"], ["W2"]], [row["items"] for row in self.launcher.started])
+        self.assertEqual("AUTOPILOT_PHASE_BOUNDARY", state["stop"]["code"])
+
+    def test_partial_lane_block_does_not_lose_earlier_blocker(self):
+        source = [ready(items=("W1", "W2"))]
+        controller = self.controller(lambda: ready("P2") if len(self.launcher.started) == 3 else source[0], outcomes=[
+            {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED", "W2": "ITEM_BLOCKED"}},
+            {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        observed = []
+        def resolve_first(clock):
+            state = self.state()
+            if state.get("phase_wait"):
+                hold = state["phase_wait"]
+                if len(self.launcher.started) == 1:
+                    store = RunStore(self.project, hold["run_id"])
+                    _, run_state = store.load()
+                    run_state["items"]["W1"]["outcome"] = "stopped"
+                    store.save(run_state)
+                    source[0] = ready(items=("W1",))
+                elif hold.get("blockers"):
+                    observed.append((state["mode"], state["stop"], len(self.launcher.started)))
+                    if len(observed) == 3:
+                        for row in [hold] + hold["blockers"]:
+                            store = RunStore(self.project, row["run_id"])
+                            _, run_state = store.load()
+                            for item in row["items"]:
+                                run_state["items"][item]["outcome"] = "stopped"
+                            store.save(run_state)
+                        source[0] = ready(items=("W1", "W2"))
+        self.clock.hooks = [resolve_first]
+        code, _, state = self.start(controller)
+        self.assertEqual([("running", None, 2)] * 3, observed[:3])
+        self.assertEqual([["W1", "W2"], ["W1"], ["W1", "W2"]], [row["items"] for row in self.launcher.started])
+        self.assertEqual((1, "AUTOPILOT_PHASE_BOUNDARY"), (code, state["stop"]["code"]))
+
+    def test_answered_lane_keeps_other_blocker_across_restart(self):
+        class Restart(Exception):
+            pass
+        source = [ready(items=("W1", "W2"))]
+        controller = self.controller(lambda: source[0], outcomes=[
+            {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED", "W2": "ITEM_BLOCKED"}},
+            {"status": "waiting", "waiting": {"W1": ["q1"]}},
+            {"status": "finished", "closed": ["W1"]}])
+        controller.phase, controller.wait_blocked = "P1", True
+        snapshots = []
+        def advance(clock):
+            state = self.state()
+            hold = state.get("phase_wait")
+            if not hold:
+                return
+            store = RunStore(self.project, hold["run_id"])
+            _, run_state = store.load()
+            if len(self.launcher.started) == 1:
+                run_state["items"]["W1"]["outcome"] = "stopped"
+                store.save(run_state)
+                source[0] = ready(items=("W1",))
+            elif state["waiting_runs"]:
+                self.answer(state["waiting_runs"][0]["run_id"], "W1")
+                source[0] = ready(items=("W2",))
+            elif len(self.launcher.started) == 3:
+                snapshots.append((state["mode"], state["stop"], hold["items"]))
+                if len(snapshots) == 3:
+                    raise Restart()
+        self.clock.hooks = [advance]
+        with self.assertRaises(Restart), contextlib.redirect_stderr(io.StringIO()):
+            controller.start()
+        self.assertEqual([("running", None, ["W2"])] * 3, snapshots)
+        self.assertEqual(["run", "run", "continue"], [row["kind"] for row in self.launcher.started])
+        saved = self.state()
+        recovered = self.controller(lambda: ready("P2") if self.launcher.started else ready(items=("W2",)))
+        recovered_looks = []
+        def release_after_recovery(clock):
+            state = self.state()
+            recovered_looks.append((state["mode"], state["stop"], len(self.launcher.started)))
+            if len(recovered_looks) == 2:
+                store = RunStore(self.project, saved["phase_wait"]["run_id"])
+                _, run_state = store.load()
+                run_state["items"]["W2"]["outcome"] = "stopped"
+                store.save(run_state)
+                self.clock.hooks = []
+        self.clock.hooks = [release_after_recovery]
+        code, _, state = self.start(recovered)
+        self.assertEqual([("running", None, 0)] * 2, recovered_looks)
+        self.assertEqual([["W2"]], [row["items"] for row in self.launcher.started])
+        self.assertEqual((1, "AUTOPILOT_PHASE_BOUNDARY"), (code, state["stop"]["code"]))
+
+    def test_resolved_source_wait_releases_phase_boundary(self):
+        for final in (ready(kind="terminal"), ready("P2", items=("W2",))):
+            with self.subTest(final=final["next"]["kind"]):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                source = [ready(kind="waiting")]
+                controller = self.controller(lambda: source[0])
+                controller.phase, controller.wait_blocked = "P1", True
+                self.clock.hooks = [lambda clock: source.__setitem__(0, final)]
+                _, _, state = self.start(controller)
+                self.assertIsNone(state.get("phase_wait"))
+                self.assertEqual([], self.launcher.started)
+                self.clock.hooks = []
+                other = self.controller(ready("P2", kind="terminal"))
+                other.phase = "P2"
+                code, _, state = self.start(other)
+                self.assertEqual((0, "P2"), (code, state["phase"]))
+
+    def test_pause_discards_ready_snapshot_before_resume(self):
+        for after in (ready(status="stale"), {"outcome": "refused", "reason_code": "AUTH_FAILED"}, ready()):
+            with self.subTest(after=after):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller(ready(kind="waiting"))
+                controller.phase, controller.wait_blocked = "P1", True
+                self.root.mkdir(parents=True, exist_ok=True)
+                controller.doc = controller._session(None)
+                controller.doc["phase_wait"] = {"code": "AUTOPILOT_PHASE_WAITING", "message": "waiting",
+                                                "snapshot": controller._snapshot(ready(kind="waiting"))}
+                controller.readiness.return_value = ready()
+                controller.readiness.side_effect = None
+                controller._poll_phase_wait()
+                self.assertIsNotNone(controller._phase_ready)
+                self.request("pause")
+                controller._step()
+                self.assertIsNone(controller._phase_ready)
+                controller.readiness.return_value = after
+                calls = controller.readiness.call_count
+                self.request("resume")
+                with contextlib.redirect_stderr(io.StringIO()):
+                    controller._step()
+                self.assertGreater(controller.readiness.call_count, calls)
+                self.assertEqual([], self.launcher.started)
+                if after.get("outcome") == "refused":
+                    self.assertEqual("AUTOPILOT_NOT_READY", controller.doc["stop"]["code"])
+                elif after["phases"][0]["status"] == "ready":
+                    controller._step()
+                    self.assertEqual([["W1"]], [row["items"] for row in self.launcher.started])
+
+    def test_wait_blocked_recovers_and_honours_stop_and_deadline(self):
+        for cause in ("stop", "deadline"):
+            with self.subTest(cause=cause):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller(ready(kind="waiting"), flags={"max_wall_s": 3})
+                controller.phase, controller.wait_blocked = "P1", True
+                prior = controller._session(None)
+                prior["phase_wait"] = {"code": "AUTOPILOT_PHASE_WAITING", "message": "waiting",
+                                       "snapshot": controller._snapshot(ready(kind="waiting"))}
+                records.write(self.root / autopilot.STATE_DOC, prior, "autopilot-state")
+                self.clock.hooks = [lambda clock: self.request("stop")] if cause == "stop" else []
+                recovered = self.controller(ready(kind="waiting"), flags={"max_wall_s": 3})
+                code, _, state = self.start(recovered)
+                self.assertEqual((0, "AUTOPILOT_STOPPED" if cause == "stop" else "AUTOPILOT_MAX_WALL"),
+                                 (code, state["stop"]["code"]))
+                self.assertTrue(state["wait_blocked"])
+                self.assertIsNotNone(state["phase_wait"])
+                self.assertEqual([], self.launcher.started)
+
+    def test_wait_blocked_source_refusal_is_not_success(self):
+        answers = iter([ready(kind="waiting"), {"outcome": "refused", "reason_code": "AUTH_FAILED"}])
+        controller = self.controller(lambda: next(answers))
+        controller.phase, controller.wait_blocked = "P1", True
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_NOT_READY"), (code, state["stop"]["code"]))
+        self.assertIn("AUTH_FAILED", state["stop"]["message"])
+
+    def test_wait_blocked_answers_continue_only_after_readiness(self):
+        controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}},
+                                               {"status": "finished", "closed": ["W1"]}])
+        controller.phase, controller.wait_blocked = "P1", True
+        def answer(clock):
+            state = self.state()
+            if state.get("phase_wait") and state["waiting_runs"]:
+                self.answer(state["waiting_runs"][0]["run_id"], "W1")
+                self.clock.hooks = []
+        self.clock.hooks = [answer]
+        self.readiness.side_effect = lambda: ready("P2") if len(self.launcher.started) == 2 else ready()
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_PHASE_BOUNDARY"), (code, state["stop"]["code"]))
+        self.assertEqual(["run", "continue"], [row["kind"] for row in self.launcher.started])
+
+    def test_wait_blocked_does_not_hide_token_budget(self):
+        controller = self.controller(outcomes=[{"status": "stopped", "blocked": {"W1": "ITEM_BLOCKED"},
+                                               "stop": {"code": "TOKEN_BUDGET_EXCEEDED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_BUDGET"), (code, state["stop"]["code"]))
+
+    def test_wait_blocked_stopped_wait_keeps_phase_conflict(self):
+        controller = self.controller(ready(kind="waiting"))
+        controller.phase, controller.wait_blocked = "P1", True
+        self.clock.hooks = [lambda clock: self.request("stop")]
+        self.start(controller)
+        self.clock.hooks = []
+        other = self.controller(ready("P2"))
+        other.phase = "P2"
+        code, error, state = self.start(other)
+        self.assertEqual(1, code)
+        self.assertIn("AUTOPILOT_PHASE_CONFLICT", error)
+        self.assertEqual("P1", state["phase"])
+
     def test_phase_restart_does_not_start_another_lane_while_waiting(self):
         controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
         controller.phase = "P1"
@@ -624,15 +915,17 @@ class ControllerTests(Case):
                 self.assertEqual([], self.launcher.started)
 
     def test_cli_passes_phase_to_controller_and_detach(self):
-        args = ["--project", str(self.project), "autopilot", "start", "--plan", "T", "--phase", "P1"]
+        args = ["--project", str(self.project), "autopilot", "start", "--plan", "T", "--phase", "P1", "--wait-blocked"]
         with mock.patch.object(autopilot_cli, "_settings", return_value=(self.settings(), "")), \
                 mock.patch.object(autopilot, "Controller") as cls:
             cls.return_value.start.return_value = 0
             self.assertEqual(0, cli.main(args))
             self.assertEqual("P1", cls.call_args.kwargs["phase"])
+            self.assertTrue(cls.call_args.kwargs["wait_blocked"])
         with mock.patch.object(detach, "launch", return_value=0) as launch:
             self.assertEqual(0, cli.main(args + ["--detach"]))
             self.assertIn("--phase", launch.call_args.args[0])
+            self.assertIn("--wait-blocked", launch.call_args.args[0])
 
     def test_cli_runs_controller_and_refuses_successor(self):
         args = ["--project", str(self.project), "autopilot", "start", "--plan", "T", "--phase", "P1"]

@@ -10,6 +10,7 @@
   "properties": {
     "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:autopilot-state:v1"},
     "plan": {"description": "Collection of the work source the session works through.", "type": "string", "minLength": 1},
+    "phase": {"description": "Persistent phase boundary of this session, if restricted.", "type": "string", "minLength": 1},
     "project": {"description": "Absolute path of the project.", "type": "string", "minLength": 1},
     "pid": {"description": "Process id of the controller.", "type": "integer", "minimum": 1},
     "start_ticks": {"description": "Start time of the controller process in clock ticks since boot (/proc/<pid>/stat), null when unknown.", "type": ["integer", "null"], "minimum": 0},
@@ -138,7 +139,7 @@
       "additionalProperties": false,
       "required": ["code", "message", "at"],
       "properties": {
-        "code": {"description": "AUTOPILOT_* stop code.", "enum": ["AUTOPILOT_NO_WORK", "AUTOPILOT_DRAINED", "AUTOPILOT_STOPPED", "AUTOPILOT_MAX_RUNS", "AUTOPILOT_MAX_WALL", "AUTOPILOT_NOT_ALLOWED", "AUTOPILOT_DISABLED", "AUTOPILOT_BUSY", "AUTOPILOT_NOT_READY", "AUTOPILOT_OWNER_NEEDED", "AUTOPILOT_BUDGET", "AUTOPILOT_QUOTA", "AUTOPILOT_REPEATED_BLOCKER", "AUTOPILOT_NO_PROGRESS", "AUTOPILOT_DECISIONS_EXCEEDED", "AUTOPILOT_RECOVERY_EXHAUSTED", "AUTOPILOT_CHECKOUT_LOST", "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED", "AUTOPILOT_INTERRUPTED"]},
+        "code": {"description": "AUTOPILOT_* stop code.", "enum": ["AUTOPILOT_NO_WORK", "AUTOPILOT_DRAINED", "AUTOPILOT_STOPPED", "AUTOPILOT_MAX_RUNS", "AUTOPILOT_MAX_WALL", "AUTOPILOT_NOT_ALLOWED", "AUTOPILOT_DISABLED", "AUTOPILOT_BUSY", "AUTOPILOT_NOT_READY", "AUTOPILOT_OWNER_NEEDED", "AUTOPILOT_BUDGET", "AUTOPILOT_QUOTA", "AUTOPILOT_REPEATED_BLOCKER", "AUTOPILOT_NO_PROGRESS", "AUTOPILOT_DECISIONS_EXCEEDED", "AUTOPILOT_RECOVERY_EXHAUSTED", "AUTOPILOT_CHECKOUT_LOST", "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED", "AUTOPILOT_INTERRUPTED", "AUTOPILOT_PHASE_COMPLETE", "AUTOPILOT_PHASE_WAITING", "AUTOPILOT_PHASE_BLOCKED", "AUTOPILOT_PHASE_BOUNDARY", "AUTOPILOT_PHASE_CONFLICT"]},
         "message": {"description": "What happened and the one action that goes on.", "type": "string"},
         "at": {"description": "UTC time.", "type": "string", "minLength": 1}
       }

@@ -9,11 +9,12 @@ import re
 from typing import Optional
 
 # Exit 0: the session ended as asked or as planned; every other code needs the owner (exit 1).
-FINE = ("AUTOPILOT_NO_WORK", "AUTOPILOT_DRAINED", "AUTOPILOT_STOPPED", "AUTOPILOT_MAX_RUNS", "AUTOPILOT_MAX_WALL")
+FINE = ("AUTOPILOT_NO_WORK", "AUTOPILOT_DRAINED", "AUTOPILOT_STOPPED", "AUTOPILOT_MAX_RUNS", "AUTOPILOT_MAX_WALL", "AUTOPILOT_PHASE_COMPLETE")
 CODES = FINE + ("AUTOPILOT_NOT_ALLOWED", "AUTOPILOT_DISABLED", "AUTOPILOT_BUSY", "AUTOPILOT_NOT_READY", "AUTOPILOT_OWNER_NEEDED",
                 "AUTOPILOT_BUDGET", "AUTOPILOT_QUOTA", "AUTOPILOT_REPEATED_BLOCKER", "AUTOPILOT_NO_PROGRESS",
                 "AUTOPILOT_DECISIONS_EXCEEDED", "AUTOPILOT_RECOVERY_EXHAUSTED", "AUTOPILOT_CHECKOUT_LOST",
-                "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED", "AUTOPILOT_INTERRUPTED")
+                "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED", "AUTOPILOT_INTERRUPTED", "AUTOPILOT_PHASE_WAITING",
+                "AUTOPILOT_PHASE_BLOCKED", "AUTOPILOT_PHASE_BOUNDARY", "AUTOPILOT_PHASE_CONFLICT")
 DEFAULTS = {"allowed": False, "enabled": False, "require_readiness": True, "max_runs": 20, "max_wall_s": 43200,
             "max_no_progress_runs": 2, "max_auto_decisions": 10, "quota_wait_max_s": 21600, "poll_s": 30, "max_recoveries": 1}
 AUTHORITY = ("defaults", "machine")  # the layers that set what the machine allows
@@ -209,6 +210,23 @@ def _stopped(run: str, stop: dict, status: dict, history: dict, policy: dict) ->
 
 def next_code(kind: Optional[str]) -> str:
     return "NEXT_" + re.sub(r"[^A-Z0-9]+", "_", str(kind).upper()).strip("_")
+
+
+def choose_phase_next(readiness: Optional[dict], phase: str, policy: dict) -> dict:
+    """A phase-limited session never dispatches an unverified or successor lane."""
+    readiness = readiness or {}
+    if readiness.get("outcome") != "ok":
+        return choose_next(None, 0, readiness, policy)
+    following = readiness.get("next") or {}
+    kind = following.get("kind")
+    if kind == "waiting":
+        return _stop("AUTOPILOT_PHASE_WAITING", f"phase {phase}: {following.get('message') or 'waiting'}")
+    if kind in DONE_KINDS:
+        return _stop("AUTOPILOT_PHASE_COMPLETE", f"phase {phase}: source reports {kind}")
+    if following.get("phase") != phase:
+        return _stop("AUTOPILOT_PHASE_BOUNDARY", f"phase {phase}: next {kind or 'unknown'} belongs to {following.get('phase') or 'an unknown phase'}")
+    # A phase boundary must be verified even when configuration disables readiness.
+    return choose_next(None, 0, readiness, {**policy, "require_readiness": True})
 
 
 def choose_next(answered: Optional[str], waiting_runs: int, readiness: Optional[dict], policy: dict) -> dict:

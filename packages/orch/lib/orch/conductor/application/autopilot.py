@@ -121,7 +121,7 @@ class Controller(LaunchFence):
     def __init__(self, project: Path, plan: str, settings, *, flags: Optional[dict] = None, config_file: Optional[Path] = None,
                  clock=None, launcher=None, readiness: Optional[Callable] = None, dirty: Optional[Callable] = None,
                  recover: Optional[Callable] = None, say: Optional[Callable] = None, label: Optional[str] = None,
-                 note: str = ""):
+                 note: str = "", phase: Optional[str] = None):
         self.project, self.plan, self.settings = Path(project), plan, settings
         self.config_file = Path(config_file).resolve() if config_file else None  # children run in the project folder
         config_file = self.config_file
@@ -134,6 +134,7 @@ class Controller(LaunchFence):
         self.recover_run = recover or self._recover_run
         self.say = say or (lambda text: print(f"[autopilot] {text}", file=sys.stderr, flush=True))
         self.label, self.note = label, note
+        self.phase = phase
         self.doc: dict = {}  # autopilot.json of the session, once ``start`` holds the lock
         self.grace_s = supervisor.Policy.build(settings).grace_s  # how long a child gets to end after SIGINT
 
@@ -152,6 +153,13 @@ class Controller(LaunchFence):
             except Stop as error:  # the file is evidence: it is not overwritten
                 return self._refuse("AUTOPILOT_STATE_INVALID", f"{error.code}: {error.message}; move "
                                     f"{self.root / STATE_DOC} aside, then start again")
+            if prior and prior.get("plan") == self.plan:
+                saved = prior.get("phase")
+                pending = prior.get("stop") is None or prior.get("current") or prior.get("waiting_runs") or prior.get("quota_wait")
+                if pending and self.phase and self.phase != saved:
+                    return self._refuse("AUTOPILOT_PHASE_CONFLICT", "the existing session has unfinished work under a different phase boundary")
+                if saved and (pending or not self.phase):
+                    self.phase = saved
             self.doc = self._session(prior)
             self._save()
             if self.label:
@@ -178,9 +186,11 @@ class Controller(LaunchFence):
             return {"recoveries": {}, "quota_wait": None, **prior, **me, "project": str(self.project), "updated_at": stamp,
                     "limits": limits}
         return {"$schema": records.TAGS["autopilot-state"][1], "plan": self.plan, "project": str(self.project), **me,
+                **({"phase": self.phase} if self.phase else {}),
                 "started_at": stamp, "updated_at": stamp, "deadline_at": clock_mod.utc_stamp(now + self.policy["max_wall_s"]),
                 "mode": "running", "limits": limits, "counters": dict.fromkeys(COUNTERS, 0), "recoveries": {},
-                "current": prior.get("current") if same else None, "quota_wait": None,
+                "current": prior.get("current") if same else None,
+                "quota_wait": prior.get("quota_wait") if same and self.phase else None,
                 "waiting_runs": list(prior.get("waiting_runs") or []) if same else [],
                 "history": list(prior.get("history") or [])[-HISTORY_MAX:] if same else [], "last_blockers": [], "stop": None}
 
@@ -261,7 +271,10 @@ class Controller(LaunchFence):
             self._save()
         answered = answered_run(self.root, self.doc["waiting_runs"])
         readiness = None if answered else self.readiness()
-        choice = rules.choose_next(answered, len(self.doc["waiting_runs"]), readiness, self.policy)
+        if self.phase and not answered:
+            choice = rules.choose_phase_next(readiness, self.phase, self.policy)
+        else:
+            choice = rules.choose_next(answered, len(self.doc["waiting_runs"]), readiness, self.policy)
         if choice["action"] == "continue":
             self.doc["waiting_runs"] = [row for row in self.doc["waiting_runs"] if row["run_id"] != answered]
             self.doc["counters"]["runs"] += 1
@@ -568,6 +581,12 @@ class Controller(LaunchFence):
         self._record_end(run_id, view, exit_code)
         self.doc["current"] = None
         action = rules.classify_outcome(exit_code, view, self._past(run_id), self.policy)
+        if self.phase and action["action"] == "waiting":
+            self._apply(run_id, action)
+            return self._finish("AUTOPILOT_PHASE_WAITING", f"phase {self.phase}: run {run_id} waits for answers")
+        if self.phase and view.get("blocked") and (exit_code == 0 or action["action"] == "continue"):
+            blocker = view["blocked"][0]
+            return self._finish("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})")
         self.say(f"run {run_id} ended {view['status']} (exit {exit_code}): {action['action']}"
                  + (f" {action['code']}" if action.get("code") else ""))
         return self._apply(run_id, action)

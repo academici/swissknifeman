@@ -202,7 +202,9 @@ def explain(project: Path, plan: Optional[str], settings, *, flags: Optional[dic
     else:
         answered = answered_run(root, waiting)
         found = None if answered else (readiness or functools.partial(source_readiness, project, plan, config_file))()
-        choice = rules.choose_next(answered, len(waiting), found, policy)
+        phase = state.get("phase") if same else None
+        choice = (rules.choose_phase_next(found, phase, policy) if phase and not answered
+                  else rules.choose_next(answered, len(waiting), found, policy))
         choice.setdefault("message", {"continue": f"continue the answered run {answered}",
                                       "run": f"start a run of {', '.join(choice.get('items') or [])}",
                                       "wait_answers": "wait for answers to the waiting runs"}.get(choice["action"], ""))

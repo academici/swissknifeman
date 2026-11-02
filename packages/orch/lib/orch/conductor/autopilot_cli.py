@@ -32,6 +32,7 @@ def add_parsers(verbs) -> None:
     commands = group.add_subparsers(dest="autopilot_verb", required=True)
     start = commands.add_parser("start", help="run the controller (in the foreground; --detach: in a session of its own)")
     start.add_argument("--plan", required=True, help="collection of the work source, such as a plan id")
+    start.add_argument("--phase", help="restrict this session to the named phase")
     start.add_argument("--max-runs", dest="max_runs", type=int, default=None, metavar="N",
                        help="runs this session may start: it can only lower [orch.autopilot] max_runs")
     start.add_argument("--max-wall-s", dest="max_wall_s", type=int, default=None, metavar="S",
@@ -58,6 +59,8 @@ def check(parser: argparse.ArgumentParser, args) -> None:
     """Usage errors of ``start`` (exit 2)."""
     if args.verb != "autopilot" or args.autopilot_verb != "start":
         return
+    if args.phase is not None and not args.phase.strip():
+        parser.error("--phase must not be empty")
     if any(value is not None and value < 1 for value in (args.max_runs, args.max_wall_s)) \
             or args.run_tokens_hard_max is not None and args.run_tokens_hard_max < 0 \
             or args.poll_s is not None and not args.poll_s >= 0.05:
@@ -118,7 +121,7 @@ def _start(args, project: Path) -> int:
     previous = signal.signal(signal.SIGTERM, terminated)
     try:
         return autopilot.Controller(project, args.plan, current, flags=flags, config_file=args.config, say=say,
-                                    label=args.run_id, note=note).start()
+                                    label=args.run_id, note=note, phase=args.phase).start()
     finally:
         signal.signal(signal.SIGTERM, previous)
 
@@ -142,6 +145,8 @@ def _status(args, project: Path) -> int:
     counters = state["counters"]
     print(f"autopilot {doc['status']}: plan {state['plan']}, {counters['runs']} run(s), {counters['items_closed']} piece(s) "
           f"closed, deadline {state['deadline_at']}" + (" (no controller holds the lock)" if doc["status"] == "dead" else ""))
+    if state.get("phase"):
+        print(f"  phase: {state['phase']}")
     if state["current"]:
         current = state["current"]
         print(f"  current: {current['kind']} {current['run_id']} ({current['state']}"

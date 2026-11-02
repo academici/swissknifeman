@@ -289,7 +289,7 @@ starts a run per lane. It never calls a model and never reads the streams of the
 inside the run (questions, advisor, panel), a decision the run leaves to the owner is a stop with one action in its message.
 
 ```text
-orch conduct autopilot start --plan P [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
+orch conduct autopilot start --plan P [--phase Pn] [--max-runs N] [--max-wall-s S] [--run-tokens-hard-max T] [--detach] [--json-lines]
 orch conduct autopilot status [--json]
 orch conduct autopilot pause | resume | drain | stop
 orch conduct autopilot explain [--plan P] [--json]
@@ -306,6 +306,15 @@ write `<runs root>/autopilot.request.json`, which the controller reads and remov
 they refuse with `AUTOPILOT_NOT_RUNNING` (exit 1). `explain` prints the effective policy with the layer of each value, the
 readiness answer of the source and the next action a controller would take now (`--json`: `autopilot-explain`); it starts and
 writes nothing.
+
+`start --phase Pn` restricts new lanes to that exact phase and requires its readiness even if configuration disables the
+readiness check. The source must name the phase: an absent or different phase stops with `AUTOPILOT_PHASE_BOUNDARY` (exit 1),
+without launching the lane. A waiting run or source stops with `AUTOPILOT_PHASE_WAITING`, a blocked run with
+`AUTOPILOT_PHASE_BLOCKED` (exit 1); `terminal` or `archive` stops with `AUTOPILOT_PHASE_COMPLETE` (exit 0). Other readiness
+failures retain their normal codes. The phase is recorded in `autopilot.json`, shown by `status`, passed through detach and
+retained on restart, including recovery and answered runs. An unfinished session cannot change its phase or adopt unbounded
+work with a new phase (`AUTOPILOT_PHASE_CONFLICT`); a stopped session with no outstanding run can explicitly start a different
+phase. Omitting the flag on restart retains an existing boundary. Without the flag on a new session the existing behavior applies.
 
 **Policy.** `[orch.autopilot]` (see [configuration](configuration.md)): `allowed` (default `false`) is set by the machine
 only: a project file that sets it is refused by the configuration (`CONFIG_LAYER_FORBIDDEN`), the project layer is then left

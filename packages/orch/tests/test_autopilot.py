@@ -23,7 +23,7 @@ from aicore.util import timefmt
 from aicore.util.lock import FileLock
 
 from orch import settings
-from orch.conductor import cli, contract, process, progress, questions, records
+from orch.conductor import autopilot_cli, cli, contract, process, progress, questions, records
 from orch.conductor.application import autopilot, autopilot_status
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import detach
@@ -376,7 +376,7 @@ class ClassifyTests(unittest.TestCase):
     def test_exit_codes_of_the_stop_codes(self):
         self.assertEqual({0}, {rules.exit_code(code) for code in rules.FINE})
         self.assertEqual({1}, {rules.exit_code(code) for code in rules.CODES if code not in rules.FINE})
-        self.assertEqual(20, len(rules.CODES))
+        self.assertEqual(25, len(rules.CODES))
 
 
 class ChooseNextTests(unittest.TestCase):
@@ -406,6 +406,84 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_phase_boundary_stops_before_successor_even_if_readiness_disabled(self):
+        answers = iter([ready(), ready("P2", items=("W2",))])
+        controller = self.controller(lambda: next(answers), machine={"allowed": True, "require_readiness": False})
+        controller.phase = "P1"
+        code, _, state = self.start(controller)
+        self.assertEqual((1, "AUTOPILOT_PHASE_BOUNDARY", "P1"), (code, state["stop"]["code"], state["phase"]))
+        self.assertEqual([["W1"]], [row["items"] for row in self.launcher.started])
+
+    def test_phase_waiting_and_blocked_do_not_select_successor(self):
+        for outcome, expected in (({"status": "waiting", "waiting": {"W1": ["q1"]}}, "AUTOPILOT_PHASE_WAITING"),
+                                  ({"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}, "AUTOPILOT_PHASE_BLOCKED")):
+            with self.subTest(expected=expected):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller(ready(), outcomes=[outcome])
+                controller.phase = "P1"
+                code, _, state = self.start(controller)
+                self.assertEqual((1, expected), (code, state["stop"]["code"]))
+                self.assertEqual(1, self.readiness.call_count)
+                self.assertEqual(1, len(self.launcher.started))
+
+    def test_phase_persists_on_recovery_and_conflict_is_refused(self):
+        controller = self.controller(ready("P2"))
+        controller.phase = "P1"
+        prior = controller._session(None)
+        records.write(self.root / autopilot.STATE_DOC, prior, "autopilot-state")
+        conflict = self.controller(ready())
+        conflict.phase = "P2"
+        code, _, state = self.start(conflict)
+        self.assertEqual(1, code)
+        self.assertEqual(prior, state)
+        recovered = self.controller(ready("P2"), machine={"allowed": True, "require_readiness": False})
+        code, _, state = self.start(recovered)
+        self.assertEqual((1, "P1", "AUTOPILOT_PHASE_BOUNDARY"), (code, state["phase"], state["stop"]["code"]))
+        self.assertEqual([], self.launcher.started)
+
+    def test_phase_terminal_and_missing_phase_fail_closed(self):
+        for answer, expected, exit_code in ((ready(kind="terminal"), "AUTOPILOT_PHASE_COMPLETE", 0),
+                                            (ready(phase=None), "AUTOPILOT_PHASE_BOUNDARY", 1),
+                                            (ready(kind="waiting"), "AUTOPILOT_PHASE_WAITING", 1)):
+            with self.subTest(expected=expected):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller(answer)
+                controller.phase = "P1"
+                code, _, state = self.start(controller)
+                self.assertEqual((exit_code, expected), (code, state["stop"]["code"]))
+                self.assertEqual([], self.launcher.started)
+
+    def test_cli_passes_phase_to_controller_and_detach(self):
+        args = ["--project", str(self.project), "autopilot", "start", "--plan", "T", "--phase", "P1"]
+        with mock.patch.object(autopilot_cli, "_settings", return_value=(self.settings(), "")), \
+                mock.patch.object(autopilot, "Controller") as cls:
+            cls.return_value.start.return_value = 0
+            self.assertEqual(0, cli.main(args))
+            self.assertEqual("P1", cls.call_args.kwargs["phase"])
+        with mock.patch.object(detach, "launch", return_value=0) as launch:
+            self.assertEqual(0, cli.main(args + ["--detach"]))
+            self.assertIn("--phase", launch.call_args.args[0])
+
+    def test_cli_runs_controller_and_refuses_successor(self):
+        args = ["--project", str(self.project), "autopilot", "start", "--plan", "T", "--phase", "P1"]
+        with mock.patch.object(autopilot_cli, "_settings", return_value=(self.settings(), "")), \
+                mock.patch.object(autopilot, "source_readiness", return_value=ready("P2")), \
+                mock.patch.object(autopilot, "ProcessLauncher") as launcher, contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(1, cli.main(args))
+            launcher.return_value.start.assert_not_called()
+        self.assertEqual("AUTOPILOT_PHASE_BOUNDARY", self.state()["stop"]["code"])
+
+    def test_phase_restart_keeps_quota_wait(self):
+        controller = self.controller()
+        controller.phase = "P1"
+        prior = controller._session(None)
+        prior["stop"] = {"code": "AUTOPILOT_MAX_WALL", "message": "deadline", "at": "2026-11-01T10:00:00Z"}
+        prior["quota_wait"] = {"run_id": "cnd-20261101T095000Z-aaaaaa", "until": "2026-11-01T10:05:00Z"}
+        records.write(self.root / autopilot.STATE_DOC, prior, "autopilot-state")
+        restarted = self.controller()
+        restarted.phase = "P1"
+        self.assertEqual(prior["quota_wait"], restarted._session(prior)["quota_wait"])
+
     def test_h_a_project_that_allows_itself_is_ignored_and_the_machine_refuses(self):
         (self.project / ".swissknifeman").mkdir()
         (self.project / ".swissknifeman" / "config.toml").write_text(

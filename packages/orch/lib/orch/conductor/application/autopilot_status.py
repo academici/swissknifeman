@@ -16,7 +16,7 @@ from typing import Callable, Optional
 from aicore.util import timefmt
 from aicore.util.lock import probe_free
 
-from orch.conductor import process, records
+from orch.conductor import process, progress, records
 from orch.conductor.application import run_service, supervisor
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock as clock_mod, work_source
@@ -134,7 +134,15 @@ def still_waiting(root: Path, row: dict) -> bool:
         state = records.read(directory / STATE_FILE, "state")
     except Stop:
         return True
-    return state is not None and (bool(run_service.waiting_pieces(state)) or RunLease.held(directory) is True)
+    return state is None or bool(run_service.waiting_pieces(state)) or RunLease.held(directory) is True
+
+
+def blocked_pieces(state: dict, stop: dict, summary: dict) -> list:
+    """Ordinary blocked pieces, excluding those waiting for an answer."""
+    rows = {row["item"]: row for row in summary["items"]}
+    return [{"item": ref, "code": (rows.get(ref) or {}).get("reason_code") or stop.get("code") or "BLOCKED"}
+            for ref, piece in (state.get("items") or {}).items()
+            if piece.get("outcome") == "blocked" and not piece.get("waiting")]
 
 
 def answered_run(root: Path, waiting: list) -> Optional[str]:
@@ -190,7 +198,7 @@ def explain(project: Path, plan: Optional[str], settings, *, flags: Optional[dic
         raise Stop("PLAN_REQUIRED", "no autopilot session names a plan: give --plan")
     policy, sources = rules.effective_policy(getattr(settings, "autopilot", None) or {}, flags or {})
     same = state.get("plan") == plan
-    waiting = list(state.get("waiting_runs") or []) if same else []
+    waiting = [row for row in state.get("waiting_runs") or [] if still_waiting(root, row)] if same else []
     found = None
     if not policy["allowed"]:
         choice = {"action": "stop", "code": "AUTOPILOT_NOT_ALLOWED", "message": "the machine does not allow the autopilot"}
@@ -203,8 +211,17 @@ def explain(project: Path, plan: Optional[str], settings, *, flags: Optional[dic
         answered = answered_run(root, waiting)
         phase = state.get("phase") if same else None
         found = (readiness or functools.partial(source_readiness, project, plan, config_file))() if phase or not answered else None
-        check = rules.check_phase_readiness(found, phase) if phase and answered else None
-        choice = (check if check else rules.choose_phase_next(found, phase, policy) if phase and not answered
+        blocked = []
+        if phase and answered:
+            directory = root / answered
+            run_state = records.read(directory / STATE_FILE, "state") or {}
+            summary = progress.summarize(progress.read_lines(directory))
+            stop = dict(run_state.get("stop") or ({"code": summary["reason_code"]} if summary["reason_code"] else {}))
+            blocked = blocked_pieces(run_state, stop, summary)
+        check = ({"action": "stop", "code": "AUTOPILOT_PHASE_BLOCKED",
+                  "message": f"phase {phase}: {blocked[0]['item']} blocked ({blocked[0]['code']})"} if blocked
+                 else rules.check_phase_readiness(found, phase) if phase and answered else None)
+        choice = (check if check else rules.choose_phase_next(found, phase, policy, len(waiting)) if phase and not answered
                   else rules.choose_next(answered, len(waiting), found, policy))
         choice.setdefault("message", {"continue": f"continue the answered run {answered}",
                                       "run": f"start a run of {', '.join(choice.get('items') or [])}",

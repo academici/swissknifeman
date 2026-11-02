@@ -32,7 +32,7 @@ from orch.conductor import options as opts, process, progress, records, runs
 from orch.conductor.application import autopilot_status as files, run_service, supervisor
 from orch.conductor.application.autopilot_fence import LaunchFence, retry_targets
 from orch.conductor.application.autopilot_status import (DETACHED, IDENTITY, LOCK_FILE, OPTIONS_DOC, REQUEST_DOC, STATE_DOC,
-                                                         answered_run, child_problem, escalations, source_readiness,
+                                                         answered_run, blocked_pieces, child_problem, escalations, source_readiness,
                                                          plan_folders, still_waiting, tracked_changes)
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure import clock as clock_mod, detach
@@ -155,6 +155,7 @@ class Controller(LaunchFence):
                                     f"{self.root / STATE_DOC} aside, then start again")
             if prior and prior.get("plan") == self.plan:
                 saved = prior.get("phase")
+                prior["waiting_runs"] = [row for row in prior.get("waiting_runs") or [] if still_waiting(self.root, row)]
                 pending = prior.get("stop") is None or prior.get("current") or prior.get("waiting_runs") or prior.get("quota_wait")
                 if pending and self.phase and self.phase != saved:
                     return self._refuse("AUTOPILOT_PHASE_CONFLICT", "the existing session has unfinished work under a different phase boundary")
@@ -271,7 +272,7 @@ class Controller(LaunchFence):
         answered = answered_run(self.root, self.doc["waiting_runs"])
         readiness = None if answered else self.readiness()
         if self.phase and not answered:
-            choice = rules.choose_phase_next(readiness, self.phase, self.policy)
+            choice = rules.choose_phase_next(readiness, self.phase, self.policy, len(self.doc["waiting_runs"]))
         else:
             choice = rules.choose_next(answered, len(self.doc["waiting_runs"]), readiness, self.policy)
         if choice["action"] == "continue":
@@ -554,10 +555,8 @@ class Controller(LaunchFence):
             stop.setdefault("code", "CONDUCTOR_CRASHED")  # it ended without run.end: the conductor died
             exit_code = 130 if stop["code"] == "INTERRUPTED" else 1
         pieces = state.get("items") or {}
-        rows = {row["item"]: row for row in summary["items"]}
         closed = [ref for ref, piece in pieces.items() if piece.get("outcome") in ("done", "done_with_deviations")]
-        blocked = [{"item": ref, "code": (rows.get(ref) or {}).get("reason_code") or stop.get("code") or "BLOCKED"}
-                   for ref, piece in pieces.items() if piece.get("outcome") == "blocked" and not piece.get("waiting")]
+        blocked = blocked_pieces(state, stop, summary)
         followups = [{"group": number, "followup": kept["followup"], "counts": kept.get("counts") or {}}
                      for number, kept in sorted((state.get("group_reviews") or {}).items())
                      if kept.get("followup") and not kept.get("resolved")

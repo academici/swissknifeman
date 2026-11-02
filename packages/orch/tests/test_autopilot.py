@@ -406,6 +406,71 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_phase_restart_does_not_start_another_lane_while_waiting(self):
+        controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
+        controller.phase = "P1"
+        _, _, state = self.start(controller)
+        run_id = state["waiting_runs"][0]["run_id"]
+        restarted = self.controller(ready(items=("W2",)))
+        restarted.phase = "P1"
+        code, _, state = self.start(restarted)
+        self.assertEqual((1, "AUTOPILOT_PHASE_WAITING", run_id),
+                         (code, state["stop"]["code"], state["waiting_runs"][0]["run_id"]))
+        self.assertEqual([], self.launcher.started)
+        result = autopilot_status.explain(self.project, "T", self.settings(), readiness=lambda: ready(items=("W2",)))
+        self.assertEqual("AUTOPILOT_PHASE_WAITING", result["next"]["code"])
+
+    def test_phase_switch_discards_only_finished_waiting_runs(self):
+        for condition in ("finished", "waiting", "leased", "missing", "invalid"):
+            with self.subTest(condition=condition):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
+                controller.phase = "P1"
+                _, _, state = self.start(controller)
+                run_id = state["waiting_runs"][0]["run_id"]
+                store = RunStore(self.project, run_id)
+                if condition in ("finished", "leased"):
+                    _, run_state = store.load()
+                    run_state["items"]["W1"] = {"steps": {}, "outcome": "done"}
+                    run_state["status"] = "finished"
+                    store.save(run_state)
+                lease = RunLease(store.directory).acquire("run") if condition == "leased" else None
+                if condition == "missing":
+                    (store.directory / "state.json").unlink()
+                if condition == "invalid":
+                    (store.directory / "state.json").write_text("{invalid", encoding="utf-8")
+                try:
+                    other = self.controller(ready("P2", kind="terminal"))
+                    other.phase = "P2"
+                    code, err, state = self.start(other)
+                    if condition == "finished":
+                        self.assertEqual((0, "P2", [], "AUTOPILOT_PHASE_COMPLETE"),
+                                         (code, state["phase"], state["waiting_runs"], state["stop"]["code"]))
+                    else:
+                        self.assertEqual(1, code)
+                        self.assertIn("AUTOPILOT_PHASE_CONFLICT", err)
+                        self.assertEqual(run_id, state["waiting_runs"][0]["run_id"])
+                    self.assertEqual([], self.launcher.started)
+                finally:
+                    if lease:
+                        lease.release()
+
+    def test_explain_answered_phase_run_reports_other_blocked_piece(self):
+        controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]},
+                                                "blocked": {"W2": "ITEM_BLOCKED"}}])
+        controller.phase = "P1"
+        _, _, state = self.start(controller)
+        self.assertEqual("AUTOPILOT_PHASE_BLOCKED", state["stop"]["code"])
+        self.answer(state["waiting_runs"][0]["run_id"], "W1")
+        result = autopilot_status.explain(self.project, "T", self.settings(), readiness=lambda: ready())
+        self.assertEqual("AUTOPILOT_PHASE_BLOCKED", result["next"]["code"])
+        self.assertIn("W2 blocked (ITEM_BLOCKED)", result["next"]["message"])
+        restarted = self.controller(ready())
+        restarted.phase = "P1"
+        code, _, state = self.start(restarted)
+        self.assertEqual((1, result["next"]["code"]), (code, state["stop"]["code"]))
+        self.assertEqual([], self.launcher.started)
+
     def test_phase_halt_retains_settled_waiting_run_on_recovery(self):
         for number, cause in enumerate(("deadline", "stop")):
             with self.subTest(cause=cause):

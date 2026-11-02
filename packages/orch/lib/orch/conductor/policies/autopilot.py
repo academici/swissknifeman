@@ -224,8 +224,10 @@ def check_phase_readiness(readiness: Optional[dict], phase: str) -> Optional[dic
     return None
 
 
-def choose_phase_next(readiness: Optional[dict], phase: str, policy: dict) -> dict:
+def choose_phase_next(readiness: Optional[dict], phase: str, policy: dict, waiting_runs: int = 0) -> dict:
     """A phase-limited session never dispatches an unverified or successor lane."""
+    if waiting_runs:
+        return _stop("AUTOPILOT_PHASE_WAITING", f"phase {phase}: a run waits for answers or completion")
     readiness = readiness or {}
     if readiness.get("outcome") != "ok":
         return choose_next(None, 0, readiness, policy)

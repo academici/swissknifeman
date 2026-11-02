@@ -651,7 +651,11 @@ class Controller(LaunchFence):
         view, exit_code = self.view(run_id)
         self._record_end(run_id, view, exit_code)
         self.doc["current"] = None
-        action = rules.classify_outcome(exit_code, view, self._past(run_id), self.policy)
+        history = self._past(run_id)
+        if self.phase and self.wait_blocked and exit_code == 0 and view.get("blocked"):
+            # Phase waiting handles repeated blockers itself, but still needs the finished run's progress accounting.
+            history = {**history, "last_blockers": []}
+        action = rules.classify_outcome(exit_code, view, history, self.policy)
         if self.phase and exit_code == 4:
             waiting = {"action": "waiting", "items": [row["item"] for row in view.get("waiting") or []]}
             self._apply(run_id, waiting)

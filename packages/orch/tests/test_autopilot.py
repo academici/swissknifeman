@@ -446,6 +446,39 @@ class ControllerTests(Case):
                     self.assertEqual(expected, self.state()["counters"]["no_progress_streak"])
                     self.assertIsNotNone(self.state()["phase_wait"])
 
+    def test_reblocked_run_accounts_for_progress_after_restart(self):
+        for limit, closed, expected in ((2, [], "AUTOPILOT_NO_PROGRESS"), (3, [], 2), (3, ["W2"], 0)):
+            with self.subTest(limit=limit, closed=closed):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                machine = {"allowed": True, "poll_s": 1, "max_no_progress_runs": limit}
+                controller = self.controller(outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}],
+                                             machine=machine)
+                controller.phase, controller.wait_blocked = "P1", True
+                self.root.mkdir(parents=True, exist_ok=True)
+                controller.doc = controller._session(None)
+                controller._step()
+                controller._step()
+                saved = self.state()
+                self.assertEqual(1, saved["counters"]["no_progress_streak"])
+                store = RunStore(self.project, saved["phase_wait"]["run_id"])
+                _, run_state = store.load()
+                run_state["items"]["W1"]["outcome"] = "stopped"
+                store.save(run_state)
+
+                recovered = self.controller(outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"},
+                                                       "closed": closed}], machine=machine)
+                recovered.phase, recovered.wait_blocked = "P1", True
+                recovered.doc = recovered._session(saved)
+                recovered._step()  # release the restored hold
+                recovered._step()  # launch in P1
+                recovered._step()  # process the repeated blocker
+                self.assertEqual([["W1"]], [row["items"] for row in self.launcher.started])
+                if isinstance(expected, str):
+                    self.assertEqual(expected, self.state()["stop"]["code"])
+                else:
+                    self.assertEqual(expected, self.state()["counters"]["no_progress_streak"])
+                    self.assertIsNotNone(self.state()["phase_wait"])
+
     def test_explain_reports_persisted_phase_hold_instead_of_launch(self):
         controller = self.controller(outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
         controller.phase, controller.wait_blocked = "P1", True
@@ -561,7 +594,8 @@ class ControllerTests(Case):
         source = [ready(items=("W1", "W2"))]
         controller = self.controller(lambda: ready("P2") if len(self.launcher.started) == 3 else source[0], outcomes=[
             {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED", "W2": "ITEM_BLOCKED"}},
-            {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+            {"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}],
+                                     machine={"allowed": True, "poll_s": 1, "max_no_progress_runs": 3})
         controller.phase, controller.wait_blocked = "P1", True
         observed = []
         def resolve_first(clock):

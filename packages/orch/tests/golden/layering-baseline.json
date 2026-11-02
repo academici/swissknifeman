@@ -9,7 +9,7 @@
  "largest_self_scc": 6,
  "measured_at": "a9756c0079482f6d25e6149a9d5d6d1f1b918c0f",
  "oversized_modules": {
-  "checks.py": 1105
+  "checks.py": 1003
  },
  "port_calls": {
   "infrastructure.role_ports.admit_budget": 2,

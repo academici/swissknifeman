@@ -85,6 +85,24 @@ class ReviewOnlyTests(ConductorCase):
         self.assertIn("REGISTER_EVIDENCE_RED", err)
         self.assertEqual(stat.S_IMODE(candidate.stat().st_mode), original)
 
+    def test_guard_allows_python_script_and_keeps_other_ioctls_denied(self):
+        candidate = self.project / "probe.py"
+        candidate.write_text(
+            "import ctypes, errno, fcntl, os\n"
+            "fd = os.open('README.md', os.O_RDONLY)\n"
+            "fcntl.ioctl(fd, 0x5451)  # FIOCLEX\n"
+            "assert fcntl.fcntl(fd, fcntl.F_GETFD) & fcntl.FD_CLOEXEC\n"
+            "libc = ctypes.CDLL(None, use_errno=True)\n"
+            "assert libc.ioctl(fd, 0x40086602, 0) == -1  # FS_IOC_SETFLAGS\n"
+            "assert ctypes.get_errno() == errno.EPERM\n"
+            "print('guarded script ran')\n")
+        _, path = self.review_with_acceptance(checks=["V1=/usr/bin/python3 probe.py"])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertEqual(code, 0, err)
+        evidence = list((self.project / ".swissknifeman" / "orch-artifacts").rglob("evidence/V1.json"))
+        self.assertTrue(evidence)
+        self.assertEqual(json.loads(evidence[0].read_text())["exit"], 0)
+
     def test_xattrat_syscalls_are_denied(self):
         script = checks.ORCH_ROOT / "scripts" / "ro-run.py"
         probe = ("import ctypes, errno; libc = ctypes.CDLL(None, use_errno=True); "

@@ -122,8 +122,8 @@ def protect_metadata() -> None:
     class Program(ctypes.Structure):
         _fields_ = [("length", ctypes.c_ushort), ("filter", ctypes.POINTER(Filter))]
 
-    # chmod/chown, timestamps, xattrs, ioctl, io_uring, ptrace and mount APIs.
-    denied = (16, 90, 91, 92, 93, 94, 101, 132, 133, 155, 161, 165, 166, 188, 189, 190,
+    # chmod/chown, timestamps, xattrs, io_uring, ptrace and mount APIs.
+    denied = (90, 91, 92, 93, 94, 101, 132, 133, 155, 161, 165, 166, 188, 189, 190,
               197, 198, 199, 235, 260, 261, 268, 272, 280, 304, 308, 310, 311, 321,
               323, 425, 426, 427, 428, 429, 430, 431, 432, 433, 442, 452, 463, 466, 467, 469)
     ins = [Filter(0x20, 0, 0, 4), Filter(0x15, 1, 0, 0xC000003E),
@@ -133,6 +133,12 @@ def protect_metadata() -> None:
     # syscall numbers until their effects have been audited.
     ins.extend((Filter(0x35, 0, 1, 470), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM),
                 Filter(0x35, 0, 2, 335), Filter(0x35, 1, 0, 424),
+                Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
+    # FIOCLEX only sets FD_CLOEXEC on the descriptor. CPython uses it when
+    # opening a script; all other ioctls can mutate filesystem metadata.
+    # ioctl's request is an unsigned int: seccomp_data.args[1] low word is at 24.
+    ins.extend((Filter(0x15, 0, 4, 16), Filter(0x20, 0, 0, 24),
+                Filter(0x15, 0, 1, 0x5451), Filter(0x06, 0, 0, 0x7FFF0000),
                 Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
     for number in denied:
         ins.extend((Filter(0x15, 0, 1, number), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))

@@ -1287,6 +1287,8 @@ protecting the checkout, an isolated writable `TMPDIR`, and the configured check
 The guard starts Python with `-I -S` (isolated and without site initialization) and uses seccomp to deny metadata changes, including
 chmod, timestamps and extended attributes. Because seccomp cannot filter by path, those operations
 are also unavailable in scratch space; ordinary scratch file creation and writes remain available.
+The guard permits `ioctl(FIOCLEX)` for closing descriptors on exec (needed by Python script startup);
+other ioctl requests remain denied.
 This metadata guard currently supports Linux x86-64; on other platforms or if it cannot be installed,
 the run stops with `METADATA_GUARD_UNAVAILABLE` without executing the command. Native syscall numbers
 335–423 and numbers beyond the audited table (469) are denied until audited. A named revision

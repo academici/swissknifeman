@@ -74,6 +74,21 @@ SLOW_PLUGIN = textwrap.dedent('''
     runpy.run_path(os.environ["FAKE_PLUGIN"], run_name="__main__")
 ''')
 
+# The original parent can be replaced by a subreaper rather than PID 1. Bound the
+# lifetime as well, even if the markers disappear or the parent never exits.
+QUIET_CHECK = textwrap.dedent('''
+    import os, sys, time
+    from pathlib import Path
+    gate = Path(sys.argv[1])
+    deadline = time.monotonic() + float(sys.argv[2])
+    parent = os.getppid()
+    (gate / "check.pid").write_text(str(os.getpid()))
+    (gate / "check-started").touch()
+    while (not (gate / "check-released").exists() and gate.is_dir()
+           and os.getppid() == parent and time.monotonic() < deadline):
+        time.sleep(0.05)
+''')
+
 
 def machine_policy(home: Path, recover: str | None = "resume", max_recoveries: int = 2, window_s: int = 3600,
                    base: str = "", **extra) -> Path:
@@ -487,15 +502,8 @@ class HealthyRunTests(FaultCase):
 
     def test_d_a_quiet_check_that_works_is_neither_hung_nor_killed(self):
         check_script = self.gate.parent / "quiet_check.py"
-        check_script.write_text(
-            "import os\n"
-            "from pathlib import Path\n"
-            f"started = Path({str(self.gate / 'check-started')!r})\n"
-            f"released = Path({str(self.gate / 'check-released')!r})\n"
-            f"Path({str(self.gate / 'check.pid')!r}).write_text(str(os.getpid()))\n"
-            "started.touch()\n"
-            "while not released.exists() and released.parent.exists() and os.getppid() != 1: pass\n", encoding="utf-8")
-        self.checks = [{"id": "V1", "cmd": shlex.join([sys.executable, str(check_script)]),
+        check_script.write_text(QUIET_CHECK, encoding="utf-8")
+        self.checks = [{"id": "V1", "cmd": shlex.join([sys.executable, str(check_script), str(self.gate), "120"]),
                         "expect": "exit 0", "kind": "acceptance"}]
         self.set_items()
         options = self.gate.parent / "options.json"
@@ -528,6 +536,86 @@ class HealthyRunTests(FaultCase):
 
 
 class QuietCheckCleanupTests(unittest.TestCase):
+    def test_quiet_check_exits_after_original_parent_dies_under_subreaper(self):
+        if sys.platform != "linux":
+            self.skipTest("Linux subreaper is unavailable")
+        with tempfile.TemporaryDirectory() as tmp:
+            gate = Path(tmp)
+            script = gate / "quiet.py"
+            script.write_text(QUIET_CHECK, encoding="utf-8")
+            harness = textwrap.dedent('''
+                import ctypes, os, signal, subprocess, sys, time
+                from pathlib import Path
+                if ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0) != 0:
+                    sys.exit(77)
+                gate, script = sys.argv[1:]
+                parent_code = """import subprocess, sys, time
+                from pathlib import Path
+                gate, script = sys.argv[1:]
+                subprocess.Popen([sys.executable, script, gate, '120'])
+                end = time.monotonic() + 5
+                while not (Path(gate) / 'check-started').exists():
+                    if time.monotonic() >= end: sys.exit(2)
+                    time.sleep(0.01)
+                """
+                parent = subprocess.Popen([sys.executable, '-c', parent_code, gate, script])
+                child = None
+                reaped = False
+                try:
+                    if parent.wait(timeout=10) != 0: sys.exit(2)
+                    child = int((Path(gate) / 'check.pid').read_text())
+                    end = time.monotonic() + 5
+                    while time.monotonic() < end:
+                        pid, status = os.waitpid(child, os.WNOHANG)
+                        if pid:
+                            reaped = True
+                            sys.exit(os.waitstatus_to_exitcode(status))
+                        time.sleep(0.05)
+                    sys.exit(3)
+                finally:
+                    if parent.poll() is None:
+                        parent.kill()
+                        parent.wait()
+                    if child is None and (Path(gate) / 'check.pid').exists():
+                        child = int((Path(gate) / 'check.pid').read_text())
+                    if child is not None and not reaped:
+                        try:
+                            os.kill(child, signal.SIGKILL)
+                            os.waitpid(child, 0)
+                        except (ProcessLookupError, ChildProcessError):
+                            pass
+            ''')
+            result = subprocess.run([sys.executable, "-c", harness, str(gate), str(script)], timeout=20)
+            if result.returncode == 77:
+                self.skipTest("Linux PR_SET_CHILD_SUBREAPER is unavailable")
+            self.assertEqual(0, result.returncode, "quiet check survived its original parent")
+
+    def test_quiet_check_has_a_deadline_and_exits_if_gate_is_removed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            script = base / "quiet.py"
+            script.write_text(QUIET_CHECK, encoding="utf-8")
+            for remove_gate in (False, True):
+                with self.subTest(remove_gate=remove_gate):
+                    gate = base / "gate"
+                    gate.mkdir()
+                    child = subprocess.Popen([sys.executable, str(script), str(gate), "0.5"])
+                    try:
+                        eventually(self, (gate / "check-started").exists, "quiet check starts", seconds=5)
+                        if remove_gate:
+                            for path in gate.iterdir():
+                                path.unlink()
+                            gate.rmdir()
+                        self.assertEqual(0, child.wait(timeout=5))
+                    finally:
+                        if child.poll() is None:
+                            child.kill()
+                            child.wait()
+                        if gate.exists():
+                            for path in gate.iterdir():
+                                path.unlink()
+                            gate.rmdir()
+
     def test_quiet_check_exits_when_supervisor_assertion_fails(self):
         case = HealthyRunTests("test_d_a_quiet_check_that_works_is_neither_hung_nor_killed")
         pids = []

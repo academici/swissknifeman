@@ -14,6 +14,7 @@ directory is skipped. Exit 3 with LANDLOCK_UNAVAILABLE when the kernel offers no
 from __future__ import annotations
 
 import ctypes
+import errno
 import os
 import platform
 import stat
@@ -105,6 +106,44 @@ def _landlock_abi(libc) -> int:
     return libc.syscall(SYS_CREATE_RULESET, None, 0, CREATE_RULESET_VERSION)
 
 
+def protect_metadata() -> None:
+    """Deny metadata mutation and asynchronous syscall bypasses for protected checks.
+
+    Landlock does not mediate chmod, timestamps or extended attributes. Seccomp
+    cannot resolve paths, so these operations are denied even in scratch space.
+    Only the audited native x86-64 syscall table is supported; fail closed on
+    other architectures and on the x32 ABI.
+    """
+    if platform.system() != "Linux" or platform.machine() != "x86_64":
+        _die("METADATA_GUARD_UNAVAILABLE", "unsupported platform or architecture", 3)
+    class Filter(ctypes.Structure):
+        _fields_ = [("code", ctypes.c_ushort), ("jt", ctypes.c_ubyte),
+                    ("jf", ctypes.c_ubyte), ("k", ctypes.c_uint32)]
+    class Program(ctypes.Structure):
+        _fields_ = [("length", ctypes.c_ushort), ("filter", ctypes.POINTER(Filter))]
+
+    # chmod/chown, timestamps, xattrs, ioctl, io_uring, ptrace and mount APIs.
+    denied = (16, 90, 91, 92, 93, 94, 101, 132, 133, 155, 161, 165, 166, 188, 189, 190,
+              197, 198, 199, 235, 260, 261, 268, 272, 280, 304, 308, 310, 311, 321,
+              323, 425, 426, 427, 428, 429, 430, 431, 432, 433, 442, 452, 463, 466, 467, 469)
+    ins = [Filter(0x20, 0, 0, 4), Filter(0x15, 1, 0, 0xC000003E),
+           Filter(0x06, 0, 0, 0x80000000), Filter(0x20, 0, 0, 0),
+           Filter(0x35, 0, 1, 0x40000000), Filter(0x06, 0, 0, 0x80000000)]
+    # Deny 335..423 (including the uprobe calls and reserved gap) and future
+    # syscall numbers until their effects have been audited.
+    ins.extend((Filter(0x35, 0, 1, 470), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM),
+                Filter(0x35, 0, 2, 335), Filter(0x35, 1, 0, 424),
+                Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
+    for number in denied:
+        ins.extend((Filter(0x15, 0, 1, number), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
+    ins.append(Filter(0x06, 0, 0, 0x7FFF0000))
+    array = (Filter * len(ins))(*ins)
+    program = Program(len(ins), array)
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(22, 2, ctypes.byref(program), 0, 0) != 0:  # PR_SET_SECCOMP, FILTER
+        _die("METADATA_GUARD_UNAVAILABLE", os.strerror(ctypes.get_errno()), 3)
+
+
 def restrict(writable: list[str], protected: list[str] | tuple[str, ...] = ()) -> None:
     """Make every path outside ``writable`` read-only for this process and its children."""
     if platform.system() != "Linux":
@@ -161,8 +200,14 @@ def restrict(writable: list[str], protected: list[str] | tuple[str, ...] = ()) -
 
 
 def main(argv: list[str]) -> None:
+    metadata = "--metadata-guard" in argv[:argv.index("--")] if "--" in argv else False
+    if metadata:
+        argv = argv.copy()
+        argv.remove("--metadata-guard")
     writable, command, protected = _parse(argv)
     restrict(writable, protected)
+    if metadata:
+        protect_metadata()
     try:
         os.execvp(command[0], command)
     except OSError as error:

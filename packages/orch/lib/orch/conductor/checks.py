@@ -882,13 +882,14 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                         marker = REPRO_MARK + secrets.token_hex(16)
                         env.update(TMPDIR=scratch, TMP=scratch, TEMP=scratch, PYTHONDONTWRITEBYTECODE="1",
                                    SKM_REPRO_MARK=marker)
-                        argv = [sys.executable, str(ORCH_ROOT / "scripts" / "ro-run.py"), "--no-default-rw",
+                        argv = [sys.executable, "-I", "-S", str(ORCH_ROOT / "scripts" / "ro-run.py"), "--metadata-guard", "--no-default-rw",
                                 "--protect", str(project), "--rw", scratch, "--rw", "/dev", "--", "bash", "-c",
                                 _REPRO_WRAPPER, "check", check["cmd"]]
                         code = run_command(argv, env)
                         out.flush()
                         if marker not in log.read_text(encoding="utf-8", errors="replace").splitlines():
-                            raise RuntimeError("protected check could not start under Landlock; see " + str(log))
+                            detail = log.read_text(encoding="utf-8", errors="replace").strip()
+                            raise RuntimeError("protected check could not start under guard: " + detail + "; see " + str(log))
                 else:
                     code = run_command(["bash", "-c", check["cmd"]], env)
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]

@@ -1,6 +1,11 @@
 """Review-only conductor with fake roles: dirty worktree, receipt and compact stdout."""
 import copy
 import json
+from pathlib import Path
+import stat
+import subprocess
+import sys
+import venv
 from unittest import mock
 
 from orch import adhoc
@@ -70,6 +75,88 @@ class ReviewOnlyTests(ConductorCase):
         code, _, err = self.conduct("run", "--input", path, "--json-lines")
         self.assertEqual(code, 0, err)
 
+    def test_metadata_substitution_is_denied(self):
+        candidate = self.project / "README.md"
+        original = stat.S_IMODE(candidate.stat().st_mode)
+        _, path = self.review_with_acceptance(checks=[
+            'V1=chmod 0755 README.md && test -x README.md && chmod 0644 README.md'])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0, err)
+        self.assertIn("REGISTER_EVIDENCE_RED", err)
+        self.assertEqual(stat.S_IMODE(candidate.stat().st_mode), original)
+
+    def test_xattrat_syscalls_are_denied(self):
+        script = checks.ORCH_ROOT / "scripts" / "ro-run.py"
+        probe = ("import ctypes, errno; libc = ctypes.CDLL(None, use_errno=True); "
+                 "assert all(libc.syscall(n, -100, b'README.md', 0, b'user.guard_probe', 0, 0) == -1 "
+                 "and ctypes.get_errno() == errno.EPERM for n in (463, 466))")
+        result = subprocess.run([sys.executable, "-I", "-S", str(script), "--metadata-guard",
+                                 "--no-default-rw", "--protect", str(self.project), "--",
+                                 sys.executable, "-I", "-S", "-c", probe],
+                                cwd=self.project, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_file_setattr_and_unknown_syscalls_are_denied(self):
+        script = checks.ORCH_ROOT / "scripts" / "ro-run.py"
+        probe = ("import ctypes, errno; libc = ctypes.CDLL(None, use_errno=True); "
+                 "attr = ctypes.create_string_buffer(24); ctypes.c_uint64.from_buffer(attr).value = 0x80; "
+                 "assert libc.syscall(469, -100, b'README.md', ctypes.byref(attr), 24, 0) == -1 "
+                 "and ctypes.get_errno() == errno.EPERM; "
+                 "assert all(libc.syscall(n) == -1 and ctypes.get_errno() == errno.EPERM "
+                 "for n in (337, 423, 470, 1000))")
+        result = subprocess.run([sys.executable, "-I", "-S", str(script), "--metadata-guard",
+                                 "--no-default-rw", "--protect", str(self.project), "--",
+                                 sys.executable, "-I", "-S", "-c", probe],
+                                cwd=self.project, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_virtualenv_site_and_pth_cannot_run_before_guard(self):
+        environment = self.project.parent / "guard-venv"
+        venv.create(environment, with_pip=False)
+        python = environment / "bin" / "python"
+        site = subprocess.check_output([str(python), "-I", "-c",
+                                        "import site; print(site.getsitepackages()[0])"], text=True).strip()
+        candidate = self.project / "README.md"
+        before = candidate.read_text()
+        markers = [self.project.parent / "site-loaded", self.project.parent / "pth-loaded"]
+        for filename, marker in zip(("sitecustomize.py", "guard_probe.pth"), markers):
+            payload = ("import sys; from pathlib import Path; "
+                       f"Path({str(marker)!r}).write_text('loaded'); "
+                       f"Path({str(candidate)!r}).write_text('substituted') if sys.argv[0].endswith('/ro-run.py') else None\n")
+            if filename.endswith(".pth"):
+                payload = payload.rstrip() + f"; sys.path.insert(0, {site!r})\n"
+            (Path(site) / filename).write_text(payload)
+        subprocess.run([str(python), "-I", "-c", "pass"], check=True)
+        for marker in markers:
+            self.assertTrue(marker.exists())
+            marker.unlink()
+        _, path = self.review_with_acceptance(checks=["V1=true"])
+        with mock.patch.object(checks.sys, "executable", str(python)):
+            code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertEqual(code, 0, err)
+        self.assertFalse(any(marker.exists() for marker in markers))
+        self.assertEqual(candidate.read_text(), before)
+
+    def test_pythonpath_sitecustomize_cannot_run_before_guard(self):
+        candidate = self.project / "README.md"
+        before = candidate.read_text()
+        custom = self.project / "custom"
+        custom.mkdir()
+        (custom / "sitecustomize.py").write_text(
+            "import sys\nfrom pathlib import Path\n"
+            "if sys.argv[0].endswith('/ro-run.py'):\n"
+            f"    Path({str(candidate)!r}).write_text('substituted')\n")
+        self.git("add", "custom/sitecustomize.py")
+        self.git("commit", "-qm", "sitecustomize fixture")
+        _, path = self.review_with_acceptance(checks=["V1=true"])
+        check_env = checks.check_env
+        def with_custom(*args, **kwargs):
+            return dict(check_env(*args, **kwargs), PYTHONPATH=str(custom), PYTHONDONTWRITEBYTECODE="1")
+        with mock.patch.object(checks, "check_env", side_effect=with_custom):
+            code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertEqual(code, 0, err)
+        self.assertEqual(candidate.read_text(), before)
+
     def test_guard_failure_never_starts_command(self):
         marker = self.project.parent / "started"
         _, path = self.review_with_acceptance(checks=[f"V1=touch {marker}"])
@@ -77,6 +164,18 @@ class ReviewOnlyTests(ConductorCase):
             code, _, err = self.conduct("run", "--input", path, "--json-lines")
         self.assertNotEqual(code, 0)
         self.assertIn("CHECKS_FAILED", err)
+        self.assertFalse(marker.exists())
+
+    def test_metadata_guard_unavailable_fails_closed(self):
+        marker = self.project.parent / "metadata-started"
+        script = checks.ORCH_ROOT / "scripts" / "ro-run.py"
+        bootstrap = ("import platform, runpy, sys; platform.machine = lambda: 'unsupported'; "
+                     f"sys.argv = [{str(script)!r}, '--metadata-guard', '--no-default-rw', "
+                     f"'--protect', {str(self.project)!r}, '--', 'touch', {str(marker)!r}]; "
+                     f"runpy.run_path({str(script)!r}, run_name='__main__')")
+        result = subprocess.run([sys.executable, "-I", "-c", bootstrap], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 3, result.stderr)
+        self.assertIn("METADATA_GUARD_UNAVAILABLE", result.stderr)
         self.assertFalse(marker.exists())
 
     def test_idle_timeout_rejects_hung_check(self):

@@ -1284,7 +1284,12 @@ The existing receipt is written with subject `P.I` when both identities are supp
 the execution input id. The default findings-shape procedure gets engine evidence from the
 validated review and triage documents. Acceptance commands run before registration with Linux Landlock
 protecting the checkout, an isolated writable `TMPDIR`, and the configured check and idle timeouts.
-If protection cannot be established, the run stops without executing the command. A named revision
+The guard starts Python with `-I -S` (isolated and without site initialization) and uses seccomp to deny metadata changes, including
+chmod, timestamps and extended attributes. Because seccomp cannot filter by path, those operations
+are also unavailable in scratch space; ordinary scratch file creation and writes remain available.
+This metadata guard currently supports Linux x86-64; on other platforms or if it cannot be installed,
+the run stops with `METADATA_GUARD_UNAVAILABLE` without executing the command. Native syscall numbers
+335–423 and numbers beyond the audited table (469) are denied until audited. A named revision
 requires a clean checkout at that revision. Stdout ends
 with one compact JSON line validated as `review-summary/v1`: `run`, `receipt`, `verdict`, `open`, and findings with only `key`, `id`,
 `severity`, `location`. Raw streams stay at `<run>/<input>/streams/review.1.jsonl`. An interactive

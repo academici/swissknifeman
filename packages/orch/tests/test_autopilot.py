@@ -421,7 +421,7 @@ class ControllerTests(Case):
         self.assertEqual("AUTOPILOT_PHASE_WAITING", result["next"]["code"])
 
     def test_phase_switch_discards_only_finished_waiting_runs(self):
-        for condition in ("finished", "waiting", "leased", "missing", "invalid"):
+        for condition in ("finished", "waiting", "leased", "running", "stopped", "unknown", "lease_unknown", "missing", "invalid"):
             with self.subTest(condition=condition):
                 (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
                 controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
@@ -429,10 +429,10 @@ class ControllerTests(Case):
                 _, _, state = self.start(controller)
                 run_id = state["waiting_runs"][0]["run_id"]
                 store = RunStore(self.project, run_id)
-                if condition in ("finished", "leased"):
+                if condition in ("finished", "leased", "running", "stopped", "unknown", "lease_unknown"):
                     _, run_state = store.load()
                     run_state["items"]["W1"] = {"steps": {}, "outcome": "done"}
-                    run_state["status"] = "finished"
+                    run_state["status"] = condition if condition in ("running", "stopped", "unknown") else "finished"
                     store.save(run_state)
                 lease = RunLease(store.directory).acquire("run") if condition == "leased" else None
                 if condition == "missing":
@@ -440,9 +440,11 @@ class ControllerTests(Case):
                 if condition == "invalid":
                     (store.directory / "state.json").write_text("{invalid", encoding="utf-8")
                 try:
-                    other = self.controller(ready("P2", kind="terminal"))
+                    other = self.controller(ready("P2", items=("W2",)) if condition != "finished" else
+                                            ready("P2", kind="terminal"))
                     other.phase = "P2"
-                    code, err, state = self.start(other)
+                    with mock.patch.object(RunLease, "held", return_value=None) if condition == "lease_unknown" else contextlib.nullcontext():
+                        code, err, state = self.start(other)
                     if condition == "finished":
                         self.assertEqual((0, "P2", [], "AUTOPILOT_PHASE_COMPLETE"),
                                          (code, state["phase"], state["waiting_runs"], state["stop"]["code"]))

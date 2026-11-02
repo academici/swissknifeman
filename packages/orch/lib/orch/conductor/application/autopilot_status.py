@@ -127,14 +127,14 @@ def alive(root: Path) -> bool:
 
 
 def still_waiting(root: Path, row: dict) -> bool:
-    """A run of ``waiting_runs`` still waits: a piece of its state waits, or a conductor holds it, or its state cannot be read
-    (kept: the owner decides). A run continued and finished by hand no longer waits."""
+    """Keep a waiting run unless its state proves it finished without waiting and its lease is free."""
     directory = Path(root) / row["run_id"]
     try:
         state = records.read(directory / STATE_FILE, "state")
     except Stop:
         return True
-    return state is None or bool(run_service.waiting_pieces(state)) or RunLease.held(directory) is True
+    return (state is None or state.get("status") != "finished" or bool(run_service.waiting_pieces(state))
+            or RunLease.held(directory) is not False)
 
 
 def blocked_pieces(state: dict, stop: dict, summary: dict) -> list:

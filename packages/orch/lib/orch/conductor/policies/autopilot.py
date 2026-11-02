@@ -212,6 +212,18 @@ def next_code(kind: Optional[str]) -> str:
     return "NEXT_" + re.sub(r"[^A-Z0-9]+", "_", str(kind).upper()).strip("_")
 
 
+def check_phase_readiness(readiness: Optional[dict], phase: str) -> Optional[dict]:
+    """Revalidate the bound phase before an existing run can execute again."""
+    readiness = readiness or {}
+    if readiness.get("outcome") != "ok":
+        return _stop("AUTOPILOT_NOT_READY", f"{readiness.get('reason_code') or 'READINESS_UNKNOWN'}: the work source tells no readiness")
+    found = next((row for row in readiness.get("phases") or [] if row.get("id") == phase), None)
+    state = (found or {}).get("status", "missing")
+    if state not in READY:
+        return _stop("AUTOPILOT_NOT_READY", f"READINESS_{state.upper()}: phase {phase} is {state}: audit it (plan-audit), then start again")
+    return None
+
+
 def choose_phase_next(readiness: Optional[dict], phase: str, policy: dict) -> dict:
     """A phase-limited session never dispatches an unverified or successor lane."""
     readiness = readiness or {}

@@ -259,7 +259,6 @@ class Controller(LaunchFence):
             if self.clock.now() < files.epoch(waiting["until"]):
                 self._wait()
                 return None
-            self.doc["quota_wait"] = None
             self.doc["counters"]["quota_waits"] += 1
             return self._launch("resume", waiting["run_id"])
         if self.doc["counters"]["runs"] >= self.policy["max_runs"]:
@@ -276,7 +275,6 @@ class Controller(LaunchFence):
         else:
             choice = rules.choose_next(answered, len(self.doc["waiting_runs"]), readiness, self.policy)
         if choice["action"] == "continue":
-            self.doc["waiting_runs"] = [row for row in self.doc["waiting_runs"] if row["run_id"] != answered]
             self.doc["counters"]["runs"] += 1
             return self._launch("continue", choice["run_id"], retry=retry_targets(self.root, choice["run_id"]))
         if choice["action"] == "run":
@@ -347,6 +345,19 @@ class Controller(LaunchFence):
     def _start(self, current: dict) -> Optional[int]:
         """Start the child of the saved intent ``current`` and wait for its acknowledgement (never for the run)."""
         kind, run_id = current["kind"], current["run_id"]
+        if self.phase and kind in ("continue", "resume"):
+            view, _ = self.view(run_id)
+            if view.get("blocked"):
+                blocker = view["blocked"][0]
+                return self._finish("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})")
+            check = rules.check_phase_readiness(self.readiness(), self.phase)
+            if check:
+                return self._finish(check["code"], check["message"])
+        if kind == "continue":
+            self.doc["waiting_runs"] = [row for row in self.doc["waiting_runs"] if row["run_id"] != run_id]
+        if kind == "resume" and (self.doc.get("quota_wait") or {}).get("run_id") == run_id:
+            self.doc["quota_wait"] = None
+        self._save()
         try:
             child = self.launcher.start(current)
         except (OSError, Stop) as error:
@@ -581,12 +592,16 @@ class Controller(LaunchFence):
         self._record_end(run_id, view, exit_code)
         self.doc["current"] = None
         action = rules.classify_outcome(exit_code, view, self._past(run_id), self.policy)
-        if self.phase and action["action"] == "waiting":
-            self._apply(run_id, action)
-            return self._finish("AUTOPILOT_PHASE_WAITING", f"phase {self.phase}: run {run_id} waits for answers")
-        if self.phase and view.get("blocked") and (exit_code == 0 or action["action"] == "continue"):
+        if self.phase and exit_code == 4:
+            waiting = {"action": "waiting", "items": [row["item"] for row in view.get("waiting") or []]}
+            self._apply(run_id, waiting)
+        if self.phase and view.get("blocked"):
             blocker = view["blocked"][0]
             return self._finish("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})")
+        if self.phase and exit_code == 4:
+            if action["action"] == "stop":
+                return self._apply(run_id, action)
+            return self._finish("AUTOPILOT_PHASE_WAITING", f"phase {self.phase}: run {run_id} waits for answers")
         self.say(f"run {run_id} ended {view['status']} (exit {exit_code}): {action['action']}"
                  + (f" {action['code']}" if action.get("code") else ""))
         return self._apply(run_id, action)

@@ -406,6 +406,68 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_phase_answered_run_rechecks_readiness_and_keeps_pending(self):
+        waiting = {"status": "waiting", "waiting": {"W1": ["q1"]}}
+        controller = self.controller(ready(), outcomes=[waiting])
+        controller.phase = "P1"
+        _, _, state = self.start(controller)
+        run_id = state["waiting_runs"][0]["run_id"]
+        self.answer(run_id, "W1")
+        restarted = self.controller(ready(status="stale"))
+        restarted.phase = "P1"
+        code, _, state = self.start(restarted)
+        self.assertEqual((1, "AUTOPILOT_NOT_READY", run_id), (code, state["stop"]["code"], state["current"]["run_id"]))
+        self.assertEqual(run_id, state["waiting_runs"][0]["run_id"])
+        self.assertEqual([], self.launcher.started)
+
+    def test_phase_resume_rechecks_readiness_and_blocked(self):
+        for stop in ("ROLE_FAILED", "PROVIDER_QUOTA"):
+            for blocked in (False, True):
+                with self.subTest(stop=stop, blocked=blocked):
+                    (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                    outcome = {"status": "stopped", "stop": {"code": stop, "message": f"resets {timefmt.utc_stamp(NOW + 1)}"},
+                               "blocked": {"W1": "ITEM_BLOCKED"} if blocked else {}}
+                    answers = iter([ready(), ready(status="stale")])
+                    controller = self.controller(lambda: next(answers), outcomes=[outcome])
+                    controller.phase = "P1"
+                    code, _, state = self.start(controller)
+                    self.assertEqual((1, "AUTOPILOT_PHASE_BLOCKED" if blocked else "AUTOPILOT_NOT_READY"),
+                                     (code, state["stop"]["code"]))
+                    self.assertEqual(1, len(self.launcher.started))
+
+    def test_phase_dirty_waiting_run_preserves_boundary(self):
+        self.dirty = True
+        controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
+        controller.phase = "P1"
+        _, _, state = self.start(controller)
+        self.assertEqual("AUTOPILOT_OWNER_NEEDED", state["stop"]["code"])
+        self.assertEqual(1, len(state["waiting_runs"]))
+        self.dirty = False
+        other = self.controller(ready("P2"))
+        other.phase = "P2"
+        code, err, state = self.start(other)
+        self.assertEqual(1, code)
+        self.assertIn("AUTOPILOT_PHASE_CONFLICT", err)
+        self.assertEqual("P1", state["phase"])
+
+    def test_phase_recovery_and_relaunch_fail_closed_on_missing_readiness(self):
+        for look in ("orphaned", "relaunch"):
+            with self.subTest(look=look):
+                controller = self.controller(ready(phases=[]))
+                controller.phase = "P1"
+                controller.doc = controller._session(None)
+                run_id = "cnd-20261101T095000Z-aaaaaa"
+                current = {"run_id": run_id, "launch_id": "abcdabcdabcdabcd", "state": "launching", "kind": "resume",
+                           "since": "2026-11-01T10:00:00Z", "boot_id": process.boot_id()}
+                controller.doc["current"] = current
+                controller.recover_run = mock.Mock(return_value=None)
+                with mock.patch.object(controller, "view", return_value=({"blocked": []}, 1)), \
+                        contextlib.redirect_stderr(io.StringIO()):
+                    code = controller._recover(current, look) if look == "orphaned" else controller._intent_end(current, look)
+                self.assertEqual((1, "AUTOPILOT_NOT_READY", run_id),
+                                 (code, controller.doc["stop"]["code"], controller.doc["current"]["run_id"]))
+                self.assertEqual([], self.launcher.started)
+
     def test_phase_boundary_stops_before_successor_even_if_readiness_disabled(self):
         answers = iter([ready(), ready("P2", items=("W2",))])
         controller = self.controller(lambda: next(answers), machine={"allowed": True, "require_readiness": False})

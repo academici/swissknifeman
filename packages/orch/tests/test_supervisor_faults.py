@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import shlex
 import signal
 import subprocess
 import sys
@@ -484,12 +485,23 @@ class HealthyRunTests(FaultCase):
                "expect": "exit 0", "kind": "acceptance"}]
 
     def test_d_a_quiet_check_that_works_is_neither_hung_nor_killed(self):
+        check_script = self.gate.parent / "quiet_check.py"
+        check_script.write_text(
+            "from pathlib import Path\n"
+            f"started = Path({str(self.gate / 'check-started')!r})\n"
+            f"released = Path({str(self.gate / 'check-released')!r})\n"
+            "started.touch()\n"
+            "while not released.exists(): pass\n", encoding="utf-8")
+        self.checks = [{"id": "V1", "cmd": shlex.join([sys.executable, str(check_script)]),
+                        "expect": "exit 0", "kind": "acceptance"}]
+        self.set_items()
         options = self.gate.parent / "options.json"
         options.write_text(json.dumps({"limits": {"check_idle_warn_s": 2}}), encoding="utf-8")
         (self.gate / "go").touch()
         conductor = self.start_conductor("--options", options)
         directory = self.run_dir()
         heartbeat = heartbeat_mod
+        eventually(self, (self.gate / "check-started").exists, "the check runs")
         step = eventually(self, lambda: ((heartbeat.read(directory)[0] or {}).get("step") or "").startswith("checks") or None,
                           "the check runs")
         for _ in range(2):  # two heartbeats of the check: its ticks move the heartbeat although it prints nothing
@@ -502,6 +514,7 @@ class HealthyRunTests(FaultCase):
             self.assertEqual([], document["actions"])
             self.assertIsNone(conductor.poll())
         self.assertTrue(step)
+        (self.gate / "check-released").touch()
         self.assertEqual(0, conductor.wait(timeout=DEADLINE_S))
         self.assertTrue(self.finished(directory))
 

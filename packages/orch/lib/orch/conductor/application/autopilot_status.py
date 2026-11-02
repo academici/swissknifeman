@@ -201,9 +201,10 @@ def explain(project: Path, plan: Optional[str], settings, *, flags: Optional[dic
                   "message": f"the session drives {state['current']['kind']} {state['current']['run_id']}"}
     else:
         answered = answered_run(root, waiting)
-        found = None if answered else (readiness or functools.partial(source_readiness, project, plan, config_file))()
         phase = state.get("phase") if same else None
-        choice = (rules.choose_phase_next(found, phase, policy) if phase and not answered
+        found = (readiness or functools.partial(source_readiness, project, plan, config_file))() if phase or not answered else None
+        check = rules.check_phase_readiness(found, phase) if phase and answered else None
+        choice = (check if check else rules.choose_phase_next(found, phase, policy) if phase and not answered
                   else rules.choose_next(answered, len(waiting), found, policy))
         choice.setdefault("message", {"continue": f"continue the answered run {answered}",
                                       "run": f"start a run of {', '.join(choice.get('items') or [])}",

@@ -406,6 +406,47 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_phase_halt_retains_settled_waiting_run_on_recovery(self):
+        for number, cause in enumerate(("deadline", "stop")):
+            with self.subTest(cause=cause):
+                (self.root / autopilot.STATE_DOC).unlink(missing_ok=True)
+                controller = self.controller()
+                controller.phase = "P1"
+                prior = controller._session(None)
+                run_id = f"cnd-20261101T095000Z-aaaaa{number}"
+                current = {"run_id": run_id, "launch_id": "0123456789abcdef", "state": "running", "kind": "run",
+                           "since": timefmt.utc_stamp(NOW - 60), "items": ["W1"]}
+                self.write_run(run_id, current, {"status": "waiting", "waiting": {"W1": ["q1"]}})
+                prior["current"] = current
+                if cause == "deadline":
+                    prior["deadline_at"] = timefmt.utc_stamp(NOW - 1)
+                else:
+                    self.request("stop")
+                records.write(self.root / autopilot.STATE_DOC, prior, "autopilot-state")
+                _, _, state = self.start(controller)
+                self.assertEqual("AUTOPILOT_MAX_WALL" if cause == "deadline" else "AUTOPILOT_STOPPED", state["stop"]["code"])
+                self.assertIsNone(state["current"])
+                self.assertEqual([run_id], [row["run_id"] for row in state["waiting_runs"]])
+                other = self.controller(ready("P2"))
+                other.phase = "P2"
+                code, err, _ = self.start(other)
+                self.assertEqual(1, code)
+                self.assertIn("AUTOPILOT_PHASE_CONFLICT", err)
+                self.assertEqual([], self.launcher.started)
+
+    def test_explain_phase_answered_waiting_checks_readiness(self):
+        controller = self.controller(outcomes=[{"status": "waiting", "waiting": {"W1": ["q1"]}}])
+        controller.phase = "P1"
+        _, _, state = self.start(controller)
+        self.answer(state["waiting_runs"][0]["run_id"], "W1")
+        for status in ("stale", "ready"):
+            with self.subTest(status=status):
+                readiness = ready(status=status)
+                result = autopilot_status.explain(self.project, "T", self.settings(), readiness=lambda: readiness)
+                self.assertEqual(readiness, result["readiness"])
+                self.assertEqual("AUTOPILOT_NOT_READY" if status == "stale" else "continue",
+                                 result["next"].get("code") or result["next"]["action"])
+
     def test_phase_answered_run_rechecks_readiness_and_keeps_pending(self):
         waiting = {"status": "waiting", "waiting": {"W1": ["q1"]}}
         controller = self.controller(ready(), outcomes=[waiting])

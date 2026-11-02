@@ -534,6 +534,8 @@ class Controller(LaunchFence):
             return True, f"; run {run_id} keeps its {self.doc['current']['kind']} as current for the next start"
         view, exit_code = self.view(run_id)
         self._record_end(run_id, view, exit_code)
+        if self.phase and exit_code == 4:
+            self._apply(run_id, {"action": "waiting", "items": [row["item"] for row in view.get("waiting") or []]})
         return True, f"; run {run_id} {how} (orch conduct resume --run {run_id})"
 
     # ------------------------------------------------------------------------------------------------ outcomes

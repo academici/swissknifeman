@@ -19,6 +19,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from typing import Optional
@@ -772,7 +773,8 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
                evidence_prefix: str, report: dict | None = None, executor: dict | None = None,
                parallel: int = 1, on_result=None, first=(), kinds=RUN_KINDS, cadence=("item", "phase"),
                warn_s: int = 0, on_slow=None, idle_s: int = 0, on_changed=None, previous=(), fail_fast: bool = True,
-               reuse: bool = True, run_env: dict | None = None, run_id: str = "", on_budget=None, on_tick=None) -> list:
+               reuse: bool = True, run_env: dict | None = None, run_id: str = "", on_budget=None, on_tick=None,
+               protect: bool = False) -> list:
     """Run the checks and write their evidence; one row per acceptance or impact check, in input order.
 
     A row: ``{id, kind, cmd|procedure, exit|verdict, evidence, log, tail, green}``. ``report`` is the executor's
@@ -859,12 +861,36 @@ def run_checks(input_doc: dict, *, project: Path, evidence_dir: Path, log_dir: P
             log.parent.mkdir(parents=True, exist_ok=True)
             begin = time.monotonic()
             with open(log, "wb") as out:
-                code = _run_command(["bash", "-c", check["cmd"]], cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
-                                    idle_s=idle_s, env=check_env(cwd, run_env=run_env, parallel=batch["parallel"]),
+                env = check_env(cwd, run_env=run_env, parallel=batch["parallel"])
+                def run_command(argv, env):
+                    return _run_command(argv, cwd=cwd, out=out, timeout_s=timeout_s, warn_s=warn_s,
+                                    idle_s=idle_s, env=env,
                                     on_slow=None if on_slow is None else
                                     (lambda elapsed, pid, check_id=check_id, slow=on_slow: slow(check_id, elapsed, pid)),
                                     on_tick=None if on_tick is None else
                                     (lambda *tick, check_id=check_id, tick_of=on_tick: tick_of(check_id, *tick)))
+                if protect:
+                    # No default writable roots: the checkout itself may be under /tmp.
+                    # The scratch directory is outside the checkout and is removed after this check.
+                    roots = (tempfile.gettempdir(), "/var/tmp", str(Path.home()))
+                    scratch_root = next((p for p in roots if os.path.isdir(p) and
+                                 os.path.commonpath((os.path.realpath(p), os.path.realpath(project))) !=
+                                 os.path.realpath(project)), None)
+                    if scratch_root is None:
+                        raise RuntimeError("no isolated temporary directory for protected check")
+                    with tempfile.TemporaryDirectory(prefix="orch-check-", dir=scratch_root) as scratch:
+                        marker = REPRO_MARK + secrets.token_hex(16)
+                        env.update(TMPDIR=scratch, TMP=scratch, TEMP=scratch, PYTHONDONTWRITEBYTECODE="1",
+                                   SKM_REPRO_MARK=marker)
+                        argv = [sys.executable, str(ORCH_ROOT / "scripts" / "ro-run.py"), "--no-default-rw",
+                                "--protect", str(project), "--rw", scratch, "--rw", "/dev", "--", "bash", "-c",
+                                _REPRO_WRAPPER, "check", check["cmd"]]
+                        code = run_command(argv, env)
+                        out.flush()
+                        if marker not in log.read_text(encoding="utf-8", errors="replace").splitlines():
+                            raise RuntimeError("protected check could not start under Landlock; see " + str(log))
+                else:
+                    code = run_command(["bash", "-c", check["cmd"]], env)
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-TAIL_LINES:]
             row.update(cmd=check["cmd"], exit=code, log=str(log), tail="\n".join(tail),
                        seconds=round(time.monotonic() - begin, 1), green=code == 0)

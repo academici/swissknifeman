@@ -562,7 +562,8 @@ def review_only(self, item: Item) -> str:
                 log_dir=item.directory / "checks" / "review", timeout_s=item.options["limits"]["check_timeout_s"],
                 evidence_prefix=f"{self.run_id}:{item.ref}:checks.review", report=report,
                 parallel=item.options["checks"]["parallel"], fail_fast=False, reuse=False, run_id=self.run_id,
-                cadence=("item", "phase"), on_changed=changed.extend)
+                cadence=("item", "phase"), on_changed=changed.extend, protect=True,
+                idle_s=item.options["limits"].get("check_idle_timeout_s", 0))
         except (RuntimeError, ValueError, OSError) as error:
             raise Stop("CHECKS_FAILED", str(error)) from None
         if changed or checks_mod.head(self.project) != before_head or self._review_changed(item, 1):

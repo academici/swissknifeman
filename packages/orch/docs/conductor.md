@@ -1275,14 +1275,17 @@ not know keeps the label and is said once per role (`ROUTE_MODEL_UNKNOWN`, info)
 
 `orch input adhoc --review BASE..WORKTREE --plan P --item I` builds a read-only execution-input.
 `orch conduct run --input FILE --options REVIEWER_OPTIONS` runs only `review.1` and `triage.1`,
-then registers through the file source. It does not run scout, researcher, executor, acceptance
-commands, advisor, corrections or commit (even with `--commit`). A dirty worktree is the subject
+then registers through the file source. It does not run scout, researcher, executor, advisor,
+corrections or commit (even with `--commit`). A dirty worktree is the subject
 of review, not adopted executor work. Named heads such as `BASE..HEAD` bind the revision's blobs
 and diff; `WORKTREE` binds `git diff --name-only BASE` plus untracked paths.
 
 The existing receipt is written with subject `P.I` when both identities are supplied, otherwise
 the execution input id. The default findings-shape procedure gets engine evidence from the
-validated review and triage documents; command checks are not executed by this path. Stdout ends
+validated review and triage documents. Acceptance commands run before registration with Linux Landlock
+protecting the checkout, an isolated writable `TMPDIR`, and the configured check and idle timeouts.
+If protection cannot be established, the run stops without executing the command. A named revision
+requires a clean checkout at that revision. Stdout ends
 with one compact JSON line validated as `review-summary/v1`: `run`, `receipt`, `verdict`, `open`, and findings with only `key`, `id`,
 `severity`, `location`. Raw streams stay at `<run>/<input>/streams/review.1.jsonl`. An interactive
 session reads only that JSON and the receipt, then supplies `--review-receipt` to finish. Review

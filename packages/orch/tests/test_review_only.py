@@ -48,11 +48,47 @@ class ReviewOnlyTests(ConductorCase):
         self.assertIn("REGISTER_EVIDENCE_MISSING", err)
 
     def test_command_mutating_candidate_stops_before_registration(self):
+        before = (self.project / "README.md").read_text()
         _, path = self.review_with_acceptance(checks=["V1=echo changed > README.md"])
         code, _, err = self.conduct("run", "--input", path, "--json-lines")
         self.assertNotEqual(code, 0)
-        self.assertIn("CHECKS_MUTATED", err)
-        self.assertNotIn("REGISTER_EVIDENCE_RED", err)
+        self.assertIn("REGISTER_EVIDENCE_RED", err)
+        self.assertEqual((self.project / "README.md").read_text(), before)
+
+    def test_temporary_substitution_is_denied_and_tmpdir_is_writable(self):
+        before = (self.project / "README.md").read_text()
+        command = ('cp README.md "$TMPDIR/original" && '
+                   'if echo substituted > README.md; then cp "$TMPDIR/original" README.md; exit 0; else exit 1; fi')
+        _, path = self.review_with_acceptance(checks=["V1=" + command])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0, err)
+        self.assertIn("REGISTER_EVIDENCE_RED", err)
+        self.assertEqual((self.project / "README.md").read_text(), before)
+
+    def test_isolated_tmp_is_writable(self):
+        _, path = self.review_with_acceptance(checks=['V1=echo ok > "$TMPDIR/value" && test "$(cat "$TMPDIR/value")" = ok'])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertEqual(code, 0, err)
+
+    def test_guard_failure_never_starts_command(self):
+        marker = self.project.parent / "started"
+        _, path = self.review_with_acceptance(checks=[f"V1=touch {marker}"])
+        with mock.patch.object(checks, "ORCH_ROOT", self.project.parent / "missing"):
+            code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("CHECKS_FAILED", err)
+        self.assertFalse(marker.exists())
+
+    def test_idle_timeout_rejects_hung_check(self):
+        _, path = self.review_with_acceptance(checks=["V1=sleep 30"])
+        options = self.project.parent / "idle.json"
+        options.write_text(json.dumps({"limits": {"check_timeout_s": 0, "check_idle_timeout_s": 1}}))
+        code, _, err = self.conduct("run", "--input", path, "--options", options, "--json-lines")
+        self.assertNotEqual(code, 0, err)
+        self.assertIn("REGISTER_EVIDENCE_RED", err)
+        evidence = list((self.project / ".swissknifeman" / "orch-artifacts").rglob("evidence/V1.json"))
+        self.assertTrue(evidence)
+        self.assertEqual(json.loads(evidence[0].read_text())["exit"], 124)
 
     def test_named_revision_with_dirty_checkout_cannot_prove_command(self):
         base = self.git("rev-parse", "HEAD").strip()

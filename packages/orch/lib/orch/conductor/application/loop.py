@@ -528,7 +528,7 @@ def conduct(self, item: Item) -> str:
 
 
 def review_only(self, item: Item) -> str:
-    """A read-only file input runs review and triage once, registers their receipt, and never executes or commits."""
+    """Review and triage once, then prove acceptance on that same candidate before registration."""
     item.policy = dict(item.policy, git_action="none")
     self._admit_budget(item)
     self._routes(item)
@@ -541,9 +541,32 @@ def review_only(self, item: Item) -> str:
     problems = contract.problems(receipt, "review-receipt")
     if problems:
         raise ValueError("invalid review receipt: " + "; ".join(problems))
-    rows = review_shape_evidence(self, item)
     report = {"status": "done", "summary": f"Review {receipt['verdict']}; receipt: {self._relative(receipt_path)}",
               "changed_paths": [], "checks_run": [], "evidence": [self._relative(receipt_path)], "open_issues": []}
+    rows = review_shape_evidence(self, item)
+    shape_ids = {row["id"] for row in rows}
+    checks = [check for check in item.input_doc["acceptance"]["checks"]
+              if check.get("kind") == "acceptance" and check["id"] not in shape_ids]
+    if checks:
+        target = item.input_doc.get("provenance", {}).get("head")
+        if target and target != "WORKTREE":
+            revision = checks_mod.git(self.project, "rev-parse", "--verify", target + "^{commit}").strip()
+            dirty = scopes.own(checks_mod.dirty_files(self.project), self._not_the_role(item))
+            if checks_mod.head(self.project) != revision or dirty:
+                raise Stop("CHECKS_CANDIDATE_MISMATCH", "command checks require the reviewed revision as a clean worktree")
+        check_input = dict(item.input_doc, acceptance=dict(item.input_doc["acceptance"], checks=checks))
+        changed = []
+        before_head = checks_mod.head(self.project)
+        try:
+            rows += checks_mod.run_checks(check_input, project=self.project, evidence_dir=self._evidence_dir(item),
+                log_dir=item.directory / "checks" / "review", timeout_s=item.options["limits"]["check_timeout_s"],
+                evidence_prefix=f"{self.run_id}:{item.ref}:checks.review", report=report,
+                parallel=item.options["checks"]["parallel"], fail_fast=False, reuse=False, run_id=self.run_id,
+                cadence=("item", "phase"), on_changed=changed.extend)
+        except (RuntimeError, ValueError, OSError) as error:
+            raise Stop("CHECKS_FAILED", str(error)) from None
+        if changed or checks_mod.head(self.project) != before_head or self._review_changed(item, 1):
+            raise Stop("CHECKS_MUTATED", "the candidate changed during review-only acceptance checks")
     status = self._finish(item, report, rows)
     summary = {"run": self.run_id, "receipt": self._relative(receipt_path), "verdict": receipt["verdict"],
                       "open": receipt["open"], "findings": [

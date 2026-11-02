@@ -1,13 +1,73 @@
 """Review-only conductor with fake roles: dirty worktree, receipt and compact stdout."""
 import copy
 import json
+from unittest import mock
 
 from orch import adhoc
-from orch.conductor import contract, records
+from orch.conductor import checks, contract, records
 from tests.test_conductor import ConductorCase, GREEN, FINDING
 
 
 class ReviewOnlyTests(ConductorCase):
+    def review_with_acceptance(self, **acceptance):
+        doc = adhoc.build_adhoc_input(None, [], review="HEAD..WORKTREE", **acceptance)
+        path = self.project.parent / "review-check.json"
+        path.write_text(json.dumps(doc))
+        self.script({"reviewer": [GREEN], "triager": [{"result": {"confirmed": [], "rejected": []}}]})
+        return doc, path
+
+    def test_command_acceptance_runs_and_registers_engine_evidence(self):
+        (self.project / "README.md").write_text("candidate\n")
+        doc, path = self.review_with_acceptance(checks=["V1=test \"$(cat README.md)\" = candidate"])
+        code, out, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertEqual(code, 0, err)
+        evidence = list((self.project / ".swissknifeman" / "orch-artifacts").rglob("evidence/V1.json"))
+        self.assertTrue(evidence)
+        found = json.loads(evidence[0].read_text())
+        self.assertEqual((found["check_id"], found["exit"], found["producer"]["kind"]), ("V1", 0, "engine"))
+        self.assertEqual(found["candidate"]["head"], self.git("rev-parse", "HEAD").strip())
+        self.assertEqual(json.loads(out.splitlines()[-1])["verdict"], "GREEN")
+
+    def test_red_command_does_not_register_green_review(self):
+        _, path = self.review_with_acceptance(checks=["V1=false"])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("REGISTER_EVIDENCE_RED", err)
+
+    def test_missing_evidence_does_not_register(self):
+        _, path = self.review_with_acceptance(checks=["V1=true"])
+        with mock.patch.object(checks, "run_checks", return_value=[{"id": "V1", "kind": "acceptance", "green": True}]):
+            code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("REGISTER_EVIDENCE_MISSING", err)
+
+    def test_manual_procedure_is_not_invented(self):
+        _, path = self.review_with_acceptance(procedures=["V1=Inspect the result"])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("REGISTER_EVIDENCE_MISSING", err)
+
+    def test_command_mutating_candidate_stops_before_registration(self):
+        _, path = self.review_with_acceptance(checks=["V1=echo changed > README.md"])
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("CHECKS_MUTATED", err)
+        self.assertNotIn("REGISTER_EVIDENCE_RED", err)
+
+    def test_named_revision_with_dirty_checkout_cannot_prove_command(self):
+        base = self.git("rev-parse", "HEAD").strip()
+        (self.project / "README.md").write_text("committed\n")
+        self.git("add", "README.md")
+        self.git("commit", "-qm", "candidate")
+        (self.project / "README.md").write_text("different\n")
+        doc = adhoc.build_adhoc_input(None, [], review=base + "..HEAD", checks=["V1=true"])
+        path = self.project.parent / "review-revision.json"
+        path.write_text(json.dumps(doc))
+        self.script({"reviewer": [GREEN], "triager": [{"result": {"confirmed": [], "rejected": []}}]})
+        code, _, err = self.conduct("run", "--input", path, "--json-lines")
+        self.assertNotEqual(code, 0)
+        self.assertIn("CHECKS_CANDIDATE_MISMATCH", err)
+
     def test_dirty_worktree_is_reviewed_without_executor_checks_advisor_or_commit(self):
         base = self.git("rev-parse", "HEAD").strip()
         (self.project / "README.md").write_text("candidate\n")

@@ -487,9 +487,11 @@ class HealthyRunTests(FaultCase):
     def test_d_a_quiet_check_that_works_is_neither_hung_nor_killed(self):
         check_script = self.gate.parent / "quiet_check.py"
         check_script.write_text(
+            "import os\n"
             "from pathlib import Path\n"
             f"started = Path({str(self.gate / 'check-started')!r})\n"
             f"released = Path({str(self.gate / 'check-released')!r})\n"
+            f"Path({str(self.gate / 'check.pid')!r}).write_text(str(os.getpid()))\n"
             "started.touch()\n"
             "while not released.exists(): pass\n", encoding="utf-8")
         self.checks = [{"id": "V1", "cmd": shlex.join([sys.executable, str(check_script)]),
@@ -499,24 +501,48 @@ class HealthyRunTests(FaultCase):
         options.write_text(json.dumps({"limits": {"check_idle_warn_s": 2}}), encoding="utf-8")
         (self.gate / "go").touch()
         conductor = self.start_conductor("--options", options)
-        directory = self.run_dir()
-        heartbeat = heartbeat_mod
-        eventually(self, (self.gate / "check-started").exists, "the check runs")
-        step = eventually(self, lambda: ((heartbeat.read(directory)[0] or {}).get("step") or "").startswith("checks") or None,
-                          "the check runs")
-        for _ in range(2):  # two heartbeats of the check: its ticks move the heartbeat although it prints nothing
-            first = (heartbeat.read(directory)[0] or {}).get("seq")
-            eventually(self, lambda first=first: (heartbeat.read(directory)[0] or {}).get("seq") != first, "the heartbeat moved")
-            health = runs.health_of(directory, runs.effective_status(directory, progress.summarize(self.journal(directory))),
-                                    hung_after_s=8)
-            self.assertEqual("running", health["health"], health)
-            document = self.supervise("--recover", "resume", "--run", directory.name)
-            self.assertEqual([], document["actions"])
-            self.assertIsNone(conductor.poll())
-        self.assertTrue(step)
-        (self.gate / "check-released").touch()
+        try:
+            directory = self.run_dir()
+            heartbeat = heartbeat_mod
+            eventually(self, (self.gate / "check-started").exists, "the check runs")
+            step = eventually(self, lambda: ((heartbeat.read(directory)[0] or {}).get("step") or "").startswith("checks") or None,
+                              "the check runs")
+            for _ in range(2):  # two heartbeats of the check: its ticks move the heartbeat although it prints nothing
+                first = (heartbeat.read(directory)[0] or {}).get("seq")
+                eventually(self, lambda first=first: (heartbeat.read(directory)[0] or {}).get("seq") != first, "the heartbeat moved")
+                health = runs.health_of(directory, runs.effective_status(directory, progress.summarize(self.journal(directory))),
+                                        hung_after_s=8)
+                self.assertEqual("running", health["health"], health)
+                document = self.supervise("--recover", "resume", "--run", directory.name)
+                self.assertEqual([], document["actions"])
+                self.assertIsNone(conductor.poll())
+            self.assertTrue(step)
+        finally:
+            (self.gate / "check-released").touch()
+            pid_file = self.gate / "check.pid"
+            if (self.gate / "check-started").exists():
+                pid = int(pid_file.read_text())
+                eventually(self, lambda: not alive(pid), "the quiet check exited")
         self.assertEqual(0, conductor.wait(timeout=DEADLINE_S))
         self.assertTrue(self.finished(directory))
+
+
+class QuietCheckCleanupTests(unittest.TestCase):
+    def test_quiet_check_exits_when_supervisor_assertion_fails(self):
+        case = HealthyRunTests("test_d_a_quiet_check_that_works_is_neither_hung_nor_killed")
+        pids = []
+
+        def fail_supervisor(*_args):
+            pids.append(int((case.gate / "check.pid").read_text()))
+            raise AssertionError("injected supervisor assertion")
+
+        with mock.patch.object(case, "supervise", side_effect=fail_supervisor):
+            result = unittest.TestResult()
+            case.run(result)
+        self.assertEqual(1, len(result.failures), result.errors)
+        self.assertIn("injected supervisor assertion", result.failures[0][1])
+        self.assertEqual(1, len(pids))
+        self.assertFalse(alive(pids[0]), "the detached quiet check must exit on assertion failure")
 
 
 if __name__ == "__main__":

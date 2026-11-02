@@ -102,6 +102,7 @@
 
 ### Fixed
 
+- orch autopilot phase waits now release when an answer-waiting run finishes by hand, preserve no-progress budgets for blocked runs, and show the saved hold in explain.
 - **harness:** генерация `hooks.env` для проекта, привязанного к workspace, читает его `local/config.toml`; исключение машинных настроек больше не меняет домашний каталог поиска workspace. Исправлено на подключении пустого PHP-пакета Tenant.
 - orch: a Claude answer made of several `result` events (a background task) keeps the stage-report of the first turn.
 - planner: the start of an item after a reopen does not need a read that the item itself deletes (`task_files` delete).

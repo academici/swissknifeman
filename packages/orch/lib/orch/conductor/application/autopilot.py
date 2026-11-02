@@ -236,6 +236,11 @@ class Controller(LaunchFence):
                 remaining.update(blocked.intersection(row["items"]))
                 completed.update(view.get("closed") or [])
             resolved = known and not remaining
+        elif hold.get("code") == "AUTOPILOT_PHASE_WAITING" and hold.get("run_id") and not still_waiting(self.root, hold):
+            view, _ = self.view(hold["run_id"])
+            remaining = {row["item"] for row in view.get("blocked") or []}
+            completed = set(view.get("closed") or [])
+            known, resolved = True, not remaining
         if answered:
             view, _ = self.view(answered)
             if not view.get("blocked") and not check:
@@ -651,10 +656,12 @@ class Controller(LaunchFence):
             waiting = {"action": "waiting", "items": [row["item"] for row in view.get("waiting") or []]}
             self._apply(run_id, waiting)
         if self.phase and view.get("blocked"):
-            if self.wait_blocked and action.get("code") in ("AUTOPILOT_BUDGET", "AUTOPILOT_DECISIONS_EXCEEDED",
+            if self.wait_blocked and action.get("code") in ("AUTOPILOT_BUDGET", "AUTOPILOT_DECISIONS_EXCEEDED", "AUTOPILOT_NO_PROGRESS",
                                                               "AUTOPILOT_OWNER_NEEDED", "AUTOPILOT_CHECKOUT_LOST",
                                                               "AUTOPILOT_STATE_INVALID", "AUTOPILOT_RUN_STOPPED"):
                 return self._apply(run_id, action)
+            if self.wait_blocked and action["action"] == "continue":
+                self._apply(run_id, action)
             blocker = view["blocked"][0]
             return self._phase_hold("AUTOPILOT_PHASE_BLOCKED", f"phase {self.phase}: {blocker['item']} blocked ({blocker['code']})", run_id,
                                     items=[row["item"] for row in view["blocked"]])

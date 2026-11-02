@@ -406,6 +406,59 @@ class ChooseNextTests(unittest.TestCase):
 
 
 class ControllerTests(Case):
+    def test_finished_answer_wait_releases_after_restart_but_never_relaunches_closed_or_blocked(self):
+        for outcome, lane, released in (({"closed": ["W1"]}, "W2", True),
+                                        ({"closed": ["W1"]}, "W1", False),
+                                        ({"blocked": {"W1": "ITEM_BLOCKED"}}, "W1", False)):
+            with self.subTest(outcome=outcome, lane=lane):
+                controller = self.controller(ready(items=(lane,)))
+                controller.phase, controller.wait_blocked = "P1", True
+                self.root.mkdir(parents=True, exist_ok=True)
+                controller.doc = controller._session(None)
+                run_id = "cnd-20261101T095000Z-aaaaaa"
+                self.write_run(run_id, {"kind": "run", "items": ["W1"]},
+                               {"status": "waiting", "waiting": {"W1": ["q1"]}})
+                controller._apply(run_id, {"action": "waiting", "items": ["W1"]})
+                controller._phase_hold("AUTOPILOT_PHASE_WAITING", "waiting", run_id)
+                self.end_run(run_id, dict(outcome, status="finished"))
+                restarted = self.controller(ready(items=(lane,)))
+                restarted.phase, restarted.wait_blocked = "P1", True
+                restarted.doc = restarted._session(self.state())
+                restarted._poll_phase_wait()
+                self.assertEqual([], restarted.doc["waiting_runs"])
+                self.assertEqual(released, restarted._phase_ready is not None)
+
+    def test_blocked_runs_preserve_no_progress_budget_and_reset_on_progress(self):
+        for limit, closed, expected in ((1, [], "AUTOPILOT_NO_PROGRESS"), (3, [], 1), (3, ["W2"], 0)):
+            with self.subTest(limit=limit, closed=closed):
+                controller = self.controller(outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"},
+                                                        "closed": closed}],
+                                             machine={"allowed": True, "poll_s": 1, "max_no_progress_runs": limit})
+                controller.phase, controller.wait_blocked = "P1", True
+                self.root.mkdir(parents=True, exist_ok=True)
+                controller.doc = controller._session(None)
+                controller.doc["counters"]["no_progress_streak"] = 1 if closed else 0
+                controller._step()
+                controller._step()
+                if isinstance(expected, str):
+                    self.assertEqual(expected, controller.doc["stop"]["code"])
+                else:
+                    self.assertEqual(expected, self.state()["counters"]["no_progress_streak"])
+                    self.assertIsNotNone(self.state()["phase_wait"])
+
+    def test_explain_reports_persisted_phase_hold_instead_of_launch(self):
+        controller = self.controller(outcomes=[{"status": "finished", "blocked": {"W1": "ITEM_BLOCKED"}}])
+        controller.phase, controller.wait_blocked = "P1", True
+        self.root.mkdir(parents=True, exist_ok=True)
+        controller.doc = controller._session(None)
+        controller._step()
+        controller._step()
+        controller._poll_phase_wait()
+        self.assertIsNone(controller._phase_ready)
+        result = autopilot_status.explain(self.project, "T", self.settings(), readiness=ready)
+        self.assertEqual("wait_answers", result["next"]["action"])
+        self.assertIn("W1 blocked", result["next"]["message"])
+
     def test_wait_blocked_polls_until_source_changes_and_keeps_phase_boundary(self):
         source = [ready()]
         controller = self.controller(lambda: ready("P2", items=("W3",)) if len(self.launcher.started) == 2 else source[0],

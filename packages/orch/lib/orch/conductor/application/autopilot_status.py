@@ -223,6 +223,9 @@ def explain(project: Path, plan: Optional[str], settings, *, flags: Optional[dic
                  else rules.check_phase_readiness(found, phase) if phase and answered else None)
         choice = (check if check else rules.choose_phase_next(found, phase, policy, len(waiting)) if phase and not answered
                   else rules.choose_next(answered, len(waiting), found, policy))
+        if phase and state.get("phase_wait") and choice["action"] == "run":
+            hold = state["phase_wait"]
+            choice = {"action": "wait_answers", "message": f"phase wait: {hold['message']}"}
         choice.setdefault("message", {"continue": f"continue the answered run {answered}",
                                       "run": f"start a run of {', '.join(choice.get('items') or [])}",
                                       "wait_answers": "wait for answers to the waiting runs"}.get(choice["action"], ""))

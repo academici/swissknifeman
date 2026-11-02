@@ -321,6 +321,9 @@ its state. It polls at `poll_s`; each saved run must confirm its relevant items 
 An answered run also needs a clear run blocker and phase readiness before continuation. Source refusals stop with
 `AUTOPILOT_NOT_READY`; phase boundaries, requests and budgets remain in force. The option and outstanding wait survive
 detach and recovery. A stopped session with an outstanding wait retains its phase boundary.
+`explain` reports a saved phase hold while it awaits the controller's next evaluation; the controller rechecks run evidence and
+readiness before releasing it. A run finished by hand releases an answer wait only after its lease is free, and closed or still
+blocked items cannot be relaunched from a stale lane.
 
 **Policy.** `[orch.autopilot]` (see [configuration](configuration.md)): `allowed` (default `false`) is set by the machine
 only: a project file that sets it is refused by the configuration (`CONFIG_LAYER_FORBIDDEN`), the project layer is then left

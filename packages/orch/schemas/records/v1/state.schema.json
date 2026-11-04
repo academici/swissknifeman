@@ -312,7 +312,7 @@
         "review_marks": {
           "description": "Paths and their hashes seen by each review round (P2.4).",
           "type": "object",
-          "patternProperties": {"^[0-9]+$": {"type": "object", "description": "Path to hash.", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false}},
+          "patternProperties": {"^[0-9]+$": {"type": "object", "description": "Path to hash, or null when absent or unreadable in the canonical dirty snapshot.", "patternProperties": {"^.+$": {"type": ["string", "null"]}}, "additionalProperties": false}},
           "additionalProperties": false
         },
         "review_debt": {"description": "Findings corrected after the last review round the wall allows (round, findings, corrected).", "type": "object"},

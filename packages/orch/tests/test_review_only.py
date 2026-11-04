@@ -286,6 +286,43 @@ class ReviewOnlyTests(ConductorCase):
         self.assertEqual({"blocker": 1, "major": 1}, result["open"])
         self.assertEqual(["F1", "F2"], [row["id"] for row in result["findings"]])
 
+    def test_named_head_preserves_null_dirty_marks_without_changing_reviewed_candidate(self):
+        foreign = self.project / "foreign.txt"
+        foreign.write_text("preexisting foreign work\n")
+        self.git("add", "foreign.txt")
+        self.git("commit", "-qm", "foreign baseline")
+        base = self.git("rev-parse", "HEAD").strip()
+        (self.project / "README.md").write_text("committed candidate\n")
+        self.git("add", "README.md")
+        self.git("commit", "-qm", "candidate")
+        head = self.git("rev-parse", "HEAD").strip()
+        blob = self.git("rev-parse", "HEAD:README.md").strip()
+        foreign.unlink()
+        dangling = self.project / "retained-report-link"
+        dangling.symlink_to("missing-container-report")
+        doc = adhoc.build_adhoc_input(None, [], review=base + ".." + head)
+        path = self.project.parent / "review-null-marks.json"
+        path.write_text(json.dumps(doc))
+        self.script({"reviewer": [GREEN], "triager": [{"result": {"confirmed": [], "rejected": []}}]})
+
+        code, out, err = self.conduct("run", "--input", path, "--json-lines")
+
+        self.assertEqual(code, 0, err)
+        receipt = json.loads((self.project / json.loads(out.splitlines()[-1])["receipt"]).read_text())
+        self.assertEqual(receipt["candidate"]["head"], head)
+        self.assertEqual(receipt["candidate"]["paths"], {"README.md": "100644 " + blob})
+        state = records.read(self.run_dir(err) / "state.json", "state")
+        marks = state["items"][doc["input_id"]]["review_marks"]["1"]
+        self.assertIn("foreign.txt", marks)
+        self.assertIsNone(marks["foreign.txt"])
+        self.assertIn("retained-report-link", marks)
+        self.assertIsNone(marks["retained-report-link"])
+        self.assertTrue(dangling.is_symlink())
+        self.assertEqual(dangling.readlink(), Path("missing-container-report"))
+        self.assertFalse(foreign.exists())
+        self.assertEqual((self.calls("reviewer"), self.calls("triager")), (1, 1))
+        self.assertEqual(self.calls("executor"), 0)
+
     def test_named_head_reviews_committed_blobs_instead_of_dirty_worktree(self):
         base = self.git("rev-parse", "HEAD").strip()
         (self.project / "README.md").write_text("committed candidate\n")

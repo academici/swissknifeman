@@ -1,7 +1,7 @@
 {
   "schema": "golden-generation/v1",
-  "captured_from": "a6baae20c252",
-  "reason": "Обновлены типы схем разрешённых каталогов артефактов",
+  "captured_from": "13c1790ae1aa",
+  "reason": "Fix review_marks nullable dirty snapshots; canonical generated records type verified by real immutable-review regression and schema checks.",
   "generators": [
     {
       "id": "skiller-registry",
@@ -260,7 +260,7 @@
     "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "f3befc24445fea003fdc30cf4cb002223ae868b9ef01a8c1d6b88c2d158308d6",
     "packages/orch/lib/orch/_types/conductor.py": "db7005deab356375c843358bc279f05609acba8c3fb0a91ea0556bbf9d418f6a",
     "packages/orch/lib/orch/_types/exec.py": "1c1f6ba939dc0d8c076452676700622e000b0fd353a87b10a6c619eb6e6c32ab",
-    "packages/orch/lib/orch/_types/records.py": "67ae82c931db212dc47d24ccb2f52c1b80451eff74a12055944ab8790150649e",
+    "packages/orch/lib/orch/_types/records.py": "cfec6b1d9e18037b999ad6b83019e3bc091b08679452dbfed918e9490011ca7c",
     "packages/orch/lib/orch/_types/work_source.py": "eb421594149595df16611c791aca1c20f76cfda0150e55fb9a4e72ed9dcfeafd",
     "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
     "packages/planner/docs/reference/provider-model-roles.md": "877ac0f5c46c850971b324ac4bf23480ae1fe5df6c10476d2826f7360871693a",

@@ -4,10 +4,15 @@
 tree run again once (``CHECKS_MUTATED`` when they change it every time)."""
 from __future__ import annotations
 
+import hashlib
 import unittest
+from contextlib import nullcontext
+from types import SimpleNamespace
 from unittest import mock
 
 from orch.conductor import checks, options, scope
+from orch.conductor.infrastructure import tree
+from orch.conductor.stages.execute import set_aside_runtime
 
 from tests.test_conductor import GREEN, ConductorCase, report
 
@@ -169,6 +174,37 @@ class OutsideModuleTests(ConductorCase):
 
 
 class RuntimeArtifactTests(ConductorCase):
+    def test_preexisting_runtime_evidence_is_not_moved_by_a_resumed_run(self):
+        old = ".swissknifeman/orch-artifacts/other/P1.5/evidence/V1.json"
+        new = ".swissknifeman/orch-artifacts/accidental/V1.log"
+        for name, value in ((old, b"prior evidence"), (new, b"new stray")):
+            path = self.project / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(value)
+        owner = SimpleNamespace(project=self.project, _scope_option=lambda _i, _k, default: default,
+                                _not_the_role=lambda _i: [], _relative=lambda p: str(p.relative_to(self.project)),
+                                store=SimpleNamespace(mutating=nullcontext), _save=mock.Mock(), progress=mock.Mock())
+        item = SimpleNamespace(ref="W1", artifacts=self.project / ".swissknifeman/orch-artifacts/current/W1", state={})
+        found = {"changed": [old, new], "runtime_before": {old: hashlib.sha256(b"prior evidence").hexdigest()}}
+        owner._changed_now = lambda _item: [old, new]
+        self.assertEqual(tree.runtime_changed(owner, item, found["runtime_before"]), [new])
+        self.assertEqual(set_aside_runtime(owner, item, "executor.1", found), [])
+        self.assertEqual((self.project / old).read_bytes(), b"prior evidence")
+        self.assertFalse((self.project / new).exists())
+        self.assertIn(new, item.state["relocated"]["executor.1"])
+
+    def test_modified_preexisting_runtime_evidence_is_blocked_not_moved(self):
+        old = ".swissknifeman/orch-artifacts/other/P1.5/evidence/V1.json"
+        path = self.project / old
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"modified")
+        owner = SimpleNamespace(project=self.project, _scope_option=lambda _i, _k, default: default,
+                                _not_the_role=lambda _i: [])
+        item = SimpleNamespace(state={})
+        found = {"changed": [old], "runtime_before": {old: hashlib.sha256(b"original").hexdigest()}}
+        self.assertEqual(set_aside_runtime(owner, item, "executor.1", found), [old])
+        self.assertEqual(path.read_bytes(), b"modified")
+
     def test_new_untracked_runtime_files_are_moved_aside_and_not_committed(self):
         self.script({"executor": [{"write": {"out/W1.txt": "ok\n", ".swissknifeman/orch-artifacts/foo/V1.log": "log\n",
                                              "packages/orch/tests/evidence/x.json": "{}\n"},

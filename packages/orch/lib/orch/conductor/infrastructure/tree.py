@@ -5,9 +5,30 @@ from __future__ import annotations
 from aicore.util.digest import sha256_hex
 
 from orch.conductor import checks as checks_mod, scope as scopes
+from orch.conductor import options as opts
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import REPORTS
+
+
+def runtime_snapshot(owner, item: Item) -> dict:
+    patterns = owner._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
+    return {path: digest for path, digest in checks_mod.dirty_files(owner.project).items()
+            if scopes.under(path, patterns)}
+
+
+def runtime_preexisting(project, found: dict, paths: list) -> tuple:
+    before = found.get("runtime_before")
+    if not isinstance(before, dict):
+        return paths, []
+    current = checks_mod.dirty_files(project)
+    protected_changed = [path for path in paths if path in before and current.get(path) != before[path]]
+    return [path for path in paths if path not in before], protected_changed
+
+
+def runtime_changed(owner, item: Item, before: dict) -> list:
+    current = checks_mod.dirty_files(owner.project) if before else {}
+    return [path for path in owner._changed_now(item) if path not in before or current.get(path) != before[path]]
 
 
 def porcelain_paths(project, limit: int = 500) -> list:

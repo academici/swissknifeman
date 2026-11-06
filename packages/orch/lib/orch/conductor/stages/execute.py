@@ -14,7 +14,7 @@ from orch.conductor import checks as checks_mod, contract, self_check as self_ch
 from orch.conductor.domain.item import Item, done_steps, piece_commits
 from orch.conductor.domain.report import ENVIRONMENT_HINT, ESCALATION_CODES, evidence_paths, is_coded, report_problems
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import clock, sessions, work_source
+from orch.conductor.infrastructure import clock, sessions, tree, work_source
 from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
 from orch.conductor.policies import authority as authority_rules
 from orch.conductor.stages import advice, decisions
@@ -91,11 +91,13 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         if context:
             prompt = prompts.with_operator_context(prompt, context)
         resumed = self._resumed_prompt(item, key, correction, note, fix, answers, context) if role == "executor" else None
+        runtime_before = tree.runtime_snapshot(self, item)
         report, meta = self._role(item, key, role, prompt, "stage-report", extra=report_problems, resumed=resumed)
         if self._shared_session(item, role, route):  # the session has now seen every answer the prompt carried
             self._note_answers(item, [answer_key(row) for row in answers])
         write_json(item.directory / "reports" / f"{key}.json", report)
-        return {"report": report, "changed": self._changed_now(item), **meta}
+        changed = tree.runtime_changed(self, item, runtime_before)
+        return {"report": report, "changed": changed, **({"runtime_before": runtime_before} if runtime_before else {}), **meta}
 
     found = self._step(item, key, run, role=role, route=self.label(route),
                        verdict=lambda result: result["report"]["status"])
@@ -140,6 +142,7 @@ def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
     if not listed:
         return []
     fresh = set(checks_mod.untracked(self.project))
+    listed, protected_changed = tree.runtime_preexisting(self.project, found, listed)
     moved = {}
     for path in listed:
         if path not in fresh:
@@ -159,7 +162,7 @@ def set_aside_runtime(self, item: Item, key: str, found: dict) -> list:
                            message=f"{len(moved)} runtime artifact(s) left in the tree were moved to the artifacts of the piece: "
                                    + ", ".join(f"{path} -> {where}" for path, where in sorted(moved.items())[:5])
                                    + (" …" if len(moved) > 5 else ""))
-    return scopes.tracked(self.project, [path for path in listed if path not in fresh])
+    return sorted(set(protected_changed) | set(scopes.tracked(self.project, [path for path in listed if path not in fresh])))
 
 
 def answer_key(row: dict) -> str:

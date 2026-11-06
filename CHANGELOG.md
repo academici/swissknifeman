@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Orch: чтение legacy Markdown inputs.** Canonical scout/executor разрешают read-only доступ к явно перечисленным Markdown `reads` в legacy каталогах без `plan.json`, включая существующий plans symlink. Native JSON context остаётся API-only, изменение планов запрещено. File-source regression проверяет штатный retry того же blocked input с сохранением первоначального отчёта и без смены provenance.
+
 - **Orch: отдельный явный режим AGY reviewer.** `SKM_ORCH_AGY_UNSAFE_REVIEWER=accept-unisolated-network-docker-host-reads` допускает штатный JSONL reviewer через защиту Landlock ABI 3 и seccomp metadata guard. Отказ по умолчанию и отдельный opt-in executor сохранены; сеть, IPC, чтение хоста и внешние инструменты явно отмечены как неизолированные. Reviewer не получает writable checkout, output или resume grants; opt-in удаляется из дочернего окружения.
 
 - **Orch: сохранение review snapshot.** `review_marks` сохраняет canonical null для удалённых или недоступных dirty paths, включая dangling evidence symlinks. Immutable review продолжает проверять exact committed candidate, сохраняя постороннее дерево.

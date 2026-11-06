@@ -498,6 +498,17 @@ an unknown scenario blocks the claim (`SCENARIO_UNKNOWN`) before the piece start
 `run.json` records `source = {kind: file, path, commit}`, the piece's reference is the `input_id`, and `resume` reads the same file
 (a file that changed since the claim is `INPUT_CHANGED`: start a new run).
 
+An explicit required `reads` entry may name a legacy Markdown document in a directory without `plan.json`, including
+through an existing project `plans` symlink. The scout and executor read that named file read-only; they do not mutate
+the plan. Planner `get` serves native JSON plans and cannot read such a legacy Markdown programme. Native plan source
+JSON and generated views retain their API-only access rule; `context_refs` use the caller's permitted read API.
+
+After an environment block, keep the same input and run and use `resume --run R --retry INPUT_ID`. The built-in file
+source holds no lifecycle status that needs a separate reopen call. The retry archives the blocked report, streams and
+prompts under `attempts/<n>/`, repeats brief/prepare/scout and the blocked round, and reads the current canonical role
+text. Registration permits the same attempt's `blocked` receipt to become `done`. Do not invent `plan_support` or
+`review_followup` provenance, replace the input, or edit run state to reopen file-source work.
+
 - Artifacts (stage-report, review verdict, check evidence, the registration receipt `register.json`) live in
   `.swissknifeman/orch-artifacts/<run>/<input_id>/`, never in `plans/`: local records, not committed.
 - The changes stay in the tree: `commit` is a no-op unless `--commit`; then it commits the changed paths

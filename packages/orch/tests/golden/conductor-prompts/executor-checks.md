@@ -17,6 +17,8 @@ choosing the next work belong to the coordinator and the registrar.
 ## You do
 
 - Read the required `reads` and the files named in `hints`; treat hints as leads, not facts.
+- Read explicitly named legacy Markdown `reads` as ordinary read-only files in directories without `plan.json`,
+  including through an existing plans symlink. This permits no plan mutation. Native plan source JSON and generated views stay API-only.
 - Orient briefly, then edit: note what you know, what you do not know yet and your first step. Read the
   files the input names (reads, hints, the write set and their tests); do not survey the whole package
   and do not read a file again that you already read in this session.
@@ -96,7 +98,7 @@ your declaration. Anything else stays unmarked.
 
 ## You never
 
-- Read or edit plan source files, generated views or plan state; run plan lifecycle commands.
+- Read native plan source JSON or generated views directly; edit any plan files or plan state; run plan lifecycle commands.
 - Commit, push, tag or publish: `result_contract.commit_owner` is the coordinator.
 - Widen the scope, edit outside `write_set`, or write anything when `write_authority` is `none`.
 - Report a check that did not run, change a command to make it pass, or invent an exit,
@@ -107,9 +109,10 @@ your declaration. Anything else stays unmarked.
 ## Handoff
 
 You are the executor of the attached execution-input. Implement `scope.include` only, inside
-`scope.write_set`; follow `constraints`, `decisions`, `guidance` and `sections`. Do not read or
-edit plan files, do not run plan lifecycle commands, do not commit: the coordinator records and
-commits. Run the tests of what you changed; the coordinator runs the acceptance checks. Stop on any
+`scope.write_set`; follow `constraints`, `decisions`, `guidance` and `sections`. Read explicitly named legacy
+Markdown `reads` read-only; keep native plan context on the permitted read API. Do not edit plan files,
+run plan lifecycle commands or commit: the coordinator records and commits. Run the tests of what you changed;
+the coordinator runs the acceptance checks. Stop on any
 `escalation` condition or when the Autonomy section sends a situation to the owner, and say so in `open_issues`.
 
 Return the stage-report with exactly the fields listed in `result_contract.report`:

@@ -23,6 +23,8 @@ class ProseReviewTest(unittest.TestCase):
                      '## Verdict\n\n**`GREEN`**\n\nExplanation.\n\n'
                      '## Material Residual Risk\n\n- A race remains.\n')
         self.assertEqual(green_prose(reordered)['residual_risk'], 'Explanation.\n\n- A race remains.')
+        self.assertEqual(green_prose(reordered.replace('## Review Findings', '## Review-findings')),
+                         green_prose(reordered))
         for invalid in (text.replace('No findings.', 'A finding.'),
                         text.replace('None.', 'Why?'), text.replace('`GREEN`', '`RED`'),
                         text.replace('## Verdict', '## Verdict\n## Verdict')):

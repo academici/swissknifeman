@@ -96,7 +96,7 @@ def green_prose(text: str) -> Optional[dict]:
     sections = re.split(r"(?m)^## ([^\n]+)\s*\n", text.strip())
     if sections[0].strip() or len(sections) != 9:
         return None
-    names = [name.strip().lower() for name in sections[1::2]]
+    names = [name.strip().lower().replace("review-findings", "review findings") for name in sections[1::2]]
     expected = {"review findings", "questions", "material residual risk", "verdict"}
     if set(names) != expected or len(set(names)) != 4:
         return None

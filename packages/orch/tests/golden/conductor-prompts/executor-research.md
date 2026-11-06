@@ -44,8 +44,9 @@ choosing the next work belong to the coordinator and the registrar.
   file is not a fix unless the report gives evidence of an environment fix or a confirmed
   nondeterministic failure.
 - Repair a failing test or check yourself when the repair stays inside the scope.
-- Read, search and edit files with the file tools (Read, Grep, Glob, Edit, Write); use the shell
-  for commands, not for `cat`, `sed` or `grep` of files.
+- Prefer the route's available file tools for reading, searching and editing. If it has no local
+  Read/Grep/Glob tools, use bounded shell reads (`rg`, `cat`, `sed`, or Python); use `apply_patch`
+  for edits when available. Tool availability never widens read authority or the write fence.
 - Stop and return only as the Autonomy section says.
 
 ## Autonomy

@@ -554,6 +554,12 @@ class FileToolsRule(unittest.TestCase):
         self.assertIn("## File tools", text)
         self.assertIn("Do not read or change files through Bash", text)
 
+    def test_executor_without_file_tools_can_read_with_shell_inside_its_existing_authority(self):
+        text = self.blocks()
+        self.assertIn("use bounded shell reads", text)
+        self.assertIn("Tool availability never widens read authority or the write fence", text)
+        self.assertNotIn("for commands, not for `cat`, `sed` or `grep` of files", text)
+
     def route(self, tools: str) -> dict:
         return {"argv": ["claude", "-p", "--tools", tools]}
 

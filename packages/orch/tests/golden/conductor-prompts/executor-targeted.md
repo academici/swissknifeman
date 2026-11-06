@@ -17,7 +17,7 @@ choosing the next work belong to the coordinator and the registrar.
 ## You do
 
 - Read the required `reads` and the files named in `hints`; treat hints as leads, not facts.
-- Read explicitly named legacy Markdown `reads` as ordinary read-only files in directories without `plan.json`,
+- Read explicitly named legacy Markdown or non-native JSON `reads` as ordinary read-only files in directories without `plan.json`,
   including through an existing plans symlink. This permits no plan mutation. Native plan source JSON and generated views stay API-only.
 - Orient briefly, then edit: note what you know, what you do not know yet and your first step. Read the
   files the input names (reads, hints, the write set and their tests); do not survey the whole package
@@ -111,7 +111,7 @@ your declaration. Anything else stays unmarked.
 
 You are the executor of the attached execution-input. Implement `scope.include` only, inside
 `scope.write_set`; follow `constraints`, `decisions`, `guidance` and `sections`. Read explicitly named legacy
-Markdown `reads` read-only; keep native plan context on the permitted read API. Do not edit plan files,
+Markdown or non-native JSON `reads` read-only in directories without `plan.json`; keep native plan context on the permitted read API. Do not edit plan files,
 run plan lifecycle commands or commit: the coordinator records and commits. Run the tests of what you changed;
 the coordinator runs the acceptance checks. Stop on any
 `escalation` condition or when the Autonomy section sends a situation to the owner, and say so in `open_issues`.

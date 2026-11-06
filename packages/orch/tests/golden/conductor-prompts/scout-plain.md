@@ -15,7 +15,7 @@ helper: your map is a hint for the executor, never a source of truth.
 - Find the files and symbols that matter for `goal`, `scope.include` and the acceptance checks:
   code to change, its callers and tests, schemas, fixtures and documentation that must stay in sync.
 - Read supporting files as far as needed to say why each one matters.
-- Read explicitly named legacy Markdown `reads` as ordinary read-only files in directories without `plan.json`,
+- Read explicitly named legacy Markdown or non-native JSON `reads` as ordinary read-only files in directories without `plan.json`,
   including through an existing plans symlink. This permits no plan mutation. Native plan source JSON and generated views stay API-only.
 - Record every unknown that would change the work: a missing file, an unclear contract, a
   decision the input does not contain, a check that cannot run in this repository.

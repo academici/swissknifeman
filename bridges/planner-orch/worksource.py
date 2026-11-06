@@ -57,7 +57,7 @@ import partners
 POINT = "orch:work-source"
 RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
 DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness", "inspect")
 OVERLAY_PREFIX = "orchestration-"
 OVERLAY_SECTION = "orchestration"
 _FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
@@ -292,6 +292,26 @@ def class_model(provider: str, model_class: str) -> str | None:
         return None
     found = (mapping.get("class_selectors") or {}).get(model_class) or []
     return found[0] if found and isinstance(found[0], str) else None
+
+
+def op_inspect(fields: dict) -> dict:
+    """Resolve the same source layers as claim, without starting work or storing a brief."""
+    import brief
+    ref, plans_root = fields["ref"], fields.get("plans_root")
+    item, _, unit = ref.partition("/")
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(fields["plan"], Path(plans_root) if plans_root else None))
+        doc = brief.build(plan, item, unit_id=unit or None,
+                          context_delivery=os.environ.get("PLANNER_ORCH_CONTEXT_DELIVERY", "reference"))
+        context = brief.context.collect(plan, item, with_scout=False)
+        scenario, source, layers = orchestration_of(context, ref)
+        if not scenario:
+            raise Blocked("SCENARIO_UNKNOWN", f"{ref} resolves no scenario")
+        return {"op": "inspect", "outcome": "ok", "ref": ref, "scenario": scenario,
+                "scenario_source": source, "options": layers, "input": doc}
+    except (brief.PlanError, Blocked) as error:
+        return {"op": "inspect", "outcome": "refused", "ref": ref,
+                "reason_code": error.code, "message": str(error)}
 
 
 def op_claim(fields: dict) -> dict:
@@ -1009,7 +1029,7 @@ def invoke(request_id: str, request: dict) -> None:
         return
     handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
                "release": op_release, "note": op_note, "research": op_research,
-               "decision": op_decision, "readiness": op_readiness}[fields["op"]]
+               "decision": op_decision, "readiness": op_readiness, "inspect": op_inspect}[fields["op"]]
     try:
         output = handler(fields)
     except Blocked as blocked:

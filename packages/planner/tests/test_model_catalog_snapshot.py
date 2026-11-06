@@ -50,6 +50,18 @@ class ModelCatalogSnapshotTests(unittest.TestCase):
         self.assertIsNotNone(load_model_catalog().provider("antigravity"))
         self.assertNotIn("antigravity", self.models.routing_snapshot(self.routing)["mappings"])
 
+    def test_orch_only_model_admission_uses_canonical_inventory_without_a_renderer(self):
+        from planner.plan.lifecycle import admitted_class
+        from unittest.mock import patch
+        self.assertEqual(admitted_class("antigravity", "claude-opus-5-5"), "frontier")
+        self.assertEqual(admitted_class("antigravity", "claude-sonnet-5-5"), "implementation")
+        self.assertIsNone(admitted_class("antigravity", "gemini-4-argon-high"))
+        self.assertIsNone(admitted_class("antigravity", "invented-opus"))
+        # An explicit inventory must remain authoritative, even if it omits a provider.
+        self.assertIsNone(admitted_class("antigravity", "claude-opus-5-5", ROUTING_PATH))
+        with patch("planner.integration.available", return_value=False):
+            self.assertIsNone(admitted_class("antigravity", "claude-opus-5-5"))
+
     def test_provider_set_mismatch_is_refused(self):
         broken = json.loads(self.raw)
         del broken["mappings"]["grok"]

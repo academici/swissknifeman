@@ -160,6 +160,21 @@ def agy_guarded(argv: list, project: str, writing: bool) -> bool:
                 "/dev" in roots and all(root in permitted for root in roots))
 
 
+def agy_launch_problem(route: dict, project: str, role: str, extra_paths=()) -> Optional[tuple]:
+    """Static AGY admission shared by preflight and launch; scratch is checked at launch."""
+    argv = route.get("argv") or []
+    prefix = authority_rules.guard_prefix(argv)
+    tail = argv[len(prefix) + 1:] if prefix else []
+    bridge = ["python3", str(ORCH_ROOT / "scripts" / "agy-transport.py"), "--model", route.get("model"),
+              "--effort", route.get("effort")]
+    if (route.get("transport") != "jsonl" or not agy_guarded(argv, project, writes(role)) or tail != bridge
+            or route.get("resume_argv") or extra_paths):
+        return "AGY_GUARD_REQUIRED", "antigravity requires its canonical narrow Landlock guard and bridge"
+    if role == "reviewer" and (landlock_abi() < 3 or platform.machine() != "x86_64"):
+        return "PROTECT_UNAVAILABLE", "AGY reviewer requires Landlock ABI >= 3 and the x86-64 metadata guard"
+    return None
+
+
 def agy_authority_problem(doc: dict) -> Optional[str]:
     """Fail closed until the role's network, IPC and host read restrictions are enforced."""
     if doc["network"]["declared"] == "none" and doc["network"]["effective"] != "none":
@@ -214,16 +229,11 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
     if admit and route.get("provider") == "antigravity":
         if not launch.agy_role_opted_in(role, self.env):
             raise Stop("AGY_AUTHORITY_UNPROVEN", launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)[1])
-        bridge = ["python3", str(ORCH_ROOT / "scripts" / "agy-transport.py"), "--model", route.get("model"),
-                  "--effort", route.get("effort")]
-        prefix = authority_rules.guard_prefix(argv)
-        tail = argv[len(prefix) + 1:] if prefix else []
-        if (route.get("transport") != "jsonl" or not agent_tmpdir(self)
-                or not agy_guarded(argv, str(self.project), writes(role)) or tail != bridge
-                or route.get("resume_argv") or self._scope_option(item, "extra_paths", [])):
+        if not agent_tmpdir(self):
             raise Stop("AGY_GUARD_REQUIRED", "antigravity requires an isolated home and its canonical narrow Landlock guard")
-        if role == "reviewer" and (landlock_abi() < 3 or platform.machine() != "x86_64"):
-            raise Stop("PROTECT_UNAVAILABLE", "AGY reviewer requires Landlock ABI >= 3 and the x86-64 metadata guard")
+        problem = agy_launch_problem(route, str(self.project), role, self._scope_option(item, "extra_paths", []))
+        if problem:
+            raise Stop(*problem)
     protection = protection_facts(self.project) if protected else None
     if protection is not None and admit and not protection["available"]:
         raise Stop("PROTECT_UNAVAILABLE", f"{role}/{route['provider']}: the checkout cannot be made read-only "

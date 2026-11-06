@@ -327,6 +327,12 @@ def admitted_class(provider: str, model: str, routing_path: str | Path | None = 
     except ValueError as exc:
         raise PlanError("ROUTING_UNAVAILABLE", f"cannot read command-routing.json: {exc}") from exc
     mapping = metadata["mappings"].get(provider)
+    if mapping is None and routing_path is None:
+        from planner.integration.models import orch_admitted_class
+        try:
+            return orch_admitted_class(provider, model)
+        except ValueError as exc:
+            raise PlanError("ROUTING_UNAVAILABLE", f"cannot read canonical model inventory: {exc}") from exc
     inventory = mapping.get("model_inventory") if isinstance(mapping, dict) else None
     entries = inventory.get("entries") if isinstance(inventory, dict) else None
     live = [e for e in entries or [] if isinstance(e, dict) and e.get("status") != "retired"]

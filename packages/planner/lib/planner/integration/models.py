@@ -17,6 +17,20 @@ _INLINE_LISTS = frozenset({"argv"})
 _ORCH_ONLY_PROVIDERS = frozenset({"antigravity"})
 
 
+def orch_admitted_class(provider: str, model: str) -> str | None:
+    """Admission inventory for a provider without a planner command renderer.
+
+    Rendering support and lifecycle admission are independent. The foundation's
+    canonical inventory is authoritative when installed; standalone Planner
+    retains its unknown-model refusal when that inventory is unavailable.
+    """
+    from planner import integration
+    if provider not in _ORCH_ONLY_PROVIDERS or not integration.available():
+        return None
+    from aicore.provider.models import admitted_class, load_model_catalog
+    return admitted_class(load_model_catalog(), provider, model)
+
+
 def routing_snapshot(routing: dict) -> dict:
     """Return ``routing`` with the catalog fields of every provider taken from the aicore catalog."""
     from aicore.provider.models import load_model_catalog

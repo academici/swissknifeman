@@ -4,6 +4,7 @@ diff."""
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import subprocess
 import tempfile
 import unittest
@@ -41,8 +42,7 @@ class ReviewDeltaTests(ConductorCase):
 
     def diff_names(self, text: str) -> set:
         """The untracked files the diff block of a reviewer prompt names."""
-        block = text.split("untracked files:", 1)[1] if "untracked files:" in text else ""
-        return {line.split("#", 1)[1].strip() for line in block.splitlines() if line.startswith("#   ")}
+        return {json.loads(line[4:]) for line in text.splitlines() if line.startswith('+++ "')}
 
     def test_round_two_reads_only_the_paths_changed_after_round_one(self):
         self.script({"executor": [writes("W1", "stable", "other"), writes("W1", text="done\n")],
@@ -165,8 +165,9 @@ class DiffByPathsTests(unittest.TestCase):
         self.assertIn("diff --git a/a.txt b/a.txt", text)
         self.assertIn("diff --git a/dir/c.txt b/dir/c.txt", text)
         self.assertNotIn("b.txt", text)
-        self.assertIn("#   new.txt", text)
-        self.assertIn("#   dir/new2.txt", text)  # under a named folder
+        self.assertIn('+++ "new.txt"', text)
+        self.assertIn('+++ "dir/new2.txt"', text)  # under a named folder
+        self.assertIn("+new", text)
 
     def test_no_path_is_no_diff_and_not_the_whole_one(self):
         self.assertEqual(checks.diff(self.project, self.base, paths=[]), "")

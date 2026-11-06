@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:preflight-result:v1",
+  "title": "Static preflight of named work-source items",
+  "description": "No claim or provider request. Optional refusals do not block admission; runtime and live-provider checks remain required.",
+  "type": "object",
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1,
+      "description": "plan"
+    },
+    "admitted": {
+      "type": "boolean",
+      "description": "admitted"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "description": "plan"
+          },
+          "admitted": {
+            "type": "boolean",
+            "description": "admitted"
+          },
+          "unavailable": {
+            "description": "Refusals by role or policy stage.",
+            "type": "object",
+            "patternProperties": {
+              "^.+$": {
+                "description": "Explicit refusal reason.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "optional_unavailable": {
+            "description": "Refusals by role or policy stage.",
+            "type": "object",
+            "patternProperties": {
+              "^.+$": {
+                "description": "Explicit refusal reason.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "scenario": {
+            "type": "string",
+            "minLength": 1,
+            "description": "plan"
+          },
+          "options": {
+            "type": "object",
+            "description": "options"
+          },
+          "sources": {
+            "type": "object",
+            "description": "sources"
+          },
+          "routes": {
+            "type": "object",
+            "description": "routes"
+          },
+          "route_notes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "route notes"
+          }
+        },
+        "required": [
+          "ref",
+          "admitted",
+          "unavailable",
+          "optional_unavailable"
+        ],
+        "additionalProperties": false
+      },
+      "description": "items"
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1,
+      "description": "plan"
+    }
+  },
+  "required": [
+    "plan",
+    "admitted",
+    "items",
+    "note"
+  ],
+  "additionalProperties": false
+}

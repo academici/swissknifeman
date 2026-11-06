@@ -3,13 +3,13 @@
  "bindings": 236,
  "facade_calls": {
   "application": 47,
-  "infrastructure": 25,
+  "infrastructure": 26,
   "stages": 41
  },
  "largest_self_scc": 6,
- "measured_at": "a9756c0079482f6d25e6149a9d5d6d1f1b918c0f",
+ "measured_at": "404279208a619d4a4539111e96fb38aa881df50c",
  "oversized_modules": {
-  "checks.py": 1003
+  "checks.py": 991
  },
  "port_calls": {
   "infrastructure.role_ports.admit_budget": 2,

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- **AGY CLI: автономный запуск и терминал.** Session-only настройки явно отключают ожидание file/artifact approval и terminal sandbox; metadata guard допускает PTY ioctls, сохраняя запрет изменения файловых метаданных. Trusted planner-orch передаёт roots расширений; preflight проверяет минимум класса и effort из execution-input.
+
+- **Orch: проверка до claim.** `conduct preflight --plan PLAN --items REF...` читает реальные source layers и execution-input каждого пункта через read-only `inspect`, проверяет маршруты и возвращает exit 1 при обязательном отказе. Claims, briefs и model requests не создаются. Обычный `run --dry-run` остаётся проекцией invocation, а не допуском пунктов плана.
+- **Orch: содержимое review candidate.** Первое ревью получает bounded diff новых файлов в пределах candidate; symlink показывает цель без чтения её содержимого. Group review больше не исключает tests/docs/fixtures. Outcome accounting автопилота выделен без изменения поведения; исправлена типизация выбора повышенного класса reviewer.
+
 - **Orch: timeout text-scout и история resume.** `limits.role_timeout_s` применяется также к text transport: заданные для context-scout 900 секунд больше не заменяются catalog timeout 300. Resume продолжает нумерацию попыток по сохранённым failures, сохраняет старые streams и receipt keys; использованный retry budget не сбрасывается.
 
 - **Orch: чтение legacy Markdown inputs.** Canonical scout/executor разрешают read-only доступ к явно перечисленным Markdown `reads` в legacy каталогах без `plan.json`, включая существующий plans symlink. Native JSON context остаётся API-only, изменение планов запрещено. File-source regression проверяет штатный retry того же blocked input с сохранением первоначального отчёта и без смены provenance.

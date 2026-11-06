@@ -97,7 +97,7 @@ class ClientTests(SourceCase):
         with self.assertRaises(worksource.WorkSourceError) as caught:
             self.source().claim(plan="P", run_id="run-1", submission_id="not-a-submission", actor=ACTOR)
         self.assertEqual(caught.exception.code, "INPUT_INVALID")
-        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research, decision, readiness"])
+        self.assertEqual(worksource.problems({"op": "peek"}, "input"), ["/op: must be one of claim, brief, register, commit, release, note, research, decision, readiness, inspect"])
 
 
 class ReadinessTests(SourceCase):

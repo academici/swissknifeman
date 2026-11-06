@@ -1,5 +1,10 @@
 # Bridge planner ↔ orch (`planner-orch`)
 
+The read-only `inspect` work-source operation resolves a named item's execution input and orchestration layers using
+the same `brief.build` and `orchestration_of` functions as execution. It creates no claim, stored brief or artifact.
+`orch conduct preflight` consumes this snapshot before any item is started; source refusals remain explicit.
+
+
 The only place where the planner knows the orch execution contract `exec/v1`. The planner core stays neutral;
 replacing the orchestrator means adding another bridge under `bridges/`, not editing the core. The bridge is a unit
 of the hub (`unit.json`, kind `bridge`); the planner finds it through `bridges.roots` of its configuration.
@@ -362,3 +367,6 @@ plans inside the checkout. They therefore preserve the phase readiness digest. B
 and verifies the plan copy even when the local blob was removed; legacy repository-relative blob
 declarations remain readable. Check evidence stays in lifecycle-owned results instead of adding
 semantic output declarations. Authored input and output artifacts remain part of the digest.
+
+The trusted work-source plugin forwards `SKM_PLANNER_BRIDGES__ROOTS` to Planner.
+This keeps schema-extension discovery consistent between direct inspection and the registered claim path.

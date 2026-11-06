@@ -47,12 +47,12 @@ class BatchReviewTests(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPT), "cnd-test", "--project", str(self.project), "--argv-json",
                                json.dumps(fake), *extra], capture_output=True, text=True, check=False)
 
-    def test_one_review_reads_the_production_diff_of_every_commit_of_the_run(self):
+    def test_one_review_reads_production_and_tests_of_every_commit_of_the_run(self):
         done = self.review()
         self.assertEqual(done.returncode, 0, done.stderr)
         text = (self.run_dir / "batch-review.md").read_text(encoding="utf-8")
         self.assertIn("json review-findings", text)
-        self.assertIn("SAW 2", text)  # lib/W1.py and lib/W2.py; the tests are left out
+        self.assertIn("SAW 4", text)  # both implementation and tests of W1 and W2
         measured = json.loads((self.run_dir / "batch-review.json").read_text(encoding="utf-8"))
         self.assertEqual((measured["returncode"], measured["pieces"]), (0, ["W1", "W2"]))
         self.assertGreaterEqual(measured["seconds"], 0)

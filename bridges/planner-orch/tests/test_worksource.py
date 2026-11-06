@@ -360,6 +360,25 @@ class OrchestrationTests(Case):
             document["applies_to"] = applies_to
         run(self.project, "add-document", self.plan, "--json", json.dumps(document))
 
+    def test_inspect_returns_claim_layers_without_start_or_artifacts(self):
+        self.overlay("orchestration-p1-1", ["P1.1"], {"scenario": "full", "options": {"limits": {"review_rounds": 1}}})
+        root = self.project / "plans" / self.plan
+        before = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+        answer = self.op(worksource.op_inspect, op="inspect", plan=self.plan, ref="P1.1")
+        self.assertEqual(answer["outcome"], "ok", answer)
+        self.assertEqual(self.item("P1.1")["status"], "todo")
+        self.assertEqual(answer["input"]["provenance"]["item"], "P1.1")
+        after = {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+        self.assertEqual(before, after)
+        claimed = self.claim(items=["P1.1"])
+        self.assertEqual(answer["options"], claimed["options"])
+        self.assertEqual(answer["scenario"], claimed["scenario"])
+
+    def test_inspect_unknown_ref_is_a_contract_valid_refusal(self):
+        answer = self.op(worksource.op_inspect, op="inspect", plan=self.plan, ref="P99.1")
+        self.assertEqual(answer["outcome"], "refused")
+        self.assertEqual(answer["reason_code"], "REF_UNKNOWN")
+
     def test_overlays_carry_scenario_and_options_general_first(self):
         self.overlay("orchestration-plan", None, {"options": {"rules": ["plan rule"]}}, **{"global": True})
         self.overlay("orchestration-p1", ["P1"], {"scenario": "full", "options": {"rules": ["phase rule"]}})
@@ -1325,6 +1344,18 @@ class ProtocolTests(Case):
         self.assertEqual(result.status, "ok", result.error)
         self.valid(result.output, "output")
         self.assertEqual((result.output["status"], result.output["ref"]), ("claimed", "P1.1"))
+
+    def test_registered_claim_preserves_bridge_schema_discovery(self):
+        # inspect reads options, but claim also validates the entire phase against extension schemas.
+        run(self.project, "set", self.plan, "P1.1", "--json", json.dumps(
+            {"orchestration": {"options": {"review": {"strategy": "each"}}}}))
+        env = {**self.env, "SKM_PLANNER_BRIDGES__ROOTS": json.dumps([str(_BRIDGE.parent)])}
+        registration = plugins.find_registration("planner-orch", self.project, env=env)
+        result = plugins.invoke_one(registration, "orch:work-source", {
+            "op": "claim", "plan": self.plan, "items": ["P1.1"], "run_id": "schema-roots",
+            "submission_id": "schema-roots", "actor": ACTOR}, env=env, project=self.project)
+        self.assertEqual(result.status, "ok", result.error)
+        self.assertEqual(result.output["status"], "claimed", result.output)
 
     def test_agy_opt_in_is_per_invocation_through_registered_bridge(self):
         key = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"

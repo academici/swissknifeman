@@ -11,6 +11,17 @@ import json
 import subprocess
 import sys
 
+# Session-local, documented CLI settings; never change the owner's persistent settings.
+# SKM still supplies role-specific filesystem guards and verifies the resulting evidence.
+SESSION_SETTINGS = {
+    "agentMode": "accept-edits",
+    "enableTerminalSandbox": False,
+    "allowNonWorkspaceAccess": True,
+    "toolPermission": "always-proceed",
+    "artifactReviewPolicy": "always-proceed",
+    "disableSlashCommands": True,
+}
+
 
 def event(doc: object, expected_model: str, state: dict) -> dict | None:
     if not isinstance(doc, dict):
@@ -67,6 +78,7 @@ def main() -> int:
     args = parser.parse_args()
     prompt = sys.stdin.read()
     argv = ["agy", "--dangerously-skip-permissions", "--model", args.model, "--effort", args.effort,
+            "--settings", json.dumps(SESSION_SETTINGS, sort_keys=True),
             "--input-format", "stream-json", "--output-format", "stream-json", "--print", ""]
     try:
         proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)

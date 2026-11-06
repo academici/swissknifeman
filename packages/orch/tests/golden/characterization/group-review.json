@@ -1011,7 +1011,7 @@
   },
   {
    "event": "info",
-   "message": "group 1 (W1, W2): grok/grok-4.7/medium, 1 KB",
+   "message": "group 1 (W1, W2): grok/grok-4.7/medium, 4 KB",
    "reason_code": "GROUP_REVIEW_START"
   },
   {

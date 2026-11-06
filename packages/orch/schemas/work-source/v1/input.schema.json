@@ -12,9 +12,38 @@
     {"$ref": "#/$defs/note"},
     {"$ref": "#/$defs/research"},
     {"$ref": "#/$defs/decision"},
-    {"$ref": "#/$defs/readiness"}
+    {"$ref": "#/$defs/readiness"},
+    {"$ref": "#/$defs/inspect"}
   ],
   "$defs": {
+    "inspect": {
+      "description": "Read the execution input and source option layers without claims or artifacts.",
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Read-only inspection.",
+          "const": "inspect"
+        },
+        "plan": {
+          "description": "Work source collection, such as a plan id or path.",
+          "$ref": "#/$defs/text"
+        },
+        "plans_root": {
+          "description": "Folder that holds the collection, when not the default.",
+          "$ref": "#/$defs/text"
+        },
+        "ref": {
+          "description": "Named piece to inspect without a claim.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "op",
+        "plan",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
     "text": {
       "description": "Non-empty text.",
       "type": "string",

@@ -367,6 +367,10 @@ class Conductor:
     def admission(self, item: Item, role: str, route: dict) -> Optional[str]:
         return self._admit(item, role, route)
 
+    def check_admission(self, item: Item) -> None:
+        """Run the same static required-role checks as execution, without preparing a launch."""
+        self._preflight(item)
+
     def reviewer_for(self, item: Item) -> tuple:
         return self._reviewer_selector(item)
 

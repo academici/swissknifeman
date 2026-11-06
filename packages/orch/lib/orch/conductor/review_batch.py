@@ -17,8 +17,8 @@ PROMPT = """You are an independent code reviewer. READ ONLY: do not run any comm
 below; open a file only when a defect cannot be judged without it, and use at most {max_tools} tool calls in total. Keep your \
 reasoning short.
 
-Context: the diff is the production-code part of one batch of work items ({refs}) made by one run, so look at how the pieces \
-interact as well as at each piece. Tests and docs are not in the diff; assume the tests of the author pass.
+Context: the diff covers one batch of work items ({refs}) made by one run, including tests, docs and contracts. Look at how \
+the pieces interact as well as at each piece. Do not assume that passing author tests proves their assertions are correct.
 
 Review for CORRECTNESS and SAFETY only; report only real defects that you can trace to a concrete failing scenario: wrong \
 behaviour on normal or edge input (state, resume/retry, empty values, ordering, concurrency); a project-controlled value \
@@ -38,7 +38,7 @@ No additional properties. Do not cap findings or drop Blockers; the conductor bo
 --- DIFF ---
 """
 INCLUDE = ["."]  # the whole project: the layout of a project is not known here (a hard-coded packages/ left every other project with an empty diff)
-EXCLUDED = ("tests/", "/tests/", "docs/", "fixtures/", "golden/", "plans/", ".md", "CHANGELOG", "config.example.toml")
+EXCLUDED = ()  # Acceptance tests, docs and schemas are part of the reviewed change.
 
 
 def has_hunks(diff: str) -> bool:

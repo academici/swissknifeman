@@ -413,7 +413,7 @@
     {
      "kind": "diff",
      "origin": "conductor",
-     "tokens": 41
+     "tokens": 76
     },
     {
      "kind": "progress",
@@ -441,7 +441,7 @@
     },
     "task": {
      "limit": 0,
-     "tokens": 470
+     "tokens": 505
     }
    },
    "excluded": [],

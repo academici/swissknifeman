@@ -12,9 +12,106 @@
     {"$ref": "#/$defs/note"},
     {"$ref": "#/$defs/research"},
     {"$ref": "#/$defs/decision"},
-    {"$ref": "#/$defs/readiness"}
+    {"$ref": "#/$defs/readiness"},
+    {"$ref": "#/$defs/inspect"}
   ],
   "$defs": {
+    "inspect": {
+      "description": "Read-only snapshot; no attempt, ownership or artifact is created.",
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Read-only inspection.",
+          "const": "inspect"
+        },
+        "outcome": {
+          "description": "Inspection outcome.",
+          "enum": [
+            "ok",
+            "refused"
+          ]
+        },
+        "ref": {
+          "description": "Named piece.",
+          "$ref": "#/$defs/text"
+        },
+        "input": {
+          "description": "Execution-input, additionally validated by the consumer against exec/v1.",
+          "type": "object"
+        },
+        "scenario": {
+          "description": "Run-policy scenario of the work.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "scenario_source": {
+          "description": "Where the scenario comes from.",
+          "$ref": "#/$defs/text"
+        },
+        "options": {
+          "description": "Run options of the work as layers, general first (the plan, the phase, the item); each layer is a run-options document of the orch conductor.",
+          "type": "array",
+          "items": {
+            "description": "One layer.",
+            "type": "object",
+            "properties": {
+              "source": {
+                "description": "Where the layer comes from, such as phase:P3 or item:P3.2.",
+                "$ref": "#/$defs/text"
+              },
+              "options": {
+                "description": "The run options of the layer; orch checks them against its run-options contract.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "source",
+              "options"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reason_code": {
+          "description": "Why the claim was blocked.",
+          "$ref": "#/$defs/reasonCode"
+        },
+        "message": {
+          "description": "Human-readable detail of the outcome.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "op",
+        "outcome",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "ok"
+            }
+          },
+          "required": [
+            "scenario",
+            "options",
+            "input"
+          ]
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "refused"
+            }
+          },
+          "required": [
+            "reason_code",
+            "message"
+          ]
+        }
+      ]
+    },
     "text": {
       "description": "Non-empty text.",
       "type": "string",

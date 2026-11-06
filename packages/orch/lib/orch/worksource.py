@@ -21,7 +21,7 @@ from orch.settings import ORCH_ROOT
 
 POINT = "orch:work-source"
 CONTRACT_DIR = ORCH_ROOT / "schemas" / "work-source" / "v1"
-OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness")
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness", "inspect")
 # Plugin error codes that mean "this source does not know the operation": a contract-valid request the plugin rejects
 # (OP_UNSUPPORTED, or INPUT_INVALID from a source that predates the operation).
 UNSUPPORTED_CODES = ("OP_UNSUPPORTED", "INPUT_INVALID")
@@ -70,6 +70,10 @@ class WorkSource(Protocol):
     def readiness(self, **fields: Any) -> dict:
         """Optional and read-only: the readiness of every detailed phase of the collection and its next lane
         (``{outcome: ok, phases, next}``), or ``{outcome: refused, reason_code}``."""
+        ...
+
+    def inspect(self, **fields: Any) -> dict:
+        """Optional, read-only execution input and option layers before claiming a named item."""
         ...
 
 
@@ -147,6 +151,9 @@ class PluginWorkSource:
 
     def claim(self, **fields: Any) -> dict:
         return self.call("claim", fields)
+
+    def inspect(self, **fields: Any) -> dict:
+        return self.call("inspect", fields)
 
     def brief(self, **fields: Any) -> dict:
         return self.call("brief", fields)

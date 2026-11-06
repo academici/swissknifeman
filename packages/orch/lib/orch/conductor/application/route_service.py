@@ -13,7 +13,7 @@ from orch import bindings, catalog as catalogs, launch, sandbox
 from orch.conductor import gates, options as opts, process, records
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import cli_probe, clock
+from orch.conductor.infrastructure import cli_probe, clock, launch_plan
 from orch.conductor.policies import authority as authority_rules, isolation as isolation_rules, routing as route_rules
 from orch.conductor.policies import sandbox as sandbox_rules
 from orch.conductor.policies.routing import OPTIONAL_ROLES
@@ -104,7 +104,9 @@ def routes(self, item: Item, persist: bool = True, preview: bool = False) -> dic
         try:
             item.routes[role] = self._selected(item, role, persist)
         except Stop as stop:
-            if stop.code not in ("LAUNCH_UNKNOWN", "LAUNCH_REFUSED") or (not preview and role not in OPTIONAL_ROLES):
+            preview_codes = {"LAUNCH_UNKNOWN", "LAUNCH_REFUSED", "AGY_MODEL_CLASS_UNVERIFIED", "PROVIDER_QUOTA"}
+            if (preview and stop.code not in preview_codes) or (not preview and (
+                    stop.code not in ("LAUNCH_UNKNOWN", "LAUNCH_REFUSED") or role not in OPTIONAL_ROLES)):
                 raise
             item.routes.pop(role, None)
             unavailable[role] = f"{stop.code}: {stop.message}"
@@ -273,6 +275,12 @@ def preflight(self, item: Item) -> None:
     if any(route.get("provider") == "antigravity" and route.get("transport") != "jsonl"
            for route in required.values()):
         raise Stop("TRANSPORT_UNSUPPORTED", "Antigravity roles require jsonl")
+    for role, route in required.items():
+        if route.get("provider") == "antigravity":
+            problem = launch_plan.agy_launch_problem(route, str(self.project), role,
+                                                     self._scope_option(item, "extra_paths", []))
+            if problem:
+                raise Stop(*problem)
     codex = [(role, route) for role, route in required.items() if self._codex_sandboxed(route)]
     claude = self._sandbox_mode(item) == "require" and any(self._claude_bash(route) for route in required.values())
     blocked = []

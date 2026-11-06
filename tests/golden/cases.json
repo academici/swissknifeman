@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "b1f0913f06e2",
-  "reason": "Add separately opted-in protected AGY reviewer route",
+  "captured_from": "404279208a61",
+  "reason": "Typed preflight refusal maps include custom policy-stage names",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

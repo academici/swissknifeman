@@ -134,12 +134,18 @@ def protect_metadata() -> None:
     ins.extend((Filter(0x35, 0, 1, 470), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM),
                 Filter(0x35, 0, 2, 335), Filter(0x35, 1, 0, 424),
                 Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
-    # FIOCLEX only sets FD_CLOEXEC on the descriptor. CPython uses it when
-    # opening a script; all other ioctls can mutate filesystem metadata.
+    # Permit descriptor and terminal operations used by native CLI PTYs. Keep
+    # filesystem-mutating ioctls (SETFLAGS, FICLONE, etc.) and TIOCSTI denied.
+    terminal_ioctls = (0x5401, 0x5402, 0x5403, 0x5404,  # TCGETS, TCSETS/W/F
+                       0x540E, 0x540F, 0x5410,          # TIOCSCTTY, TIOCG/SPGRP
+                       0x5413, 0x5414, 0x541B,          # TIOCG/SWINSZ, FIONREAD
+                       0x5421, 0x5450, 0x5451,          # FIONBIO, FIONCLEX, FIOCLEX
+                       0x80045430, 0x40045431, 0x5441)  # TIOCGPTN, TIOCSPTLCK, TIOCGPTPEER
     # ioctl's request is an unsigned int: seccomp_data.args[1] low word is at 24.
-    ins.extend((Filter(0x15, 0, 4, 16), Filter(0x20, 0, 0, 24),
-                Filter(0x15, 0, 1, 0x5451), Filter(0x06, 0, 0, 0x7FFF0000),
-                Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
+    ins.extend((Filter(0x15, 0, 2 + 2 * len(terminal_ioctls), 16), Filter(0x20, 0, 0, 24)))
+    for request in terminal_ioctls:
+        ins.extend((Filter(0x15, 0, 1, request), Filter(0x06, 0, 0, 0x7FFF0000)))
+    ins.append(Filter(0x06, 0, 0, 0x00050000 | errno.EPERM))
     for number in denied:
         ins.extend((Filter(0x15, 0, 1, number), Filter(0x06, 0, 0, 0x00050000 | errno.EPERM)))
     ins.append(Filter(0x06, 0, 0, 0x7FFF0000))

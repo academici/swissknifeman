@@ -22,7 +22,7 @@ from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
 from orch.conductor import autopilot_cli, prompt_cli, records, runs, supervise_cli
 from orch.conductor.application import run_service
-from orch.conductor.infrastructure import detach, launch_plan
+from orch.conductor.infrastructure import detach, launch_plan, preflight
 from orch.conductor.infrastructure.lease import launcher
 
 
@@ -341,6 +341,7 @@ def main(argv: list | None = None) -> int:
     run.add_argument("--adopt", action="store_true",
                      help="take over the changes in the tree as an earlier attempt of the first piece (they must lie in "
                           "its write set): the executor checks and finishes them instead of starting over")
+    preflight.add_parser(verbs)
     resume = verbs.add_parser("resume", help="continue a stopped run; closed steps are not repeated")
     resume.add_argument("--run", required=True, metavar="RUN")
     resume.add_argument("--raise-limit", action="append", default=[], metavar="KEY=N",
@@ -562,6 +563,10 @@ def main(argv: list | None = None) -> int:
                                  model_catalog=getattr(args, "model_catalog", None),
                                  project_resolution=context.resolution)
     try:
+        if args.verb == "preflight":
+            result = preflight.inspect_items(conductor, args)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0 if result["admitted"] else 1
         if args.verb == "run" and args.dry_run:
             print(json.dumps(_preview(conductor, args), ensure_ascii=False, indent=2))
             return 0

@@ -158,6 +158,25 @@ for action in (lambda:p.write_text('bad'),lambda:p.chmod(0o777),lambda:os.utime(
  try: action()
  except PermissionError: pass
  else: sys.exit(9)
+# Native AGY uses a PTY even for noninteractive run_command calls.
+import fcntl, termios, subprocess, array
+master, slave = os.openpty()
+attrs = termios.tcgetattr(slave)
+termios.tcsetattr(slave, termios.TCSANOW, attrs)
+fcntl.ioctl(slave, termios.TIOCSWINSZ, b'\\x18\\x00\\x50\\x00\\x00\\x00\\x00\\x00')
+def terminal():
+ os.setsid()
+ fcntl.ioctl(slave, termios.TIOCSCTTY, 0)
+subprocess.run(['/bin/sh', '-c', 'printf terminal-ok'], stdin=slave, stdout=slave,
+               stderr=slave, preexec_fn=terminal, check=True)
+assert b'terminal-ok' in os.read(master, 1024)
+# A terminal allowlist must not reopen filesystem mutation or terminal injection.
+with p.open('rb') as handle:
+ for request in (0x40086602, 0x40049409, 0x5412):
+  try: fcntl.ioctl(handle, request, array.array('i', [0]))
+  except PermissionError: pass
+  else: sys.exit(10)
+os.close(master); os.close(slave)
 Path(os.environ['TMPDIR'],'canary').write_text('allowed')
 """
         source = ("#!" + sys.executable + "\nimport json,subprocess,sys\nsys.stdin.read()\n"

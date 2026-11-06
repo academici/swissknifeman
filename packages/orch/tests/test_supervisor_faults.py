@@ -543,7 +543,7 @@ class QuietCheckCleanupTests(unittest.TestCase):
             gate = Path(tmp)
             script = gate / "quiet.py"
             script.write_text(QUIET_CHECK, encoding="utf-8")
-            harness = textwrap.dedent('''
+            supervisor_script = textwrap.dedent('''
                 import ctypes, os, signal, subprocess, sys, time
                 from pathlib import Path
                 if ctypes.CDLL(None, use_errno=True).prctl(36, 1, 0, 0, 0) != 0:
@@ -585,7 +585,7 @@ class QuietCheckCleanupTests(unittest.TestCase):
                         except (ProcessLookupError, ChildProcessError):
                             pass
             ''')
-            result = subprocess.run([sys.executable, "-c", harness, str(gate), str(script)], timeout=20)
+            result = subprocess.run([sys.executable, "-c", supervisor_script, str(gate), str(script)], timeout=20)
             if result.returncode == 77:
                 self.skipTest("Linux PR_SET_CHILD_SUBREAPER is unavailable")
             self.assertEqual(0, result.returncode, "quiet check survived its original parent")

@@ -121,6 +121,14 @@ class TranslationTests(unittest.TestCase):
         executable = tmp_path / "agy"
         executable.write_text(
             "#!" + sys.executable + "\nimport json,sys\n"
+            'settings_index = sys.argv.index("--settings")\n'
+            'settings = json.loads(sys.argv[settings_index + 1])\n'
+            'assert settings["enableTerminalSandbox"] is False\n'
+            'assert settings["allowNonWorkspaceAccess"] is True\n'
+            'assert settings["agentMode"] == "accept-edits"\n'
+            'assert settings["toolPermission"] == settings["artifactReviewPolicy"] == "always-proceed"\n'
+            'assert settings["disableSlashCommands"] is True\n'
+            'del sys.argv[settings_index:settings_index + 2]\n'
             'assert sys.argv[1:] == ["--dangerously-skip-permissions", "--model", "gemini-4-argon-high", "--effort", "high", "--input-format", "stream-json", "--output-format", "stream-json", "--print", ""]\n'
             'msg = json.loads(sys.stdin.readline())\n'
             'assert msg["message"]["content"] == "content with \\n and quotes"\n'

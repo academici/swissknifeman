@@ -1,5 +1,15 @@
 # Conductor
 
+Before claiming named plan items, run `orch conduct preflight --plan PLAN --items REF...` with the same invocation
+configuration intended for the run. The read-only work-source `inspect` operation supplies each item's real execution
+input, scenario and option layers. No claim, stored brief or model request is made. Every item is checked even when an
+earlier one is refused; JSON `admitted: false` returns exit 1. Optional scout/repair refusals are reported separately.
+An enabled advisor is required: disable it explicitly when the selected provider cannot run that role.
+Invocation `--options`, `--scenario`, `--batch`, `--fence` and `--allow-path` retain their usual precedence.
+The result is static admission, not proof of dependency readiness, credentials, live quota or complete delivered input.
+Antigravity still requires its separate explicit owner exceptions described below; preflight does not grant them.
+`run --dry-run` remains an invocation projection without source items and must not be used as an admission gate.
+
 `orch conduct` (`swissknifeman orch conduct`, or `python3 -I .swissknifeman/launcher.py orch conduct` in a project) takes pieces of work from the work source and drives each one through the roles of its
 run-policy until it is green or stops honestly. It is shipped with orch and tuned by configuration and by the run
 options of the work; it is never rewritten for a run. The conductor itself decides nothing: it branches only on exit
@@ -1417,7 +1427,7 @@ effort to `high`. Naming a mode in `review.strategy` skips the strategist. The p
 will run at (an effort named by `reviewer` wins over the plan's).
 
 In `groups`, `single` and `none` a piece has no review of its own. After the last piece of a group the conductor reads the
-commits of the group once (`review_batch`: production code only, the same as `batch-review.py`), with the reviewer of the run
+commits of the group once (`review_batch`: including tests, docs and fixtures, as in `batch-review.py`), with the reviewer of the run
 (`reviewer`, grok by default) at the effort of the plan, and keeps the reply in `group-review-<n>.md` of the run folder
 (`state.group_reviews`).
 The reserved reviewer of a last piece with `review.mode: none|self` does not override the group's requested review routes;
@@ -2119,6 +2129,18 @@ the underlying inference backend is not independently attested by this CLI. Opus
 not currently admitted. The catalog also lists `gemini-4-argon` and `gemini-3.8-flash` with no
 admitted model class: the former returned a location restriction and the latter timed out in the
 initial probes. Do not treat a routed, catalogued or listed model as a completed run.
+
+The bridge supplies a session-only `--settings` object: `agentMode: accept-edits`,
+`enableTerminalSandbox: false`, `allowNonWorkspaceAccess: true`,
+`toolPermission: always-proceed`, `artifactReviewPolicy: always-proceed`, and
+`disableSlashCommands: true`, alongside `--dangerously-skip-permissions`.
+These are documented [AGY CLI settings](https://antigravity.google/schemas/v1/settings.json),
+also accepted by the installed CLI's `--settings` flag. They avoid interactive file/artifact
+approval and inherited terminal sandbox defaults without modifying persistent user settings.
+The SKM role guard remains the filesystem boundary. CLI tool permissions and a terminal
+sandbox are separate from that boundary; neither the existence of `--sandbox` nor plan mode
+proves read-only isolation for all tools. See Google's [CLI permissions](https://antigravity.google/docs/permissions)
+and [sandbox documentation](https://antigravity.google/docs/sandbox/).
 
 For a local checkout, the owner can opt in for the conductor process by setting
 `SKM_ORCH_AGY_UNSAFE_EXECUTOR=accept-unisolated-network-docker-host-reads` on its command line.

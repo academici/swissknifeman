@@ -161,7 +161,7 @@ def upgrade_reviewer(self, item: Item) -> None:
     changes nothing (no beacon, no routes.json rewrite), the class is never lowered. The upgrade is kept
     in ``route_overrides``, so a resume starts from it, and announced once (``ROUTE_UPGRADED``)."""
     wanted = max((advice["suggested_model_class"] for advice in self._executor_advice(item)
-                  if advice.get("suggested_model_class") in CLASS_RANK), key=CLASS_RANK.get, default=None)
+                  if advice.get("suggested_model_class") in CLASS_RANK), key=lambda name: CLASS_RANK[name], default=None)
     route = item.routes["reviewer"]
     if wanted is None or CLASS_RANK[wanted] <= CLASS_RANK.get(route["model_class"], -1) \
             or item.state.get("reviewer_upgrade_refused") == wanted:
@@ -249,7 +249,7 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                            | fix_commit_paths(self, item))  # what the fix commits took is clean in the tree
             diff, scope = checks_mod.diff(self.project, base, paths=paths), "changed"
         else:
-            diff, scope = checks_mod.diff(self.project, base), "full"
+            diff, scope = checks_mod.diff(self.project, base, paths=list(candidate["paths"])), "full"
         prompt = prompts.reviewer(item.input_doc, item=item.ref, step=key, base=base, corrected=corrected,
                                   diff=diff, diff_scope=scope, checks=rows, round_no=number,
                                   pre_final=number > 1 and item.options["review"]["pre_final"],

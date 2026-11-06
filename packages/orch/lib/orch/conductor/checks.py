@@ -31,6 +31,7 @@ from orch import contracts
 from orch.conductor.shell_lex import _close, _lex
 from orch.conductor.signals import CpuWatch, file_size as _size, process_stopped as stopped
 from orch.conductor.infrastructure.review_tree import candidate as candidate, path_fingerprint as path_fingerprint, review_outside as review_outside
+from orch.conductor.infrastructure import review_diff
 from aicore.util.proc import run as run_with_timeout
 
 ORCH_ROOT = Path(__file__).resolve().parents[3]  # not orch.settings: that module imports this one
@@ -80,21 +81,8 @@ def dirty_digest(project: Path, exclude=()) -> str:
 
 
 def diff(project: Path, base: str, limit: int = 200_000, paths: Optional[list] = None) -> str:
-    """The diff of the working tree against ``base``, plus the untracked files; cut at ``limit`` characters. ``paths``
-    (names relative to the project) limits both to those paths and what lies under them; no path gives no diff."""
-    if paths is None:
-        text = git(project, "diff", base)
-        extra = untracked(project)
-    elif not paths:
-        return ""
-    else:
-        text = git(project, "diff", base, "--", *[f":(literal){name}" for name in paths])
-        extra = [name for name in untracked(project) if _under(name, paths)]
-    if extra:
-        text += "\n# untracked files:\n" + "\n".join(f"#   {name}" for name in extra) + "\n"
-    if len(text) > limit:
-        text = text[:limit] + f"\n# … diff cut at {limit} characters; read the files for the rest\n"
-    return text
+    """Bounded tracked and new-file content of the selected candidate."""
+    return review_diff.diff(project, base, limit, paths, git=git, untracked=untracked)
 
 
 def subject_of(input_doc: dict) -> str:

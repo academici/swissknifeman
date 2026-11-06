@@ -363,6 +363,22 @@
         "executor_started": {"description": "An executor round of this run began.", "type": "boolean"},
         "expected": {"description": "Expected outcome given by the work source.", "type": ["string", "null", "object"]},
         "interrupted_note": {"description": "Interruption note of each executor step.", "type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+        "operator_context": {
+          "description": "Caller-supplied context snapshots for blocked executor retries; input, authority and budgets are unchanged.",
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["n", "step", "source", "file", "sha256", "at"],
+            "properties": {
+              "n": {"type": "integer", "minimum": 1},
+              "step": {"type": "string", "pattern": "^executor\\.[0-9]+(-q[0-9]+)?$"},
+              "source": {"type": "string", "minLength": 1},
+              "file": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+              "at": {"type": "string", "minLength": 1}
+            }
+          }
+        },
         "no_diff_admitted": {"description": "A round without changes was admitted.", "type": ["boolean", "array", "object"]},
         "no_diff_proofs": {"description": "Proofs of rounds without changes.", "type": ["array", "object"]},
         "plan_notes": {"description": "Notes for the plan.", "type": "array"},

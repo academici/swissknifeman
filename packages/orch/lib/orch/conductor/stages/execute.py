@@ -18,6 +18,7 @@ from orch.conductor.infrastructure import clock, sessions, work_source
 from orch.conductor.infrastructure.files import REPORTS, STATE_FILE, safe, write_json
 from orch.conductor.policies import authority as authority_rules
 from orch.conductor.stages import advice, decisions
+from orch.conductor.infrastructure import operator_context as operator_mod
 
 
 def execute(self, item: Item, number: int, scout_text: str, correction: str, fix: str = "",
@@ -60,6 +61,7 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
         scouted = (done_steps(item.state.get("steps") or {}).get("scout") or {}).get("result") or {}
         researched = self._researched(item)
         note = (item.state.get("interrupted_note") or {}).get(key, "")
+        context = operator_mod.current(self, item, key)
         corrected = "\n\n".join(text for text in (correction, note) if text)
         answers = questions_mod.answers_text(self._questions(item))
         # what the prompt promises (Docker, the network, where to write) is what the launch of this route records
@@ -86,7 +88,9 @@ def executor_round(self, item: Item, key: str, number: int, refresh: bool, scout
                                   protected=self._write_protected(item),
                                   generated=self._write_generated(item), generator=self.conductor.get("generate") or (),
                                   staged=self._relative(work_source.protected_dir(item)))
-        resumed = self._resumed_prompt(item, key, correction, note, fix, answers) if role == "executor" else None
+        if context:
+            prompt = prompts.with_operator_context(prompt, context)
+        resumed = self._resumed_prompt(item, key, correction, note, fix, answers, context) if role == "executor" else None
         report, meta = self._role(item, key, role, prompt, "stage-report", extra=report_problems, resumed=resumed)
         if self._shared_session(item, role, route):  # the session has now seen every answer the prompt carried
             self._note_answers(item, [answer_key(row) for row in answers])
@@ -164,7 +168,8 @@ def answer_key(row: dict) -> str:
                                  sort_keys=True).encode("utf-8"))
 
 
-def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: str, answers: list) -> Optional[list]:
+def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: str, answers: list,
+                   context: Optional[dict] = None) -> Optional[list]:
     """The delta blocks of this round (``prompts.executor_resumed``) for a session that continues: what the round asks
     (the correction, the deviation to fix, the note of an interrupted round) and the answers the session has not seen,
     with the paths the earlier round of the piece changed. ``None`` when the round asks nothing the session lacks (the
@@ -172,16 +177,17 @@ def resumed_prompt(self, item: Item, key: str, correction: str, note: str, fix: 
     decided per attempt (``_delta_mode``)."""
     seen = self._answers_seen(item)
     fresh = [row for row in answers if answer_key(row) not in seen]
-    if not (correction or note or fix or fresh):
+    if not (correction or note or fix or fresh or context):
         return None
     steps = done_steps(item.state.get("steps") or {})
     earlier = [step["result"].get("changed") or [] for name, step in steps.items()
                if name.startswith("executor.") and name != key and isinstance(step.get("result"), dict)]
-    return prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
+    result = prompts.executor_resumed(item=item.ref, step=key, correction=correction, answers=fresh, interrupted=note,
                                     correction_origin=correction_origin(self, item, key) if correction else "conductor",
                                     fix=fix, changed_paths=earlier[-1] if earlier else [],
                                     targeted_tests=not item.options["checks"]["executor_runs_checks"],
                                     self_check=item.options["checks"].get("self_check") or ())
+    return prompts.with_operator_context(result, context) if context else result
 
 
 def batch_note(self, item: Item) -> str:

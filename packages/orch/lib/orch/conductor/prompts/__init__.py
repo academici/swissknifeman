@@ -30,7 +30,8 @@ from orch.conductor.policies.budget import BUDGET_CLASSES, BUDGET_LIMITS, budget
 from orch.conductor.policies.skills import EXCLUSIVE_GROUP_LIMITS, EXCLUSIVE_GROUP_MAX, INTERACTIVE_TOOL, check_skills  # noqa: F401
 
 from orch.conductor.prompts.blocks import (  # noqa: F401
-    BATCH_ID, CONDUCTOR, KINDS, ROUND_KINDS, Block, _fence, _join, _progress, _then, render, task_digest)
+    BATCH_ID, CONDUCTOR, KINDS, ROUND_KINDS, Block, _fence, _join, _progress, _then, render, task_digest,
+    with_operator_context)
 from orch.conductor.prompts.contracts import (  # noqa: F401
     CONTRACT_TEXT, RESULT_KINDS, _ADVICE, _PROGRESS, _RESEARCH_RESULT, _REVIEW_FINDINGS, _STAGE_REPORT, _TRIAGE_RESULT)
 from orch.conductor.prompts.corrections import (  # noqa: F401

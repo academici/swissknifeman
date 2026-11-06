@@ -48,7 +48,10 @@ Fix the typo in README install section
 ### V1 · acceptance
 - expect: observed
 
-command: withheld; the conductor runs this check itself after your report
+procedure:
+```text
+README install section reads `pip install`
+```
 
 ## Result contract
 
@@ -59,10 +62,9 @@ command: withheld; the conductor runs this check itself after your report
 
 ## Verification
 
-The conductor runs these acceptance checks itself right after your report:
-- `V1`: observed
-
-Do not run them, nor the whole suites they start: prove your change with what is cheap (single test files of what you changed, container-based ones included, a syntax check, `git diff --check`). A proof that needs something your environment does not give (write access to `.git`, the network, a credential) is not a blocker: finish the work, name each check you could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep `checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.
+Manual acceptance procedures must be performed by you; the conductor cannot execute them:
+- `V1`: README install section reads `pip install` (expect observed)
+After actually observing a procedure, report its id and truthful verdict in `checks_run` (for example `{"id":"V2","verdict":"pass"}`), with candidate-bound evidence. Never fabricate a verdict or infer runtime qualification from documentation. Missing genuine inputs remain pending/blocked; command acceptance still belongs to the conductor.
 
 ## Progress lines
 

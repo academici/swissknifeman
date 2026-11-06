@@ -79,11 +79,25 @@ class WithheldChecksTests(unittest.TestCase):
         self.assertIn("kind `pending`", text)
         self.assertIn("withheld; the conductor runs this check itself", text)
 
-    def test_a_procedure_check_is_withheld_too_and_the_input_is_not_changed(self):
+    def test_a_manual_procedure_remains_visible_for_the_executor_to_observe(self):
         doc = fixture("adhoc")
+        before = json.dumps(doc, sort_keys=True)
         text = prompts.render(prompts.executor(doc, item="W1", step="executor.1"))
-        self.assertNotIn("README install section reads", text)
-        self.assertIn("procedure", doc["acceptance"]["checks"][0])  # the caller's document keeps its commands
+        self.assertIn("README install section reads", text)
+        self.assertIn("Manual acceptance procedures must be performed by you", text)
+        self.assertIn("truthful verdict in `checks_run`", text)
+        self.assertNotIn("Do not run them", text)
+        self.assertEqual(json.dumps(doc, sort_keys=True), before)
+
+    def test_mixed_checks_withhold_only_commands_and_never_invent_a_manual_verdict(self):
+        doc = fixture("adhoc")
+        doc["acceptance"]["checks"].append({"id": "V2", "cmd": "expensive-full-gate", "expect": "exit 0",
+                                            "kind": "acceptance"})
+        text = prompts.render(prompts.executor(doc, item="W1", step="executor.1"))
+        self.assertNotIn("expensive-full-gate", text)
+        self.assertIn("`V2`: exit 0", text)
+        self.assertIn("README install section reads", text)
+        self.assertIn("Never fabricate a verdict", text)
 
     def test_an_executor_that_runs_checks_still_gets_the_commands(self):
         doc = fixture("plan-bound")

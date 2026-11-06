@@ -230,17 +230,17 @@ def _acceptance(doc: dict) -> str:
 
 
 def withhold_commands(doc: dict) -> dict:
-    """A copy of the input whose acceptance checks keep their id, kind and expectation but not their command or
-    procedure (``withheld``): for a role that must not run them, so its prompt carries no command to try."""
-    checks = [{key: value for key, value in check.items() if key not in ("cmd", "procedure", "cwd")} | {"withheld": True}
+    """Withhold conductor-run commands; preserve manual procedures the executor must actually observe."""
+    checks = [({key: value for key, value in check.items() if key not in ("cmd", "cwd")} | {"withheld": True})
+              if "cmd" in check else dict(check)
               for check in (doc.get("acceptance") or {}).get("checks") or []]
     result = {**doc, "acceptance": {**(doc.get("acceptance") or {}), "checks": checks}}
     # A supplemental source pack can repeat typed validation checks. It must not reintroduce commands withheld above.
     def withhold(value):
         if isinstance(value, dict):
-            if {"id", "kind", "expect"} <= value.keys() and ("cmd" in value or "procedure" in value):
+            if {"id", "kind", "expect"} <= value.keys() and "cmd" in value:
                 return {key: child for key, child in value.items()
-                        if key not in ("cmd", "procedure", "cwd")} | {"withheld": True}
+                        if key not in ("cmd", "cwd")} | {"withheld": True}
             return {key: withhold(child) for key, child in value.items()}
         return [withhold(child) for child in value] if isinstance(value, list) else value
     if any(item.get("delivery") == "supplement" for item in doc.get("context_refs") or []):

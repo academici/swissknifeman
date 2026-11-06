@@ -69,13 +69,15 @@ Run every acceptance check of the input yourself, exactly as written, before you
 
 
 def _conductor_checks(input_doc: dict, containers: bool = True, self_check: bool = False) -> str:
-    """The acceptance checks the conductor itself runs after the report, by id and expectation and never by command: the
-    executor does not run them (a full run of them by the executor measured 30–50% of its step). What it cannot prove in its
-    environment stays ``pending`` for the conductor; it is not an escalation. ``containers`` says whether the executor can
-    use Docker (a provider sandbox that keeps it out of the socket is the only reason it cannot): it may then run the
-    container-based tests of what it changed, otherwise it is told not to try."""
-    checks = (input_doc.get("acceptance") or {}).get("checks") or []
-    if not checks:
+    """Separate conductor-run commands from executor-observed manual procedures.
+
+    Command argv stays withheld to avoid duplicate expensive suites. Manual procedures need
+    their actual executor verdict; withholding them leaves MANUAL_PENDING forever.
+    """
+    all_checks = (input_doc.get("acceptance") or {}).get("checks") or []
+    checks = [check for check in all_checks if "procedure" not in check]
+    manual = [check for check in all_checks if "procedure" in check]
+    if not all_checks:
         return ""
     text = ("\nThe conductor runs these acceptance checks itself right after your report:\n"
             + "\n".join(f"- `{check['id']}`: {check.get('expect', '-')}" for check in checks)
@@ -84,7 +86,15 @@ def _conductor_checks(input_doc: dict, containers: bool = True, self_check: bool
             + _PROVE + _CHEAP_CONTAINERS + ". A proof that needs something your environment " + _PROOF_GAPS
             + ", the network, a credential) is not a blocker: finish the work, name each "
               "check you could not run in an `open_issues` entry of kind `pending`, report `done_pending_checks` and keep "
-              "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n")
+              "`checks_run` to what really ran. Report `blocked` only for a gap that needs the owner.\n") if checks else ""
+    if manual:
+        text += ("\nManual acceptance procedures must be performed by you; the conductor cannot execute them:\n"
+                 + "\n".join(f"- `{check['id']}`: {check['procedure']} (expect {check.get('expect', '-')})"
+                             for check in manual)
+                 + "\nAfter actually observing a procedure, report its id and truthful verdict in `checks_run` "
+                   "(for example `{\"id\":\"V2\",\"verdict\":\"pass\"}`), with candidate-bound evidence. "
+                   "Never fabricate a verdict or infer runtime qualification from documentation. "
+                   "Missing genuine inputs remain pending/blocked; command acceptance still belongs to the conductor.\n")
     return with_containers(text, containers)
 
 

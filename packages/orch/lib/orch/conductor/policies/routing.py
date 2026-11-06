@@ -220,10 +220,10 @@ def reviewer_selector(item_options: dict, item_sources: dict, input_doc: dict) -
 
 
 def exact_reviewer(item_options: dict, item_sources: dict, input_doc: dict) -> bool:
-    """A work-source named reviewer and an empty fallback list pin the complete reviewer route."""
+    """A work-source or invocation named reviewer with no fallback pins the complete route."""
     selector, _, source = reviewer_selector(item_options, item_sources, input_doc)
     return bool(selector.get("model") and source and
-                (source.startswith("item:") or source == PLAN_REVIEW_SOURCE) and
+                (source.startswith(("item:", "invocation:")) or source == PLAN_REVIEW_SOURCE) and
                 not item_options.get("fallback_routes"))
 
 

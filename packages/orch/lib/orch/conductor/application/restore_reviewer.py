@@ -61,7 +61,9 @@ def restore(project: Path, run_id: str, ref: str, expected_digest: str) -> dict:
                 raise Stop("RESTORE_REFUSED", "invalid check evidence")
             candidate = (evidence or {}).get("candidate") or {}
             exclude = [str(path.parent.relative_to(project.resolve()))]
-            if (evidence or {}).get("exit") != 0 or candidate.get("dirty_digest") != expected_digest or \
+            passed = evidence.get("exit") == 0 or (evidence.get("verdict") == "pass" and
+                                                   (evidence.get("producer") or {}).get("kind") == "executor")
+            if not passed or candidate.get("dirty_digest") != expected_digest or \
                     candidate.get("head") != checks.head(project) or \
                     checks.dirty_digest(project, exclude=exclude) != expected_digest:
                 raise Stop("RESTORE_REFUSED", "candidate or successful evidence changed")

@@ -57,3 +57,19 @@ class RestoreReviewerTests(TestCase):
                     restore_reviewer.restore(self.project, "run", "P1.1", "wrong" if case == "digest" else "digest")
                 self.assertIn("reviewer", self.state["items"]["P1.1"]["route_overrides"])
         self.store.save.assert_not_called()
+
+    def test_invocation_pin_and_actual_manual_pass_are_restored_without_budget_reset(self):
+        self.options["sources"]["reviewer"] = "invocation:--options"
+        self.evidence.pop("exit")
+        self.evidence.update(verdict="pass", producer={"kind": "executor"})
+        restore_reviewer.restore(self.project, "run", "P1.1", "digest")
+        self.assertEqual(self.state["items"]["P1.1"]["corrections_used"], 1)
+
+    def test_missing_or_untrusted_manual_verdict_cannot_restore(self):
+        self.evidence.pop("exit")
+        for verdict, producer in [(None, "executor"), ("fail", "executor"), ("pass", "caller")]:
+            with self.subTest(verdict=verdict, producer=producer):
+                self.evidence.update(verdict=verdict, producer={"kind": producer})
+                with self.assertRaises(Stop):
+                    restore_reviewer.restore(self.project, "run", "P1.1", "digest")
+        self.store.save.assert_not_called()

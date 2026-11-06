@@ -137,6 +137,17 @@ class FocusRunTests(ConductorCase):
         self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
         self.assertNotIn("reviewer", self.state(err)["items"]["W1"].get("route_overrides", {}))
 
+    def test_explicit_invocation_options_reviewer_with_no_fallback_cannot_be_upgraded(self):
+        path = self.project.parent / "pinned-reviewer.json"
+        path.write_text(json.dumps({"reviewer": "grok/grok-4/high", "fallback_routes": []}))
+        self.script({"executor": [advised()], "reviewer": [GREEN]})
+        with self.distinct_frontier():
+            code, _, err = self.run_items("W1", extra=("--options", str(path)))
+        self.assertEqual(code, 0, err)
+        self.assertEqual(self.routes(err)["reviewer"]["model"], "grok-4")
+        self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
+        self.assertNotIn("reviewer", self.state(err)["items"]["W1"].get("route_overrides", {}))
+
     def test_the_default_reviewer_class_is_kept_without_a_suggestion(self):
         advice = {key: value for key, value in ADVICE.items() if key != "suggested_model_class"}
         err = self.finished({"write": {"out/W1.txt": "ok\n"}, "result": report("W1", review_recommendation=advice)})

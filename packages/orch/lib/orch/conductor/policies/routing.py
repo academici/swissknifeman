@@ -219,6 +219,14 @@ def reviewer_selector(item_options: dict, item_sources: dict, input_doc: dict) -
     return found, model_class, PLAN_REVIEW_SOURCE
 
 
+def exact_reviewer(item_options: dict, item_sources: dict, input_doc: dict) -> bool:
+    """A work-source named reviewer and an empty fallback list pin the complete reviewer route."""
+    selector, _, source = reviewer_selector(item_options, item_sources, input_doc)
+    return bool(selector.get("model") and source and
+                (source.startswith("item:") or source == PLAN_REVIEW_SOURCE) and
+                not item_options.get("fallback_routes"))
+
+
 def lowered_class(model_class: str, known: Optional[str]) -> str:
     """``model_class``, the label the layers or the launch catalog give a route, or the class the model catalog knows for
     the model the route names (``aicore.provider.models.admitted_class``) when that is lower: a label above the

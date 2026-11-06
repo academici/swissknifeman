@@ -7,8 +7,13 @@ import json
 import time
 import unittest
 from unittest import mock
+from types import SimpleNamespace
+from pathlib import Path
 
 from orch.conductor import engine, gates, prompts
+from orch.conductor.application import route_service
+from orch.conductor.domain.item import Item
+from orch.conductor.domain.stop import Stop
 from tests.test_conductor import FINDING, GREEN, ConductorCase, DynamicReviewTests, executor_ok, report
 from tests.test_conductor_prompts import fixture
 
@@ -47,6 +52,22 @@ class FocusBlockTests(unittest.TestCase):
         blocks = self.build(focus=["x"], focus_origin="stage-report")
         rest = prompts.render([block for block in blocks if block.kind != "focus"])
         self.assertEqual(rest, plain)
+
+
+class ExactReviewerResumeTests(unittest.TestCase):
+    def test_saved_different_reviewer_stops_without_changing_history(self):
+        item = Item(ref="W1", orch_run="run", directory=Path("."), claim={},
+                    options={"reviewer": "grok/grok-4/high", "fallback_routes": []},
+                    sources={"reviewer": "item:W1"},
+                    state={"route_overrides": {"reviewer": {"provider": "grok", "model_class": "frontier"}},
+                           "steps": {"checks.1": {"status": "done"}}})
+        original = json.loads(json.dumps(item.state))
+        def route(_item, _role, override=None):
+            return {"provider": "grok", "model": "grok-frontier" if override else "grok-4", "effort": "high"}
+        with self.assertRaises(Stop) as raised:
+            route_service.selected(SimpleNamespace(_route=route), item, "reviewer", True)
+        self.assertEqual(raised.exception.code, "EXACT_ROUTE_MISMATCH")
+        self.assertEqual(item.state, original)
 
 
 class FocusRunTests(ConductorCase):
@@ -106,6 +127,15 @@ class FocusRunTests(ConductorCase):
         self.assertIn("implementation -> frontier", found[0]["message"])
         kept = self.state(err)["items"]["W1"]["route_overrides"]["reviewer"]  # a resume starts from the upgrade
         self.assertEqual(kept["model_class"], "frontier")
+
+    def test_explicit_item_reviewer_with_no_fallback_cannot_be_upgraded(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "reviewer": "grok/grok-4/high", "fallback_routes": []}}]}})
+        with self.distinct_frontier():
+            err = self.finished()
+        self.assertEqual(self.routes(err)["reviewer"]["model"], "grok-4")
+        self.assertEqual(self.beacons(err, "ROUTE_UPGRADED"), [])
+        self.assertNotIn("reviewer", self.state(err)["items"]["W1"].get("route_overrides", {}))
 
     def test_the_default_reviewer_class_is_kept_without_a_suggestion(self):
         advice = {key: value for key, value in ADVICE.items() if key != "suggested_model_class"}

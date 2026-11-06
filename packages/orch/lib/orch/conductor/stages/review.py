@@ -14,7 +14,7 @@ from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure import work_source
 from orch.conductor.policies import review_strategy
-from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE
+from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE, exact_reviewer
 
 
 def review_enabled(self, item: Item) -> bool:
@@ -160,6 +160,8 @@ def upgrade_reviewer(self, item: Item) -> None:
     sandbox rule); a suggestion at or below the route, or a higher class that resolves to the same provider/model/effort,
     changes nothing (no beacon, no routes.json rewrite), the class is never lowered. The upgrade is kept
     in ``route_overrides``, so a resume starts from it, and announced once (``ROUTE_UPGRADED``)."""
+    if exact_reviewer(item.options, item.sources, item.input_doc):
+        return
     wanted = max((advice["suggested_model_class"] for advice in self._executor_advice(item)
                   if advice.get("suggested_model_class") in CLASS_RANK), key=lambda name: CLASS_RANK[name], default=None)
     route = item.routes["reviewer"]

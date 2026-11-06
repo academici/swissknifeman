@@ -176,6 +176,12 @@ def selected(self, item: Item, role: str, persist: bool) -> dict:
     ``PROVIDER_QUOTA``; one that cannot start keeps its route and is refused by the preflight with its own code (the
     optional scout is left to its own step: it is skipped when it may be)."""
     kept = (item.state.get("route_overrides") or {}).get(role)  # a fallback taken before a stop: a resume keeps it
+    if kept and role == "reviewer" and route_rules.exact_reviewer(item.options, item.sources, item.input_doc):
+        canonical = self._route(item, role)
+        overridden = self._route(item, role, kept)
+        if any(canonical.get(key) != overridden.get(key) for key in ("provider", "model", "effort")):
+            raise Stop("EXACT_ROUTE_MISMATCH", "saved reviewer override differs from the item route; "
+                       "preserve the run and restore the assigned route before resume")
     route = self._route(item, role, kept) if kept else self._route(item, role)
     gate = gates.blocked(route["provider"], clock.wall())
     problem = None if gate else self.route_problem(route)

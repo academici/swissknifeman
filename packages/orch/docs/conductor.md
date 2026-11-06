@@ -1903,8 +1903,11 @@ review is not narrowed; without a source there is no block, and the prompt is th
 lists the block. `suggested_model_class` of the executor raises the class of the reviewer route (the highest class
 suggested by any round) when it is above the class of the route and `_admit` takes the higher route of the same provider
 (command, transport, sandbox, gate): the beacon `ROUTE_UPGRADED`, `routes.json` and `state.route_overrides.reviewer` (a
-resume starts from it) change. A suggestion at or below the route changes nothing: the class is never lowered; a refused
-upgrade is an `info` line once and the review goes on with its route.
+resume starts from it) change. An item or plan that names an exact reviewer and has no fallback routes pins that route:
+the executor's suggestion cannot upgrade it. If an earlier run retained an override that resolves to a different
+provider, model or effort, resume stops with `EXACT_ROUTE_MISMATCH` without changing the stored override or history.
+A suggestion at or below the route changes nothing: the class is never lowered; a refused upgrade is an `info` line
+once and the review goes on with its route.
 
 ### Skill checks
 

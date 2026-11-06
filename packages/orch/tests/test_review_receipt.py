@@ -248,6 +248,22 @@ class ReceiptUnitTests(unittest.TestCase):
             p.mkdir()
             self.assertEqual(checks.path_fingerprint(root, "mode"), "other")
 
+    def test_batched_fingerprints_match_git_for_odd_names_and_modes(self):
+        import subprocess
+        from orch.conductor.infrastructure.review_tree import fingerprints
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            paths = ["plain", "space name", '"quoted', "line\nbreak", "-leading", "executable", "carriage", "carriage\r"]
+            for index, path in enumerate(paths):
+                (root / path).write_bytes(("content " + str(index)).encode())
+            (root / "executable").chmod(0o755)
+            (root / "link").symlink_to("plain")
+            (root / "directory").mkdir()
+            paths += ["link", "directory", "absent"]
+            self.assertEqual(fingerprints(root, paths), {path: checks.path_fingerprint(root, path)
+                                                        for path in sorted(paths)})
+
     def test_outside_and_deterministic_candidate(self):
         import subprocess
         with tempfile.TemporaryDirectory() as tmp:

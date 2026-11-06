@@ -12,7 +12,7 @@ from typing import Callable, NamedTuple, Optional
 from aicore.util.digest import sha256_hex
 
 from orch import events, settings as settings_mod
-from orch.conductor import agents, options as opts, process, prompts
+from orch.conductor import agents, contract, options as opts, process, prompts
 from orch.conductor.signals import StallWatch
 from orch.conductor.domain.item import Item
 from orch.conductor.domain.route import actor, label
@@ -328,6 +328,11 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         doc, healed, repaired, from_text = None, [], None, False
         if problem is None and kind:
             doc, healed, issues, original = self._closed(run.text, kind, extra)
+            if (issues and kind == "review-findings" and role == "reviewer"
+                    and os.environ.get("SKM_ORCH_ACCEPT_PROSE_REVIEW") == "1"):
+                prose = results.green_prose(run.text)
+                if prose is not None and not contract.problems(prose, kind) and (not extra or not extra(prose)):
+                    doc, issues, healed = prose, [], ["owner-authorized exact GREEN prose; raw stream retained"]
             if issues:
                 doc, healed, issues, repaired, from_text = self._repair(item, key, kind, extra, run.text, issues, doc,
                                                                         healed, original)

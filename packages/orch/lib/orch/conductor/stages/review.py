@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 
 from orch.conductor.domain import fix_brief
 
@@ -12,7 +13,7 @@ from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.report import finding_key, findings_problems
 from orch.conductor.domain.stop import Stop
 from orch.conductor.infrastructure.files import write_json
-from orch.conductor.infrastructure import work_source
+from orch.conductor.infrastructure import results, work_source
 from orch.conductor.policies import review_strategy
 from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE, exact_reviewer
 from orch.conductor.prompts.blocks import Block, CONDUCTOR
@@ -219,6 +220,9 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
     route = item.routes["reviewer"]
     key = f"review.{number}"
     focus, focus_origin = self._review_focus(item)
+    previous = item.state.get("steps", {}).get(key, {})
+    recover = (os.environ.get("SKM_ORCH_ACCEPT_PROSE_REVIEW") == "1"
+               and previous.get("status") == "stopped" and previous.get("code") in ("ROLE_OUTPUT_INVALID", "REVIEW_RECOVERY_INVALID"))
 
     def run() -> dict:
         provenance = item.input_doc.get("provenance", {})
@@ -237,6 +241,40 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
             outside = {}  # the subject is an immutable revision, independent of the checked-out worktree
         dirty = checks_mod.dirty_files(self.project)  # without what the conductor writes (reports, artifacts, plan folder)
         tree = {path: dirty[path] for path in scopes.own(dirty, self._not_the_role(item))}
+        if recover:
+            # Replay the already delivered reviewer answer, never a new provider call or a reset attempt.
+            if tree != (item.state.get("review_marks") or {}).get(str(number)):
+                raise Stop("REVIEW_RECOVERY_CHANGED", "the worktree differs from the review snapshot")
+            attempts = item.state.get("retries_by_stage", {}).get(key, 0)
+            raw = item.directory / "streams" / (f"{key}-a{attempts}.jsonl" if attempts > 1 else f"{key}.jsonl")
+            expected = os.environ.get("SKM_ORCH_PROSE_REVIEW_SHA256", "")
+            try:
+                data = raw.read_bytes()
+                if hashlib.sha256(data).hexdigest() != expected:
+                    raise ValueError("raw stream hash does not match owner authorization")
+                events = [json.loads(line) for line in data.splitlines() if line.strip()]
+                terminal = [event for event in events if event.get("type") == "result"]
+                if len(terminal) != 1 or terminal[0].get("is_error") is not False or not terminal[0].get("session_id"):
+                    raise ValueError("missing successful terminal reviewer session")
+                findings = results.green_prose(terminal[0].get("result", ""))
+                if findings is None or contract.problems(findings, "review-findings") or findings_problems(findings):
+                    raise ValueError("review prose is ambiguous or has findings/questions")
+                requests = [json.loads(path.read_text()) for path in (item.directory / "agents").glob("*/request.json")]
+                matching = [request for request in requests if request.get("step") == key
+                            and request.get("role") == "reviewer"
+                            and all(request.get("route", {}).get(k) == route.get(k)
+                                    for k in ("provider", "model", "effort"))]
+                if len(matching) != 1:
+                    raise ValueError("reviewer route or attempt does not match")
+            except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+                raise Stop("REVIEW_RECOVERY_INVALID", str(error)) from error
+            self.progress.emit("info", item=item.ref, stage=key, role="reviewer",
+                               reason_code="OWNER_PROSE_REVIEW_ACCEPTED",
+                               message="owner authorized unambiguous GREEN prose; raw stream and attempts preserved")
+            return {"findings": findings, "finding_keys": {}, "base": base, "candidate": candidate,
+                    "outside": outside, "session": terminal[0]["session_id"], "model": route.get("model"),
+                    "stream": self._relative(raw), "attempts": attempts,
+                    "healed": ["owner-authorized exact GREEN prose; sha256:" + expected]}
         with self.store.mutating():  # the tree this review starts from: the next review reads what changed after it
             item.state.setdefault("review_marks", {})[str(number)] = tree
             self._save()

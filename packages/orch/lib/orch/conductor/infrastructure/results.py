@@ -2,6 +2,8 @@
 its contract by the report-fixer role from the role's own answer, and the isolation the stream of the role showed."""
 from __future__ import annotations
 
+import re
+
 from typing import Optional
 
 from aicore.util.digest import sha256_hex
@@ -86,6 +88,21 @@ def closed(text: str, kind: str, extra) -> tuple:
     if not issues and extra:
         issues = extra(doc)
     return doc, healed, issues, original
+
+
+def green_prose(text: str) -> Optional[dict]:
+    """Normalize only an unambiguous, explicitly empty GREEN review; retain risk verbatim."""
+    match = re.fullmatch(
+        r"\s*## Review Findings\s*\n\s*(?:No findings|None)\.\s*\n"
+        r"\s*## Questions\s*\n\s*None\.\s*\n"
+        r"\s*## Material Residual Risk\s*\n(.*?)\n"
+        r"\s*## Verdict\s*\n\s*`?GREEN`?\s*", text, re.I | re.S)
+    if not match:
+        return None
+    risk = match.group(1).strip()
+    if not risk or re.search(r"(?m)^##\s", risk):
+        return None
+    return {"verdict": "GREEN", "findings": [], "questions": [], "residual_risk": risk}
 
 
 def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: list, doc, healed, original=None) -> tuple:

@@ -329,7 +329,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 2868
+     "tokens": 2976
     },
     {
      "kind": "input",
@@ -370,7 +370,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 3992
+     "tokens": 4100
     },
     "retrieval": {
      "limit": 50000,
@@ -464,7 +464,7 @@
     {
      "kind": "role_text",
      "origin": "roles/context-scout.md",
-     "tokens": 606
+     "tokens": 683
     },
     {
      "kind": "input",
@@ -480,7 +480,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 641
+     "tokens": 718
     },
     "retrieval": {
      "limit": 50000,
@@ -744,7 +744,7 @@
     "model_class": "economy",
     "provider": "claude-code",
     "role": "context-scout",
-    "timeout_s": 300,
+    "timeout_s": 900,
     "transport": "text"
    },
    "executor": {

@@ -261,7 +261,9 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
     route = item.routes[role]
     (item.directory / "prompts").mkdir(parents=True, exist_ok=True)
     (item.directory / "prompts" / f"{key}.md").write_text(prompts.render(blocks), encoding="utf-8")  # the full prompt
-    attempt = 0
+    # A resume keeps this stage's failures: its next physical attempt must not
+    # overwrite a prior stream or reuse an unmetered-charge receipt key.
+    attempt = item.state.get("retries_by_stage", {}).get(key, 0)
     first_prompt = prompt
     trail = handle["trail"] = {"decisions": [], "error": None, "api_retries": 0, "denials": []}
     base = self._tree_mark() if self._writes(role) else None  # the tree this step started from

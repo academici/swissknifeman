@@ -35,6 +35,7 @@ from orch.conductor import denials, records
 from orch.conductor.signals import (CPU_PROGRESS_S, CPU_SAMPLE_S, PROGRESS_MARKERS, CpuWatch, StreamScan,  # noqa: F401 — re-exported
                                     TickInfo, command_of, markers_of, tree_cpu_ticks)
 from orch.conductor.infrastructure.clock import utc_now
+from orch.conductor.infrastructure.stream_usage import codex_accounting, is_int as _is_int, normalize as _usage
 
 STDERR_TAIL_CHARS = 4000
 INIT_FIELDS = ("tools", "mcp_servers", "skills", "plugins", "slash_commands")  # what an init event says was loaded
@@ -81,20 +82,6 @@ def _command_available(command: str) -> bool:
     if os.sep in command:
         return os.path.isfile(command) and os.access(command, os.X_OK)
     return shutil.which(command) is not None
-
-
-def _usage(found: object) -> dict:
-    if not isinstance(found, dict):
-        return {"input": 0, "cached": 0, "output": 0}
-    def count(*keys: str) -> int:
-        return sum(found[key] for key in keys if _is_int(found.get(key)) and found[key] >= 0)
-    # ``cached`` (cache reads) is reported apart: it re-counts the whole context each turn and is not spend
-    cached = found.get("cached_input_tokens")
-    if _is_int(cached):  # Codex/OpenAI includes cache reads in input_tokens; invalid counts are ignored
-        cached = count("cached_input_tokens")
-        return {"input": max(0, count("input_tokens") - cached), "cached": cached, "output": count("output_tokens")}
-    return {"input": count("input_tokens", "cache_creation_input_tokens"),
-            "cached": count("cache_read_input_tokens"), "output": count("output_tokens")}
 
 
 def parse_stream(transport: str, data: str, *, guard: str = "") -> dict:
@@ -197,16 +184,7 @@ def parse_stream(transport: str, data: str, *, guard: str = "") -> dict:
             # Native Codex reports the session counter, including prior resumed turns.
             # Keep the last snapshot; the durable ledger turns it into one attempt's delta.
             found["usage"] = usage
-            found["usage_accounting"] = {"basis": "codex-session-cumulative"}
-            if found["session"]:
-                found["usage_accounting"]["counter_id"] = "codex:" + str(found["session"])
-            else:
-                found["usage_accounting"]["unavailable"] = "Codex cumulative usage has no session identity"
-            native = doc.get("usage")
-            if (not isinstance(native, dict) or any(not _is_int(native.get(key)) or native[key] < 0
-                    for key in ("input_tokens", "cached_input_tokens", "output_tokens"))
-                    or native["cached_input_tokens"] > native["input_tokens"]):
-                found["usage_accounting"]["unavailable"] = "Codex input/cache counters are missing or inconsistent"
+            found["usage_accounting"] = codex_accounting(doc.get("usage"), found["session"])
             found["usage_complete"] = bool(usage["input"] or usage["output"])
             if found["usage_accounting"].get("unavailable"):
                 found["usage_complete"] = False
@@ -257,10 +235,6 @@ def _names(value: object) -> list:
     """The sorted names of a list of an init event; an entry that is an object gives its ``name``."""
     entries = value if isinstance(value, list) else []
     return sorted(str(entry.get("name", "")) if isinstance(entry, dict) else str(entry) for entry in entries)
-
-
-def _is_int(value: object) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def partial_usage(data: str) -> dict:

@@ -15,7 +15,7 @@ from orch.conductor.policies.routing import exact_reviewer
 from orch.conductor.stages import review as review_stage
 
 
-def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
+def recover(conductor, run_id: str, ref: str, commit: str, *, owner_extra_round: bool = False) -> dict:
     store = RunStore(conductor.project, run_id)
     with store.ownership("recover-review", checkout=True):
         loaded_run, loaded_state = store.load()
@@ -29,9 +29,14 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         prior = ((steps.get("review.1") or {}).get("result") or {})
         if not prior.get("repaired_from_text") or prior.get("findings", {}).get("findings"):
             raise Stop("RECOVERY_REFUSED", "the original review must be a repaired-from-text review with no findings")
+        number = 3 if owner_extra_round else 2
         later = [key for key in steps if key.startswith("review.") and key != "review.1"]
-        completed = (steps.get("review.2") or {}).get("status") == "done"
-        if later and (later != ["review.2"] or not completed):
+        completed = (steps.get(f"review.{number}") or {}).get("status") == "done"
+        second = steps.get("review.2") or {}
+        extra_valid = owner_extra_round and second.get("status") == "stopped" and second.get("code") == "ROLE_OUTPUT_INVALID" and \
+            piece.get("review_rounds_used") in (2, 3) and all(key in ("review.2", "review.3") for key in later) and \
+            ("review.3" not in later or completed)
+        if later and not extra_valid and (later != ["review.2"] or not completed or owner_extra_round):
             raise Stop("RECOVERY_REFUSED", "a second review is unfinished; preserve it and reconcile the original run")
         folder = store.directory / safe(ref)
         options = records.read(folder / "options.json", "item-options")
@@ -39,7 +44,9 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         routes = records.read(folder / "routes.json", "item-routes")
         if not options or not input_doc or not routes or not exact_reviewer(options["options"], options["sources"], input_doc):
             raise Stop("RECOVERY_REFUSED", "the original item does not pin a reviewer")
-        if options["options"]["limits"]["review_rounds"] < 2 or (not completed and piece.get("review_rounds_used", 0) >= 2):
+        if owner_extra_round and not extra_valid:
+            raise Stop("RECOVERY_REFUSED", "owner extra round requires an invalid stopped second review")
+        if options["options"]["limits"]["review_rounds"] < 2 or (not completed and piece.get("review_rounds_used", 0) >= number):
             raise Stop("REVIEW_LIMIT", "the original run has no remaining review round")
         recorded_commit = ((steps.get("commit") or {}).get("result") or {}).get("sha")
         if not recorded_commit or commit != recorded_commit or checks.head(conductor.project) != commit:
@@ -70,7 +77,7 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         conductor._open_artifacts(item, brief)
         receipt_path = work_source.artifact_path(item, "review-receipt.json")
         history = folder / "review-recovery"
-        receipt = read_json(history / "review-receipt.json") if completed else read_json(receipt_path)
+        receipt = read_json(history / "review-receipt.json") if completed or owner_extra_round else read_json(receipt_path)
         if not receipt or contract.problems(receipt, "review-receipt") or receipt.get("run") != run_id or \
                 receipt.get("item") != ref or receipt.get("round") != 1 or \
                 receipt.get("candidate", {}).get("paths") != candidate["paths"] or \
@@ -85,10 +92,13 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
             source, target = work_source.artifact_path(item, name), history / name
             if source.is_file() and not target.exists():
                 durable_replace(target, source.read_bytes())
-            elif not completed and source.is_file() and target.read_bytes() != source.read_bytes():
+            elif not completed and not owner_extra_round and source.is_file() and target.read_bytes() != source.read_bytes():
                 raise Stop("RECOVERY_REFUSED", "archived original review differs from the current artifact")
         item.claim = {"attempt_id": receipt["attempt_id"], "scenario": options["scenario"], "route": options.get("claim_route") or {}}
         item.options, item.sources = records.options_effective(options["options"]), options["sources"]
+        if owner_extra_round:
+            item.options["limits"]["review_rounds"] = 3
+            item.options["limits"]["retries"] = 0
         item.policy = policies.load(options["scenario"], conductor.settings, warn=lambda _message: None)
         item.launch_plan = ((steps.get("prepare") or {}).get("result") or {})
         item.input_doc = dict(input_doc, provenance={"kind": "review", "base": base, "head": commit,
@@ -106,24 +116,25 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         item.routes = {"reviewer": route}
         rows = ((steps.get("checks.2") or steps.get("checks.1") or {}).get("result") or [])
         if completed:
-            findings = steps["review.2"]["result"]["findings"]
+            findings = steps[f"review.{number}"]["result"]["findings"]
         else:
-            piece["review_rounds_used"] = 2
+            piece["review_rounds_used"] = number
             conductor._save()
             conductor.progress.emit("info", item=ref, role="reviewer", reason_code="REVIEW_RECOVERY_STARTED",
-                                    message="original run, second and final review round; prior receipt archived")
-            findings = conductor._review(item, 2, rows)
+                                    message=f"original run, review round {number}; prior receipt archived" +
+                                            ("; one extra round authorized by owner" if owner_extra_round else ""))
+            findings = conductor._review(item, number, rows)
         if findings.get("verdict") != "GREEN" or findings.get("findings") or findings.get("questions"):
             raise Stop("RECOVERY_REVIEW_RED", "the second review was not green; preserve its result and stop")
-        result = done_steps(piece["steps"])["review.2"]["result"]
+        result = done_steps(piece["steps"])[f"review.{number}"]["result"]
         if result.get("repaired_from_text") or not result.get("session") or \
                 (result.get("model") and result["model"] != route["model"]) or \
                 result.get("candidate", {}).get("paths") != candidate["paths"]:
             raise Stop("RECOVERY_REFUSED", "the second review is not a valid receipt for the original candidate")
         result["outside"] = outside
-        round_two = {"round": 2, "provider": route["provider"], "model": route["model"], "effort": route["effort"],
+        round_two = {"round": number, "provider": route["provider"], "model": route["model"], "effort": route["effort"],
                      "session": result.get("session"), "verdict": "GREEN", "findings": [], "triage": None}
         review_stage.receipt_file(conductor, item, [round_two], done_steps(piece["steps"]))
         conductor._save()
-        return {"run": run_id, "item": ref, "round": 2, "attempt_id": receipt["attempt_id"],
+        return {"run": run_id, "item": ref, "round": number, "attempt_id": receipt["attempt_id"],
                 "commit": commit, "receipt": str(receipt_path), "prior_receipt": str(history / "review-receipt.json")}

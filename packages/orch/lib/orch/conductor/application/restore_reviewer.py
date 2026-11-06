@@ -18,12 +18,13 @@ def add_parser(verbs):
     recovery.add_argument("--run", required=True)
     recovery.add_argument("--item", required=True)
     recovery.add_argument("--commit", required=True)
+    recovery.add_argument("--owner-extra-round", action="store_true", help="owner authorized one additional review round")
 
 
 def run(args, conductor):
     if args.verb == "recover-review":
         from orch.conductor.application import recover_review
-        result = recover_review.recover(conductor, args.run, args.item, args.commit)
+        result = recover_review.recover(conductor, args.run, args.item, args.commit, owner_extra_round=args.owner_extra_round)
     else:
         result = restore(conductor.project, args.run, args.item, args.expected_digest)
     print(json.dumps(result, ensure_ascii=False))

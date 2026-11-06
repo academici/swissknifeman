@@ -100,6 +100,27 @@ class RecoverReviewTests(TestCase):
             recover_review.recover(self.conductor, "run", "P1.1", self.head)
         self.conductor._review.assert_not_called()
 
+    def test_owner_extra_round_preserves_failed_round_and_has_no_retry(self):
+        self.piece["steps"]["review.2"] = {"status": "stopped", "code": "ROLE_OUTPUT_INVALID"}
+        self.piece["review_rounds_used"] = 2
+        history = self.run_dir / "P1.1/review-recovery"
+        history.mkdir()
+        (history / "review-receipt.json").write_text((self.root / ".artifacts/review-receipt.json").read_text())
+        def review(item, number, _rows):
+            self.assertEqual(number, 3)
+            self.assertEqual(item.options["limits"]["retries"], 0)
+            candidate = item.state["steps"]["review.1"]["result"]["candidate"]
+            item.state["steps"]["review.3"] = {"status": "done", "result": {"session": "new-session",
+                "candidate": candidate, "findings": {"verdict": "GREEN", "findings": [], "questions": []}}}
+            return {"verdict": "GREEN", "findings": [], "questions": []}
+        self.conductor._review.side_effect = review
+        answer = recover_review.recover(self.conductor, "run", "P1.1", self.head, owner_extra_round=True)
+        self.assertEqual(answer["round"], 3)
+        self.assertEqual(self.piece["steps"]["review.2"]["code"], "ROLE_OUTPUT_INVALID")
+        self.assertEqual(self.piece["review_rounds_used"], 3)
+        self.assertEqual(recover_review.recover(self.conductor, "run", "P1.1", self.head, owner_extra_round=True)["round"], 3)
+        self.conductor._review.assert_called_once()
+
     def test_accepts_only_plan_metadata_beyond_original_candidate(self):
         self.input_doc["provenance"]["plan_dir"] = "plans/demo"
         (self.root / "plans/demo").mkdir(parents=True)

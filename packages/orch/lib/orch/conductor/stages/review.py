@@ -15,6 +15,7 @@ from orch.conductor.infrastructure.files import write_json
 from orch.conductor.infrastructure import work_source
 from orch.conductor.policies import review_strategy
 from orch.conductor.policies.routing import CLASS_RANK, PLAN_REVIEW_SOURCE, exact_reviewer
+from orch.conductor.prompts.blocks import Block, CONDUCTOR
 
 
 def review_enabled(self, item: Item) -> bool:
@@ -262,6 +263,10 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                                   checks_pending=pending, outside=self._outside(item), focus=focus,
                                   focus_origin=focus_origin, repo_rules=self._repo_rules(item, "reviewer"),
                                   skill_texts=self._skill_texts(item, "reviewer"))
+        if item.recovery_candidate and number > 2:
+            prompt.append(Block("result_contract", CONDUCTOR,
+                                "MANDATORY FINAL OUTPUT: End with exactly one fenced `review-findings` JSON block "
+                                "as specified above, even for GREEN with no findings. A prose-only verdict is invalid."))
         findings, meta = self._role(item, key, "reviewer", prompt, "review-findings", extra=findings_problems,
                                     cancel=cancel)
         return {"findings": findings, "finding_keys": {f["id"]: finding_key(f) for f in findings["findings"]},

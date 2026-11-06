@@ -47,6 +47,13 @@ def event(doc: object, expected_model: str, state: dict) -> dict | None:
         step = doc.get("step_update")
         if not isinstance(step, dict) or not state.get("session") or step.get("conversation_id") != state["session"]:
             state["invalid"] = True
+            return None
+        index = step.get("step_index")
+        if step.get("state") == "DONE" and step.get("step_type") == "error_message" and isinstance(index, int):
+            errors = state.setdefault("consecutive_errors", set())
+            errors.add(index)  # duplicate progress updates are not distinct failures
+        elif step.get("step_type") not in ("user_input", "error_message"):
+            state.pop("consecutive_errors", None)  # actual new activity breaks the streak
         return None
     if kind != "result":
         state["invalid"] = True
@@ -115,6 +122,15 @@ def main() -> int:
             state["invalid"] = True
             continue
         mapped = event(doc, args.model, state)
+        if len(state.get("consecutive_errors", ())) >= 3:
+            print("AGY_REPEATED_ERROR_STEPS: three distinct AGY error steps without intervening activity", file=sys.stderr)
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            break
         if mapped is not None:
             if mapped["type"] == "result":
                 terminal = mapped

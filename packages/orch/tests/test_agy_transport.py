@@ -57,6 +57,37 @@ class TranslationTests(unittest.TestCase):
         self.addCleanup(self.scratch.cleanup)
         self.root = Path(self.scratch.name)
 
+    def test_repeated_error_steps_abort_hanging_provider_without_success(self):
+        executable = self.root / "agy"
+        executable.write_text(
+            "#!" + sys.executable + "\nimport json,sys,time\n"
+            "sys.stdin.readline()\n"
+            "print(json.dumps({'event':'init','conversation_id':'s','init':{'model':'m'}}),flush=True)\n"
+            "for i in range(3):\n"
+            " print(json.dumps({'event':'step_update','step_update':{'conversation_id':'s','step_index':i,"
+            "'step_type':'error_message','state':'DONE'}}),flush=True)\n"
+            "time.sleep(30)\n")
+        executable.chmod(0o755)
+        env = dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ["PATH"])
+        result = subprocess.run([sys.executable, str(Path(module.__file__)), "--model", "m", "--effort", "high"],
+                                input="prompt", env=env, text=True, capture_output=True, timeout=5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("AGY_REPEATED_ERROR_STEPS", result.stderr)
+        self.assertEqual(sum(json.loads(line).get("type") == "agy.raw" for line in result.stdout.splitlines()), 4)
+        self.assertFalse(any(json.loads(line).get("type") == "result" for line in result.stdout.splitlines()))
+
+    def test_error_steps_count_distinct_indices_and_reset_on_progress(self):
+        state = {}
+        module.event({"event": "init", "conversation_id": "s", "init": {"model": "m"}}, "m", state)
+        def step(index, kind):
+            module.event({"event": "step_update", "step_update": {"conversation_id": "s", "step_index": index,
+                         "state": "DONE", "step_type": kind}}, "m", state)
+        step(1, "error_message")
+        step(1, "error_message")
+        self.assertEqual(len(state["consecutive_errors"]), 1)
+        step(2, "tool_call")
+        self.assertNotIn("consecutive_errors", state)
+
     def test_workspace_output_grant_matches_envelope_and_landlock(self):
         from orch.conductor.infrastructure import launch_plan
         from orch.conductor.policies import authority as rules

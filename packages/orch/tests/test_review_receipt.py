@@ -264,6 +264,17 @@ class ReceiptUnitTests(unittest.TestCase):
             self.assertEqual(fingerprints(root, paths), {path: checks.path_fingerprint(root, path)
                                                         for path in sorted(paths)})
 
+    def test_batch_timeout_falls_back_to_single_path(self):
+        import subprocess
+        from orch.conductor.infrastructure import review_tree
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "file").write_text("x")
+            with mock.patch.object(review_tree.subprocess, "run", side_effect=subprocess.TimeoutExpired("git", 120)), \
+                    mock.patch.object(review_tree, "path_fingerprint", return_value="100644 abc") as single:
+                self.assertEqual(review_tree.fingerprints(root, ["file"]), {"file": "100644 abc"})
+                single.assert_called_once_with(root, "file")
+
     def test_outside_and_deterministic_candidate(self):
         import subprocess
         with tempfile.TemporaryDirectory() as tmp:

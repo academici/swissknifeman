@@ -48,11 +48,14 @@ def fingerprints(project: Path, paths) -> dict:
         else:
             found[path] = path_fingerprint(project, path)
     if regular:
-        result = subprocess.run(["git", "hash-object", "--no-filters", "--stdin-paths"], cwd=project,
-                                input=b"".join(os.fsencode(path) + b"\n" for path, _ in regular),
-                                capture_output=True, timeout=120)
-        hashes = result.stdout.splitlines()
-        if result.returncode == 0 and len(hashes) == len(regular):
+        try:
+            result = subprocess.run(["git", "hash-object", "--no-filters", "--stdin-paths"], cwd=project,
+                                    input=b"".join(os.fsencode(path) + b"\n" for path, _ in regular),
+                                    capture_output=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            result = None
+        hashes = result.stdout.splitlines() if result else []
+        if result and result.returncode == 0 and len(hashes) == len(regular):
             for (path, mode), blob in zip(regular, hashes):
                 found[path] = mode + blob.decode("ascii")
         else:

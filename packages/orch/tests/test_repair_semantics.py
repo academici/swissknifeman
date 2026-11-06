@@ -349,6 +349,16 @@ class RepairLadderTests(ConductorCase):
         self.assertIs(result["repaired_from_text"], True)
         self.assertTrue(any("no block to compare" in note for note in result["healed"]), result["healed"])
 
+    def test_pinned_reviewer_forbids_repair_without_a_comparable_block(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "reviewer": "grok/grok-4/high", "fallback_routes": []}}]}})
+        self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "text": "the work is done, no block"}],
+                     "reviewer": [GREEN], "report-fixer": [{"result": report("W1"), "tag": "stage-report"}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        self.assertEqual(self.outcome(err), ("stopped", "ROLE_OUTPUT_INVALID"), err)
+        self.assertEqual(self.calls("report-fixer"), 0)
+
     def test_a_repair_with_a_block_to_compare_does_not_claim_repaired_from_text(self):
         broken = report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])
         self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": broken}], "reviewer": [GREEN],

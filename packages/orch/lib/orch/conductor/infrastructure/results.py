@@ -12,6 +12,7 @@ from orch.conductor.domain import semantics
 from orch.conductor.domain.report import json_block
 from orch.conductor.domain.route import label
 from orch.conductor.policies import isolation as isolation_rules
+from orch.conductor.policies.routing import exact_reviewer
 
 
 def observe_denials(handle: dict, counts: dict) -> None:
@@ -94,6 +95,8 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
     ``original`` is refused (``REPAIR_SEMANTIC_DRIFT``) and the next repair, then a repeat of the role, follows. An
     answer with no block that parses (``original`` None) has nothing to compare: the fixer's block is taken and said
     (``from_text``)."""
+    if original is None and exact_reviewer(item.options, item.sources, item.input_doc):
+        return doc, healed, issues, None, False
     if item.options["limits"]["repairs"] <= 0 or "report-fixer" not in item.routes:
         return doc, healed, issues, None, False
     route = item.routes["report-fixer"]

@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.8.0",
+  "catalog_version": "1.9.0",
   "defaults": {
     "transport": "jsonl",
     "model_set": "supported"
@@ -85,6 +85,9 @@
       "effort": "high",
       "timeout_s": 1800,
       "providers": {
+        "antigravity": {
+          "argv": ["python3", "{orch}/scripts/ro-run.py", "--metadata-guard", "--no-default-rw", "--protect", "{cwd}", "--rw", "/dev", "--", "python3", "{orch}/scripts/agy-transport.py", "--model", "{model}", "--effort", "{effort}"]
+        },
         "claude-code": {
           "argv": ["python3", "{orch}/scripts/ro-run.py", "--protect", "{cwd}", "--rw", "{cwd}/vendor", "--", "@claude.stream", "@claude.model", "@claude.read-tools", "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "@claude.no-edit", "@claude.quiet"]
         },
@@ -171,7 +174,6 @@
   },
   "refusals": {
     "scout": {"antigravity": "AGY text-only scout transport has not been verified"},
-    "reviewer": {"antigravity": "AGY read-only network and IPC boundary is not verified"},
     "triager": {"antigravity": "AGY read-only network and IPC boundary is not verified"},
     "report-fixer": {"antigravity": "AGY tool-free report fixing has not been verified"},
     "advisor": {

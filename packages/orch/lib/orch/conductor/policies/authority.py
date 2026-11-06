@@ -301,7 +301,8 @@ def prompt_block(doc: dict) -> str:
     lines = ["## Authority", "",
              f"- Writes: {where} (guard {doc['guard']}).",
              f"- Network: {reach}" + (f", enforced by {network['enforced_by']}." if network["enforced_by"] else "."),
-             "- Docker: " + ("you may use containers, the docker socket and compose." if doc["docker"] == "open"
+             "- Docker: " + ("reachable, but this reviewer must not use Docker or compose." if doc["docker"] == "open" and doc["role"] == "reviewer"
+                             else "you may use containers, the docker socket and compose." if doc["docker"] == "open"
                              else "not available here: do not start containers or call docker or compose."),
              "- Git: the conductor commits through the work source; do not commit yourself"
              + ("; " + ", ".join(f"git {name}" for name in forbidden) + " are denied." if forbidden else "."),
@@ -311,4 +312,10 @@ def prompt_block(doc: dict) -> str:
         lines.append("- Owner instruction: do not push, publish, create tags, or change remote settings. "
                      "This instruction is not technically enforced. Network, IPC (including Docker) and host reads are not isolated. "
                      "/dev, including /dev/shm, is writable; Landlock ABI below 3 cannot prevent outside truncation.")
+    if any(row.get("code") == "AGY_UNSAFE_REVIEWER_OPT_IN" for row in doc["degraded"]):
+        lines.append("- Owner instruction: review only; do not change files, use Docker or external tools to change "
+                     "the checkout, push, publish, create tags, or change remote settings. Direct filesystem writes "
+                     "and metadata changes are guarded; network, IPC (including Docker), host reads and external "
+                     "tools are not isolated. These external actions are not technically prevented. "
+                     "/dev, including /dev/shm, is writable.")
     return "\n".join(lines[:PROMPT_LINES])

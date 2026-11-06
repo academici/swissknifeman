@@ -103,7 +103,8 @@ class LaunchMatrixTests(unittest.TestCase):
                     guard = argv[:argv.index("--")]
                     self.assertIn("--no-default-rw", guard)
                     self.assertEqual(flag_values(guard, "--protect"), ["{cwd}"])
-                    self.assertEqual(flag_values(guard, "--rw"), ["~/.gemini/antigravity-cli", "/dev"])
+                    self.assertEqual(flag_values(guard, "--rw"), ["/dev"])
+                    self.assertIn("--metadata-guard", guard)
                 else:
                     self.assert_grok_read_only(argv)
         self.assertEqual(used_exceptions, READ_ONLY_EXCEPTIONS)

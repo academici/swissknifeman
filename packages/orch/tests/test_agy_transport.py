@@ -146,7 +146,9 @@ class TranslationTests(unittest.TestCase):
         common = ["python3", str(ORCH_ROOT / "scripts" / "ro-run.py"), "--no-default-rw"]
         tail = ["--rw", "/dev", "--", "python3", str(ORCH_ROOT / "scripts" / "agy-transport.py")]
         assert agy_guarded(common + ["--rw", root] + tail, root, True)
-        assert agy_guarded(common + ["--protect", root] + tail, root, False)
+        reviewer = [*common[:2], "--metadata-guard", *common[2:], "--protect", root] + tail
+        assert agy_guarded(reviewer, root, False)
+        assert not agy_guarded(common + ["--protect", root] + tail, root, False)
         assert not agy_guarded(common + ["--rw", root] + tail, root, False)
         assert not agy_guarded(common + ["--rw", root, "--rw", "/"] + tail, root, True)
         assert not agy_guarded(["untrusted-interpreter", *common[1:], "--rw", root] + tail, root, True)

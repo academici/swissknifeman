@@ -14,7 +14,7 @@ class Native(Binding):
 
     def project(self, input_doc: dict, base: dict, manifest: dict, cap: dict, resolved: dict) -> dict:
         if base["provider"] == "antigravity" and not (base["role"] == manifest["role_id"]
-                                                       and launch.agy_executor_opted_in(base["role"])):
+                                                       and launch.agy_role_opted_in(base["role"])):
             code, reason = launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)
             raise Unmet("authority", reason, code)
         role = LAUNCH_ROLES.get(manifest["role_id"], manifest["role_id"])

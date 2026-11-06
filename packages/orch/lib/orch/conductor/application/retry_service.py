@@ -30,8 +30,11 @@ def routed_blocks(self, role: str, route: dict, blocks: list, item: Optional[Ite
     routed = [block for block in blocks if block.kind != "stub"]
     if text:
         routed.insert(1, prompts.Block("stub", origin, text.rstrip() + "\n\n"))
-    if item is not None and any(block.kind == "authority" for block in routed):
+    if item is not None and (any(block.kind == "authority" for block in routed)
+                             or role == "reviewer" and route.get("provider") == "antigravity"):
         envelope = self._authority(item, role, route, admit=False, quiet=True)
+        if not any(block.kind == "authority" for block in routed):
+            routed.append(prompts.Block("authority", "conductor", ""))
         routed = prompts.retarget(routed, authority_rules.prompt_block(envelope), envelope["docker"] == "open")
     return routed
 

@@ -15,7 +15,7 @@ import aicore
 from aicore.util import digest as _digest, timefmt
 
 import orch
-from orch import CONTRACT_VERSION, contracts, settings as orch_settings
+from orch import CONTRACT_VERSION, contracts, launch, settings as orch_settings
 from orch.catalog import CLASS_RANK, Catalog, CatalogError
 from orch.port import BINDINGS as BINDING_NAMES, PortError
 
@@ -137,8 +137,10 @@ def _stage_requirements(binding: str, policy: dict, stage: dict, manifest: dict,
         raise Unmet("independent_provider", f"review must not run on the primary provider {provider!r}",
                     "INDEPENDENT_PROVIDER")
     restrictions = cap["restrictions"]
+    reviewer_exception = (binding == "native" and provider == "antigravity" and stage["role"] == manifest["role_id"]
+                          and launch.agy_reviewer_opted_in(stage["role"]))
     if manifest["write_authority"] == "none" and restrictions["tools_native"] in NOT_SET \
-            and not restrictions["prompt_only"]:
+            and not restrictions["prompt_only"] and not reviewer_exception:
         raise Unmet("read_only_enforcement", f"{provider} cannot enforce a read-only role",
                     "READ_ONLY_UNENFORCEABLE")
 
@@ -273,6 +275,10 @@ def prepare_common(binding: str, input_doc: dict, policy: dict, roles: Mapping[s
         try:
             _stage_requirements(binding, policy, stage, manifest, cap, stage_provider, primary_provider,
                                 refuse_stale=refuse_stale, now=created)
+            if binding == "native" and stage_provider == "antigravity" and launch.agy_reviewer_opted_in(stage["role"]):
+                reason_codes.append("AGY_UNSAFE_REVIEWER_OPT_IN")
+                warnings[f"{stage_provider}:reviewer"] = {"code": "AGY_UNSAFE_REVIEWER_OPT_IN", "message":
+                    "Owner reviewer opt-in: network, IPC (including Docker), host reads and external tools are not isolated."}
             if stale:  # only reached when stale records are warned about
                 reason_codes.append("CAPABILITY_STALE")
                 warnings[stage_provider] = {"code": "CAPABILITY_STALE", "message":

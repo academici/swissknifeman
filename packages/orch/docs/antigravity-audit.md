@@ -5,6 +5,26 @@ conductor direct/planned routes and fallback. `launch argv` only renders a comma
 it does not grant authority or prove that executing it is safe. No campaign delivery,
 controller, live machine configuration, push or publication was changed.
 
+2026-11-06 follow-up: this audit's default refusal remains. The conductor now offers separate explicit owner
+exceptions for executor and reviewer, documented in [conductor.md](conductor.md). The reviewer uses Landlock ABI 3
+and the x86-64 seccomp metadata guard; its evidence still discloses unisolated network, IPC, host reads and external
+tools. AGY 1.5.1 completed a bounded no-tool request under this guard, then a synthetic Git-checkout review with
+the shipped bridge, model `gemini-4-argon-high` and high effort. The latter called `read_file`, identified the seeded
+arithmetic defect and completed with matching init/result session `e0b64852-13c4-4c96-9f2f-d3a67ea6c00e`;
+the candidate stayed unchanged. Local evidence is under `$HOME/.cache/skm-agy-review-probe/live-review-h8j4ndjm/`.
+These probes do not supersede the audit's unproven end-to-end isolation result.
+
+Reviewer follow-up verification: 115 focused transport/catalog/authority tests passed; the separate reviewer suite
+passed all eight tests, including the full conductor review-only path and real guard inheritance into descendants.
+The four affected bridge suites, golden check, fixture validator, ecosystem boundaries and public hygiene passed.
+The complete Orch run discovered and executed 2941 tests; its only unique failure was the existing layering ratchet
+(`application/autopilot.py: 703 > 0`), repeated once by the runner. The same refusal was reproduced against an
+unmodified archive of the pre-change HEAD; the baseline was not weakened. A live `write_file` canary received
+permission denied and kept its synthetic file's content, mode and mtime, but timed out before a final response;
+that canary is enforcement evidence, not a completed model result.
+A separate live metadata request was refused by the model without a tool call, so it proves no syscall enforcement;
+metadata denial is established by the local kernel/descendant regression test.
+
 The audit began on clean `main`, exactly `9e309d952402dfb80834fc1ada27e005eba6987f`.
 Existing AGY/Codex/conductor processes were observed and left alone. Prior reports
 were leads; the conclusions below use fresh local probes and code review.

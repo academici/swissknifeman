@@ -15,12 +15,24 @@ ANTIGRAVITY_AUTHORITY_PROBLEM = (
     "has no verified enforcement; HOME and Landlock write guards are insufficient"
 )
 AGY_OPT_IN = "SKM_ORCH_AGY_UNSAFE_EXECUTOR"
+AGY_REVIEW_OPT_IN = "SKM_ORCH_AGY_UNSAFE_REVIEWER"
 AGY_OPT_IN_VALUE = "accept-unisolated-network-docker-host-reads"
 
 
 def agy_executor_opted_in(role: str | None, env=None) -> bool:
     """A per-process, explicit owner opt-in, never an implicit provider capability."""
     return role == "executor" and (os.environ if env is None else env).get(AGY_OPT_IN) == AGY_OPT_IN_VALUE
+
+
+def agy_reviewer_opted_in(role: str | None, env=None) -> bool:
+    """A separate owner exception: executor authority never admits a reviewer."""
+    return role == "reviewer" and (os.environ if env is None else env).get(AGY_REVIEW_OPT_IN) == AGY_OPT_IN_VALUE
+
+
+def agy_role_opted_in(role: str | None, env=None) -> bool:
+    return agy_executor_opted_in(role, env) or agy_reviewer_opted_in(role, env)
+
+
 PROVIDERS = ("claude-code", "codex", "grok", "antigravity")
 MODEL_CLASSES = ("economy", "implementation", "frontier")
 EFFORTS = ("low", "medium", "high", "xhigh")

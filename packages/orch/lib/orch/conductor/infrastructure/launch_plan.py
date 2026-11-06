@@ -150,6 +150,9 @@ def agy_guarded(argv: list, project: str, writing: bool) -> bool:
     trusted_guard = str(ORCH_ROOT / "scripts" / "ro-run.py")
     tail = argv[len(prefix) + 1:] if prefix else []
     trusted_bridge = str(ORCH_ROOT / "scripts" / "agy-transport.py")
+    if not writing:
+        return prefix == ["python3", trusted_guard, "--metadata-guard", "--no-default-rw", "--protect", project,
+                          "--rw", "/dev"] and len(tail) >= 2 and tail[:2] == ["python3", trusted_bridge]
     return bool(len(tail) >= 2 and tail[0] == "python3" and os.path.realpath(tail[1]) == os.path.realpath(trusted_bridge) and
                 prefix and len(prefix) >= 2 and prefix[0] == "python3" and
                 os.path.realpath(prefix[1]) == os.path.realpath(trusted_guard) and
@@ -209,16 +212,18 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         raise Stop("LAUNCH_REFUSED", refused.split(": ", 1)[1])
     protected = route.get("provider") == "claude-code" and not writes(role)
     if admit and route.get("provider") == "antigravity":
-        if not launch.agy_executor_opted_in(role, self.env):
+        if not launch.agy_role_opted_in(role, self.env):
             raise Stop("AGY_AUTHORITY_UNPROVEN", launch.ANTIGRAVITY_AUTHORITY_PROBLEM.split(": ", 1)[1])
         bridge = ["python3", str(ORCH_ROOT / "scripts" / "agy-transport.py"), "--model", route.get("model"),
                   "--effort", route.get("effort")]
         prefix = authority_rules.guard_prefix(argv)
         tail = argv[len(prefix) + 1:] if prefix else []
-        if (route.get("transport") != "jsonl" or not writes(role) or not agent_tmpdir(self)
-                or not agy_guarded(argv, str(self.project), True) or tail != bridge
+        if (route.get("transport") != "jsonl" or not agent_tmpdir(self)
+                or not agy_guarded(argv, str(self.project), writes(role)) or tail != bridge
                 or route.get("resume_argv") or self._scope_option(item, "extra_paths", [])):
-            raise Stop("AGY_GUARD_REQUIRED", "antigravity requires an isolated home and narrow Landlock writer guard")
+            raise Stop("AGY_GUARD_REQUIRED", "antigravity requires an isolated home and its canonical narrow Landlock guard")
+        if role == "reviewer" and (landlock_abi() < 3 or platform.machine() != "x86_64"):
+            raise Stop("PROTECT_UNAVAILABLE", "AGY reviewer requires Landlock ABI >= 3 and the x86-64 metadata guard")
     protection = protection_facts(self.project) if protected else None
     if protection is not None and admit and not protection["available"]:
         raise Stop("PROTECT_UNAVAILABLE", f"{role}/{route['provider']}: the checkout cannot be made read-only "
@@ -240,13 +245,20 @@ def authority(self, item: Item, role: str, route: dict, *, admit: bool = True, q
         listed=listed, tmpdir=agent_tmpdir(self), protection=protection,
         output_dirs=agy_output_dirs(item) if route.get("provider") == "antigravity" and role == "executor" else [])
     agy_problem = agy_authority_problem(doc) if route.get("provider") == "antigravity" else None
-    if admit and agy_problem and not launch.agy_executor_opted_in(role, self.env):
+    if admit and agy_problem and not launch.agy_role_opted_in(role, self.env):
         raise Stop("AGY_AUTHORITY_UNPROVEN", agy_problem)
     if route.get("provider") == "antigravity" and launch.agy_executor_opted_in(role, self.env):
         doc["degraded"].append({"code": "AGY_UNSAFE_EXECUTOR_OPT_IN",
                                 "detail": "Explicit local opt-in: network, IPC (including Docker) and host reads are not isolated; "
                                           "/dev including /dev/shm is writable; Landlock ABI below 3 does not prevent "
                                           "truncation outside writable roots; model class for gemini-4-argon-high is unverified."})
+        doc["digest"] = authority_rules.digest(doc)
+    if route.get("provider") == "antigravity" and launch.agy_reviewer_opted_in(role, self.env):
+        doc["degraded"].append({"code": "AGY_UNSAFE_REVIEWER_OPT_IN",
+                                "detail": "Explicit local reviewer opt-in: direct checkout writes and metadata changes "
+                                          "are guarded; network, IPC (including Docker), host reads and external tools "
+                                          "are not isolated; /dev including /dev/shm is writable; "
+                                          "model class for gemini-4-argon-high is unverified."})
         doc["digest"] = authority_rules.digest(doc)
     refused = authority_rules.setting_sources_problem(doc, isolation) if admit else None
     if refused:
@@ -520,10 +532,12 @@ def role_env(self, item: Item, role: str, route: dict) -> Optional[dict]:
     isolation = isolation_plan(self, item, role, route)
     scratch = agent_tmpdir(self)
     original = dict(os.environ if self.env is None else self.env)
-    if not isolation["env"] and not isolation["home"] and not scratch and launch.AGY_OPT_IN not in original:
+    if not isolation["env"] and not isolation["home"] and not scratch \
+            and not any(key in original for key in (launch.AGY_OPT_IN, launch.AGY_REVIEW_OPT_IN)):
         return self.env
     base = {**original, **isolation["env"]}
     base.pop(launch.AGY_OPT_IN, None)
+    base.pop(launch.AGY_REVIEW_OPT_IN, None)
     if scratch:
         base["TMPDIR"] = scratch
         if route.get("provider") == "antigravity":

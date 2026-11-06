@@ -129,7 +129,7 @@ class ResumeArgvTests(unittest.TestCase):
 
     def test_the_shipped_catalog_resumes_a_codex_and_a_grok_executor_only(self):
         catalog = launch.load_catalog()
-        self.assertEqual(catalog["catalog_version"], "1.8.0")
+        self.assertEqual(catalog["catalog_version"], "1.9.0")
         found = [(role, provider) for role, providers in catalog["launch"].items() for provider, entry in providers.items()
                  if "resume_argv" in entry]
         self.assertEqual(found, [("executor", "codex"), ("executor", "grok")])

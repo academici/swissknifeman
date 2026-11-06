@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Orch: отдельный явный режим AGY reviewer.** `SKM_ORCH_AGY_UNSAFE_REVIEWER=accept-unisolated-network-docker-host-reads` допускает штатный JSONL reviewer через защиту Landlock ABI 3 и seccomp metadata guard. Отказ по умолчанию и отдельный opt-in executor сохранены; сеть, IPC, чтение хоста и внешние инструменты явно отмечены как неизолированные. Reviewer не получает writable checkout, output или resume grants; opt-in удаляется из дочернего окружения.
+
 - **Orch: сохранение review snapshot.** `review_marks` сохраняет canonical null для удалённых или недоступных dirty paths, включая dangling evidence symlinks. Immutable review продолжает проверять exact committed candidate, сохраняя постороннее дерево.
 - **Orch: ожидание блокировки фазы.** `autopilot start --phase Pn --wait-blocked` сохраняет живое ожидание, ограниченно опрашивает источник и продолжает только подтверждённую готовую работу текущей фазы; режим переживает восстановление и учитывает запросы и бюджеты.
 - **Orch: бюджет ожидания фазы.** Повторная блокировка после внешнего снятия учитывает запуски без прогресса, в том числе после восстановления autopilot.

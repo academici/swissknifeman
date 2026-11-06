@@ -1,5 +1,5 @@
 {
-  "catalog_version": "1.8.0",
+  "catalog_version": "1.9.0",
   "launch": {
     "scout": {
       "claude-code": {
@@ -335,6 +335,30 @@
       }
     },
     "reviewer": {
+      "antigravity": {
+        "model_class": "implementation",
+        "effort": "high",
+        "transport": "jsonl",
+        "argv": [
+          "python3",
+          "{orch}/scripts/ro-run.py",
+          "--metadata-guard",
+          "--no-default-rw",
+          "--protect",
+          "{cwd}",
+          "--rw",
+          "/dev",
+          "--",
+          "python3",
+          "{orch}/scripts/agy-transport.py",
+          "--model",
+          "{model}",
+          "--effort",
+          "{effort}"
+        ],
+        "timeout_s": 1800,
+        "model_set": "supported"
+      },
       "claude-code": {
         "model_class": "implementation",
         "effort": "high",
@@ -767,9 +791,6 @@
   "refusals": {
     "scout": {
       "antigravity": "AGY text-only scout transport has not been verified"
-    },
-    "reviewer": {
-      "antigravity": "AGY read-only network and IPC boundary is not verified"
     },
     "triager": {
       "antigravity": "AGY read-only network and IPC boundary is not verified"

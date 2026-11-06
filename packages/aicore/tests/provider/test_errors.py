@@ -150,6 +150,14 @@ CODEX_RULES = (
 
 
 class TestSignalRules(unittest.TestCase):
+    def test_antigravity_individual_quota_is_not_retried_as_unknown(self):
+        result = errors.classify_signals("antigravity", {"exit_code": 1, "stderr_tail":
+            "error: Individual quota reached. Please upgrade your subscription. Resets in 38h43m57s."}, now=NOW)
+        self.assertEqual((result.error_class.value, result.code, result.scope.value),
+                         ("quota", "PROVIDER_QUOTA", "request"))
+        self.assertFalse(result.retryable)
+        self.assertIsNone(errors.classify_failure("antigravity", text="ordinary rate limit"))
+
     def test_antigravity_authentication_requires_failed_structured_401(self):
         result = errors.classify_signals("antigravity", {"http_status": 401, "is_error": True}, now=NOW)
         self.assertEqual((result.code, result.scope.value), ("PROVIDER_AUTH", "account"))

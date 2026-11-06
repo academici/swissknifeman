@@ -2,9 +2,11 @@
 ladder repair → repeat of the role when the report-fixer's block moves the meaning toward ease (REPAIR_SEMANTIC_DRIFT)."""
 from __future__ import annotations
 
+import os
 import sys
 import types
 import unittest
+from unittest import mock
 
 from orch.conductor import heal
 from orch.conductor.domain import report as report_rules, semantics
@@ -369,6 +371,18 @@ class RepairLadderTests(ConductorCase):
         self.assertEqual(code, 1, err)
         self.assertEqual(self.outcome(err), ("stopped", "ROLE_OUTPUT_INVALID"), err)
         self.assertEqual(self.calls("report-fixer"), 0)
+
+    def test_owner_can_disable_format_only_reviewer_retry(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "reviewer": "grok/grok-4/high", "fallback_routes": []}}]}})
+        self.script({"executor": [executor_ok("W1")],
+                     "reviewer": [{"text": "## Review-findings\nNone.\n## Verdict\nGREEN"}, GREEN]})
+        with mock.patch.dict(os.environ, {"SKM_ORCH_REVIEW_FORMAT_NO_RETRY": "1"}):
+            code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        self.assertEqual(self.outcome(err), ("stopped", "ROLE_OUTPUT_INVALID"), err)
+        self.assertEqual(self.calls("reviewer"), 1)
+        self.assertIn("format-only retry disabled by owner", err)
 
     def test_a_repair_with_a_block_to_compare_does_not_claim_repaired_from_text(self):
         broken = report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])

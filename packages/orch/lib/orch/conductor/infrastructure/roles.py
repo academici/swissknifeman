@@ -4,6 +4,7 @@ in are their own modules; what the role needs from the layers above comes in :cl
 from __future__ import annotations
 
 import contextlib
+import os
 from pathlib import Path
 import time
 from typing import Callable, NamedTuple, Optional
@@ -366,6 +367,9 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
             route, prompt = self.role_ports.provider_failure(item, key, role, route, run, by_stage[key], base,
                                                              first_prompt, trail, cancel)
             continue
+        if (kind == "review-findings" and os.environ.get("SKM_ORCH_REVIEW_FORMAT_NO_RETRY") == "1"
+                and problem.startswith("ROLE_OUTPUT_INVALID: no fenced `review-findings` block")):
+            raise Stop("ROLE_OUTPUT_INVALID", f"{role} on {label(route)}: {problem}; format-only retry disabled by owner")
         if by_stage[key] > item.options["limits"]["retries"]:  # a stage has its own repeats: a slow executor must not cost the review its only one
             raise Stop(problem.split(":", 1)[0], f"{role} on {label(route)}: {problem}")
         self.progress.emit("info", item=item.ref, stage=key, role=role, route=label(route),

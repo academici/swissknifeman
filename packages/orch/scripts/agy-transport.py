@@ -65,10 +65,23 @@ def event(doc: object, expected_model: str, state: dict) -> dict | None:
     state["error"] = status == "ERROR"
     usage = result.get("usage")
     usage = usage if isinstance(usage, dict) else {}
+    reported = {key: value for key, value in usage.items()
+                if key in ("input_tokens", "output_tokens", "cache_read_tokens", "total_tokens", "thinking_tokens")
+                and isinstance(value, int) and not isinstance(value, bool) and value >= 0}
+    # Explicit zero cache makes inclusion irrelevant; a missing or nonzero cache
+    # counter does not establish the native input counter's semantics.
+    known_input = reported.get("cache_read_tokens") == 0 and "input_tokens" in reported
+    accounting = {"basis": "agy-native", "reported": reported}
+    if not known_input:
+        accounting["unavailable"] = "AGY input/cache inclusion contract unavailable; input is not measured"
     return {"type": "result", "session_id": session, "is_error": status != "SUCCESS",
             "result": (result.get("error") or response) if status == "ERROR" else response,
-            "usage": {"input_tokens": usage.get("input_tokens"), "output_tokens": usage.get("output_tokens"),
-                      "cached_input_tokens": usage.get("cache_read_tokens")}}
+            # Native AGY does not declare whether input already excludes cache. Preserve
+            # reported counters, rather than applying Codex's subtraction and inventing zero.
+            "usage": {"input_tokens": reported.get("input_tokens") if known_input else None,
+                      "output_tokens": usage.get("output_tokens"),
+                      "cache_read_input_tokens": usage.get("cache_read_tokens")},
+            "usage_accounting": accounting}
 
 
 def main() -> int:

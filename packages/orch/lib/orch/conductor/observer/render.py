@@ -57,10 +57,15 @@ def markdown(report: dict) -> str:
             lines.append(f"| {item['item']} | " + "; ".join(
                 f"{attempt['n']}: " + ", ".join(f"{key} {verdict or '-'}" for key, verdict in attempt["steps"].items())
                 for attempt in item["attempts"]) + f" | {item['reviews']} |")
+    if report.get("usage_unavailable"):
+        lines += ["", "Usage unavailable: token tables contain known portions only, not complete spend.",
+                  *["- " + reason for reason in report["usage_unavailable"]]]
     lines += ["", "## Roles", "", "| Role | Seconds | Tokens in/out |", "| --- | --- | --- |"]
     for role in sorted(set(report["seconds_by_role"]) | set(report["tokens_by_role"])):
         value = report["tokens_by_role"].get(role, {"input": 0, "output": 0})
-        lines.append(f"| {role} | {report['seconds_by_role'].get(role, 0)} | {value['input']}/{value['output']} |")
+        amount = ("unavailable" if any(reason.startswith(role + ": legacy") for reason in report.get("usage_unavailable", []))
+                  else f"{value['input']}/{value['output']}")
+        lines.append(f"| {role} | {report['seconds_by_role'].get(role, 0)} | {amount} |")
     if report.get("checks_by_command"):
         lines += ["", "## Checks by command", "", "Seconds are elapsed time of executed runs, not CPU time; skipped and reused "
                   "rows ran no process.", "", "| Command | Ids | Context | Runs | Executed | Seconds | Red | Skipped | Reused | Retried |",

@@ -7,6 +7,7 @@
   "additionalProperties": false,
   "required": ["run", "beacons", "red_checks", "items", "proposals"],
   "properties": {
+    "usage_unavailable": {"description": "Native usage semantics are unknown; token tables contain known portions only, with receipt evidence.", "type": "array", "items": {"type": "string", "minLength": 1}},
     "schema": {"description": "Published tag of the document.", "const": "orch-conductor-observer/v1"},
     "run": {"description": "Run id.", "type": "string", "minLength": 1},
     "started": {"description": "UTC time of the first journal line, null without a journal.", "type": ["string", "null"]},

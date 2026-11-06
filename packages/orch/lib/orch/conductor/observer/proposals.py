@@ -66,7 +66,7 @@ def proposals(report: dict) -> list:
                      + "; orch conduct answer, then resume --retry.")
     tokens = report["tokens_by_role"]
     total = sum(value["input"] + value["output"] for value in tokens.values())
-    for role, value in tokens.items():
+    for role, value in ({} if report.get("usage_unavailable") else tokens).items():
         share = (value["input"] + value["output"]) / total if total else 0
         if role in ("context-scout", "triager") and share > 0.4:
             found.append(f"{role} used {int(share * 100)} % of the tokens: give it a cheaper model class.")

@@ -81,7 +81,8 @@ def _run_agent(self, item: Item, key: str, role: str, route: dict, prompt: str, 
     try:
         run = self._launch(item, handle, role, route, prompt, attempt=1, raw=raw, timeout_s=timeout_s,
                            provider=route["provider"])
-        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw),
+                     accounting=run.usage_accounting)
         results.observe_isolation(self, item, key, role, route, run.init, handle)  # ISOLATION_DRIFT, result.json
         handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
     except BaseException as error:

@@ -1661,6 +1661,19 @@ cache reads. Otherwise (Claude/Grok), `input = input_tokens + cache_creation_inp
 are ignored. Fresh tokens are `input + output`; cache reads stay separate. Item and run totals use receipts keyed by
 agent id and attempt stream (`state.items[ref].usage_by_agent`), so reading the same receipt again does not add tokens.
 
+Native Codex `turn.completed` is a cumulative session counter. The parser keeps its last snapshot; each receipt's
+`accounting.counter_id` and `cumulative` values form the durable watermark. Only the increase is charged, atomically
+with the receipt and totals, across retries, restarts and shared-session items. Replays add nothing. A decreasing
+counter or resumed legacy session without a watermark is unavailable; existing budgets are never refunded or reset.
+The observer sums unique physical actor contributions rather than cumulative stage-end events. Legacy resumed Codex
+aggregates without a counter basis are shown as unavailable; historical state is not rewritten.
+
+Native AGY does not declare whether `input_tokens` includes `cache_read_tokens`. Nonzero or missing cache therefore
+makes input unavailable, with original counters retained in `accounting.reported` and the raw stream. Known output
+and cache counts remain separate. Explicit zero cache makes input inclusion irrelevant and can be measured. Unknown
+input is never silently presented as measured zero: `usage_complete=false`, the existing unmetered-budget rule applies,
+and the observer's `usage_unavailable` warning links the receipts. Token tables then contain known portions only.
+
 Each attempt records `usage_complete`: `true` when its JSONL stream supplied terminal `result`/`turn.completed` usage
 with nonzero fresh input or output, `false` when a running JSONL attempt has no terminal usage or reports 0/0, and
 `null` for text transport (scout) or a process that never started. Partial assistant-message usage is still counted

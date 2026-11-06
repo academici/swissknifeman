@@ -21,6 +21,37 @@ from tests import test_conductor
 
 
 class ObserverTests(unittest.TestCase):
+    def test_usage_summary_counts_physical_contributions_not_replayed_stage_totals(self):
+        receipt = {"input": 50, "cached": 0, "output": 5, "usage_complete": True,
+                   "accounting": {"basis": "codex-session-cumulative", "counter_id": "codex:s",
+                                  "cumulative": {"input": 150, "cached": 0, "output": 15}}}
+        self.store.save({"status": "finished", "items": {"W1": {"steps": {}, "usage_by_agent": {"agent-2": {"stream": receipt}}}}})
+        for amount in [100, 150]:
+            self.progress.emit("stage.end", item="W1", stage="executor.1", role="executor", duration_s=1,
+                               tokens={"input": amount, "cached": 0, "output": amount // 10})
+        rows = [{"agent_run_id": f"agent-{index}", "item": "W1", "role": "executor", "step": "executor.1",
+                 "status": "ok", "tokens": {"input": amount, "cached": 0, "output": amount // 10}}
+                for index, amount in [(1, 100), (2, 50)]]
+        with mock.patch.object(observer.reader, "agent_runs", return_value=rows):
+            report = observer.build(self.directory, self.project)
+        self.assertEqual(report["tokens_by_role"]["executor"], {"input": 150, "cached": 0, "output": 15})
+
+    def test_legacy_cumulative_summary_is_unavailable_without_rewriting_state(self):
+        self.store.save({"status": "finished", "items": {"W1": {"steps": {}, "usage_by_agent": {
+            "agent-1": {"stream": {"input": 100, "cached": 0, "output": 10, "usage_complete": True}}}}}})
+        before = (self.directory / "state.json").read_bytes()
+        self.progress.emit("info", item="W1", stage="executor.1", role="executor", route="codex/model/high",
+                           reason_code="SESSION_RESUMED", message="session resumed")
+        self.progress.emit("stage.end", item="W1", stage="executor.1", role="executor", duration_s=1,
+                           tokens={"input": 100, "cached": 0, "output": 10})
+        row = {"agent_run_id": "agent-1", "item": "W1", "role": "executor", "step": "executor.1",
+               "status": "ok", "tokens": {"input": 100, "cached": 0, "output": 10}}
+        with mock.patch.object(observer.reader, "agent_runs", return_value=[row]):
+            report = observer.build(self.directory, self.project)
+        self.assertNotIn("executor", report["tokens_by_role"])
+        self.assertIn("aggregate usage unavailable", observer.markdown(report))
+        self.assertEqual((self.directory / "state.json").read_bytes(), before)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

@@ -1,1 +1,2 @@
+{"type":"thread.started","thread_id":"usage-fixture"}
 {"type":"turn.completed","usage":{"input_tokens":10000,"cached_input_tokens":9000,"output_tokens":100}}

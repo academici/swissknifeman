@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
   "captured_from": "404279208a61",
-  "reason": "Integrate audited operator context with current native source admission",
+  "reason": "Integrate operator context and resumed usage accounting without changing historical receipts",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

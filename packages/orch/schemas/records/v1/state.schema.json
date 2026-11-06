@@ -396,7 +396,30 @@
         "cached": {"description": "Cached input tokens.", "type": "integer"},
         "output": {"description": "Output tokens.", "type": "integer"},
         "usage_complete": {"description": "The provider reported complete usage (null: unknown).", "type": ["boolean", "null"]},
-        "step": {"description": "Logical stage the attempt belongs to (P3.10).", "type": "string"}
+        "step": {"description": "Logical stage the attempt belongs to (P3.10).", "type": "string"},
+        "accounting": {
+          "description": "Native usage semantics and durable session counter; unknown input is not a measured zero.",
+          "type": "object", "additionalProperties": false,
+          "required": ["basis"],
+          "properties": {
+            "basis": {"type": "string", "enum": ["codex-session-cumulative", "agy-native"]},
+            "counter_id": {"type": "string", "minLength": 1},
+            "resumed": {"type": "boolean"},
+            "unavailable": {"type": "string", "minLength": 1},
+            "cumulative": {
+              "type": "object", "additionalProperties": false, "required": ["input", "cached", "output"],
+              "properties": {"input": {"type": "integer", "minimum": 0}, "cached": {"type": "integer", "minimum": 0}, "output": {"type": "integer", "minimum": 0}}
+            },
+            "reported": {
+              "type": "object", "additionalProperties": false,
+              "properties": {
+                "input_tokens": {"type": "integer", "minimum": 0}, "output_tokens": {"type": "integer", "minimum": 0},
+                "cache_read_tokens": {"type": "integer", "minimum": 0}, "total_tokens": {"type": "integer", "minimum": 0},
+                "thinking_tokens": {"type": "integer", "minimum": 0}
+              }
+            }
+          }
+        }
       }
     },
     "skills-auto-role": {

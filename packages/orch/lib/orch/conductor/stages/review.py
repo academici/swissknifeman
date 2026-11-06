@@ -232,7 +232,7 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
         outside = checks_mod.review_outside(self.project, base, candidate["paths"], self._not_the_role(item))
         target = provenance.get("head") if review_only else None
         if target and target != "WORKTREE":
-            candidate = revision_candidate(self.project, base, target)
+            candidate = item.recovery_candidate or revision_candidate(self.project, base, target)
             outside = {}  # the subject is an immutable revision, independent of the checked-out worktree
         dirty = checks_mod.dirty_files(self.project)  # without what the conductor writes (reports, artifacts, plan folder)
         tree = {path: dirty[path] for path in scopes.own(dirty, self._not_the_role(item))}
@@ -244,7 +244,9 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
         before = (item.state.get("review_marks") or {}).get(str(number - 1))
         if target and target != "WORKTREE":
             diff = (f"# Review revision {candidate['head']}; read its files with git show REV:path.\n"
-                    + checks_mod.git(self.project, "diff", base, candidate["head"]))
+                    + checks_mod.git(self.project, "diff", base, candidate["head"],
+                                     *(["--", *[f":(literal){path}" for path in candidate["paths"]]]
+                                       if item.recovery_candidate else [])))
             scope = "full"
         elif audit and isinstance(before, dict):  # round 1 and audit_scope full see the whole diff, and so does a run without marks
             paths = sorted(set(checks_mod.changed_files(before, tree)) | set(self._finding_paths(corrected))

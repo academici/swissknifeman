@@ -47,10 +47,17 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         candidate = prior.get("candidate") or {}
         base = prior.get("base")
         committed = review_stage.revision_candidate(conductor.project, base, commit) if base else {}
-        if not candidate.get("paths") or committed.get("paths") != candidate["paths"] or \
-                committed.get("digest") != candidate.get("digest"):
+        committed_paths = committed.get("paths") or {}
+        plan_dir = (input_doc.get("provenance") or {}).get("plan_dir", "")
+        plan_parts = Path(plan_dir).parts if isinstance(plan_dir, str) else ()
+        local_plan = (len(plan_parts) >= 2 and plan_parts[0] == "plans" and
+                      all(part not in (".", "..") for part in plan_parts))
+        extra = set(committed_paths) - set(candidate.get("paths") or {})
+        if not candidate.get("paths") or any(committed_paths.get(path) != value for path, value in candidate["paths"].items()) or \
+                any(not local_plan or not path.startswith(plan_dir.rstrip("/") + "/") for path in extra):
             raise Stop("RECOVERY_REFUSED", "the committed candidate differs from the original review")
-        if checks.candidate(conductor.project, candidate["paths"])["paths"] != candidate["paths"]:
+        current = checks.candidate(conductor.project, candidate["paths"])
+        if current["paths"] != candidate["paths"] or current["digest"] != candidate.get("digest"):
             raise Stop("RECOVERY_REFUSED", "the working candidate differs from the committed review")
         outside = prior.get("outside") or {}
         if any(checks.path_fingerprint(conductor.project, path) != fingerprint for path, fingerprint in outside.items()):
@@ -86,6 +93,7 @@ def recover(conductor, run_id: str, ref: str, commit: str) -> dict:
         item.launch_plan = ((steps.get("prepare") or {}).get("result") or {})
         item.input_doc = dict(input_doc, provenance={"kind": "review", "base": base, "head": commit,
                                                      "plan": subject[:-(len(ref) + 1)], "item": ref})
+        item.recovery_candidate = {"head": commit, "digest": candidate["digest"], "paths": candidate["paths"]}
         route = conductor._selected(item, "reviewer", False)
         expected = conductor._reviewer_selector(item)[0]
         if any(route.get(key) != expected.get(key) for key in ("provider", "model", "effort")):

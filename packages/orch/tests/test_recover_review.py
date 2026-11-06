@@ -49,6 +49,7 @@ class RecoverReviewTests(TestCase):
         self.store.load.return_value = ({"plan": "PLAN1"}, self.state)
         self.options = {"scenario": "full", "options": {"reviewer": "antigravity/gemini-4-argon-high/high",
                         "fallback_routes": [], "skills": [], "limits": {"review_rounds": 2}}, "sources": {"reviewer": "item:P1.1"}}
+        self.input_doc = {"provenance": {"kind": "plan", "plan_dir": "@plan"}}
         self.conductor = mock.Mock(project=self.root, settings=object())
         self.conductor._selected.return_value = {"provider": "antigravity", "model": "gemini-4-argon-high", "effort": "high"}
         self.conductor._reviewer_selector.return_value = (self.conductor._selected.return_value, None, "item:P1.1")
@@ -62,13 +63,14 @@ class RecoverReviewTests(TestCase):
             self.assertEqual(item.input_doc["provenance"]["head"], self.head)
             self.assertEqual(item.input_doc["provenance"]["kind"], "review")
             self.assertEqual(item.options["skills"], {})
+            self.assertEqual(item.recovery_candidate["paths"], candidate["paths"])
             item.state["steps"]["review.2"] = {"status": "done", "result": {"session": "new-session",
                 "candidate": candidate, "findings": {"verdict": "GREEN", "findings": [], "questions": []}}}
             return {"verdict": "GREEN", "findings": [], "questions": []}
         self.conductor._review.side_effect = review
         self.patches = [mock.patch.object(recover_review, "RunStore", return_value=self.store),
                         mock.patch.object(recover_review.records, "read", side_effect=lambda p, kind: self.options if kind == "item-options" else {"reviewer": {}}),
-                        mock.patch.object(recover_review, "read_json", side_effect=lambda p: json.loads(p.read_text()) if p.exists() else {"provenance": {}}),
+                        mock.patch.object(recover_review, "read_json", side_effect=lambda p: json.loads(p.read_text()) if p.exists() else self.input_doc),
                         mock.patch.object(recover_review.policies, "load", return_value={}),
                         mock.patch.object(recover_review.contract, "problems", return_value=[]),
                         mock.patch.object(recover_review.review_stage, "receipt_file")]
@@ -94,6 +96,26 @@ class RecoverReviewTests(TestCase):
         with self.assertRaises(Stop):
             recover_review.recover(self.conductor, "run", "P1.1", "wrong")
         self.piece["review_rounds_used"] = 2
+        with self.assertRaises(Stop):
+            recover_review.recover(self.conductor, "run", "P1.1", self.head)
+        self.conductor._review.assert_not_called()
+
+    def test_accepts_only_plan_metadata_beyond_original_candidate(self):
+        self.input_doc["provenance"]["plan_dir"] = "plans/demo"
+        (self.root / "plans/demo").mkdir(parents=True)
+        (self.root / "plans/demo/state.json").write_text("{}\n")
+        subprocess.run(["git", "add", "plans/demo/state.json"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "-qm", "plan metadata"], cwd=self.root, check=True)
+        self.head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.piece["steps"]["commit"]["result"]["sha"] = self.head
+        self.assertEqual(recover_review.recover(self.conductor, "run", "P1.1", self.head)["round"], 2)
+
+    def test_refuses_unrelated_product_path_in_commit(self):
+        (self.root / "unrelated").write_text("not reviewed\n")
+        subprocess.run(["git", "add", "unrelated"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "-qm", "extra product"], cwd=self.root, check=True)
+        self.head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.piece["steps"]["commit"]["result"]["sha"] = self.head
         with self.assertRaises(Stop):
             recover_review.recover(self.conductor, "run", "P1.1", self.head)
         self.conductor._review.assert_not_called()

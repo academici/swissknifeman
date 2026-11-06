@@ -359,6 +359,17 @@ class RepairLadderTests(ConductorCase):
         self.assertEqual(self.outcome(err), ("stopped", "ROLE_OUTPUT_INVALID"), err)
         self.assertEqual(self.calls("report-fixer"), 0)
 
+    def test_pinned_review_plain_text_cannot_be_promoted_to_a_fenced_verdict(self):
+        self.set_items({"W1": {"options": [{"source": "item:W1", "options": {
+            "reviewer": "grok/grok-4/high", "fallback_routes": []}}]}})
+        self.script({"executor": [executor_ok("W1")],
+                     "reviewer": [{"text": "## Review-findings\nNone.\n## Verdict\nGREEN"}],
+                     "report-fixer": [{"result": GREEN["result"], "tag": "review-findings"}]})
+        code, _, err = self.run_items("W1")
+        self.assertEqual(code, 1, err)
+        self.assertEqual(self.outcome(err), ("stopped", "ROLE_OUTPUT_INVALID"), err)
+        self.assertEqual(self.calls("report-fixer"), 0)
+
     def test_a_repair_with_a_block_to_compare_does_not_claim_repaired_from_text(self):
         broken = report("W1", changed_paths=["out/W1.txt", "out/W1.txt"])
         self.script({"executor": [{"write": {"out/W1.txt": "ok\n"}, "result": broken}], "reviewer": [GREEN],

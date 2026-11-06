@@ -21,7 +21,7 @@ from aicore.state import ProjectContextRequired
 from orch import project as project_mod, sandbox, settings as settings_mod
 from orch.conductor import agents, engine, frozen, gates, observer, options as opts, progress, questions
 from orch.conductor import autopilot_cli, prompt_cli, records, runs, supervise_cli
-from orch.conductor.application import run_service
+from orch.conductor.application import restore_reviewer, run_service
 from orch.conductor.infrastructure import detach, launch_plan, preflight
 from orch.conductor.infrastructure.lease import launcher
 
@@ -401,6 +401,7 @@ def main(argv: list | None = None) -> int:
     which.add_argument("--all", action="store_true", help="every piece of the run that nobody worked on and that is not closed "
                                                          "(the whole batch after a stop before any work)")
     release.add_argument("--reason", default="released by hand", help="why, for the journal of the source")
+    restore_reviewer.add_parser(verbs)
     status = verbs.add_parser("status", help="state of a run from its journal (default: the latest run)")
     status.add_argument("--run", metavar="RUN")
     status.add_argument("--json", action="store_true")
@@ -566,6 +567,8 @@ def main(argv: list | None = None) -> int:
                                  model_catalog=getattr(args, "model_catalog", None),
                                  project_resolution=context.resolution)
     try:
+        if args.verb == "restore-reviewer":
+            return restore_reviewer.run(args, project)
         if args.verb == "preflight":
             result = preflight.inspect_items(conductor, args)
             print(json.dumps(result, ensure_ascii=False, indent=2))

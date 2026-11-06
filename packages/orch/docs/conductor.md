@@ -1906,6 +1906,10 @@ suggested by any round) when it is above the class of the route and `_admit` tak
 resume starts from it) change. An item or plan that names an exact reviewer and has no fallback routes pins that route:
 the executor's suggestion cannot upgrade it. If an earlier run retained an override that resolves to a different
 provider, model or effort, resume stops with `EXACT_ROUTE_MISMATCH` without changing the stored override or history.
+After an interrupted automatic upgrade with no completed review, `orch conduct restore-reviewer --run RUN --item REF
+--expected-digest DIGEST` restores the pinned route only if the stored successful check evidence still matches HEAD and
+the candidate. It keeps a receipt with the old override and review/check history under the run, and does not reset
+attempts or review counters. It refuses missing upgrade evidence, a completed review, or a changed candidate.
 A suggestion at or below the route changes nothing: the class is never lowered; a refused upgrade is an `info` line
 once and the review goes on with its route.
 

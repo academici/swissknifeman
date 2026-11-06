@@ -76,6 +76,27 @@ class TranslationTests(unittest.TestCase):
         self.assertEqual(sum(json.loads(line).get("type") == "agy.raw" for line in result.stdout.splitlines()), 4)
         self.assertFalse(any(json.loads(line).get("type") == "result" for line in result.stdout.splitlines()))
 
+    def test_completed_response_is_not_discarded_when_error_steps_follow(self):
+        executable = self.root / "agy"
+        executable.write_text(
+            "#!" + sys.executable + "\nimport json,sys\n"
+            "sys.stdin.readline()\n"
+            "print(json.dumps({'event':'init','conversation_id':'s','init':{'model':'m'}}),flush=True)\n"
+            "print(json.dumps({'event':'step_update','step_update':{'conversation_id':'s','step_index':1,"
+            "'step_type':'agent_response','state':'DONE','text_delta':'review'}}),flush=True)\n"
+            "for i in range(2,5):\n"
+            " print(json.dumps({'event':'step_update','step_update':{'conversation_id':'s','step_index':i,"
+            "'step_type':'error_message','state':'DONE'}}),flush=True)\n"
+            "print(json.dumps({'event':'result','result':{'conversation_id':'s','status':'ERROR',"
+            "'response':'review','error':'UNAVAILABLE (code 503): capacity'}}),flush=True)\n")
+        executable.chmod(0o755)
+        env = dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ["PATH"])
+        result = subprocess.run([sys.executable, str(Path(module.__file__)), "--model", "m", "--effort", "high"],
+                                input="prompt", env=env, text=True, capture_output=True, timeout=5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("AGY_REPEATED_ERROR_STEPS", result.stderr)
+        self.assertTrue(any(json.loads(line).get("type") == "result" for line in result.stdout.splitlines()))
+
     def test_error_steps_count_distinct_indices_and_reset_on_progress(self):
         state = {}
         module.event({"event": "init", "conversation_id": "s", "init": {"model": "m"}}, "m", state)

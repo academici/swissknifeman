@@ -54,6 +54,10 @@ def event(doc: object, expected_model: str, state: dict) -> dict | None:
             errors.add(index)  # duplicate progress updates are not distinct failures
         elif step.get("step_type") not in ("user_input", "error_message"):
             state.pop("consecutive_errors", None)  # actual new activity breaks the streak
+            if step.get("step_type") == "agent_response" and step.get("state") == "DONE":
+                state["completed_response"] = True
+            elif step.get("step_type") != "agent_response":
+                state.pop("completed_response", None)
         return None
     if kind != "result":
         state["invalid"] = True
@@ -122,7 +126,7 @@ def main() -> int:
             state["invalid"] = True
             continue
         mapped = event(doc, args.model, state)
-        if len(state.get("consecutive_errors", ())) >= 3:
+        if len(state.get("consecutive_errors", ())) >= 3 and not state.get("completed_response"):
             print("AGY_REPEATED_ERROR_STEPS: three distinct AGY error steps without intervening activity", file=sys.stderr)
             proc.terminate()
             try:

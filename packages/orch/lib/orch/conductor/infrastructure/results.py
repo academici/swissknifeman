@@ -112,7 +112,8 @@ def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: li
         try:
             run = self._launch(item, handle, "report-fixer", route, prompt, attempt=number, raw=raw,
                                timeout_s=route["timeout_s"])
-            self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+            self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw),
+                         accounting=run.usage_accounting)
             observe_isolation(self, item, key, "report-fixer", route, run.init, handle)
             handle.update(last_exit=run.exit, stream=self._relative(raw), lingered=run.lingered)
         except BaseException as error:

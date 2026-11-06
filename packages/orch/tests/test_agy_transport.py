@@ -19,6 +19,19 @@ spec.loader.exec_module(module)
 
 
 class TranslationTests(unittest.TestCase):
+    def test_native_usage_does_not_guess_codex_cache_inclusion(self):
+        from orch.conductor import process
+        state = {}
+        module.event({"event": "init", "conversation_id": "s", "init": {"model": "m"}}, "m", state)
+        mapped = module.event({"event": "result", "result": {"conversation_id": "s", "status": "SUCCESS", "response": "ok",
+            "usage": {"input_tokens": 208383, "cache_read_tokens": 923458, "output_tokens": 7375,
+                      "thinking_tokens": 4192, "total_tokens": 215758}}}, "m", state)
+        parsed = process.parse_stream("jsonl", json.dumps(mapped))
+        self.assertFalse(parsed["usage_complete"])
+        self.assertEqual(parsed["usage"], {"input": 0, "cached": 923458, "output": 7375})
+        self.assertEqual(parsed["usage_accounting"]["reported"]["input_tokens"], 208383)
+        self.assertIn("unavailable", parsed["usage_accounting"])
+
     def setUp(self):
         self.scratch = tempfile.TemporaryDirectory(prefix="agy-translation-")
         self.addCleanup(self.scratch.cleanup)
@@ -92,7 +105,9 @@ class TranslationTests(unittest.TestCase):
         assert module.event(init, "claude-sonnet-5-5", state)["model"] == "claude-sonnet-5-5"
         result = module.event(end, "claude-sonnet-5-5", state)
         assert result["session_id"] == "s" and result["is_error"] is False
-        assert result["usage"]["cached_input_tokens"] == 80
+        assert result["usage"]["cache_read_input_tokens"] == 80
+        assert result["usage"]["input_tokens"] is None
+        assert result["usage_accounting"]["reported"]["input_tokens"] == 100
 
     def test_mismatched_model_or_session_cannot_emit_success(self):
         state = {}
@@ -316,7 +331,7 @@ class AntigravityBoundaryTests(unittest.TestCase):
                      "init": {"model": "claude-sonnet-5-5", "tools": ["shell-canary"]}}
         self.result = {"event": "result", "result": {"conversation_id": "observed-session",
                        "status": "SUCCESS", "response": "verified answer",
-                       "usage": {"input_tokens": 10, "output_tokens": 2}}}
+                       "usage": {"input_tokens": 10, "cache_read_tokens": 0, "output_tokens": 2}}}
 
     def run_bridge(self, rows, *, tail="", timeout=3, cancel_on_init=False):
         from orch.conductor import process

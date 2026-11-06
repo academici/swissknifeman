@@ -61,6 +61,7 @@ class RoleRun:
     reset_at: Optional[int] = None  # unix time the provider itself gave for the end of a limit (claude ``resetsAt``), as seen
     usage_complete: Optional[bool] = None  # text or not started: None; jsonl: terminal usage with fresh tokens
     init: Optional[dict] = None  # the names of the first init event (``INIT_FIELDS``), None when the stream has none
+    usage_accounting: dict = field(default_factory=dict)  # native counter identity or unavailable semantics
 
 
 def available(argv: list) -> bool:
@@ -146,6 +147,11 @@ def parse_stream(transport: str, data: str, *, guard: str = "") -> dict:
             found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
             complete = complete and bool(usage["input"] or usage["output"])
             found["usage_complete"] = complete
+            accounting = doc.get("usage_accounting")
+            if isinstance(accounting, dict):
+                found["usage_accounting"] = accounting
+                if accounting.get("unavailable"):
+                    found["usage_complete"] = complete = False
             found["is_error"] = bool(doc.get("is_error"))
             if found["is_error"]:
                 found["text"] = text or found["text"]
@@ -188,8 +194,22 @@ def parse_stream(transport: str, data: str, *, guard: str = "") -> dict:
             found["is_error"] = False
             last = {"terminal": True}
             usage = _usage(doc.get("usage"))
-            found["usage"] = {key: found["usage"].get(key, 0) + usage[key] for key in usage}
+            # Native Codex reports the session counter, including prior resumed turns.
+            # Keep the last snapshot; the durable ledger turns it into one attempt's delta.
+            found["usage"] = usage
+            found["usage_accounting"] = {"basis": "codex-session-cumulative"}
+            if found["session"]:
+                found["usage_accounting"]["counter_id"] = "codex:" + str(found["session"])
+            else:
+                found["usage_accounting"]["unavailable"] = "Codex cumulative usage has no session identity"
+            native = doc.get("usage")
+            if (not isinstance(native, dict) or any(not _is_int(native.get(key)) or native[key] < 0
+                    for key in ("input_tokens", "cached_input_tokens", "output_tokens"))
+                    or native["cached_input_tokens"] > native["input_tokens"]):
+                found["usage_accounting"]["unavailable"] = "Codex input/cache counters are missing or inconsistent"
             found["usage_complete"] = bool(usage["input"] or usage["output"])
+            if found["usage_accounting"].get("unavailable"):
+                found["usage_complete"] = False
     found["denials"] = [{"tool_name": name, **({"hint": hint} if hint else {})} for name, hint in denied.values()]
     found["env_denials"] = denials.classify(transport, events)
     if not found["text"] and messages:
@@ -574,7 +594,8 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
             return RoleRun(exit=process.returncode, session=parsed["session"], model=parsed["model"], init=parsed.get("init"),
                            error="CANCELLED" if stopped == "cancelled" else "TIMEOUT", detail=stopped,
                            duration_s=time.monotonic() - started, raw=str(raw_path),
-                           usage=usage, usage_complete=parsed["usage_complete"], env_denials=parsed["env_denials"])
+                           usage=usage, usage_complete=parsed["usage_complete"], env_denials=parsed["env_denials"],
+                           usage_accounting=parsed.get("usage_accounting", {}))
     duration = time.monotonic() - started
     data = raw_path.read_text(encoding="utf-8", errors="replace")
     parsed = parse_stream(transport, data, guard=guard)
@@ -582,6 +603,7 @@ def run_role(argv: list, prompt: str, *, transport: str, cwd: Path, timeout_s: i
     run = RoleRun(exit=process.returncode, text=parsed["text"], session=parsed["session"], model=parsed["model"],
                   usage=usage, duration_s=duration, raw=str(raw_path), lingered=lingered,
                   usage_complete=parsed["usage_complete"],
+                  usage_accounting=parsed.get("usage_accounting", {}),
                   api_retries=parsed["signals"].get("api_retries", 0), denials=parsed["denials"], env_denials=parsed["env_denials"],
                   reset_at=parsed["signals"].get("limit_resets_at"), init=parsed.get("init"))
     if lingered:

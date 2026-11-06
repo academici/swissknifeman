@@ -77,12 +77,13 @@ class UsageNormalizationTests(unittest.TestCase):
                                          "cache_creation_input_tokens": 2, "cache_read_input_tokens": 8,
                                          "output_tokens": 3}), {"input": 5, "cached": 0, "output": 3})
 
-    def test_codex_turns_are_normalized_before_they_are_summed(self):
-        stream = '\n'.join(json.dumps({"type": "turn.completed", "usage": usage}) for usage in (
+    def test_codex_cumulative_turns_keep_the_latest_snapshot(self):
+        stream = '{"type":"thread.started","thread_id":"same-session"}\n' + '\n'.join(json.dumps({"type": "turn.completed", "usage": usage}) for usage in (
             {"input_tokens": 10000, "cached_input_tokens": 9000, "output_tokens": 100},
             {"input_tokens": 15000, "cached_input_tokens": 12000, "output_tokens": 200}))
         parsed = process.parse_stream("jsonl", stream)
-        self.assertEqual(parsed["usage"], {"input": 4000, "cached": 21000, "output": 300})
+        self.assertEqual(parsed["usage"], {"input": 3000, "cached": 12000, "output": 200})
+        self.assertEqual(parsed["usage_accounting"]["counter_id"], "codex:same-session")
         self.assertIs(parsed["usage_complete"], True)
 
     def test_missing_malformed_or_zero_terminal_usage_is_incomplete(self):
@@ -95,6 +96,15 @@ class UsageNormalizationTests(unittest.TestCase):
                     self.assertIs(parsed["usage_complete"], False)
         self.assertIs(process.parse_stream("jsonl", '{"type":"thread.started"}')["usage_complete"], False)
         self.assertIsNone(process.parse_stream("text", "scout map")["usage_complete"])
+
+    def test_invalid_native_counter_semantics_are_unavailable(self):
+        for usage in ({"input_tokens": 5, "cached_input_tokens": 8, "output_tokens": 2},
+                      {"input_tokens": 5, "output_tokens": 2},
+                      {"input_tokens": 5, "cached_input_tokens": 0, "output_tokens": -1}):
+            stream = '{"type":"thread.started","thread_id":"s"}\n' + json.dumps({"type": "turn.completed", "usage": usage})
+            parsed = process.parse_stream("jsonl", stream)
+            self.assertFalse(parsed["usage_complete"])
+            self.assertIn("unavailable", parsed["usage_accounting"])
 
 
 class UsageAccountingTests(unittest.TestCase):
@@ -115,8 +125,8 @@ class UsageAccountingTests(unittest.TestCase):
             self.item.directory, agent, role="executor", route={}, step="executor.1", attempt=1,
             prompt="prompt.md", parent=None, started_at="2026-10-20T00:00:00Z")
 
-    def add(self, usage, complete=True, attempt=None):
-        roles.add_tokens(self.engine, self.item, usage, usage_complete=complete, attempt=attempt)
+    def add(self, usage, complete=True, attempt=None, accounting=None):
+        roles.add_tokens(self.engine, self.item, usage, usage_complete=complete, attempt=attempt, accounting=accounting)
 
     def test_same_agent_receipt_does_not_add_tokens_twice_after_state_reload(self):
         usage = {"input": 1000, "cached": 9000, "output": 100}
@@ -187,6 +197,81 @@ class UsageAccountingTests(unittest.TestCase):
         self.assertIsNone(self.engine._local.agent["usage_complete"])
         self.assertNotIn("usage_incomplete", self.item.state)
         self.engine.progress.emit.assert_not_called()
+
+    def test_incident_nine_resumed_counters_count_one_session_once(self):
+        counters = [(43750, 294528, 3388), (89771, 843008, 8735), (143744, 8772480, 57379),
+                    (151494, 10457088, 68612), (155335, 11124736, 71767), (158039, 11350784, 72641),
+                    (162267, 11580288, 73511), (192339, 12566528, 79031), (198030, 14497280, 87417)]
+        for index, (fresh, cached, output) in enumerate(counters):
+            if index:
+                self.state = json.loads(json.dumps(self.state))
+                self.engine.state = self.state
+                self.item.state = self.state["items"]["W1"]
+            self.start_agent(f"agent-{index + 1}")
+            self.add({"input": fresh, "cached": cached, "output": output}, attempt="stream.jsonl",
+                     accounting={"basis": "codex-session-cumulative", "counter_id": "codex:session", "resumed": bool(index)})
+        self.assertEqual(self.state["tokens"], {"input": 198030, "cached": 14497280, "output": 87417})
+        self.assertEqual(self.engine._local.agent["usage"], {"input": 5691, "cached": 1930752, "output": 8386})
+        before = copy.deepcopy(self.state)
+        self.add({"input": 198030, "cached": 14497280, "output": 87417}, attempt="stream.jsonl",
+                 accounting={"basis": "codex-session-cumulative", "counter_id": "codex:session", "resumed": True})
+        self.assertEqual(self.state, before)
+
+    def test_new_session_starts_a_new_counter_and_never_subtracts_another(self):
+        for identity in ("first", "second"):
+            self.start_agent("agent-" + identity)
+            self.add({"input": 10, "cached": 90, "output": 1}, accounting={
+                "basis": "codex-session-cumulative", "counter_id": "codex:" + identity, "resumed": False})
+        self.assertEqual(self.state["tokens"], {"input": 20, "cached": 180, "output": 2})
+
+    def test_counter_decrease_is_unavailable_and_never_refunds_budget(self):
+        metadata = {"basis": "codex-session-cumulative", "counter_id": "codex:session", "resumed": False}
+        self.add({"input": 10, "cached": 90, "output": 5}, attempt="stream", accounting=metadata)
+        before = dict(self.state["tokens"])
+        self.add({"input": 5, "cached": 80, "output": 1}, attempt="stream", accounting=metadata)
+        self.assertEqual(self.state["tokens"], before)
+        self.assertTrue(self.item.state["usage_incomplete"])
+        receipt = self.item.state["usage_by_agent"]["agent-1"]["stream"]
+        self.assertIn("decreased", receipt["accounting"]["unavailable"])
+
+    def test_legacy_resume_without_watermark_is_unavailable_without_rewriting_old_totals(self):
+        self.state["tokens"] = {"input": 300, "cached": 900, "output": 20}
+        before = dict(self.state["tokens"])
+        self.add({"input": 400, "cached": 1200, "output": 30}, accounting={
+            "basis": "codex-session-cumulative", "counter_id": "codex:legacy", "resumed": True})
+        self.assertEqual(self.state["tokens"], before)
+        self.assertTrue(self.item.state["usage_incomplete"])
+
+    def test_shared_session_watermark_spans_items(self):
+        self.add({"input": 10, "cached": 90, "output": 1}, accounting={
+            "basis": "codex-session-cumulative", "counter_id": "codex:shared", "resumed": False})
+        self.item = Item("W2", "run-2", {}, self.item.directory, {})
+        self.state["items"]["W2"] = self.item.state
+        self.start_agent("agent-2")
+        self.add({"input": 25, "cached": 190, "output": 4}, accounting={
+            "basis": "codex-session-cumulative", "counter_id": "codex:shared", "resumed": True})
+        self.assertEqual(self.item.state["tokens"], {"input": 15, "cached": 100, "output": 3})
+        self.assertEqual(self.state["tokens"], {"input": 25, "cached": 190, "output": 4})
+
+    def test_unavailable_replacement_never_refunds_known_input(self):
+        self.add({"input": 10, "cached": 90, "output": 1}, attempt="same")
+        self.add({"input": 0, "cached": 90, "output": 1}, attempt="same", accounting={
+            "basis": "agy-native", "unavailable": "native semantics unavailable"})
+        self.assertEqual(self.state["tokens"], {"input": 10, "cached": 90, "output": 1})
+        self.assertTrue(self.item.state["usage_incomplete"])
+
+    def test_concurrent_counter_replays_do_not_charge_twice(self):
+        from concurrent.futures import ThreadPoolExecutor
+        lock, ready = threading.RLock(), threading.Barrier(2)
+        self.engine.store.mutating = lambda: lock
+        def record(number):
+            self.start_agent(f"agent-{number}")
+            ready.wait(timeout=10)
+            self.add({"input": 10, "cached": 90, "output": 1}, attempt="stream", accounting={
+                "basis": "codex-session-cumulative", "counter_id": "codex:shared", "resumed": False})
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(record, [1, 2]))
+        self.assertEqual(self.state["tokens"], {"input": 10, "cached": 90, "output": 1})
 
     def test_batch_agent_records_completeness_outside_a_step(self):
         handle = self.engine._local.agent

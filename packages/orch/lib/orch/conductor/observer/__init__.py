@@ -80,6 +80,28 @@ def build(directory: Path, project: Path) -> dict:
     group_reviews = state.get("group_reviews") or {}
     incomplete_groups = metrics.group_review_totals(group_reviews, severities)
     by_agent = reader.agent_runs(directory)
+    receipts = [(ref, attempt, receipt) for ref, item in (state.get("items") or {}).items()
+                for attempts in (item.get("usage_by_agent") or {}).values() for attempt, receipt in attempts.items()]
+    unavailable = [f"{ref}: {row['accounting']['unavailable']} (evidence: {attempt})"
+                   for ref, attempt, row in receipts if (row.get("accounting") or {}).get("unavailable")]
+    resumed_codex = {line.get("role") for line in lines if line.get("reason_code") == "SESSION_RESUMED"
+                     and str(line.get("route", "")).startswith("codex/")}
+    actor_roles = {row["agent_run_id"]: row["role"] for row in by_agent}
+    legacy_roles = {actor_roles.get(agent) for item in (state.get("items") or {}).values()
+                    for agent, attempts in (item.get("usage_by_agent") or {}).items()
+                    if actor_roles.get(agent) in resumed_codex and any(not row.get("accounting")
+                        and any(row.get(key, 0) for key in ("input", "cached", "output")) for row in attempts.values())}
+    if any(row.get("accounting") for _, _, row in receipts):
+        # Stage-end counters include earlier resumed rounds and nested repair roles.
+        # Each physical actor's ledger contribution belongs in the summary only once.
+        tokens = {}
+        for row in {row["agent_run_id"]: row for row in by_agent}.values():
+            target = tokens.setdefault(row["role"], {"input": 0, "cached": 0, "output": 0})
+            for name in target:
+                target[name] += row["tokens"].get(name, 0)
+    for role in legacy_roles:
+        tokens.pop(role, None)
+        unavailable.append(f"{role}: legacy resumed Codex receipts have no counter basis; aggregate usage unavailable")
     correlations = {run_id} | {item.get("orch_run") for item in (state.get("items") or {}).values()
                                if item.get("orch_run")}
     until = (state.get("ended") if state.get("status") != "running" else None) or (lines[-1]["ts"] if lines else None)
@@ -116,6 +138,7 @@ def build(directory: Path, project: Path) -> dict:
         "triage": {"confirmed": found["confirmed"], "rejected": found["rejected"]},
         "idle": {"total_s": round(idle["total"], 1), "max_s": round(idle["max"], 1), "max_between": idle["where"]},
         "tokens_by_role": {role: value for role, value in sorted(tokens.items())},
+        **({"usage_unavailable": unavailable} if unavailable else {}),
         "tokens_by_agent": by_agent,
         "refusals_by_source": metrics.refusals_by_source(by_agent),
         "prompt_blocks_by_role": prompt_blocks(directory),

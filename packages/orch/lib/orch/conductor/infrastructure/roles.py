@@ -104,6 +104,8 @@ def launch(self, item: Item, handle: dict, role: str, route: dict, prompt: str, 
                              guard=envelope["guard"],
                             **run_kwargs)
     results.observe_denials(handle, run.env_denials)
+    if run.usage_accounting.get("counter_id"):
+        run.usage_accounting["resumed"] = bool(resume)
     return run
 
 
@@ -281,7 +283,8 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         run = self._launch(item, handle, role, route, prompt, attempt=attempt, raw=raw, timeout_s=route["timeout_s"],
                            decision=decision, clean_env=True, idle_timeout_s=route.get("idle_timeout_s", 0),
                            cancel=cancel, on_tick=self._beacons(item, key, role, raw), provider=route["provider"])
-        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw))
+        self._tokens(item, run.usage, usage_complete=run.usage_complete, attempt=self._relative(raw),
+                     accounting=run.usage_accounting)
         results.observe_isolation(self, item, key, role, route, run.init, handle)
         self._keep_session(item, role, route, run, task_digest=digest, delta=delta, decision=decision)
         if resuming and (run.error or not run.session):  # the next attempt starts a fresh session with the whole prompt

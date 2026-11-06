@@ -567,8 +567,8 @@ def main(argv: list | None = None) -> int:
                                  model_catalog=getattr(args, "model_catalog", None),
                                  project_resolution=context.resolution)
     try:
-        if args.verb == "restore-reviewer":
-            return restore_reviewer.run(args, project)
+        if args.verb in ("restore-reviewer", "recover-review"):
+            return restore_reviewer.run(args, conductor)
         if args.verb == "preflight":
             result = preflight.inspect_items(conductor, args)
             print(json.dumps(result, ensure_ascii=False, indent=2))

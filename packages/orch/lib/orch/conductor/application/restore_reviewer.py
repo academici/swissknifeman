@@ -14,10 +14,19 @@ def add_parser(verbs):
     parser.add_argument("--run", required=True)
     parser.add_argument("--item", required=True)
     parser.add_argument("--expected-digest", required=True)
+    recovery = verbs.add_parser("recover-review", help="re-review an unchanged committed candidate in its original run")
+    recovery.add_argument("--run", required=True)
+    recovery.add_argument("--item", required=True)
+    recovery.add_argument("--commit", required=True)
 
 
-def run(args, project):
-    print(json.dumps(restore(project, args.run, args.item, args.expected_digest), ensure_ascii=False))
+def run(args, conductor):
+    if args.verb == "recover-review":
+        from orch.conductor.application import recover_review
+        result = recover_review.recover(conductor, args.run, args.item, args.commit)
+    else:
+        result = restore(conductor.project, args.run, args.item, args.expected_digest)
+    print(json.dumps(result, ensure_ascii=False))
     return 0
 
 

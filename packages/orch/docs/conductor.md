@@ -1910,6 +1910,12 @@ After an interrupted automatic upgrade with no completed review, `orch conduct r
 --expected-digest DIGEST` restores the pinned route only if the stored successful check evidence still matches HEAD and
 the candidate. It keeps a receipt with the old override and review/check history under the run, and does not reset
 attempts or review counters. It refuses missing upgrade evidence, a completed review, or a changed candidate.
+For a closed run whose first review was repaired from prose instead of a comparable block,
+`orch conduct recover-review --run RUN --item REF --commit SHA` can use the remaining second review round on the
+same committed candidate and pinned reviewer. It archives the original receipt, keeps the original attempt and prior
+steps, and refuses a changed candidate, a spent round or an unfinished second review. A green result produces a fresh
+receipt; the caller must still verify delivered review coverage and register it with the work source. A non-green
+result remains open for reconciliation and is not registered as a pass.
 A suggestion at or below the route changes nothing: the class is never lowered; a refused upgrade is an `info` line
 once and the review goes on with its route.
 

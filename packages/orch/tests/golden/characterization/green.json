@@ -302,7 +302,7 @@
     {
      "kind": "role_text",
      "origin": "roles/executor.md",
-     "tokens": 3016
+     "tokens": 3038
     },
     {
      "kind": "input",
@@ -343,7 +343,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 4140
+     "tokens": 4162
     },
     "retrieval": {
      "limit": 50000,
@@ -437,7 +437,7 @@
     {
      "kind": "role_text",
      "origin": "roles/context-scout.md",
-     "tokens": 683
+     "tokens": 689
     },
     {
      "kind": "input",
@@ -453,7 +453,7 @@
    "budgets": {
     "core": {
      "limit": 12000,
-     "tokens": 718
+     "tokens": 724
     },
     "retrieval": {
      "limit": 50000,

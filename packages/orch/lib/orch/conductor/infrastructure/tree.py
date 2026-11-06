@@ -13,7 +13,8 @@ from orch.conductor.infrastructure.files import REPORTS
 
 def runtime_snapshot(owner, item: Item) -> dict:
     patterns = owner._scope_option(item, "runtime_paths", opts.DEFAULT_SCOPE["runtime_paths"])
-    return {path: digest for path, digest in checks_mod.dirty_files(owner.project).items()
+    dirty = checks_mod.dirty_files(owner.project)
+    return {path: dirty[path] for path in scopes.own(dirty, owner._not_the_role(item))
             if scopes.under(path, patterns)}
 
 

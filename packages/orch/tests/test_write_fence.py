@@ -174,6 +174,17 @@ class OutsideModuleTests(ConductorCase):
 
 
 class RuntimeArtifactTests(ConductorCase):
+    def test_snapshot_excludes_own_reports_but_keeps_foreign_evidence(self):
+        old = ".swissknifeman/orch-artifacts/other/P1.5/evidence/V1.json"
+        report = ".swissknifeman/orch/reports/current/observer.json"
+        for name in (old, report):
+            path = self.project / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("evidence", encoding="utf-8")
+        owner = SimpleNamespace(project=self.project, _scope_option=lambda _i, _k, default: default,
+                                _not_the_role=lambda _i: [".swissknifeman/orch/reports"])
+        self.assertEqual(list(tree.runtime_snapshot(owner, SimpleNamespace())), [old])
+
     def test_preexisting_runtime_evidence_is_not_moved_by_a_resumed_run(self):
         old = ".swissknifeman/orch-artifacts/other/P1.5/evidence/V1.json"
         new = ".swissknifeman/orch-artifacts/accidental/V1.log"

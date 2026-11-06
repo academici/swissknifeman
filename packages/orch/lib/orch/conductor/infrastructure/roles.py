@@ -30,6 +30,16 @@ from orch.conductor.progress import human_duration
 DENIAL_NOTE_ROLES = ("executor", "bounded-implementer", "reviewer")
 
 
+def unused_attempt(directory: Path, key: str, attempt: int) -> int:
+    """Keep streams from interrupted attempts even before their failure is recorded."""
+    while True:
+        suffix = "" if attempt == 1 else f"-a{attempt}"
+        if not any((directory / f"{key}{suffix}{ext}").exists()
+                   for ext in (".jsonl", ".txt", ".stderr", ".jsonl.gz", ".txt.gz")):
+            return attempt
+        attempt += 1
+
+
 class RolePorts(NamedTuple):
     """What a role needs from above the infrastructure, implemented there and passed down (the conductor builds it):
     the functions of infrastructure call these, never a binding of a higher layer through ``self``."""
@@ -277,6 +287,9 @@ def role_body(self, item: Item, key: str, role: str, prompt: str, kind: Optional
         first_prompt, prompt = self.role_ports.prompt_for_route(item, key, role, route, blocks, first_prompt, prompt,
                                                                 resumed=resumed if delta else None, digest=digest)
         attempt += 1
+        # An interrupted attempt may have a stream but no recorded failure yet.
+        # Preserve it even when the retry budget counter has not advanced.
+        attempt = unused_attempt(item.directory / "streams", key, attempt)
         suffix = "" if attempt == 1 else f"-a{attempt}"
         raw = item.directory / "streams" / f"{key}{suffix}.{'txt' if route['transport'] == 'text' else 'jsonl'}"
         # the launch refuses a role that instructions.isolation = require does not admit (ISOLATION_UNAVAILABLE)

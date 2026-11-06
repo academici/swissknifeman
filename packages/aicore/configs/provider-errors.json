@@ -1,6 +1,7 @@
 {
   "schema_version": "provider-errors/v1",
   "rules": [
+    {"provider": "antigravity", "class": "authentication", "code": "PROVIDER_AUTH", "scope": "account", "match": {"signal_any": {"http_status": [401], "is_error": [true]}}},
     {"provider": "claude-code", "class": "quota", "code": "PROVIDER_QUOTA", "scope": "account", "match": {"signal_not_in": {"limit_status": ["allowed", "allowed_warning"]}, "signal_any": {"is_error": [true]}}, "safe_message": "provider quota exhausted", "retry_after_from": "limit_resets_at"},
     {"provider": "claude-code", "class": "authentication", "code": "PROVIDER_AUTH", "scope": "account", "match": {"signal_any": {"http_status": [401], "is_error": [true]}}},
     {"provider": "claude-code", "class": "authorization", "code": "PROVIDER_AUTHZ", "scope": "account", "match": {"signal_any": {"http_status": [403], "is_error": [true]}}},

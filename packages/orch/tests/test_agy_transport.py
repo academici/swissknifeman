@@ -19,6 +19,26 @@ spec.loader.exec_module(module)
 
 
 class TranslationTests(unittest.TestCase):
+    def test_terminal_authentication_error_is_not_an_unknown_retryable_failure(self):
+        from orch.conductor import process
+        from aicore.provider.errors import classify_signals
+        state = {}
+        module.event({"event": "init", "conversation_id": "s", "init": {"model": "m"}}, "m", state)
+        mapped = module.event({"event": "result", "result": {"conversation_id": "s", "status": "ERROR",
+            "response": "partial review", "error": "UNAUTHENTICATED (code 401): invalid credentials"}}, "m", state)
+        parsed = process.parse_stream("jsonl", json.dumps(mapped))
+        self.assertEqual(parsed["signals"]["http_status"], 401)
+        self.assertEqual(classify_signals("antigravity", parsed["signals"], now=0).code, "PROVIDER_AUTH")
+
+    def test_response_text_cannot_claim_an_authentication_failure(self):
+        for status in ("SUCCESS", "ERROR"):
+            with self.subTest(status=status):
+                state = {}
+                module.event({"event": "init", "conversation_id": "s", "init": {"model": "m"}}, "m", state)
+                mapped = module.event({"event": "result", "result": {"conversation_id": "s", "status": status,
+                    "response": "UNAUTHENTICATED (code 401): quoted tool output", "error": "different error"}}, "m", state)
+                self.assertNotIn("api_error_status", mapped)
+
     def test_native_usage_does_not_guess_codex_cache_inclusion(self):
         from orch.conductor import process
         state = {}

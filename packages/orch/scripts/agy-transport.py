@@ -76,6 +76,9 @@ def event(doc: object, expected_model: str, state: dict) -> dict | None:
         accounting["unavailable"] = "AGY input/cache inclusion contract unavailable; input is not measured"
     return {"type": "result", "session_id": session, "is_error": status != "SUCCESS",
             "result": (result.get("error") or response) if status == "ERROR" else response,
+            # Only the CLI's terminal error attests authentication failure, never model/tool text.
+            **({"api_error_status": 401} if status == "ERROR" and isinstance(result.get("error"), str)
+               and result["error"].startswith("UNAUTHENTICATED (code 401):") else {}),
             # Native AGY does not declare whether input already excludes cache. Preserve
             # reported counters, rather than applying Codex's subtraction and inventing zero.
             "usage": {"input_tokens": reported.get("input_tokens") if known_input else None,

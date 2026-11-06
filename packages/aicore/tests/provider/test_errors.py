@@ -150,6 +150,17 @@ CODEX_RULES = (
 
 
 class TestSignalRules(unittest.TestCase):
+    def test_antigravity_authentication_requires_failed_structured_401(self):
+        result = errors.classify_signals("antigravity", {"http_status": 401, "is_error": True}, now=NOW)
+        self.assertEqual((result.code, result.scope.value), ("PROVIDER_AUTH", "account"))
+        self.assertFalse(result.retryable)
+        self.assertEqual(result.evidence, "structured")
+        for signals in ({"http_status": 401}, {"http_status": 401, "is_error": False},
+                        {"http_status": 403, "is_error": True},
+                        {"fatal_text": "UNAUTHENTICATED (code 401): quoted text", "is_error": True}):
+            with self.subTest(signals=signals):
+                self.assertIsNone(errors.classify_signals("antigravity", signals, now=NOW))
+
     def test_every_claude_structured_rule_on_its_signal(self):
         for name, signals, error_class, code, scope in CLAUDE_RULES:
             with self.subTest(source=name):

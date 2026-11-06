@@ -348,6 +348,9 @@ def main(argv: list | None = None) -> int:
     resume.add_argument("--retry", nargs="+", default=[], metavar="ITEM",
                         help="also continue these blocked pieces: their steps from the blocked executor round on are "
                              "repeated (the source must have reopened them); finished steps are kept")
+    resume.add_argument("--note-file", type=Path, metavar="FILE",
+                        help="UTF-8 operator context for exactly one blocked --retry; snapshot and provenance are kept, "
+                             "input, authority and budgets are unchanged")
     resume.add_argument("--fresh-context", action="store_true",
                         help="opt-in fresh brief/session for one interrupted executor; preserves every physical launch and budget")
     resume.add_argument("--options", type=Path, metavar="FILE",
@@ -582,7 +585,7 @@ def main(argv: list | None = None) -> int:
             return conductor.continue_run(args.run, items=args.item, partial=args.partial, raise_limits=args.raise_limit)
         return conductor.resume(args.run, retry=args.retry, raise_limits=args.raise_limit,
                                 fresh_context=args.fresh_context, options_file=args.options,
-                                model_launch_ceiling=args.model_launch_ceiling)
+                                model_launch_ceiling=args.model_launch_ceiling, note_file=args.note_file)
     except engine.Stop as stop:
         detach.refuse(stop.code, stop.message)
         print(f"{stop.code}: {stop.message}", file=sys.stderr)

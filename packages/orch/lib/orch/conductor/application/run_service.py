@@ -15,7 +15,7 @@ from orch.conductor import debug_mode, options as opts, progress, questions as q
 from orch.conductor.domain.report import continued
 from orch.conductor.domain.item import Item, done_steps
 from orch.conductor.domain.stop import Stop
-from orch.conductor.infrastructure import attempt_files, clock, detach, sessions
+from orch.conductor.infrastructure import attempt_files, clock, detach, sessions, operator_context as operator_mod
 from orch.conductor.infrastructure.lease import launcher
 from orch.conductor.infrastructure.files import RunStore, safe, write_json
 from orch.conductor.application.budget_service import effective_limit
@@ -112,13 +112,15 @@ def announce_concurrent(self) -> None:
 
 @detach.refuse_errors
 def resume(self, run_id: str, retry=(), raise_limits=(), *, fresh_context: bool = False,
-           options_file: Optional[Path] = None, model_launch_ceiling: Optional[int] = None) -> int:
+           options_file: Optional[Path] = None, model_launch_ceiling: Optional[int] = None,
+           note_file: Optional[Path] = None) -> int:
     store = RunStore(self.project, run_id)
     with detach.startup_fence(self.project, run_id), store.ownership("resume", checkout=True):
         run_doc, state = store.load()
         if run_doc.get("config_file") and not self.config_file:
             self.config_file = Path(run_doc["config_file"])
         self._open(run_id, run_doc, state, store)
+        note = operator_mod.requested(note_file, retry, fresh_context=fresh_context, raises=raise_limits)
         from orch.conductor.application import fresh_context as fresh
         if fresh_context and (not retry or options_file is None or not model_launch_ceiling or raise_limits):
             raise Stop("OPTIONS_INVALID", "fresh-context requires --retry, --options and a positive --model-launch-ceiling; no limit raises")
@@ -139,7 +141,7 @@ def resume(self, run_id: str, retry=(), raise_limits=(), *, fresh_context: bool 
             fresh.prepare_requested(self, retry, options_file, model_launch_ceiling)
         else:
             for ref in retry:
-                self._retry(ref)
+                self._retry(ref, operator_note=note)
         self._reconcile_interrupted()
         if changes:
             state.setdefault("limit_raises", []).extend(changes)
@@ -287,12 +289,14 @@ def stubs_changed(self, run_doc: dict) -> None:
                                    f"({run_doc['instructions_digest'] or 'none'}), a new run reads them")
 
 
-def retry(self, ref: str) -> None:
+def retry(self, ref: str, *, operator_note: Optional[dict] = None) -> None:
     """Take a blocked piece back into the run: the input is built again from the (amended) plan, and the steps from the executor round that reported ``blocked`` on
     (and the closing steps after it) are repeated; the earlier rounds are kept and the work in the tree is not thrown away."""
     item = self.state["items"].get(ref)
     again = bool(item) and reblocked(item)
     if item and item.get("retried") and item.get("outcome") in (None, "stopped") and not again:
+        if operator_note is not None:
+            raise Stop("RETRY_NOT_BLOCKED", "--note-file requires a blocked item")
         # the first resume already took the piece back and stopped again: the same command again is not an error
         self.progress.emit("info", item=ref, message="retry: already taken back by an earlier resume; the run goes on from there")
         return
@@ -337,6 +341,8 @@ def retry(self, ref: str) -> None:
     dropped = [key for key in steps if steps[key].get("status") != "done" or key == blocked
                or key in ("brief", "prepare", "scout", "close", "register", "commit")
                or follows_executor(key)]
+    if operator_note is not None:
+        operator_mod.record(self, ref, item, blocked, operator_note)
     archive_attempt(self, ref, item, dropped)  # the repeated steps write the same files again: the first attempt is kept aside
     for key in dropped:
         steps.pop(key)

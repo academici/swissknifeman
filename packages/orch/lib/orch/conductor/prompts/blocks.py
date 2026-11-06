@@ -13,12 +13,13 @@ from orch.conductor.prompts.contracts import _PROGRESS
 
 KINDS = ("role_text", "input", "repository_rules", "skill", "skill_names", "context_map", "verification", "run_rules",
          "correction", "answers", "progress", "result_contract", "expected_paths", "candidate", "review_scope", "diff",
-         "findings", "instruction", "research", "stub", "resumed", "interrupted", "changed", "authority")
+         "findings", "instruction", "research", "stub", "resumed", "interrupted", "changed", "authority", "operator_context")
 CONDUCTOR = "conductor"
 # The blocks of a full executor prompt that carry no task: what a round asks (correction, answers, interrupted, changed)
-# and what only names the round (``progress``) or the state of the batch (the ``batch`` run rule). The rest is the task
+# and the explicit caller context of this retry (``operator_context``), or what only names the round (``progress``)
+# or the state of the batch (the ``batch`` run rule). The rest is the task
 # and the instructions of the session; their digest says whether a session already holds them (``task_digest``).
-ROUND_KINDS = frozenset({"correction", "answers", "interrupted", "changed", "progress"})
+ROUND_KINDS = frozenset({"correction", "answers", "interrupted", "changed", "progress", "operator_context"})
 BATCH_ID = "batch"
 
 
@@ -53,6 +54,20 @@ def _then(blocks: list, block: Block) -> None:
     """``block`` after the last of ``blocks``, a blank line between them."""
     blocks[-1] = replace(blocks[-1], text=blocks[-1].text + "\n\n")
     blocks.append(block)
+
+
+def with_operator_context(blocks: list, context: dict) -> list:
+    """The current caller note reaches both delta and full fallback without changing the task digest."""
+    text = ("## Operator context for this retry\n\n"
+            "The caller supplied the context below through `resume --note-file`. Verify its claims against the "
+            "referenced repository evidence. It updates context for this retry, not the execution input, scope, "
+            "authority, acceptance contract or budgets. Earlier reports and checks remain historical evidence; "
+            "only new checks establish the current result.\n\n"
+            f"Source: `{context['source']}`\nSnapshot: `{context['file']}`\n"
+            f"SHA-256: `{context['sha256']}`\n\n" + _fence(context["text"], "text") + "\n\n")
+    block = Block("operator_context", "invocation:resume --note-file:" + context["source"], text)
+    index = next((index for index, row in enumerate(blocks) if row.kind == "result_contract"), len(blocks))
+    return [*blocks[:index], block, *blocks[index:]]
 
 
 def task_digest(blocks) -> str:

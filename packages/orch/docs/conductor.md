@@ -13,7 +13,7 @@ orch conduct [--config FILE] [--project DIR] run --plan P (--items REF… | --re
            [--quiet | --json-lines] [--model-catalog FILE]
 orch conduct [--config FILE] [--project DIR] run --input FILE [--commit] [--scenario S] [--options FILE] [--dry-run]
            [--quiet | --json-lines] [--model-catalog FILE]
-orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--raise-limit KEY=N ...]
+orch conduct [--config FILE] resume --run RUN [--retry ITEM ...] [--note-file FILE] [--raise-limit KEY=N ...]
            [--fresh-context --options FILE --model-launch-ceiling TOTAL] [--detach | --frozen] [--quiet | --json-lines]
 orch conduct settle --run RUN --item REF --outcome done|done_with_deviations|blocked --reason TEXT
 orch conduct answer --run RUN --item REF --question ID (--option ID | --text TEXT) [--by WHO]  (without `--by`: the shell user at a terminal, `cli:USER` without one — an agent's answer is never recorded as the owner's)
@@ -1209,6 +1209,22 @@ code and exit 1. If other work starts, the message is only a beacon. `orch condu
 `open` with a `resolution` on disk; resume with retry merges and consumes it (`answered` records are also recognized).
 
 `resume --run RUN --retry ITEM` also takes back a piece that stopped as `blocked` (after the source has reopened it, for example the planner's `reopen`; a piece held on advice for the owner, whose question `advice-<n>` is answered, needs no executor round that reported `blocked`): the input is built again from the amended plan, and the steps from the executor round that reported `blocked` on, and the closing steps, are repeated; the earlier rounds and the work in the tree are kept (`RETRY_NOT_BLOCKED` when the piece is not blocked). `resume --run RUN` runs the same loop again. Without a retry, a plan amended while a piece runs reaches its next executor round anyway: the brief is asked again before every correction round and replaces the input when its digest changed (`INPUT_REBUILT`).
+
+When an owner repaired an external blocker, pass the concrete facts to one blocked retry:
+
+```sh
+orch conduct resume --run RUN --retry ITEM --note-file /path/to/operator-context.md
+```
+
+The UTF-8 note is nonempty and at most 64 KiB. It is snapshotted under
+`<item>/operator-context/<n>.md`; `state.items.<ref>.operator_context[]` records its source, digest, time and target
+executor step. The original file may subsequently change without changing the snapshot. The caller note reaches
+both the resumed provider session and the full-prompt fallback if that session is unavailable. Its manifest origin
+is `invocation:resume --note-file:<source>`, separate from the input and acceptance corrections. Claims still need
+verification and fresh checks; the note grants no authority and changes no input, options or budget counters.
+Earlier attempts and their streams remain archived. An altered snapshot fails closed before an executor launch.
+Only one blocked `--retry` target is supported; `--fresh-context` and `--raise-limit` cannot be combined with the note.
+Ordinary resume without the flag keeps its existing behavior.
 
 For one stopped, unfinished executor in a one-piece run, an explicit fresh continuation is available:
 

@@ -221,8 +221,11 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
     key = f"review.{number}"
     focus, focus_origin = self._review_focus(item)
     previous = item.state.get("steps", {}).get(key, {})
-    recover = (os.environ.get("SKM_ORCH_ACCEPT_PROSE_REVIEW") == "1"
-               and previous.get("status") == "stopped" and previous.get("code") in ("ROLE_OUTPUT_INVALID", "REVIEW_RECOVERY_INVALID"))
+    stopped = previous.get("status") == "stopped"
+    recover_error = (os.environ.get("SKM_ORCH_ACCEPT_REVIEW_AFTER_PROVIDER_ERROR") == "1" and stopped
+                     and previous.get("code") in ("ROLE_FAILED", "REVIEW_RECOVERY_INVALID"))
+    recover = recover_error or (os.environ.get("SKM_ORCH_ACCEPT_PROSE_REVIEW") == "1" and stopped
+                                and previous.get("code") in ("ROLE_OUTPUT_INVALID", "REVIEW_RECOVERY_INVALID"))
 
     def run() -> dict:
         provenance = item.input_doc.get("provenance", {})
@@ -246,19 +249,41 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
             if tree != (item.state.get("review_marks") or {}).get(str(number)):
                 raise Stop("REVIEW_RECOVERY_CHANGED", "the worktree differs from the review snapshot")
             attempts = item.state.get("retries_by_stage", {}).get(key, 0)
-            raw = item.directory / "streams" / (f"{key}-a{attempts}.jsonl" if attempts > 1 else f"{key}.jsonl")
             expected = os.environ.get("SKM_ORCH_PROSE_REVIEW_SHA256", "")
             try:
+                source_attempt = int(os.environ.get("SKM_ORCH_REVIEW_RECOVERY_ATTEMPT", str(attempts)))
+                if source_attempt < 1 or source_attempt > attempts:
+                    raise ValueError("source attempt is outside recorded review attempts")
+                raw = item.directory / "streams" / (f"{key}-a{source_attempt}.jsonl" if source_attempt > 1 else f"{key}.jsonl")
                 data = raw.read_bytes()
                 if hashlib.sha256(data).hexdigest() != expected:
                     raise ValueError("raw stream hash does not match owner authorization")
                 events = [json.loads(line) for line in data.splitlines() if line.strip()]
-                terminal = [event for event in events if event.get("type") == "result"]
-                if len(terminal) != 1 or terminal[0].get("is_error") is not False or not terminal[0].get("session_id"):
-                    raise ValueError("missing successful terminal reviewer session")
-                findings = results.green_prose(terminal[0].get("result", ""))
-                if findings is None or contract.problems(findings, "review-findings") or findings_problems(findings):
-                    raise ValueError("review prose is ambiguous or has findings/questions")
+                for later in range(source_attempt + 1, attempts + 1):
+                    later_raw = item.directory / "streams" / f"{key}-a{later}.jsonl"
+                    later_events = [json.loads(line) for line in later_raw.read_bytes().splitlines() if line.strip()]
+                    for event in later_events:
+                        if event.get("type") == "result" and event.get("is_error") is False:
+                            raise ValueError("a later reviewer response exists")
+                        if event.get("type") == "agy.raw":
+                            native = json.loads(event.get("line", ""))
+                            if native.get("event") == "result" and native.get("result", {}).get("response", "").strip():
+                                raise ValueError("a later substantive reviewer response exists")
+                if recover_error:
+                    recovered = results.completed_error_review(events, findings_problems)
+                    if recovered is None:
+                        raise ValueError("provider error has no complete, valid reviewer response")
+                    findings, session = recovered["findings"], recovered["session"]
+                    provenance_note = "completed reviewer response followed by provider ERROR: " + recovered["provider_error"]
+                else:
+                    terminal = [event for event in events if event.get("type") == "result"]
+                    if len(terminal) != 1 or terminal[0].get("is_error") is not False or not terminal[0].get("session_id"):
+                        raise ValueError("missing successful terminal reviewer session")
+                    findings = results.green_prose(terminal[0].get("result", ""))
+                    if findings is None or contract.problems(findings, "review-findings") or findings_problems(findings):
+                        raise ValueError("review prose is ambiguous or has findings/questions")
+                    session = terminal[0]["session_id"]
+                    provenance_note = "owner-authorized exact GREEN prose"
                 requests = [json.loads(path.read_text()) for path in (item.directory / "agents").glob("*/request.json")]
                 matching = [request for request in requests if request.get("step") == key
                             and request.get("role") == "reviewer"
@@ -266,15 +291,15 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                                     for k in ("provider", "model", "effort"))]
                 if len(matching) != 1:
                     raise ValueError("reviewer route or attempt does not match")
-            except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+            except (OSError, ValueError, TypeError, AttributeError, json.JSONDecodeError) as error:
                 raise Stop("REVIEW_RECOVERY_INVALID", str(error)) from error
             self.progress.emit("info", item=item.ref, stage=key, role="reviewer",
                                reason_code="OWNER_PROSE_REVIEW_ACCEPTED",
-                               message="owner authorized unambiguous GREEN prose; raw stream and attempts preserved")
-            return {"findings": findings, "finding_keys": {}, "base": base, "candidate": candidate,
-                    "outside": outside, "session": terminal[0]["session_id"], "model": route.get("model"),
-                    "stream": self._relative(raw), "attempts": attempts,
-                    "healed": ["owner-authorized exact GREEN prose; sha256:" + expected]}
+                               message="owner authorized complete reviewer response; raw stream and attempts preserved")
+            return {"findings": findings, "finding_keys": {f["id"]: finding_key(f) for f in findings["findings"]},
+                    "base": base, "candidate": candidate, "outside": outside, "session": session,
+                    "model": route.get("model"), "stream": self._relative(raw), "attempts": attempts,
+                    "healed": [provenance_note + "; sha256:" + expected]}
         with self.store.mutating():  # the tree this review starts from: the next review reads what changed after it
             item.state.setdefault("review_marks", {})[str(number)] = tree
             self._save()

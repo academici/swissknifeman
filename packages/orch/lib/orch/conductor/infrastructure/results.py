@@ -2,6 +2,7 @@
 its contract by the report-fixer role from the role's own answer, and the isolation the stream of the role showed."""
 from __future__ import annotations
 
+import json
 import re
 
 from typing import Optional
@@ -111,6 +112,41 @@ def green_prose(text: str) -> Optional[dict]:
     context = (verdict.group(1) or "").strip()
     risk = "\n\n".join(part for part in (context, bodies["material residual risk"]) if part)
     return {"verdict": "GREEN", "findings": [], "questions": [], "residual_risk": risk}
+
+
+def completed_error_review(events: list, extra) -> Optional[dict]:
+    """Recover a completed reviewer response followed by a transient provider error, without hiding the error."""
+    raw = []
+    try:
+        for event in events:
+            if event.get("type") == "agy.raw":
+                raw.append(json.loads(event["line"]))
+        terminal = [event.get("result", {}) for event in raw if event.get("event") == "result"]
+        if len(terminal) != 1 or terminal[0].get("status") != "ERROR":
+            return None
+        error, response = terminal[0].get("error", ""), terminal[0].get("response", "")
+        if not isinstance(error, str) or "UNAVAILABLE (code 503)" not in error or not isinstance(response, str):
+            return None
+        session = terminal[0].get("conversation_id")
+        if not isinstance(session, str) or not session:
+            return None
+        updates = [event.get("step_update", {}) for event in raw if event.get("event") == "step_update"]
+        completed = [step for step in updates if step.get("conversation_id") == session
+                     and step.get("step_type") == "agent_response" and step.get("state") == "DONE"]
+        if not completed:
+            return None
+        index = completed[-1].get("step_index")
+        pieces = [step.get("text_delta", "") for step in updates if step.get("conversation_id") == session
+                  and step.get("step_type") == "agent_response" and step.get("step_index") == index]
+        final = "".join(pieces)
+        if not final or not response.endswith(final):
+            return None
+        document, _healed, issues, original = closed(final, "review-findings", extra)
+        if issues or original is None or document != original:
+            return None
+        return {"findings": document, "session": session, "provider_error": error}
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def repair(self, item: Item, key: str, kind: str, extra, answer: str, issues: list, doc, healed, original=None) -> tuple:

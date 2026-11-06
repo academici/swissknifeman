@@ -91,17 +91,25 @@ def closed(text: str, kind: str, extra) -> tuple:
 
 
 def green_prose(text: str) -> Optional[dict]:
-    """Normalize only an unambiguous, explicitly empty GREEN review; retain risk verbatim."""
-    match = re.fullmatch(
-        r"\s*## Review Findings\s*\n\s*(?:No findings|None)\.\s*\n"
-        r"\s*## Questions\s*\n\s*None\.\s*\n"
-        r"\s*## Material Residual Risk\s*\n(.*?)\n"
-        r"\s*## Verdict\s*\n\s*`?GREEN`?\s*", text, re.I | re.S)
-    if not match:
+    """Normalize a declared GREEN with empty findings/questions, retaining all explanatory text."""
+    sections = re.split(r"(?m)^## ([^\n]+)\s*\n", text.strip())
+    if sections[0].strip() or len(sections) != 9:
         return None
-    risk = match.group(1).strip()
-    if not risk or re.search(r"(?m)^##\s", risk):
+    names = [name.strip().lower() for name in sections[1::2]]
+    expected = {"review findings", "questions", "material residual risk", "verdict"}
+    if set(names) != expected or len(set(names)) != 4:
         return None
+    bodies = {name: body.strip() for name, body in zip(names, sections[2::2])}
+    if not re.fullmatch(r"(?:no findings|none)\.", bodies["review findings"], re.I):
+        return None
+    if not re.fullmatch(r"none\.", bodies["questions"], re.I):
+        return None
+    verdict = re.fullmatch(r"(?:\*\*)?`?GREEN`?(?:\*\*)?(?:\s*\n(.*))?", bodies["verdict"], re.I | re.S)
+    if verdict is None or not bodies["material residual risk"]:
+        return None
+    # Prose accompanying the verdict is evidence too; retain it verbatim, ahead of the risk.
+    context = (verdict.group(1) or "").strip()
+    risk = "\n\n".join(part for part in (context, bodies["material residual risk"]) if part)
     return {"verdict": "GREEN", "findings": [], "questions": [], "residual_risk": risk}
 
 

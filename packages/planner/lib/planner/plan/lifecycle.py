@@ -700,8 +700,11 @@ def shown_path(path: Path) -> str:
         return str(path)
 
 
-def validate_route(route: dict, actor: Mapping, target: str) -> None:
+def validate_route(route: dict, actor: Mapping, target: str, *, plan=None) -> None:
     """Explicit selections are portable pins; semantic class/effort remain minimums."""
+    from . import temporary_routes
+    if temporary_routes.approved(plan, route, actor):
+        return
     for field in ("provider", "model"):
         if route.get(field) and route[field] != actor.get(field):
             raise PlanError("ROUTE_MISMATCH", f"{target} selects {field} {route[field]!r}")
@@ -927,7 +930,7 @@ def start(plan, items: Iterable[str], actor: Mapping, *, grants: Iterable[str] =
         try:
             verdict = _route_verdict(p, requested, actor, strict_route=strict_route, routes=routes)
             for item_id in requested:
-                validate_route((routes or {}).get(item_id) or p.items[item_id].get("route") or {}, actor, item_id)
+                validate_route((routes or {}).get(item_id) or p.items[item_id].get("route") or {}, actor, item_id, plan=p)
         except PlanError as error:
             hinted = [i for i in requested if status_of(p, i) == "in_progress"
                       and (p.items[i].get("route") or {}).get("correction")]
@@ -1204,7 +1207,7 @@ def finish(plan, item_id: str, status: str, *, notes: str = "", checks: Mapping[
             need = _correction_route(item) if correcting else item.get("route") or {}
             _route_verdict(p, [item_id], executed_by, strict_route=strict_route,
                            routes={item_id: need} if correcting else None)
-            validate_route(need, executed_by, item_id)
+            validate_route(need, executed_by, item_id, plan=p)
 
         review = _load_review_receipt(p, item_id, review_receipt, attempt_id, status) if review_receipt else None
         if status in ("done", "done_with_deviations") and review is None \

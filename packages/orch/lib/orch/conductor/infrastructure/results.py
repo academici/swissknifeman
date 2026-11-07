@@ -97,6 +97,7 @@ def green_prose(text: str) -> Optional[dict]:
     if sections[0].strip() or len(sections) != 9:
         return None
     names = [name.strip().lower().replace("review-findings", "review findings") for name in sections[1::2]]
+    names = ["review findings" if name == "findings" else name for name in names]
     expected = {"review findings", "questions", "material residual risk", "verdict"}
     if set(names) != expected or len(set(names)) != 4:
         return None
@@ -105,7 +106,7 @@ def green_prose(text: str) -> Optional[dict]:
         return None
     if not re.fullmatch(r"none\.", bodies["questions"], re.I):
         return None
-    verdict = re.fullmatch(r"(?:\*\*)?`?GREEN`?(?:\*\*)?(?:\s*\n(.*))?", bodies["verdict"], re.I | re.S)
+    verdict = re.fullmatch(r"(?:\*\*)?`?GREEN`?(?:\*\*)?(?:\s*(?:—\s*|\n)(.*))?", bodies["verdict"], re.I | re.S)
     if verdict is None or not bodies["material residual risk"]:
         return None
     # Prose accompanying the verdict is evidence too; retain it verbatim, ahead of the risk.

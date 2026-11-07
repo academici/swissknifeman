@@ -16,8 +16,13 @@ from orch.conductor.infrastructure.files import runs_root, safe
 
 
 def stage(self, item: Item) -> Optional[dict]:
-    return next((stage for stage in item.policy.get("stages", [])
-                 if stage.get("role") in ("scout", "context-scout")), None)
+    found = next((stage for stage in item.policy.get("stages", [])
+                  if stage.get("role") in ("scout", "context-scout")), None)
+    if item.options.get("scout_enabled") is False:
+        if found and found.get("required"):
+            raise Stop("SCOUT_REQUIRED", "a required context scout cannot be disabled")
+        return None
+    return found
 
 
 def scout(self, item: Item) -> str:

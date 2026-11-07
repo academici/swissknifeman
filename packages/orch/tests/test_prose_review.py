@@ -26,6 +26,9 @@ class ProseReviewTest(unittest.TestCase):
         self.assertEqual(green_prose(reordered.replace('## Review Findings', '## Review-findings')),
                          green_prose(reordered))
         self.assertEqual(green_prose(reordered.replace('## ', '### ')), green_prose(reordered))
+        inline = reordered.replace('## Review Findings', '## Findings').replace('**`GREEN`**\n\nExplanation.',
+                                                                                 '**GREEN** — Explanation.')
+        self.assertEqual(green_prose(inline), green_prose(reordered))
         for invalid in (text.replace('No findings.', 'A finding.'),
                         text.replace('None.', 'Why?'), text.replace('`GREEN`', '`RED`'),
                         text.replace('## Verdict', '## Verdict\n## Verdict')):

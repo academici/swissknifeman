@@ -9,6 +9,19 @@ from types import SimpleNamespace
 import unittest
 from unittest import mock
 
+from orch.conductor.domain.stop import Stop
+from orch.conductor.stages import scout as scout_stage
+
+
+class OptionalScoutPolicyTest(unittest.TestCase):
+    def test_optional_scout_can_be_disabled_but_required_scout_cannot(self):
+        stage = {"role": "context-scout"}
+        self.assertEqual(scout_stage.stage(None, SimpleNamespace(policy={"stages": [stage]}, options={})), stage)
+        self.assertIsNone(scout_stage.stage(None, SimpleNamespace(policy={"stages": [stage]}, options={"scout_enabled": False})))
+        with self.assertRaises(Stop) as error:
+            scout_stage.stage(None, SimpleNamespace(policy={"stages": [dict(stage, required=True)]}, options={"scout_enabled": False}))
+        self.assertEqual(error.exception.code, "SCOUT_REQUIRED")
+
 from orch.conductor import engine
 from orch.conductor.stages import scout
 from tests.test_conductor import GREEN, INPUT, ConductorCase, executor_ok
@@ -94,6 +107,15 @@ class CachedTests(unittest.TestCase):
 
 
 class ScoutCacheRunTests(ConductorCase):
+    def test_explicit_fast_path_skips_scout_but_keeps_independent_review(self):
+        options = self.project.parent / "no-scout.json"
+        options.write_text(json.dumps({"scout_enabled": False}), encoding="utf-8")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [GREEN]})
+        code, _, err = self.run_items("W1", extra=("--options", options))
+        self.assertEqual((code, self.outcome(err)), (0, ("finished", None)), err)
+        self.assertEqual(self.calls("context-scout"), 0)
+        self.assertEqual(self.calls("reviewer"), 1)
+
     def cache_files(self) -> list:
         return sorted((engine.runs_root(self.project) / "cache" / "scout" / "W1").glob("*"))
 

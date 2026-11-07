@@ -63,6 +63,10 @@ and network access to research sources; Landlock confines source writes to its w
 
 ## Configuration, work source and validation
 
+For an already mapped, bounded task, run options may set `"scout_enabled": false` to skip the optional
+context scout. Required scouts cannot be disabled. The executor still receives the selected input and
+the configured independent review and checks remain active. Omit the option to retain normal scouting.
+
 The `[orch]` configuration (engine, per-role engine, default profile, work source, capability freshness, pack
 folders, events) is layered through aicore; `orch.py --config FILE` adds the invocation layer. Run-policies ship as
 versioned packs with test cases (`configs/run-policies/<id>/`): `orch.py policy list|show|test`.

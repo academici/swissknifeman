@@ -5,6 +5,10 @@
   "description": "Options of a conductor run for one piece of work. Layers merge from the general to the specific: the [orch.conductor] configuration, the run-policy pack, the options of the phase, then the options of the item.",
   "type": "object",
   "properties": {
+    "scout_enabled": {
+      "description": "Run the optional context scout. False skips it when the work already has sufficient bounded context; required scouts cannot be disabled.",
+      "type": "boolean"
+    },
     "stages": {
       "description": "Route of each role in pipeline order; a more specific layer overrides the fields of the same role.",
       "type": "array",

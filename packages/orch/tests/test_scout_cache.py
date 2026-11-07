@@ -121,6 +121,17 @@ class ScoutCacheRunTests(ConductorCase):
         receipt = self.state(err)["items"]["W1"]["steps"]["review.1"]["result"]["findings"]
         self.assertIn("A race remains.", receipt["residual_risk"])
 
+    def test_prose_opt_in_does_not_accept_a_finding_as_green(self):
+        options = self.project.parent / "no-scout-prose-negative.json"
+        options.write_text(json.dumps({"scout_enabled": False, "limits": {"repairs": 0, "retries": 0}}), encoding="utf-8")
+        body = ("### Findings\n\nA real defect.\n\n### Questions\n\nNone.\n\n"
+                "### Verdict\n\n**GREEN**\n\n### Material Residual Risk\n\n- A race remains.\n")
+        self.script({"executor": [executor_ok("W1")], "reviewer": [{"text": body}]})
+        with mock.patch.dict("os.environ", {"SKM_ORCH_ACCEPT_PROSE_REVIEW": "1"}):
+            code, _, err = self.run_items("W1", extra=("--options", options))
+        self.assertNotEqual(code, 0, err)
+        self.assertNotEqual(self.outcome(err), ("finished", None))
+
     def test_explicit_fast_path_skips_scout_but_keeps_independent_review(self):
         options = self.project.parent / "no-scout.json"
         options.write_text(json.dumps({"scout_enabled": False}), encoding="utf-8")

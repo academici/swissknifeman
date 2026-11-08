@@ -4,9 +4,9 @@
   "provenance": {
     "source": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
     "source_hash_scope": "file",
-    "source_sha256": "d356d77abc18890dd4142dc63941e82209df16eda7b72589d9f0c9e567f1b2d0",
+    "source_sha256": "8806670118f3d5747e26c121ae03d2f8b52fae1dc9f4def5b6a8e83dbd712382",
     "generator": "packages/harness/scripts/generate-provider-instructions.py",
-    "literal_count": 375
+    "literal_count": 386
   },
   "literals": [
     {
@@ -467,6 +467,50 @@
     },
     {
       "semantic_id": "root.grok.package-scope-routing",
+      "literal": "explicitly read each applicable package guide"
+    },
+    {
+      "semantic_id": "root.antigravity.instruction-precedence",
+      "literal": "The common repository contract reaches this session through the `AGENTS.md` Antigravity already reads"
+    },
+    {
+      "semantic_id": "root.antigravity.instruction-precedence",
+      "literal": "root.codex.*"
+    },
+    {
+      "semantic_id": "root.antigravity.instruction-precedence",
+      "literal": "root.cursor.*"
+    },
+    {
+      "semantic_id": "root.antigravity.instruction-precedence",
+      "literal": "are **not** authoritative in an Antigravity session"
+    },
+    {
+      "semantic_id": "root.antigravity.launch-and-autonomy",
+      "literal": "`--model`"
+    },
+    {
+      "semantic_id": "root.antigravity.launch-and-autonomy",
+      "literal": "`--mode plan|accept-edits|auto`"
+    },
+    {
+      "semantic_id": "root.antigravity.launch-and-autonomy",
+      "literal": "session-only `--settings`"
+    },
+    {
+      "semantic_id": "root.antigravity.launch-and-autonomy",
+      "literal": "the file alone does not prove native CLI enforcement"
+    },
+    {
+      "semantic_id": "root.antigravity.launch-and-autonomy",
+      "literal": "Do not pass Grok's `--permission-mode` or `--always-approve` flags to AGY"
+    },
+    {
+      "semantic_id": "root.antigravity.package-scope-routing",
+      "literal": "reads root→cwd"
+    },
+    {
+      "semantic_id": "root.antigravity.package-scope-routing",
       "literal": "explicitly read each applicable package guide"
     },
     {

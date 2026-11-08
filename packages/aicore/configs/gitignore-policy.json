@@ -21,7 +21,8 @@
         ".cursor/mcp.json.example",
         ".claude/settings.json.example",
         ".claude/settings.local.json.example",
-        ".grok/config.toml.example"
+        ".grok/config.toml.example",
+        ".antigravity/config.toml.example"
       ],
       "owner": "maind sync (mcpconfig.write_example)",
       "why": "Portable template with placeholders next to the ignored real file; is updated synchronously with it."
@@ -54,7 +55,12 @@
         ".cursor/cli.json",
         ".cursor/permissions.json",
         ".grok/config.toml",
-        ".grok/lsp.json"
+        ".grok/lsp.json",
+        ".antigravity/config.toml",
+        ".antigravity/lsp.json",
+        ".agents/hooks.json",
+        ".agents/skills.json",
+        ".agents/plugins.json"
       ],
       "owner": "harness / maind provider deploy",
       "why": "Generated provider-configs: general, no machine paths yet; with absolute paths - only locally. `.grok/lsp.json` is the same file-level rule."
@@ -87,7 +93,8 @@
         ".codex/terminal-admission.env.ini",
         ".claude/agent-router.env.ini",
         ".claude/observer.env.ini",
-        ".grok/*.env.ini"
+        ".grok/*.env.ini",
+        ".antigravity/*.env.ini"
       ],
       "owner": "harness hooks / maind sync",
       "why": "Hook modes (`*.env.ini`, `*.config.json`: autonomy, memory, telemetry, gates): are committed until they contain paths on the computer (/home/…, /Users/…) or secrets; with such paths - only in .gitignore."
@@ -130,7 +137,8 @@
         ".agents/**/*.bak",
         ".swissknifeman/backups/",
         ".codex/hooks.pre-telemetry-*",
-        ".grok/**/*.bak"
+        ".grok/**/*.bak",
+        ".antigravity/**/*.bak"
       ],
       "owner": "maind / harness / skiller (merge-only writers)",
       "why": "Backups before merge-entry: garbage in history, accumulating (tens `.codex/config.toml.*.bak`)."
@@ -163,6 +171,10 @@
         ".grok/logs/",
         ".grok/runs/",
         ".grok/review-gate.state.json",
+        ".antigravity/state/",
+        ".antigravity/logs/",
+        ".antigravity/runs/",
+        ".antigravity/review-gate.state.json",
         ".codex/review-gate.state.json",
         ".cursor/review-gate.state.json"
       ],
@@ -259,7 +271,14 @@
         ".grok/agents/",
         ".grok/commands/",
         ".grok/plugins/",
-        ".grok/workflows/"
+        ".grok/workflows/",
+        ".antigravity/rules/",
+        ".antigravity/agents/",
+        ".antigravity/commands/",
+        ".antigravity/plugins/",
+        ".antigravity/workflows/",
+        ".agents/rules/",
+        ".agents/workflows/"
       ],
       "owner": "harness agent-packs",
       "why": "Roles, rules, commands and agent guides - a common team artifact (`.claude/guidelines/` is explicitly committed, runbook). Grok project agents, commands, plugins and workflows are the same class; user copies stay in ~/.grok."
@@ -271,7 +290,9 @@
         ".claude/hooks/",
         ".codex/hooks/",
         ".cursor/hooks/",
-        ".grok/hooks/"
+        ".grok/hooks/",
+        ".antigravity/hooks/",
+        ".agents/hooks/"
       ],
       "owner": "harness hooks",
       "why": "Hook scripts without native paths (launcher resolves from env/PATH): common to the command; must keep up with tracking settings/hooks.json, that refer to them."
@@ -284,7 +305,8 @@
         ".agents/skills/",
         ".cursor/skills/",
         ".codex/skills/",
-        ".grok/skills/"
+        ".grok/skills/",
+        ".antigravity/skills/"
       ],
       "owner": "skiller (connect/vendor)",
       "why": "Skills are always in the repository: needed by disconnected consumers, CI and a fresh clone without `skiller sync` (skiller CLAUDE.md: vendor-targets committed)."

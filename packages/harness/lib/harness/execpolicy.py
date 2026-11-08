@@ -27,7 +27,7 @@ _SUBJECT_ROW_KEYS = frozenset({
     "nesting_depth", "settings", "controlled_by_us", "provenance",
 })
 _SUBJECTS = frozenset({"session-agent-tool", "workflow-runtime", "codex-subagents"})
-_PROVIDERS = frozenset({"claude-code", "codex", "cursor", "grok"})
+_PROVIDERS = frozenset({"claude-code", "codex", "cursor", "grok", "antigravity"})
 _TOTAL_SCOPES = frozenset({"session", "run"})
 _FLEET_CAP_KEYS = frozenset({"value", "applies_to", "condition", "provenance"})
 

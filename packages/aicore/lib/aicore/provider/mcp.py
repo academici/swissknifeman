@@ -19,7 +19,7 @@ from ..artifacts.artifact import (
 )
 from .values import ProviderId
 
-_ARTIFACT_PROVIDERS = (ProviderId.CODEX, ProviderId.CURSOR, ProviderId.GROK)
+_ARTIFACT_PROVIDERS = (ProviderId.CODEX, ProviderId.CURSOR, ProviderId.GROK, ProviderId.ANTIGRAVITY)
 
 
 @dataclass(frozen=True)

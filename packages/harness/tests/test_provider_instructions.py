@@ -65,13 +65,13 @@ def set_conflict(catalog, *, common_modality="must", extension_modality="must",
 
 
 class SemanticCatalogTests(unittest.TestCase):
-    def test_exact_71_common_26_extension_97_total_and_thirty_two_targets(self):
+    def test_exact_71_common_29_extension_100_total_and_five_providers(self):
         catalog = load_catalog()
         common = sum(record["kind"] == "common" for scope in catalog["scopes"]
                      for record in scope["sections"])
         extensions = sum(record["kind"] == "provider-extension" for scope in catalog["scopes"]
                          for record in scope["sections"])
-        self.assertEqual((common, extensions, common + extensions), (71, 26, 97))
+        self.assertEqual((common, extensions, common + extensions), (71, 29, 100))
         with tempfile.TemporaryDirectory() as temp:
             result = plan_instructions(request("plan", Path(temp).resolve()))
         self.assertEqual(
@@ -86,7 +86,7 @@ class SemanticCatalogTests(unittest.TestCase):
         for scope in SCOPES:
             by_provider = {item.provider_id: item
                            for item in result.targets if item.scope_id == scope}
-            claude, codex, cursor, grok = (by_provider[provider] for provider in PROVIDERS)
+            claude, codex, cursor, grok, antigravity = (by_provider[provider] for provider in PROVIDERS)
             # Root common is on demand except the pinned ids, which every root target carries;
             # package common is projected to Claude Code only.
             pinned = ROOT_PINNED_COMMON_IDS if scope == "root" else ()
@@ -102,6 +102,8 @@ class SemanticCatalogTests(unittest.TestCase):
                              pinned + EXTENSION_IDS[(scope, "cursor")])
             self.assertEqual(grok.ordered_semantic_ids,
                              pinned + EXTENSION_IDS[(scope, "grok")])
+            self.assertEqual(antigravity.ordered_semantic_ids,
+                             pinned + EXTENSION_IDS[(scope, "antigravity")])
 
     def test_missing_id_refuses_before_p2(self):
         result = altered_result(lambda value: root_records(value).pop(0))

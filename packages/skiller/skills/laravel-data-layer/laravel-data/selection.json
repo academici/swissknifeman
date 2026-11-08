@@ -1,5 +1,15 @@
 {
   "schema": "skill-selection/v1",
   "kind": "contract",
-  "decision": "KEEP"
+  "decision": "KEEP",
+  "triggers": {
+    "paths": [
+      "*Data.php",
+      "app/Data/**/*.php",
+      "src/Data/**/*.php"
+    ],
+    "deps": [
+      "composer:spatie/laravel-data"
+    ]
+  }
 }

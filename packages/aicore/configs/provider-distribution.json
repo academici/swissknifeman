@@ -34,6 +34,13 @@
         "decision": "D8",
         "note": "Grok scans .agents/skills natively (and .grok/skills); skiller does not vendor-write a second Grok skill tree."
       }
+    },
+    "antigravity": {
+      "discovery": {
+        "surface": ".agents/skills",
+        "decision": "D8",
+        "note": "Antigravity scans .agents/skills and .agents/skills.json natively; skiller registers active project skills in .agents/skills.json during connect."
+      }
     }
   }
 }

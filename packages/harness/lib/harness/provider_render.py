@@ -20,6 +20,7 @@ from aicore.artifacts.artifact import (
 )
 from aicore.provider.values import ProviderId
 
+from .antigravity_render import antigravity_profile_target, render_antigravity_config_toml
 from .cursor_render import render_cursor_cli_json
 from .grok_render import grok_profile_target, render_grok_config_toml
 from .profiles import ProfileResolution
@@ -105,6 +106,10 @@ def _render_grok(resolution: ProfileResolution, path: Path) -> bytes:
     return render_grok_config_toml(resolution, path)
 
 
+def _render_antigravity(resolution: ProfileResolution, path: Path) -> bytes:
+    return render_antigravity_config_toml(resolution, path)
+
+
 def _render_codex(resolution: ProfileResolution, path: Path) -> bytes:
     value = json.loads(Path(path).read_text(encoding="utf-8"))
     try:
@@ -122,4 +127,5 @@ _ADAPTERS = {
     ProviderId.CODEX: ProviderAdapter(".codex/config.toml", _render_codex, True),
     ProviderId.CURSOR: ProviderAdapter(".cursor/cli.json", _render_cursor, True),
     ProviderId.GROK: ProviderAdapter(grok_profile_target(), _render_grok, True),
+    ProviderId.ANTIGRAVITY: ProviderAdapter(antigravity_profile_target(), _render_antigravity, True),
 }

@@ -43,7 +43,7 @@ class McpCatalogCase(unittest.TestCase):
         self.assertEqual(validate(document, kind, registry), [])
         catalog_path = ROOT / "configs/common/mcp/catalog.json"
         self.assertEqual(document["catalog"], json.loads(catalog_path.read_text(encoding="utf-8")))
-        self.assertEqual(sorted(document["bindings"]), ["claude-code", "codex", "cursor", "grok"])
+        self.assertEqual(sorted(document["bindings"]), ["antigravity", "claude-code", "codex", "cursor", "grok"])
         self.assertEqual(document["sources"]["catalog"], {
             "id": "harness.mcp.catalog", "path": "packages/harness/configs/common/mcp/catalog.json",
             "sha256": sha256_digest(catalog_path.read_bytes())})

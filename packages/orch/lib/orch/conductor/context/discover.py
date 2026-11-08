@@ -36,15 +36,46 @@ def rule_carriers(project: Path, write_set) -> list:
     return carriers
 
 
+def _agents_skills_json_map(project: Path) -> dict[str, tuple[Path, Path]]:
+    """Map ``skill_name -> (skill_md_path, allowed_root)`` from ``<project>/.agents/skills.json``."""
+    cfg_path = project / ".agents" / "skills.json"
+    if not cfg_path.is_file() or cfg_path.is_symlink():
+        return {}
+    try:
+        entries = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(entries, list):
+        return {}
+    mapping: dict[str, tuple[Path, Path]] = {}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        raw_root = entry.get("path")
+        include_only = entry.get("include_only")
+        if not isinstance(raw_root, str) or not raw_root:
+            continue
+        root = Path(raw_root).expanduser()
+        if not root.is_absolute():
+            root = project / root
+        if isinstance(include_only, list):
+            for sname in include_only:
+                if isinstance(sname, str) and sname and sname not in mapping:
+                    mapping[sname] = (root / sname / "SKILL.md", root)
+    return mapping
+
+
 def skill_candidates(project: Path, names) -> list:
     """The skills of a list of names: the SKILL.md of each in the skill folders of the project (``.claude`` before
-    ``.agents``). A name that breaks the pattern, or a file that leaves its folder, carries a ``reason``."""
+    ``.agents``, then ``.agents/skills.json``). A name that breaks the pattern, or a file that leaves its folder, carries a ``reason``."""
     found = []
+    json_map = None
     for name in names:
         skill = SkillRef(name=name, id=name, path=None, auto=False)
         if not validate.skill_name_ok(name):  # defence for callers with already-merged options
             found.append(dict(skill, reason="outside"))
             continue
+        matched = False
         for folder in SKILL_FOLDERS:
             root = project / folder
             path = root / name / "SKILL.md"
@@ -55,7 +86,19 @@ def skill_candidates(project: Path, names) -> list:
                 skill["reason"] = validate.path_reason(path)
             else:
                 skill.update(path=resolved, roots=[root])
+            matched = True
             break
+        if not matched:
+            if json_map is None:
+                json_map = _agents_skills_json_map(project)
+            if name in json_map:
+                path, root = json_map[name]
+                if path.exists() or paths.has_symlink(path):
+                    resolved = paths.contained(path, [root])
+                    if resolved is None:
+                        skill["reason"] = validate.path_reason(path)
+                    else:
+                        skill.update(path=resolved, roots=[root])
         found.append(skill)
     return found
 

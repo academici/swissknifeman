@@ -4,6 +4,7 @@ from pathlib import Path
 
 _STATE_DIR = '.codex'
 _PROVIDER_ID = 'codex'
+_FAIL_OPEN_PROVIDERS = ("grok", "antigravity")
 _SURFACE_EVENTS = {
     "context.observer": "SessionStart",
     "lifecycle.command-log": "PreToolUse",
@@ -52,31 +53,49 @@ def _canonical_event(value):
 
 
 def _normalize_payload(raw, expected_event):
-    """Accept Claude snake_case and Grok camelCase hook envelopes.
+    """Accept Claude snake_case, Grok camelCase, and Antigravity toolCall hook envelopes.
 
     Grok supplies ``hookEventName``, ``toolName``, ``toolInput`` and ``sessionId``;
-    Claude-shaped providers use their snake_case counterparts.  Missing optional
-    fields are normalized to benign defaults.  An incompatible envelope returns
-    ``None`` so the caller can log and fail open (Grok) or exit 2 (Codex).
+    Antigravity supplies ``toolCall`` (``name``, ``args``), ``conversationId``, ``workspacePaths``;
+    Claude-shaped providers use their snake_case counterparts. Missing optional
+    fields are normalized to benign defaults. An incompatible envelope returns
+    ``None`` so the caller can log and fail open (Grok/Antigravity) or exit 2 (Codex).
     """
     if not isinstance(raw, dict):
         return None
     payload = dict(raw)
-    event = _canonical_event(raw.get("hook_event_name") or raw.get("hookEventName"))
+    raw_event = raw.get("hook_event_name") or raw.get("hookEventName")
+    if not raw_event and _PROVIDER_ID == "antigravity":
+        raw_event = expected_event
+    event = _canonical_event(raw_event)
     if event != expected_event:
         return None
     payload["hook_event_name"] = event
-    payload["tool_name"] = raw.get("tool_name") or raw.get("toolName")
+    tool_call = raw.get("toolCall") if isinstance(raw.get("toolCall"), dict) else {}
+    tool_name = raw.get("tool_name") or raw.get("toolName") or tool_call.get("name")
+    if tool_name == "run_command":
+        tool_name = "Bash"
+    payload["tool_name"] = tool_name
     tool_input = raw.get("tool_input")
     if tool_input is None:
         tool_input = raw.get("toolInput")
+    if tool_input is None and isinstance(tool_call.get("args"), dict):
+        tool_input = dict(tool_call["args"])
+        if "CommandLine" in tool_input and "command" not in tool_input:
+            tool_input["command"] = tool_input["CommandLine"]
     if expected_event == "PreToolUse" and not isinstance(tool_input, dict):
         return None
     payload["tool_input"] = tool_input if isinstance(tool_input, dict) else {}
     payload["session_id"] = (raw.get("session_id") or raw.get("sessionId")
-                             or os.environ.get("GROK_SESSION_ID", ""))
-    payload["cwd"] = (raw.get("cwd") or raw.get("workspaceRoot")
-                      or os.environ.get("GROK_WORKSPACE_ROOT", "") or os.getcwd())
+                             or raw.get("conversation_id") or raw.get("conversationId")
+                             or os.environ.get("GROK_SESSION_ID", "")
+                             or os.environ.get("ANTIGRAVITY_SESSION_ID", ""))
+    workspace_paths = raw.get("workspacePaths")
+    first_ws = (workspace_paths[0] if isinstance(workspace_paths, list) and workspace_paths
+                and isinstance(workspace_paths[0], str) else "")
+    payload["cwd"] = (raw.get("cwd") or raw.get("workspaceRoot") or first_ws
+                      or os.environ.get("GROK_WORKSPACE_ROOT", "")
+                      or os.environ.get("ANTIGRAVITY_WORKSPACE_ROOT", "") or os.getcwd())
     payload["permission_mode"] = raw.get("permission_mode") or raw.get("permissionMode") or ""
     payload["model"] = raw.get("model") or ""
     return payload
@@ -744,25 +763,25 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--surface", required=True)
 args = parser.parse_args()
 if args.surface not in _SURFACE_EVENTS:
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("unknown lifecycle surface; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
 try:
     raw_payload = json.load(sys.stdin)
 except (json.JSONDecodeError, TypeError, ValueError):
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("payload was not parseable; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
 event = _SURFACE_EVENTS[args.surface]
 payload = _normalize_payload(raw_payload, event)
 if payload is None:
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("payload did not match the lifecycle event; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
-if _PROVIDER_ID != "grok":
+if _PROVIDER_ID not in _FAIL_OPEN_PROVIDERS:
     required = {"session_id", "cwd", "hook_event_name", "model"}
     if event == "SessionStart":
         required.add("permission_mode")

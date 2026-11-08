@@ -2047,7 +2047,15 @@
       "selection": {
         "kind": "contract",
         "decision": "OVERLAY",
-        "exclusive_group": "js-style"
+        "exclusive_group": "js-style",
+        "triggers": {
+          "paths": [
+            "*.ts",
+            "*.tsx",
+            "*.js",
+            "*.vue"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md",
@@ -2242,7 +2250,17 @@
         "decision": "KEEP",
         "also": [
           "OVERLAY"
-        ]
+        ],
+        "triggers": {
+          "paths": [
+            "*.vue",
+            "*.tsx",
+            "tailwind.config.*"
+          ],
+          "deps": [
+            "npm:tailwindcss"
+          ]
+        }
       },
       "source": "local"
     },
@@ -2376,7 +2394,17 @@
       "selection": {
         "kind": "domain",
         "decision": "KEEP",
-        "exclusive_group": "pinia"
+        "exclusive_group": "pinia",
+        "triggers": {
+          "paths": [
+            "*Store*.ts",
+            "stores/**/*.ts",
+            "src/stores/**/*.ts"
+          ],
+          "deps": [
+            "npm:pinia"
+          ]
+        }
       },
       "source": "local"
     },
@@ -2488,7 +2516,15 @@
       "selection": {
         "kind": "domain",
         "decision": "MERGE",
-        "exclusive_group": "vue-core"
+        "exclusive_group": "vue-core",
+        "triggers": {
+          "paths": [
+            "*.vue"
+          ],
+          "deps": [
+            "npm:vue"
+          ]
+        }
       },
       "source": "local"
     },
@@ -2535,7 +2571,16 @@
       ],
       "selection": {
         "kind": "domain",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "router/**/*.ts",
+            "src/router/**/*.ts"
+          ],
+          "deps": [
+            "npm:vue-router"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-router-best-practices/SKILL.md",
@@ -2566,7 +2611,16 @@
       "selection": {
         "kind": "contract",
         "decision": "KEEP",
-        "exclusive_group": "vitest"
+        "exclusive_group": "vitest",
+        "triggers": {
+          "paths": [
+            "*.spec.ts",
+            "*.test.ts"
+          ],
+          "deps": [
+            "npm:@vue/test-utils"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-testing-best-practices/SKILL.md",
@@ -3138,7 +3192,12 @@
       ],
       "selection": {
         "kind": "domain",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "config/*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -3189,7 +3248,14 @@
       ],
       "selection": {
         "kind": "domain",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "*Enum*.php",
+            "app/Enums/**/*.php",
+            "src/Enums/**/*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -3214,7 +3280,14 @@
       ],
       "selection": {
         "kind": "domain",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "*State*.php",
+            "*Status*.php",
+            "app/Enums/**/*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -3405,7 +3478,17 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "KEEP"
+        "decision": "KEEP",
+        "triggers": {
+          "paths": [
+            "*Data.php",
+            "app/Data/**/*.php",
+            "src/Data/**/*.php"
+          ],
+          "deps": [
+            "composer:spatie/laravel-data"
+          ]
+        }
       },
       "source": "local"
     },
@@ -3615,7 +3698,16 @@
       ],
       "selection": {
         "kind": "domain",
-        "decision": "SLIM"
+        "decision": "SLIM",
+        "triggers": {
+          "paths": [
+            "tests/Feature/**/*.php",
+            "tests/Unit/**/*.php"
+          ],
+          "deps": [
+            "composer:laravel/framework"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4161,7 +4253,12 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "OVERLAY"
+        "decision": "OVERLAY",
+        "triggers": {
+          "paths": [
+            "*.php"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/laravel-php.md",
@@ -4239,7 +4336,12 @@
         "also": [
           "SLIM"
         ],
-        "exclusive_group": "php-architecture"
+        "exclusive_group": "php-architecture",
+        "triggers": {
+          "paths": [
+            "*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4319,7 +4421,12 @@
         "also": [
           "OVERLAY"
         ],
-        "exclusive_group": "php-architecture"
+        "exclusive_group": "php-architecture",
+        "triggers": {
+          "deps": [
+            "composer:laravel/framework"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4340,7 +4447,12 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "OVERLAY"
+        "decision": "OVERLAY",
+        "triggers": {
+          "paths": [
+            "*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4384,7 +4496,12 @@
       ],
       "selection": {
         "kind": "contract",
-        "decision": "MERGE"
+        "decision": "MERGE",
+        "triggers": {
+          "paths": [
+            "*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4497,7 +4614,15 @@
       "selection": {
         "kind": "domain",
         "decision": "KEEP",
-        "exclusive_group": "php-architecture"
+        "exclusive_group": "php-architecture",
+        "triggers": {
+          "paths": [
+            "*Repository*.php",
+            "*Store*.php",
+            "src/**/*.php",
+            "app/**/*.php"
+          ]
+        }
       },
       "source": "local"
     },
@@ -4705,7 +4830,16 @@
       "selection": {
         "kind": "domain",
         "decision": "KEEP",
-        "exclusive_group": "php-packages"
+        "exclusive_group": "php-packages",
+        "triggers": {
+          "paths": [
+            "*ServiceProvider.php"
+          ],
+          "deps": [
+            "composer:illuminate/support",
+            "composer:laravel/framework"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md",
@@ -4728,7 +4862,15 @@
       "selection": {
         "kind": "procedure",
         "decision": "KEEP",
-        "exclusive_group": "php-packages"
+        "exclusive_group": "php-packages",
+        "triggers": {
+          "paths": [
+            "tests/**/*.php"
+          ],
+          "deps": [
+            "composer:orchestra/testbench"
+          ]
+        }
       },
       "source": "github",
       "upstream": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",

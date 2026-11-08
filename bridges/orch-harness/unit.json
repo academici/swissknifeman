@@ -9,7 +9,7 @@
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Foundation."},
     {"unit": "orch", "range": "^0.1", "description": "Role manifests."},
-    {"unit": "harness", "range": "^0.7", "description": "Agent-pack role catalog."}
+    {"unit": "harness", "range": "^0.8", "description": "Agent-pack role catalog."}
   ],
   "provides": {},
   "protocol": {"min": "1", "max": "1"},

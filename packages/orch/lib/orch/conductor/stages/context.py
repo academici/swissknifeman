@@ -54,6 +54,13 @@ def auto_skills(self, item: Item, role: str) -> dict:
     paths = self._work_paths(item)
     if paths:
         argv += ["--paths", *paths]
+    if role in ("executor", "bounded-implementer"):
+        supp_item = ((item.input_doc.get("supplemental") or {}).get("item")
+                     if isinstance(item.input_doc.get("supplemental"), dict) else None)
+        item_skills = [s for s in (supp_item.get("skills") if isinstance(supp_item, dict) else None) or []
+                       if isinstance(s, str) and s]
+        if item_skills:
+            argv += ["--include", *item_skills]
     answer = discover.bridge_selection(argv, self.project, self.env)
     if answer.chosen is None:
         raise Stop("SKILLS_SELECT_FAILED", f"skills bridge for {role}{answer.failure}")

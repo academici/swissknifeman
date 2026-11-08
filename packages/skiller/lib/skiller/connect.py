@@ -455,6 +455,29 @@ def _apply_codex_connect_plan(env, target, plan, *, dry_run, register):
     return record
 
 
+def sync_antigravity_skills_json(env, target, config, *, profile="", no_core=False, dry_run=False):
+    """Write `<target>/.agents/skills.json` so Antigravity discovers the project's active skill set."""
+    repo_root = find_repo_root(env.root) or env.root
+    if target.resolve() == repo_root.resolve():
+        return None
+    from .budget import resolve_active_set
+    skills, _meta = resolve_active_set(env, target, config, profile=profile, no_core=no_core)
+    grouped: dict[str, set[str]] = {}
+    for _bucket, _rel, skill_dir, _fm in skills:
+        skill_path = Path(skill_dir).resolve()
+        parent = str(skill_path.parent)
+        grouped.setdefault(parent, set()).add(skill_path.name)
+    entries = [
+        {"path": parent, "include_only": sorted(names)}
+        for parent, names in sorted(grouped.items())
+    ]
+    dest = target / ".agents" / "skills.json"
+    if not dry_run:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_text(dest, json.dumps(entries, indent=2, ensure_ascii=False) + "\n")
+    return dest
+
+
 def do_connect(env, target, opts, register=True, fix_path_drift=False):
     """Apply a preflighted provider marketplace plan.
 
@@ -523,6 +546,13 @@ def do_connect(env, target, opts, register=True, fix_path_drift=False):
         apply_selection(target, native_plan, dry_run=opts.get("dry_run", False))
         if opts.get("hub") and not opts.get("dry_run", False):
             generate_hub(env, target, root_files=("AGENTS.md",))
+    if not opts.get("list") and "antigravity" in selected_distribution_providers(config, project_id=target.name):
+        sync_antigravity_skills_json(
+            env, target, config,
+            profile=opts.get("profile", ""),
+            no_core=opts.get("no_core", False),
+            dry_run=opts.get("dry_run", False),
+        )
     return records[0] if len(records) == 1 else {"providers": records}
 
 

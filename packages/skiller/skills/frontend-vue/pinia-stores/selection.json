@@ -2,5 +2,15 @@
   "schema": "skill-selection/v1",
   "kind": "domain",
   "decision": "KEEP",
-  "exclusive_group": "pinia"
+  "exclusive_group": "pinia",
+  "triggers": {
+    "paths": [
+      "*Store*.ts",
+      "stores/**/*.ts",
+      "src/stores/**/*.ts"
+    ],
+    "deps": [
+      "npm:pinia"
+    ]
+  }
 }

@@ -4,5 +4,15 @@
   "decision": "KEEP",
   "also": [
     "OVERLAY"
-  ]
+  ],
+  "triggers": {
+    "paths": [
+      "*.vue",
+      "*.tsx",
+      "tailwind.config.*"
+    ],
+    "deps": [
+      "npm:tailwindcss"
+    ]
+  }
 }

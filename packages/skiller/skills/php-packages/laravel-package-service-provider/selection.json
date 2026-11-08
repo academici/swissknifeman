@@ -2,5 +2,14 @@
   "schema": "skill-selection/v1",
   "kind": "domain",
   "decision": "KEEP",
-  "exclusive_group": "php-packages"
+  "exclusive_group": "php-packages",
+  "triggers": {
+    "paths": [
+      "*ServiceProvider.php"
+    ],
+    "deps": [
+      "composer:illuminate/support",
+      "composer:laravel/framework"
+    ]
+  }
 }

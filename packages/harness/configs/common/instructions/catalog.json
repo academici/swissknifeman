@@ -17,7 +17,8 @@
         "claude-code": "CLAUDE.md",
         "codex": "AGENTS.md",
         "cursor": ".cursor/rules/swissknifeman-instructions.mdc",
-        "grok": ".grok/rules/swissknifeman-instructions.md"
+        "grok": ".grok/rules/swissknifeman-instructions.md",
+        "antigravity": ".antigravity/rules/swissknifeman-instructions.md"
       },
       "sections": [
         {
@@ -992,6 +993,95 @@
             "reads root→cwd",
             "explicitly read each applicable package guide"
           ]
+        },
+        {
+          "id": "root.antigravity.instruction-precedence",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "antigravity",
+          "order": 1,
+          "intent": "Apply this source-derived instruction: The common repository contract reaches this session through the AGENTS.md Antigravity already reads; Codex-owned, Cursor-owned and Grok-owned sections are not authoritative in an Antigravity session.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.antigravity.maintainer",
+              "action": "enforce",
+              "object": "root.antigravity.instruction-precedence.requirements",
+              "boundary": "root.provider.antigravity"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.antigravity",
+              "path": "packages/harness/configs/common/instructions/root/antigravity.md",
+              "sha256": "c6365cd8d2c8e34cce936b41a743f3726ffef3872de69ad66f7dded5084ce42c"
+            }
+          ],
+          "compatibility_assertions": [
+            "The common repository contract reaches this session through the `AGENTS.md` Antigravity already reads",
+            "root.codex.*",
+            "root.cursor.*",
+            "are **not** authoritative in an Antigravity session"
+          ]
+        },
+        {
+          "id": "root.antigravity.launch-and-autonomy",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "antigravity",
+          "order": 2,
+          "intent": "Use the installed AGY CLI flags and distinguish rendered policy from verified native enforcement.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.antigravity.maintainer",
+              "action": "enforce",
+              "object": "root.antigravity.launch-and-autonomy.requirements",
+              "boundary": "root.provider.antigravity"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.antigravity",
+              "path": "packages/harness/configs/common/instructions/root/antigravity.md",
+              "sha256": "c6365cd8d2c8e34cce936b41a743f3726ffef3872de69ad66f7dded5084ce42c"
+            }
+          ],
+          "compatibility_assertions": [
+            "`--model`",
+            "`--mode plan|accept-edits|auto`",
+            "session-only `--settings`",
+            "the file alone does not prove native CLI enforcement",
+            "Do not pass Grok's `--permission-mode` or `--always-approve` flags to AGY"
+          ]
+        },
+        {
+          "id": "root.antigravity.package-scope-routing",
+          "scope_id": "root",
+          "kind": "provider-extension",
+          "provider_id": "antigravity",
+          "order": 3,
+          "intent": "Apply this source-derived instruction: Start package-scoped work with the intended workspace root so native discovery reads root→cwd.",
+          "obligations": [
+            {
+              "modality": "must",
+              "subject": "root.antigravity.maintainer",
+              "action": "enforce",
+              "object": "root.antigravity.package-scope-routing.requirements",
+              "boundary": "root.provider.antigravity"
+            }
+          ],
+          "sources": [
+            {
+              "source_id": "instruction.fragment.root.antigravity",
+              "path": "packages/harness/configs/common/instructions/root/antigravity.md",
+              "sha256": "c6365cd8d2c8e34cce936b41a743f3726ffef3872de69ad66f7dded5084ce42c"
+            }
+          ],
+          "compatibility_assertions": [
+            "reads root→cwd",
+            "explicitly read each applicable package guide"
+          ]
         }
       ]
     },
@@ -1001,7 +1091,8 @@
         "claude-code": "packages/skiller/CLAUDE.md",
         "codex": "packages/skiller/AGENTS.md",
         "cursor": "packages/skiller/.cursor-instructions.mdc",
-        "grok": "packages/skiller/.grok-instructions.md"
+        "grok": "packages/skiller/.grok-instructions.md",
+        "antigravity": "packages/skiller/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -1347,7 +1438,8 @@
         "claude-code": "packages/harness/CLAUDE.md",
         "codex": "packages/harness/AGENTS.md",
         "cursor": "packages/harness/.cursor-instructions.mdc",
-        "grok": "packages/harness/.grok-instructions.md"
+        "grok": "packages/harness/.grok-instructions.md",
+        "antigravity": "packages/harness/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -1725,7 +1817,8 @@
         "claude-code": "packages/maind/CLAUDE.md",
         "codex": "packages/maind/AGENTS.md",
         "cursor": "packages/maind/.cursor-instructions.mdc",
-        "grok": "packages/maind/.grok-instructions.md"
+        "grok": "packages/maind/.grok-instructions.md",
+        "antigravity": "packages/maind/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -2008,7 +2101,8 @@
         "claude-code": "packages/analyst/CLAUDE.md",
         "codex": "packages/analyst/AGENTS.md",
         "cursor": "packages/analyst/.cursor-instructions.mdc",
-        "grok": "packages/analyst/.grok-instructions.md"
+        "grok": "packages/analyst/.grok-instructions.md",
+        "antigravity": "packages/analyst/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -2311,7 +2405,8 @@
         "claude-code": "packages/planner/CLAUDE.md",
         "codex": "packages/planner/AGENTS.md",
         "cursor": "packages/planner/.cursor-instructions.mdc",
-        "grok": "packages/planner/.grok-instructions.md"
+        "grok": "packages/planner/.grok-instructions.md",
+        "antigravity": "packages/planner/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -2679,7 +2774,8 @@
         "claude-code": "packages/brain/CLAUDE.md",
         "codex": "packages/brain/AGENTS.md",
         "cursor": "packages/brain/.cursor-instructions.mdc",
-        "grok": "packages/brain/.grok-instructions.md"
+        "grok": "packages/brain/.grok-instructions.md",
+        "antigravity": "packages/brain/.antigravity-instructions.md"
       },
       "sections": [
         {
@@ -2870,7 +2966,8 @@
         "claude-code": "packages/orch/CLAUDE.md",
         "codex": "packages/orch/AGENTS.md",
         "cursor": "packages/orch/.cursor-instructions.mdc",
-        "grok": "packages/orch/.grok-instructions.md"
+        "grok": "packages/orch/.grok-instructions.md",
+        "antigravity": "packages/orch/.antigravity-instructions.md"
       },
       "sections": [
         {

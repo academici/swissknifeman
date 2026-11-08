@@ -228,6 +228,7 @@ def adapt_codex_hook_payload(binding: LifecycleBinding, payload: dict) -> dict:
 _CLAUDE_SHAPED_HOOK_DIRS = {
     ProviderId.CODEX: ".codex",
     ProviderId.GROK: ".grok",
+    ProviderId.ANTIGRAVITY: ".antigravity",
 }
 
 
@@ -235,13 +236,14 @@ def claude_shaped_hook_paths(provider_id: ProviderId) -> tuple[str, str]:
     """Return ``(document, handler)`` for a Claude-shaped hook bundle.
 
     Codex loads one ``.codex/hooks.json``. Grok loads every ``.grok/hooks/*.json``
-    and ignores a sibling ``.grok/hooks.json``.
+    and ignores a sibling ``.grok/hooks.json``. Antigravity uses ``.antigravity/hooks/swissknifeman.json``
+    and mirrors named hooks into ``.agents/hooks.json``.
     """
     state_dir = _CLAUDE_SHAPED_HOOK_DIRS.get(provider_id)
     if state_dir is None:
         raise ValueError("HARNESS_MAPPING_MISSING")
     handler = f"{state_dir}/hooks/lifecycle.py"
-    if provider_id is ProviderId.GROK:
+    if provider_id in (ProviderId.GROK, ProviderId.ANTIGRAVITY):
         return f"{state_dir}/hooks/swissknifeman.json", handler
     return f"{state_dir}/hooks.json", handler
 
@@ -1297,14 +1299,15 @@ def _codex_router_catalog():
 def render_codex_hook_handler(*, state_dir: str = ".codex") -> bytes:
     """Generate the multi-surface dispatcher: one generator, one per-surface handler table.
 
-    Codex and Grok share this dispatcher, but their payload spellings differ.  The generated
-    adapter normalizes both shapes before dispatch.  A malformed or unknown Grok payload is
-    deliberately fail-open: a lifecycle observer must never brick a session.  Codex keeps its
-    fail-closed contract; explicit policy refusals are the only other exit-2 path.
+    Codex, Grok, and Antigravity share this dispatcher, but their payload spellings differ.
+    The generated adapter normalizes all shapes before dispatch. A malformed or unknown
+    Grok/Antigravity payload is deliberately fail-open: a lifecycle observer must never brick
+    a session. Codex keeps its fail-closed contract; explicit policy refusals are the only
+    other exit-2 path.
     """
-    if state_dir not in {".codex", ".grok"}:
+    if state_dir not in {".codex", ".grok", ".antigravity"}:
         raise ValueError("HARNESS_MAPPING_MISSING")
-    provider_id = "grok" if state_dir == ".grok" else "codex"
+    provider_id = state_dir.lstrip(".")
     router_commands, hint_template = _codex_router_catalog()
     router_catalog_literal = json.dumps(router_commands, ensure_ascii=False)
     return f'''#!/usr/bin/env python3
@@ -1313,6 +1316,7 @@ from pathlib import Path
 
 _STATE_DIR = {state_dir!r}
 _PROVIDER_ID = {provider_id!r}
+_FAIL_OPEN_PROVIDERS = ("grok", "antigravity")
 _SURFACE_EVENTS = {{
     "context.observer": "SessionStart",
     "lifecycle.command-log": "PreToolUse",
@@ -1361,31 +1365,49 @@ def _canonical_event(value):
 
 
 def _normalize_payload(raw, expected_event):
-    """Accept Claude snake_case and Grok camelCase hook envelopes.
+    """Accept Claude snake_case, Grok camelCase, and Antigravity toolCall hook envelopes.
 
     Grok supplies ``hookEventName``, ``toolName``, ``toolInput`` and ``sessionId``;
-    Claude-shaped providers use their snake_case counterparts.  Missing optional
-    fields are normalized to benign defaults.  An incompatible envelope returns
-    ``None`` so the caller can log and fail open (Grok) or exit 2 (Codex).
+    Antigravity supplies ``toolCall`` (``name``, ``args``), ``conversationId``, ``workspacePaths``;
+    Claude-shaped providers use their snake_case counterparts. Missing optional
+    fields are normalized to benign defaults. An incompatible envelope returns
+    ``None`` so the caller can log and fail open (Grok/Antigravity) or exit 2 (Codex).
     """
     if not isinstance(raw, dict):
         return None
     payload = dict(raw)
-    event = _canonical_event(raw.get("hook_event_name") or raw.get("hookEventName"))
+    raw_event = raw.get("hook_event_name") or raw.get("hookEventName")
+    if not raw_event and _PROVIDER_ID == "antigravity":
+        raw_event = expected_event
+    event = _canonical_event(raw_event)
     if event != expected_event:
         return None
     payload["hook_event_name"] = event
-    payload["tool_name"] = raw.get("tool_name") or raw.get("toolName")
+    tool_call = raw.get("toolCall") if isinstance(raw.get("toolCall"), dict) else {{}}
+    tool_name = raw.get("tool_name") or raw.get("toolName") or tool_call.get("name")
+    if tool_name == "run_command":
+        tool_name = "Bash"
+    payload["tool_name"] = tool_name
     tool_input = raw.get("tool_input")
     if tool_input is None:
         tool_input = raw.get("toolInput")
+    if tool_input is None and isinstance(tool_call.get("args"), dict):
+        tool_input = dict(tool_call["args"])
+        if "CommandLine" in tool_input and "command" not in tool_input:
+            tool_input["command"] = tool_input["CommandLine"]
     if expected_event == "PreToolUse" and not isinstance(tool_input, dict):
         return None
     payload["tool_input"] = tool_input if isinstance(tool_input, dict) else {{}}
     payload["session_id"] = (raw.get("session_id") or raw.get("sessionId")
-                             or os.environ.get("GROK_SESSION_ID", ""))
-    payload["cwd"] = (raw.get("cwd") or raw.get("workspaceRoot")
-                      or os.environ.get("GROK_WORKSPACE_ROOT", "") or os.getcwd())
+                             or raw.get("conversation_id") or raw.get("conversationId")
+                             or os.environ.get("GROK_SESSION_ID", "")
+                             or os.environ.get("ANTIGRAVITY_SESSION_ID", ""))
+    workspace_paths = raw.get("workspacePaths")
+    first_ws = (workspace_paths[0] if isinstance(workspace_paths, list) and workspace_paths
+                and isinstance(workspace_paths[0], str) else "")
+    payload["cwd"] = (raw.get("cwd") or raw.get("workspaceRoot") or first_ws
+                      or os.environ.get("GROK_WORKSPACE_ROOT", "")
+                      or os.environ.get("ANTIGRAVITY_WORKSPACE_ROOT", "") or os.getcwd())
     payload["permission_mode"] = raw.get("permission_mode") or raw.get("permissionMode") or ""
     payload["model"] = raw.get("model") or ""
     return payload
@@ -2053,25 +2075,25 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--surface", required=True)
 args = parser.parse_args()
 if args.surface not in _SURFACE_EVENTS:
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("unknown lifecycle surface; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
 try:
     raw_payload = json.load(sys.stdin)
 except (json.JSONDecodeError, TypeError, ValueError):
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("payload was not parseable; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
 event = _SURFACE_EVENTS[args.surface]
 payload = _normalize_payload(raw_payload, event)
 if payload is None:
-    if _PROVIDER_ID == "grok":
+    if _PROVIDER_ID in _FAIL_OPEN_PROVIDERS:
         _adapter_log("payload did not match the lifecycle event; allowing without dispatch")
         sys.exit(0)
     sys.exit(2)
-if _PROVIDER_ID != "grok":
+if _PROVIDER_ID not in _FAIL_OPEN_PROVIDERS:
     required = {{"session_id", "cwd", "hook_event_name", "model"}}
     if event == "SessionStart":
         required.add("permission_mode")
@@ -2261,6 +2283,58 @@ def plan_claude_shaped_lifecycle_artifacts(plan: LifecycleRenderPlan, *, binding
     return hooks, handler
 
 
+def render_antigravity_agents_hooks(plan: LifecycleRenderPlan, *, existing_document=None) -> bytes:
+    """Render Antigravity's native ``.agents/hooks.json`` named-hook configuration."""
+    if plan.provider_id is not ProviderId.ANTIGRAVITY or not plan.green:
+        raise ValueError("cannot render refused lifecycle plan")
+    doc = dict(existing_document) if isinstance(existing_document, dict) else {}
+    events = {}
+    for binding in plan.bindings:
+        if binding.support_level != "hook-native":
+            continue
+        cmd = _handler_command(".antigravity", binding.surface_id)
+        if binding.event in ("PreToolUse", "PostToolUse"):
+            matcher = binding.matcher or "*"
+            if matcher == "^Bash$":
+                matcher = "^Bash$|run_command"
+            events.setdefault(binding.event, []).append({
+                "matcher": matcher,
+                "hooks": [{"type": "command", "command": cmd}],
+            })
+        else:
+            events.setdefault(binding.event, []).append({"type": "command", "command": cmd})
+    doc["swissknifeman"] = events
+    return (json.dumps(doc, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def plan_antigravity_agents_hooks(plan: LifecycleRenderPlan, *, bindings_path: Path,
+                                  existing_document=None):
+    source = ArtifactSource("harness.antigravity.lifecycle-bindings",
+                            "packages/harness/configs/antigravity/hooks/lifecycle-context-bindings.json",
+                            sha256_digest(Path(bindings_path).read_bytes()))
+    identity = ArtifactAdapterIdentity("harness.antigravity.lifecycle", _CODEX_HOOK_ADAPTER_VERSION,
+                                       ProviderId.ANTIGRAVITY, "1.0.0", ())
+    return plan_artifact_render(ArtifactRenderRequest(
+        "harness.antigravity.lifecycle.agents-hooks", (source,),
+        ArtifactTarget(".agents/hooks.json", ("whole-file", ())), identity, (), {},
+        lambda _request: render_antigravity_agents_hooks(plan, existing_document=existing_document)))
+
+
+def _read_antigravity_agents_hooks(target: Path):
+    path = target / ".agents" / "hooks.json"
+    if path.is_symlink():
+        raise ValueError("HARNESS_ANTIGRAVITY_HOOKS_INVALID")
+    if not path.exists():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError("HARNESS_ANTIGRAVITY_HOOKS_INVALID") from exc
+    if not isinstance(value, dict):
+        raise ValueError("HARNESS_ANTIGRAVITY_HOOKS_INVALID")
+    return value
+
+
 def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry,
                           provider_id=ProviderId.CODEX):
     """Deploy Claude-shaped lifecycle as ONE managed hooks.json + handler bundle."""
@@ -2274,6 +2348,13 @@ def block_codex_lifecycle(env, target, *, surfaces, trusted, repair, dry,
         diagnostic = lifecycle.diagnostics[0]
         die(f"{diagnostic.code}: {diagnostic.next_action}")
     artifacts = plan_codex_lifecycle_artifacts(lifecycle, bindings_path=bindings_path)
+    if provider_id is ProviderId.ANTIGRAVITY:
+        try:
+            existing_document = _read_antigravity_agents_hooks(Path(target))
+        except ValueError:
+            die("HARNESS_ANTIGRAVITY_HOOKS_INVALID: fix .agents/hooks.json before deploy")
+        artifacts += (plan_antigravity_agents_hooks(
+            lifecycle, bindings_path=bindings_path, existing_document=existing_document),)
     lock_path = Path(target) / LOCK_RELATIVE_PATH
     lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
     repair_ids = tuple(item.provenance.artifact_id for item in artifacts) if repair else ()
@@ -2708,9 +2789,9 @@ _CODEX_GATE_HOOK = {
 def _block_codex_gates(env, target, opts, *, provider="codex"):
     """Compose one declarative Claude-shaped hooks.json deploy from every surface flag.
 
-    Codex and Grok share the dispatcher; only the state dir (`.codex` / `.grok`) changes.
+    Codex, Grok, and Antigravity share the dispatcher; only the state dir changes.
     """
-    provider_id = ProviderId.CODEX if provider == "codex" else ProviderId.GROK
+    provider_id = ProviderId(provider)
     surfaces = []
     if opts["observer"]:
         surfaces.append("context.observer")
@@ -2870,7 +2951,7 @@ def cmd_hooks(env, argv):
               "[--output-style lean|off] "
               "[--plans-dir plans|off] "
               f"[--statusline {'|'.join(STATUSLINE_MODES)}] "
-              "[--provider codex|grok [--observer] [--pack-guard off|warn|strict] [--plan-guard off|warn|strict] "
+              "[--provider codex|grok|antigravity [--observer] [--pack-guard off|warn|strict] [--plan-guard off|warn|strict] "
               "[--changelog-gate off|warn|strict] [--review-gate off|warn|strict] "
               "[--git-guardrails off|warn|strict] [--safe-dirs] [--daemon-safety] "
               "| --provider cursor [--safe-dirs] "
@@ -2890,12 +2971,12 @@ def cmd_hooks(env, argv):
     # artifact lock deliberately accepts only an explicit absolute root.
     target = Path(opts["target"]).expanduser().resolve()
     if opts["provider"]:
-        if opts["provider"] in ("codex", "grok"):
+        if opts["provider"] in ("codex", "grok", "antigravity"):
             _block_codex_gates(env, target, opts, provider=opts["provider"])
         elif opts["provider"] == "cursor":
             _block_cursor_gates(env, target, opts)
         else:
-            die("is only supported --provider codex|cursor|grok")
+            die("is only supported --provider codex|cursor|grok|antigravity")
         return
     if not (opts["auto_approve"] or opts["memory"] or opts["router"]
             or opts["run_report"] or opts["pack_guard"] or opts["changelog_gate"]

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-11-08
+
+- **Antigravity: интеграция с окружением проекта.** Добавлены provider manifest, профили permissions, управляемые hooks, MCP и инструкции; skiller публикует активные skills через `.agents/skills.json`, planner распознаёт сессию, orch читает подключённые skills и восстанавливает валидный fenced review. Разбор prose сохраняет отказ при findings или questions.
+- **Skiller: автоматический подбор навыков.** Добавлены path/dependency triggers для PHP, Laravel, Vue, Tailwind и JavaScript; обновлены проверки ожидаемого набора навыков.
+
 - **AGY CLI: автономный запуск и терминал.** Session-only настройки явно отключают ожидание file/artifact approval и terminal sandbox; metadata guard допускает PTY ioctls, сохраняя запрет изменения файловых метаданных. Trusted planner-orch передаёт roots расширений; preflight проверяет минимум класса и effort из execution-input.
 
 - **Orch: проверка до claim.** `conduct preflight --plan PLAN --items REF...` читает реальные source layers и execution-input каждого пункта через read-only `inspect`, проверяет маршруты и возвращает exit 1 при обязательном отказе. Claims, briefs и model requests не создаются. Обычный `run --dry-run` остаётся проекцией invocation, а не допуском пунктов плана.

@@ -73,6 +73,24 @@
             "Grok disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
             "no .grok/agents directory is created"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.agent-packs.lifecycle",
+          "diagnostic": "Antigravity consumer mapping resolves role lifecycle over the shared .claude/agents projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role resolves through agy consumer mapping to .claude/agents/*.md without creating a grok-owned agents tree",
+              "scope": "agy agent-packs.lifecycle consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "Antigravity acts as a consumer mapping over .claude/agents/*.md with projection_owner=claude-code",
+            "Antigravity disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code",
+            "no .antigravity/agents directory is created"
+          ]
         }
       }
     },
@@ -145,6 +163,23 @@
             "uses Grok compatibility loading of the existing Claude-format role projection",
             "does not introduce a Grok-owned agents directory"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.agents.catalog",
+          "diagnostic": "Antigravity resolves semantic agent roles through the shared .claude/agents catalog projection",
+          "evidence": [
+            {
+              "claim": "provider audit verifies every semantic role maps to a grok-consumable .claude/agents target while preserving claude-code ownership",
+              "scope": "agy agents.catalog consumer mapping over shared Claude projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "uses Antigravity compatibility loading of the existing Claude-format role projection",
+            "does not introduce a Antigravity-owned agents directory"
+          ]
         }
       }
     },
@@ -216,6 +251,22 @@
             "new Grok analytics evidence writes directly to the neutral store"
           ],
           "diagnostic": "unsupported for Grok: no committed legacy Grok analytics carrier exists; migration intent does not apply"
+        },
+        "antigravity": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy analytics.legacy-migration applicability",
+              "claim": "no committed legacy Antigravity analytics carrier exists to migrate; new Antigravity evidence is written directly to the neutral store"
+            }
+          ],
+          "limitations": [
+            "reason: not applicable — no legacy Antigravity analytics carrier exists to migrate",
+            "new Antigravity analytics evidence writes directly to the neutral store"
+          ],
+          "diagnostic": "unsupported for Antigravity: no committed legacy Antigravity analytics carrier exists; migration intent does not apply"
         }
       }
     },
@@ -280,6 +331,24 @@
             {
               "claim": "Grok schema=1 run-summary envelopes are normalized through the Codex-shaped reader and rejected when raw output/reason markers violate the allowlist",
               "scope": "grok reader normalization, redaction and schema checks",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "normalizes only allowlisted schema=1 fields; session_id is required",
+            "reuses the Codex capture reader with provider_id grok",
+            "raw command output, prompts and transcript keys are refused fail-closed"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "analyst.grok-capture-reader",
+          "diagnostic": "Antigravity schema=1 hook envelopes are normalized only through the named fail-closed reader",
+          "evidence": [
+            {
+              "claim": "Antigravity schema=1 run-summary envelopes are normalized through the Codex-shaped reader and rejected when raw output/reason markers violate the allowlist",
+              "scope": "agy reader normalization, redaction and schema checks",
               "source": "packages/analyst/tests/test_provider_readers.py",
               "verified_at": "2026-10-03"
             }
@@ -362,6 +431,23 @@
             "requires Grok events normalized through analyst.grok-capture-reader",
             "missing semantic metrics remain omitted and are never inferred as zero"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "analyst.neutral-run-report",
+          "diagnostic": "provider-neutral run-report projection is available for Antigravity-origin normalized events",
+          "evidence": [
+            {
+              "claim": "the agy schema=1 envelope path reaches neutral run-report through normalize -> append_event -> neutral_run_report without provider-specific fallback",
+              "scope": "agy envelope to neutral run-report end-to-end chain",
+              "source": "packages/analyst/tests/test_provider_readers.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "requires Antigravity events normalized through analyst.grok-capture-reader",
+            "missing semantic metrics remain omitted and are never inferred as zero"
+          ]
         }
       }
     },
@@ -432,6 +518,22 @@
           ],
           "diagnostic": "deterministic grok adapter satisfies command.external-research",
           "adapter_id": "planner.grok.external-research"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "availability depends on an explicitly configured research surface and WebFetch permission token"
+          ],
+          "diagnostic": "deterministic agy adapter satisfies command.external-research",
+          "adapter_id": "planner.antigravity.external-research"
         }
       }
     },
@@ -498,6 +600,22 @@
             }
           ],
           "diagnostic": "native grok binding satisfies command.filesystem-read",
+          "binding": {
+            "surface": "provider-native filesystem read"
+          },
+          "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies command.filesystem-read",
           "binding": {
             "surface": "provider-native filesystem read"
           },
@@ -572,6 +690,22 @@
             "surface": "provider-native filesystem write"
           },
           "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies command.filesystem-write",
+          "binding": {
+            "surface": "provider-native filesystem write"
+          },
+          "limitations": []
         }
       }
     },
@@ -638,6 +772,22 @@
             }
           ],
           "diagnostic": "native grok binding satisfies command.git-read",
+          "binding": {
+            "surface": "provider-native Git read"
+          },
+          "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies command.git-read",
           "binding": {
             "surface": "provider-native Git read"
           },
@@ -712,6 +862,22 @@
             "surface": "provider-native Git write"
           },
           "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies command.git-write",
+          "binding": {
+            "surface": "provider-native Git write"
+          },
+          "limitations": []
         }
       }
     },
@@ -778,6 +944,22 @@
             }
           ],
           "diagnostic": "native grok binding satisfies command.subagents",
+          "binding": {
+            "surface": "provider-native subagents"
+          },
+          "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies command.subagents",
           "binding": {
             "surface": "provider-native subagents"
           },
@@ -853,6 +1035,23 @@
           "limitations": [
             "managed planner carrier is an instruction projection over native subagents",
             "Grok-native Rhai workflow runs are not a swissknifeman workflows.status store"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "planner.antigravity.workflow-carrier",
+          "diagnostic": "Antigravity workflow-carrier is a generated instruction carrier; Antigravity also has native Rhai workflows that remain provider-owned",
+          "evidence": [
+            {
+              "claim": "the Antigravity command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog",
+              "scope": "agy command.workflow-carrier generated instruction projection",
+              "source": "packages/planner/lib/planner/command_render.py",
+              "verified_at": "2026-09-18"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "managed planner carrier is an instruction projection over native subagents",
+            "Antigravity-native Rhai workflow runs are not a swissknifeman workflows.status store"
           ]
         }
       }
@@ -939,6 +1138,28 @@
             "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
             "inactive by default unless registered via harness hooks --provider grok"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.context.observer",
+          "binding": {
+            "surface": "SessionStart",
+            "target": ".antigravity/hooks/swissknifeman.json"
+          },
+          "diagnostic": "Antigravity context.observer uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Antigravity context.observer uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)",
+              "scope": "agy context.observer Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
         }
       }
     },
@@ -1012,6 +1233,22 @@
             "repository rules can suggest formatting, but they are not provider-native output-style configuration"
           ],
           "diagnostic": "unsupported for Grok: no project-scoped output-style binding exists"
+        },
+        "antigravity": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy context.output-style capability cap",
+              "claim": "Antigravity exposes no project-scoped output-style binding in managed project configuration surfaces"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Antigravity exposes no project-scoped output-style binding",
+            "repository rules can suggest formatting, but they are not provider-native output-style configuration"
+          ],
+          "diagnostic": "unsupported for Antigravity: no project-scoped output-style binding exists"
         }
       }
     },
@@ -1085,6 +1322,22 @@
             ".grok/plans is a repository convention, not a provider configuration surface"
           ],
           "diagnostic": "unsupported for Grok: no project-scoped plans-directory binding exists"
+        },
+        "antigravity": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy context.plans-directory capability cap",
+              "claim": "Antigravity exposes no project-scoped plan-directory binding; plan paths remain repository convention only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Antigravity exposes no project-scoped plan-directory binding",
+            ".antigravity/plans is a repository convention, not a provider configuration surface"
+          ],
+          "diagnostic": "unsupported for Antigravity: no project-scoped plans-directory binding exists"
         }
       }
     },
@@ -1155,6 +1408,22 @@
           ],
           "diagnostic": "deterministic grok adapter satisfies doctor.environment",
           "adapter_id": "harness.grok.doctor.environment"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "requires the committed harness agy adapter and managed-boundary checks"
+          ],
+          "diagnostic": "deterministic agy adapter satisfies doctor.environment",
+          "adapter_id": "harness.antigravity.doctor.environment"
         }
       }
     },
@@ -1227,6 +1496,23 @@
           ],
           "diagnostic": "deterministic grok adapter satisfies doctor.provider",
           "adapter_id": "harness.grok.doctor.provider"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "reports the unmanaged approval-mode axis per D2",
+            "Claude-compat delivery depends on the user toggle \"Include Third-Party Plugins, Skills, and Other Configs\", so compat is not treated as a managed provider binding"
+          ],
+          "diagnostic": "deterministic agy adapter satisfies doctor.provider",
+          "adapter_id": "harness.antigravity.doctor.provider"
         }
       }
     },
@@ -1295,6 +1581,22 @@
           "diagnostic": "native grok binding satisfies instructions.project",
           "binding": {
             "surface": "AGENTS.md+.grok/rules/*.md"
+          },
+          "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies instructions.project",
+          "binding": {
+            "surface": "AGENTS.md+.antigravity/rules/*.md"
           },
           "limitations": []
         }
@@ -1375,6 +1677,27 @@
             "approval_surface": "launch-flag",
             "project_surface": "[permission] deny"
           }
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "claim": "Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation.",
+              "scope": "Antigravity lifecycle.auto-approval project projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-11-08"
+            }
+          ],
+          "limitations": [
+            "Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.",
+            "Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation."
+          ],
+          "diagnostic": "Antigravity lifecycle.auto-approval has a local harness projection; live native activation is unverified",
+          "adapter_id": "harness.antigravity.lifecycle.auto-approval",
+          "binding": {
+            "approval_surface": "launch-flag",
+            "project_surface": "[permission] deny"
+          }
         }
       }
     },
@@ -1441,6 +1764,24 @@
             {
               "claim": "Grok and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
               "scope": "grok lifecycle.changelog-gate shared-core routing and mode behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "reads release-sensitive commit type only from git commit -m messages",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.changelog-gate",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.changelog-gate through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Antigravity and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files",
+              "scope": "agy lifecycle.changelog-gate shared-core routing and mode behavior",
               "source": "packages/harness/lib/harness/hooks.py",
               "verified_at": "2026-10-03"
             }
@@ -1525,6 +1866,23 @@
             "records only tool calls Grok exposes as Bash on PreToolUse",
             "writes the grok state log, not ~/.claude/logs/bash-commands.jsonl"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.command-log",
+          "diagnostic": "deterministic agy adapter captures PreToolUse Bash commands through the shared lifecycle handler",
+          "evidence": [
+            {
+              "claim": "Antigravity command-log reads PreToolUse tool_input.command for tool_name Bash and writes ~/.antigravity/logs/bash-commands.jsonl; it does not use Cursor afterShellExecution",
+              "scope": "agy lifecycle.command-log shared handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "records only tool calls Antigravity exposes as Bash on PreToolUse",
+            "writes the agy state log, not ~/.claude/logs/bash-commands.jsonl"
+          ]
         }
       }
     },
@@ -1596,6 +1954,23 @@
           "limitations": [
             "correlates records by session_id, not Cursor conversation_id",
             "sidecar path is .grok/state, not .cursor/state"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.tool-telemetry",
+          "diagnostic": "deterministic agy adapter records PreToolUse tool_name into .antigravity/state/<session>.tools.jsonl",
+          "evidence": [
+            {
+              "claim": "Antigravity tool-telemetry appends tool_name under .antigravity/state/<session_id>.tools.jsonl; SessionEnd run-report merges that sidecar",
+              "scope": "agy lifecycle.tool-telemetry shared handler",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "correlates records by session_id, not Cursor conversation_id",
+            "sidecar path is .antigravity/state, not .cursor/state"
           ]
         }
       }
@@ -1676,6 +2051,24 @@
             "fail closed when the shared policy core is unreachable",
             "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.daemon-safety",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.daemon-safety through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Antigravity and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode",
+              "scope": "agy lifecycle.daemon-safety policy-core routing and enforcement behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive unless explicitly registered via harness hooks --provider agy --daemon-safety",
+            "fail closed when the shared policy core is unreachable",
+            "uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off"
+          ]
         }
       }
     },
@@ -1742,6 +2135,24 @@
             {
               "claim": "Grok and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
               "scope": "grok lifecycle.git-guardrails shared-core enforcement and warning behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "pattern-based refusal remains intentionally unchanged on this pass",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.git-guardrails",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.git-guardrails through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Antigravity and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling",
+              "scope": "agy lifecycle.git-guardrails shared-core enforcement and warning behavior",
               "source": "packages/harness/lib/harness/hooks.py",
               "verified_at": "2026-10-03"
             }
@@ -1827,6 +2238,24 @@
             "sessionStart additional_context is intentionally not used for this surface",
             "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.memory",
+          "diagnostic": "deterministic agy adapter activates lifecycle.memory through sessionStart env",
+          "evidence": [
+            {
+              "claim": "Antigravity memory adapter reads .antigravity/memory.env.ini on SessionStart and emits systemMessage from maind memory status; it does not inject additional_context",
+              "scope": "agy lifecycle.memory sessionStart environment activation",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "activation is explicit and mode-driven via .antigravity/memory.env.ini",
+            "sessionStart additional_context is intentionally not used for this surface",
+            "memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints"
+          ]
         }
       }
     },
@@ -1898,6 +2327,22 @@
             "no repository-scoped binding can satisfy provider-native notification semantics"
           ],
           "diagnostic": "unsupported for Grok: notifications are global-only and outside project-scoped control"
+        },
+        "antigravity": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy lifecycle.notification capability cap",
+              "claim": "Antigravity notification control is global CLI configuration and cannot be managed through repository-scoped bindings"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — notification settings are machine-global and not project-overridable",
+            "no repository-scoped binding can satisfy provider-native notification semantics"
+          ],
+          "diagnostic": "unsupported for Antigravity: notifications are global-only and outside project-scoped control"
         }
       }
     },
@@ -1964,6 +2409,24 @@
             {
               "claim": "Grok and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
               "scope": "grok lifecycle.pack-guard managed-target guard behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches managed targets through serialized preToolUse payload inspection",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.pack-guard",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.pack-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Antigravity and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict",
+              "scope": "agy lifecycle.pack-guard managed-target guard behavior",
               "source": "packages/harness/lib/harness/hooks.py",
               "verified_at": "2026-10-03"
             }
@@ -2050,6 +2513,24 @@
             "continuation followups are emitted only when subagentStop status is completed",
             "if a Claude-compat review-gate registration is already present, Grok-native continuation is skipped to avoid double triggering"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.review-gate",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.review-gate via subagentStop continuation",
+          "evidence": [
+            {
+              "claim": "Antigravity review-gate runs on SubagentStop, stores attempt counts in .antigravity/review-gate.state.json, exits 2 in strict mode, and otherwise emits systemMessage",
+              "scope": "agy lifecycle.review-gate continuation behavior and dedup safeguards",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "continuation followups are emitted only when subagentStop status is completed",
+            "if a Claude-compat review-gate registration is already present, Antigravity-native continuation is skipped to avoid double triggering"
+          ]
         }
       }
     },
@@ -2120,6 +2601,24 @@
             {
               "claim": "Grok lifecycle.router uses the shared Codex-shaped hook dispatcher over .grok/hooks/swissknifeman.json (Claude event names)",
               "scope": "grok lifecycle.router Claude-shaped hook projection",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop)",
+            "handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok",
+            "inactive by default unless registered via harness hooks --provider grok"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.router",
+          "diagnostic": "Antigravity lifecycle.router uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)",
+          "evidence": [
+            {
+              "claim": "Antigravity lifecycle.router uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)",
+              "scope": "agy lifecycle.router Claude-shaped hook projection",
               "source": "packages/harness/lib/harness/hooks.py",
               "verified_at": "2026-10-03"
             }
@@ -2205,6 +2704,23 @@
             "provider_id is grok when the shared handler is rendered with state_dir=.grok",
             "tool counts come from the .grok/state sidecar"
           ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.run-report",
+          "diagnostic": "deterministic agy adapter writes a SessionEnd run record with provider_id grok",
+          "evidence": [
+            {
+              "claim": "Antigravity run-report writes .antigravity/runs/<session>.json on SessionEnd and stamps provider_id antigravity",
+              "scope": "agy lifecycle.run-report schema=1 envelope checks",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "provider_id is agy when the shared handler is rendered with state_dir=.grok",
+            "tool counts come from the .antigravity/state sidecar"
+          ]
         }
       }
     },
@@ -2275,6 +2791,25 @@
             "surface": ".grok/config.toml"
           },
           "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "claim": "Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation.",
+              "scope": "Antigravity mcp.catalog project projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-11-08"
+            }
+          ],
+          "diagnostic": "Antigravity mcp.catalog has a local harness projection; live native activation is unverified",
+          "binding": {
+            "surface": ".antigravity/config.toml"
+          },
+          "limitations": [
+            "Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.",
+            "Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation."
+          ]
         }
       }
     },
@@ -2354,6 +2889,23 @@
           ],
           "diagnostic": "deterministic grok adapter denies rm/rmdir on PreToolUse Bash through the shared allowlist core",
           "adapter_id": "harness.grok.security.safe-dirs"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "claim": "Antigravity safe-dirs is a PreToolUse Bash hook in .antigravity/hooks/swissknifeman.json that calls the shared safedirs verdict and fails closed when the harness checkout is unreachable",
+              "scope": "agy security.safe-dirs hook document and handler",
+              "source": "packages/harness/tests/test_grok_provider_surface.py",
+              "verified_at": "2026-10-03"
+            }
+          ],
+          "limitations": [
+            "matcher is ^Bash$ on PreToolUse, not Cursor beforeShellExecution",
+            "unreachable harness checkout is a refusal, not a pass"
+          ],
+          "diagnostic": "deterministic agy adapter denies rm/rmdir on PreToolUse Bash through the shared allowlist core",
+          "adapter_id": "harness.antigravity.security.safe-dirs"
         }
       }
     },
@@ -2425,6 +2977,22 @@
           ],
           "diagnostic": "deterministic grok adapter satisfies settings.audit",
           "adapter_id": "harness.grok.settings.audit"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "limitations": [
+            "read-only audit of documented layers; unreadable layer is a finding"
+          ],
+          "diagnostic": "deterministic agy adapter satisfies settings.audit",
+          "adapter_id": "harness.antigravity.settings.audit"
         }
       }
     },
@@ -2495,6 +3063,23 @@
           ],
           "diagnostic": "deterministic grok adapter satisfies settings.permissions",
           "adapter_id": "harness.grok.settings.permissions"
+        },
+        "antigravity": {
+          "level": "adapted",
+          "evidence": [
+            {
+              "claim": "Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation.",
+              "scope": "Antigravity settings.permissions project projection",
+              "source": "packages/harness/lib/harness/provider_audit.py",
+              "verified_at": "2026-11-08"
+            }
+          ],
+          "limitations": [
+            "Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.",
+            "Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation."
+          ],
+          "diagnostic": "Antigravity settings.permissions has a local harness projection; live native activation is unverified",
+          "adapter_id": "harness.antigravity.settings.permissions"
         }
       }
     },
@@ -2561,6 +3146,22 @@
             }
           ],
           "diagnostic": "native grok binding satisfies skills.repository",
+          "binding": {
+            "surface": ".agents/skills"
+          },
+          "limitations": []
+        },
+        "antigravity": {
+          "level": "native",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy capability matrix",
+              "claim": "committed support level"
+            }
+          ],
+          "diagnostic": "native agy binding satisfies skills.repository",
           "binding": {
             "surface": ".agents/skills"
           },
@@ -2636,6 +3237,22 @@
             "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
           ],
           "diagnostic": "unsupported for Grok: no provider-native workflow status store exists"
+        },
+        "antigravity": {
+          "level": "unsupported",
+          "evidence": [
+            {
+              "source": "docs/provider-support.md",
+              "verified_at": "2026-09-17",
+              "scope": "agy workflows.status capability cap",
+              "claim": "Antigravity exposes no provider-native workflow run store; generated workflow carriers are instruction-only"
+            }
+          ],
+          "limitations": [
+            "reason: API-capped — Antigravity exposes no provider-native workflow run store to query",
+            "generated workflow carriers orchestrate native subagents but do not create a queryable run directory"
+          ],
+          "diagnostic": "unsupported for Antigravity: no provider-native workflow status store exists"
         }
       }
     },
@@ -2703,6 +3320,24 @@
             {
               "claim": "Grok and Codex plan-guard adapters share one dispatcher and one policy core for generated plan files",
               "scope": "grok lifecycle.plan-guard generated-file guard behavior",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "adapted",
+          "limitations": [
+            "inactive by default; MODE=warn|strict must be set explicitly via harness hooks",
+            "matches only the apply_patch tool",
+            "fail closed when the shared policy core is unreachable"
+          ]
+        },
+        "antigravity": {
+          "adapter_id": "harness.antigravity.lifecycle.plan-guard",
+          "diagnostic": "deterministic agy adapter satisfies lifecycle.plan-guard through the shared policy core",
+          "evidence": [
+            {
+              "claim": "Antigravity and Codex plan-guard adapters share one dispatcher and one policy core for generated plan files",
+              "scope": "agy lifecycle.plan-guard generated-file guard behavior",
               "source": "packages/harness/lib/harness/hooks.py",
               "verified_at": "2026-10-05"
             }
@@ -2782,6 +3417,21 @@
           "limitations": [
             "generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON"
           ]
+        },
+        "antigravity": {
+          "diagnostic": "unsupported for Antigravity: no PostToolUse surface is mapped by the harness for lifecycle.plan-regen",
+          "evidence": [
+            {
+              "claim": "harness hooks.py maps no PostToolUse lifecycle surface for Antigravity",
+              "scope": "Antigravity lifecycle.plan-regen activation state",
+              "source": "packages/harness/lib/harness/hooks.py",
+              "verified_at": "2026-10-05"
+            }
+          ],
+          "level": "unsupported",
+          "limitations": [
+            "generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON"
+          ]
         }
       }
     }
@@ -2805,6 +3455,10 @@
     {
       "display_name": "Grok",
       "id": "grok"
+    },
+    {
+      "display_name": "Antigravity",
+      "id": "antigravity"
     }
   ]
 }

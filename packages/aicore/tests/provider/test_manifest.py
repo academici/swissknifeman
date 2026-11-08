@@ -13,10 +13,9 @@ from aicore.provider.manifest import (ProviderManifestError, default_manifest_pa
 
 
 MANIFEST_PATH = default_manifest_path()
-# Reviewed when the Python 3.11 floor removed the Codex settings.audit limitation
-# that interpreters before 3.11 could not read the layer. Not a generator rewrite.
-APPROVED_CANONICAL_SHA256 = "0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6"
-APPROVED_CARRIER_SHA256 = "f93aae540a71f9e01e215b2dd07625d61724b89ce99b93105699caeadf6f2ab5"
+# Reviewed Antigravity provider admission: existing provider support is unchanged.
+APPROVED_CANONICAL_SHA256 = "0bd3a971c7fa4d33f97d336c9c1cc51c22f6ba06b92557e1b348bb47caf2aa67"
+APPROVED_CARRIER_SHA256 = "7df7cdce32d3b679f5abd58bb331d2d2168f65437f009551558d73cd5d9c0ed4"
 
 REGENERATION_DIAGNOSTIC = (
     "manifest hash mismatch — packages/aicore/configs/provider-capabilities.json was likely "
@@ -62,7 +61,7 @@ class TestProviderManifest(unittest.TestCase):
         self.assertEqual(parse_provider_manifest(raw),
                          parse_provider_manifest(provider_manifest_canonical_bytes(manifest)))
         self.assertEqual((len(manifest.providers), len(manifest.capabilities),
-                          len(manifest.native_extensions)), (4, 38, 0))
+                          len(manifest.native_extensions)), (5, 38, 0))
 
     def test_contract_compatibility_accepts_v1_minor_and_rejects_next_major(self):
         compatible = manifest_value()
@@ -95,7 +94,7 @@ class TestProviderManifest(unittest.TestCase):
         manifest = load_provider_manifest(MANIFEST_PATH)
         catalog = provider_config_catalog(manifest)
         self.assertEqual(catalog.catalog_version, "1.0.0")
-        self.assertEqual(len(catalog.capability_support), 152)
+        self.assertEqual(len(catalog.capability_support), 190)
         for provider in ProviderId:
             projection = provider_support_projection(manifest, provider)
             self.assertEqual(len(projection), 38)

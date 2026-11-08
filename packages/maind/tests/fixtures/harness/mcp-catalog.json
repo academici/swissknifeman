@@ -48,6 +48,80 @@
     ]
   },
   "bindings": {
+    "antigravity": {
+      "binding_version": "1.0.0",
+      "provider_id": "antigravity",
+      "target_scope": "project",
+      "target_path": ".antigravity/config.toml",
+      "servers": {
+        "context7": {
+          "url": "https://mcp.context7.com/mcp"
+        },
+        "fetch": {
+          "command": "uvx",
+          "args": [
+            "mcp-server-fetch"
+          ]
+        },
+        "filesystem": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-filesystem",
+            "."
+          ]
+        },
+        "github": {
+          "url": "https://api.githubcopilot.com/mcp/"
+        },
+        "memory": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-memory"
+          ]
+        },
+        "playwright": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@playwright/mcp@latest"
+          ]
+        },
+        "sequential-thinking": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@modelcontextprotocol/server-sequential-thinking"
+          ]
+        },
+        "perplexity-web": {
+          "command": "${PERPLEXITY_WEB_MCP_BIN}",
+          "args": [],
+          "env": {
+            "PERPLEXITY_SESSION_TOKEN": "${PERPLEXITY_SESSION_TOKEN}"
+          }
+        },
+        "serena": {
+          "command": "uvx",
+          "args": [
+            "--from",
+            "git+https://github.com/oraios/serena",
+            "serena",
+            "start-mcp-server",
+            "--context",
+            "ide-assistant"
+          ]
+        },
+        "laravel-boost": {
+          "command": "php",
+          "args": [
+            "artisan",
+            "boost:mcp"
+          ]
+        }
+      }
+    },
     "claude-code": {
       "binding_version": "1.0.0",
       "provider_id": "claude-code",
@@ -257,6 +331,11 @@
   },
   "sources": {
     "bindings": {
+      "antigravity": {
+        "id": "harness.antigravity.mcp-bindings",
+        "path": "@HARNESS_PKG@/configs/antigravity/mcp/bindings.json",
+        "sha256": "sha256:e4a016b932f65b5672753534fa2107a45481c41edda925b3168a0a7b588b3c30"
+      },
       "claude-code": {
         "id": "harness.claude-code.mcp-bindings",
         "path": "@HARNESS_PKG@/configs/claude-code/mcp/bindings.json",
@@ -285,6 +364,7 @@
     }
   },
   "adapters": {
+    "antigravity": "harness.antigravity.mcp",
     "claude-code": "harness.claude-code.mcp",
     "codex": "harness.codex.mcp",
     "cursor": "harness.cursor.mcp",

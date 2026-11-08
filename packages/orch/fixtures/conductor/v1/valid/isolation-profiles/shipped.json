@@ -4,120 +4,45 @@
   "providers": {
     "claude-code": {
       "guarantee": "full",
-      "args": [
-        "--safe-mode",
-        "--strict-mcp-config"
-      ],
-      "env": {
-        "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
-        "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"
-      },
-      "probe": {
-        "help": [
-          "claude",
-          "--help"
-        ],
-        "flags": [
-          "--safe-mode",
-          "--strict-mcp-config"
-        ]
-      },
+      "args": ["--safe-mode", "--strict-mcp-config"],
+      "env": {"CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"},
+      "probe": {"help": ["claude", "--help"], "flags": ["--safe-mode", "--strict-mcp-config"]},
       "home": null,
-      "observe": {
-        "event": "system/init",
-        "empty": [
-          "mcp_servers",
-          "plugins"
-        ],
-        "allowed_skills": "prompt-only"
-      },
-      "surfaces": {
-        "repository_instructions": "off",
-        "memory": "off",
-        "plugins": "off",
-        "hooks": "off",
-        "mcp": "off",
-        "user_skills": "off",
-        "project_permissions": "on"
-      }
+      "observe": {"event": "system/init", "empty": ["mcp_servers", "plugins"], "allowed_skills": "prompt-only"},
+      "surfaces": {"repository_instructions": "off", "memory": "off", "plugins": "off", "hooks": "off", "mcp": "off",
+                   "user_skills": "off", "project_permissions": "on"}
     },
     "codex": {
       "guarantee": "partial",
-      "args": [
-        "--ignore-user-config",
-        "-c",
-        "project_doc_max_bytes=0"
-      ],
+      "args": ["--ignore-user-config", "-c", "project_doc_max_bytes=0"],
       "env": {},
-      "probe": {
-        "help": [
-          "codex",
-          "exec",
-          "--help"
-        ],
-        "flags": [
-          "--ignore-user-config"
-        ],
-        "render": [
-          "codex",
-          "debug",
-          "prompt-input"
-        ]
-      },
-      "home": {
-        "vars": {
-          "CODEX_HOME": "codex-home",
-          "HOME": "codex-user-home"
-        },
-        "keep_env": [
-          "XDG_CACHE_HOME"
-        ],
-        "auth": [
-          "auth.json"
-        ],
-        "mode": "link",
-        "origin": ".codex"
-      },
+      "probe": {"help": ["codex", "exec", "--help"], "flags": ["--ignore-user-config"],
+                "render": ["codex", "debug", "prompt-input"]},
+      "home": {"vars": {"CODEX_HOME": "codex-home", "HOME": "codex-user-home"}, "keep_env": ["XDG_CACHE_HOME"],
+               "auth": ["auth.json"], "mode": "link", "origin": ".codex"},
       "observe": null,
-      "surfaces": {
-        "repository_instructions": "canary",
-        "memory": "off",
-        "plugins": "off",
-        "hooks": "off",
-        "mcp": "off",
-        "user_skills": "unknown",
-        "project_permissions": "n/a"
-      }
+      "surfaces": {"repository_instructions": "canary", "memory": "off", "plugins": "off", "hooks": "off", "mcp": "off",
+                   "user_skills": "unknown", "project_permissions": "n/a"}
     },
     "grok": {
       "guarantee": "partial",
       "args": [],
       "env": {},
-      "probe": {
-        "help": [
-          "grok",
-          "--help"
-        ],
-        "flags": []
-      },
+      "probe": {"help": ["grok", "--help"], "flags": []},
       "home": null,
-      "observe": {
-        "event": "system/init",
-        "empty": [
-          "mcp_servers",
-          "skills"
-        ],
-        "allowed_skills": "none"
-      },
-      "surfaces": {
-        "repository_instructions": "unknown",
-        "memory": "unknown",
-        "plugins": "unknown",
-        "hooks": "on",
-        "mcp": "observed",
-        "user_skills": "observed",
-        "project_permissions": "n/a"
-      }
+      "observe": {"event": "system/init", "empty": ["mcp_servers", "skills"], "allowed_skills": "none"},
+      "surfaces": {"repository_instructions": "unknown", "memory": "unknown", "plugins": "unknown", "hooks": "on",
+                   "mcp": "observed", "user_skills": "observed", "project_permissions": "n/a"}
+    },
+    "antigravity": {
+      "guarantee": "partial",
+      "args": [],
+      "env": {},
+      "probe": {"help": ["agy", "chat", "--help"], "flags": []},
+      "home": null,
+      "observe": null,
+      "surfaces": {"repository_instructions": "unknown", "memory": "unknown", "plugins": "unknown", "hooks": "on",
+                   "mcp": "unknown", "user_skills": "unknown", "project_permissions": "n/a"}
     }
   }
 }

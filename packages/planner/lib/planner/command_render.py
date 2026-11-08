@@ -35,7 +35,8 @@ _MAPPING_KEYS = frozenset({
     "provider_id", "mapping_version", "class_selectors", "effort_selectors",
     "capability_bindings", "invocation_binding", "model_inventory", "evidence",
 })
-_PROVIDER_ORDER = tuple(item.value for item in ProviderId)
+# Command publication has four renderers; runtime provider admission is independent.
+_PROVIDER_ORDER = ("claude-code", "codex", "cursor", "grok")
 _PROVIDER_IDS = frozenset(_PROVIDER_ORDER)
 _PLAN_NEXT_COMMANDS = {
     "exec-items": f"{COMMAND_NAMESPACE}:plan-run",  # legacy kind spelling, same command

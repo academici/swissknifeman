@@ -115,6 +115,10 @@ def audited_paths(package_root: Path) -> tuple[Path, ...]:
         root / "configs/grok/agent-packs/consumer-mapping.json",
         root / "configs/grok/hooks/lifecycle-context-bindings.json",
         root / "configs/grok/mcp/bindings.json",
+        root / "configs/antigravity/config/profile-bindings.json",
+        root / "configs/antigravity/agent-packs/consumer-mapping.json",
+        root / "configs/antigravity/hooks/lifecycle-context-bindings.json",
+        root / "configs/antigravity/mcp/bindings.json",
         root / "configs/claude-code/agent-packs/role-bindings.json",
     )
     return tuple(sorted(paths))
@@ -189,7 +193,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
                 rendered = (render_profile(resolution, codex_bindings_path=profile_bindings)
                             if resolution.green else b"")
             except ValueError as error:
-                if "HARNESS_CURSOR" in str(error) or "HARNESS_GROK" in str(error):
+                if any(tag in str(error) for tag in ("HARNESS_CURSOR", "HARNESS_GROK", "HARNESS_ANTIGRAVITY")):
                     evidence.append(("security", provider.value, f"profile:{profile.id}", "negative",
                                      "refused", str(error)))
                     continue
@@ -248,7 +252,7 @@ def audit_package(package_root: Path, fixture_path: Path | None = None, *,
             root / "configs/claude-code/agent-packs/role-bindings.json", roles)
             if provider is ProviderId.CLAUDE_CODE else None)
         verified_count = 0
-        if provider in (ProviderId.CURSOR, ProviderId.GROK):
+        if provider in (ProviderId.CURSOR, ProviderId.GROK, ProviderId.ANTIGRAVITY):
             mapping = load_cursor_agent_consumer_mapping(
                 root / "configs" / provider.value / "agent-packs/consumer-mapping.json")
             consumer_targets = _verify_cursor_agent_consumer_mapping(roles, mapping, provider=provider)
@@ -377,7 +381,7 @@ def _verify_cursor_agent_consumer_mapping(roles, mapping, *, provider=ProviderId
     targets = cursor_consumer_targets(roles, mapping)
     if len(targets) != len(roles):
         raise ValueError(f"HARNESS_CATALOG_MISMATCH:{name}:agents:missing")
-    forbidden = (".cursor/agents", ".grok/agents")
+    forbidden = (".cursor/agents", ".grok/agents", ".antigravity/agents")
     for _pack_id, _role_id, target in targets:
         if not target.startswith(".claude/agents/") or not target.endswith(".md"):
             raise ValueError(f"HARNESS_CATALOG_MISMATCH:{name}:agents:target")
@@ -401,6 +405,9 @@ def _provider_surface_rows(provider, catalog, lifecycle, mcp_plan, verified_agen
     elif provider is ProviderId.GROK:
         from .grok_render import grok_profile_target
         profile_target = grok_profile_target()
+    elif provider is ProviderId.ANTIGRAVITY:
+        from .antigravity_render import antigravity_profile_target
+        profile_target = antigravity_profile_target()
     else:
         profile_target = ".codex/config.toml"
     rows = []
@@ -429,6 +436,8 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
             return "non-artifact:named-cursor-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
         if provider is ProviderId.GROK:
             return "non-artifact:named-grok-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
+        if provider is ProviderId.ANTIGRAVITY:
+            return "non-artifact:named-antigravity-settings-audit", "supported", "HARNESS_SETTINGS_AUDIT_NAMED"
         # bounded closure (codex-parity-verdicts-v1.md §3.11, P2.4): Codex gets its own
         # smaller named check set (settings_audit.run_codex_checks) over the documented
         # Codex layers — not a generalization of the 13 Claude checks.
@@ -438,7 +447,7 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
         code = lifecycle_codes.get(surface_id, "")
         if code:
             return "non-artifact:unsupported-native-binding", "unsupported", code
-        if provider in (ProviderId.CODEX, ProviderId.GROK) and binding.support_level == "hook-native":
+        if provider in (ProviderId.CODEX, ProviderId.GROK, ProviderId.ANTIGRAVITY) and binding.support_level == "hook-native":
             document, handler = claude_shaped_hook_paths(provider)
             return f"artifact:project:{document}+{handler}", "supported", "HARNESS_ACTIVATION_NATIVE"
         if provider is ProviderId.CURSOR and binding.support_level == "hook-native":
@@ -455,7 +464,7 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "mcp.catalog":
         return f"artifact:{mcp_plan.target_scope}:{mcp_plan.target_path}", "supported", "HARNESS_MCP_PROJECTION_RENDERED"
     if surface_id == "agents.catalog":
-        if provider in (ProviderId.CURSOR, ProviderId.GROK):
+        if provider in (ProviderId.CURSOR, ProviderId.GROK, ProviderId.ANTIGRAVITY):
             return (f"non-artifact:{provider.value}-consumer-mapping:{verified_agent_count}-targets:.claude/agents/*.md",
                     "supported", "HARNESS_CURSOR_AGENT_CONSUMER_MAPPING")
         return (f"artifact:project:{verified_agent_count}-named-agent-targets", "supported",
@@ -463,7 +472,7 @@ def _named_surface_state(provider, surface_id, bindings, lifecycle_codes, profil
     if surface_id == "agent-packs.lifecycle":
         if provider is ProviderId.CLAUDE_CODE:
             return "non-artifact:named-agent-pack-engine", "supported", "HARNESS_AGENTPACK_LIFECYCLE_NAMED"
-        if provider in (ProviderId.CURSOR, ProviderId.GROK):
+        if provider in (ProviderId.CURSOR, ProviderId.GROK, ProviderId.ANTIGRAVITY):
             return (f"non-artifact:{provider.value}-consumer-lifecycle-shared-projection",
                     "supported", "HARNESS_CURSOR_AGENTPACK_CONSUMER_LIFECYCLE")
         # bounded closure (codex-parity-verdicts-v1.md §3.12, P2.4): role-projection

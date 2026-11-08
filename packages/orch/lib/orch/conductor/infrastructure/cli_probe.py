@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from typing import Optional
 
-PROVIDERS = {"claude": "claude-code", "codex": "codex", "grok": "grok"}  # CLI name -> provider id
+PROVIDERS = {"claude": "claude-code", "codex": "codex", "grok": "grok", "agy": "antigravity"}  # CLI name -> provider id
 TIMEOUT_S = 20
 # A CLI is its file (realpath, inode, size, mtime): a CLI replaced at the same path (an update) is asked again.
 _KNOWN: dict = {}  # (identity, version, help argv, flags) -> whether the help lists the flags

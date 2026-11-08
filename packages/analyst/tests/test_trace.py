@@ -50,6 +50,11 @@ class TestTraceId(unittest.TestCase):
 
 
 class TestBuildTraceRecord(unittest.TestCase):
+    def test_antigravity_provider_is_accepted_by_builder_and_schema(self):
+        record = build_trace_record(_raw(provenance=_provenance(provider_id="antigravity")),
+                                    provider_id="antigravity", project_id="p", identity="s", turn_id="t")
+        self.assertEqual(record["provenance"]["provider_id"], "antigravity")
+
     def test_full_record_is_complete_and_closed_schema(self):
         record = build_trace_record(_raw(), provider_id="claude-code", project_id="swissknifeman",
                                      identity="session-1", turn_id="turn-3")

@@ -5,5 +5,10 @@
   "also": [
     "SLIM"
   ],
-  "exclusive_group": "php-architecture"
+  "exclusive_group": "php-architecture",
+  "triggers": {
+    "paths": [
+      "*.php"
+    ]
+  }
 }

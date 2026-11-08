@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 SCHEMA_VERSION = "unified-agent-trace/v1"
-PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor", "grok"))
+PROVIDER_IDS = frozenset(("claude-code", "codex", "cursor", "grok", "antigravity"))
 PRIVACY_EXCLUDED = ("raw_transcript", "chain_of_thought", "tool_payload", "secret")
 DISPATCH_STATES = frozenset((
     "READY", "EXECUTING", "VERIFYING", "FIXING", "DONE", "INCIDENT",

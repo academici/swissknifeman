@@ -113,7 +113,7 @@ def cmd_resolve(env, argv):
     parser = argparse.ArgumentParser(prog="skiller resolve",
                                      description="Resolve skills and their transitive requirements.")
     parser.add_argument("skills", nargs="+", metavar="SKILL")
-    parser.add_argument("--provider", choices=("claude-code", "codex", "grok"))
+    parser.add_argument("--provider", choices=("claude-code", "codex", "grok", "antigravity"))
     parser.add_argument("--json", action="store_true", dest="json_output")
     args = parser.parse_args(argv)
     registry = safe_load_json(env.root / "skills.json",

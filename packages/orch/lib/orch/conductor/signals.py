@@ -20,7 +20,7 @@ _CODEX_MARKERS = {"tool_use": (b'"type":"item.started"', b'"type": "item.started
                   "tool_result": (b'"type":"item.completed"', b'"type": "item.completed"')}
 # The lines of a stream that show a role at work, by provider (the transport ``text`` has none): a tool call starts or
 # ends. A provider that is not listed is read for the markers of all of them.
-PROGRESS_MARKERS = {"claude-code": _CLAUDE_MARKERS, "grok": _CLAUDE_MARKERS, "codex": _CODEX_MARKERS}
+PROGRESS_MARKERS = {"claude-code": _CLAUDE_MARKERS, "grok": _CLAUDE_MARKERS, "antigravity": _CLAUDE_MARKERS, "codex": _CODEX_MARKERS}
 
 
 def markers_of(transport: str, provider: Optional[str]) -> dict:

@@ -33,6 +33,16 @@
       "observe": {"event": "system/init", "empty": ["mcp_servers", "skills"], "allowed_skills": "none"},
       "surfaces": {"repository_instructions": "unknown", "memory": "unknown", "plugins": "unknown", "hooks": "on",
                    "mcp": "observed", "user_skills": "observed", "project_permissions": "n/a"}
+    },
+    "antigravity": {
+      "guarantee": "partial",
+      "args": [],
+      "env": {},
+      "probe": {"help": ["agy", "chat", "--help"], "flags": []},
+      "home": null,
+      "observe": null,
+      "surfaces": {"repository_instructions": "unknown", "memory": "unknown", "plugins": "unknown", "hooks": "on",
+                   "mcp": "unknown", "user_skills": "unknown", "project_permissions": "n/a"}
     }
   }
 }

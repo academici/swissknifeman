@@ -279,11 +279,18 @@ def review(self, item: Item, number: int, rows: list, pending: bool = False, can
                     terminal = [event for event in events if event.get("type") == "result"]
                     if len(terminal) != 1 or terminal[0].get("is_error") is not False or not terminal[0].get("session_id"):
                         raise ValueError("missing successful terminal reviewer session")
-                    findings = results.green_prose(terminal[0].get("result", ""))
-                    if findings is None or contract.problems(findings, "review-findings") or findings_problems(findings):
-                        raise ValueError("review prose is ambiguous or has findings/questions")
+                    doc, _healed, issues, _original = results.closed(
+                        terminal[0].get("result", ""), "review-findings", findings_problems
+                    )
+                    if not issues and doc is not None:
+                        findings = doc
+                        provenance_note = "recovered valid fenced review-findings from completed stream"
+                    else:
+                        findings = results.green_prose(terminal[0].get("result", ""))
+                        if findings is None or contract.problems(findings, "review-findings") or findings_problems(findings):
+                            raise ValueError("review prose is ambiguous or has findings/questions")
+                        provenance_note = "owner-authorized exact GREEN prose"
                     session = terminal[0]["session_id"]
-                    provenance_note = "owner-authorized exact GREEN prose"
                 requests = [json.loads(path.read_text()) for path in (item.directory / "agents").glob("*/request.json")]
                 matching = [request for request in requests if request.get("step") == key
                             and request.get("role") == "reviewer"

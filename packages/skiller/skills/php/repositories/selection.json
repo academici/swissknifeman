@@ -2,5 +2,13 @@
   "schema": "skill-selection/v1",
   "kind": "domain",
   "decision": "KEEP",
-  "exclusive_group": "php-architecture"
+  "exclusive_group": "php-architecture",
+  "triggers": {
+    "paths": [
+      "*Repository*.php",
+      "*Store*.php",
+      "src/**/*.php",
+      "app/**/*.php"
+    ]
+  }
 }

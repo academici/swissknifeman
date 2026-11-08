@@ -1,7 +1,7 @@
 {
   "schema": "golden-cases/v1",
-  "captured_from": "404279208a61",
-  "reason": "Integrate operator context and resumed usage accounting without changing historical receipts",
+  "captured_from": "ba8687842199",
+  "reason": "Antigravity integration with verified CLI flags and release 0.36.0 surfaces",
   "doc": "Behaviour cases of the CLIs, run in a dev-sandbox from the repository root. argv: {REPO} and {SANDBOX} are expanded; the first case argument is a path inside the clone, never a PATH lookup. Version commands are excluded on purpose: they change with every commit.",
   "setup": [
     {

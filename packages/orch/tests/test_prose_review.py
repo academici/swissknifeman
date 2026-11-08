@@ -34,6 +34,16 @@ class ProseReviewTest(unittest.TestCase):
                         text.replace('## Verdict', '## Verdict\n## Verdict')):
             self.assertIsNone(green_prose(invalid))
 
+    def test_prose_does_not_erase_findings_or_questions(self):
+        template = ('## Review Findings\n\n{}\n\n## Questions\n\n{}\n\n'
+                    '## Material Residual Risk\n\nRemaining risk.\n\n## Verdict\n\nGREEN\n')
+        for findings, questions in (
+                ('[Minor] Preserve this finding.', 'None.'),
+                ('No findings. [Major] Must fix.', 'None.'),
+                ('No findings.', 'None. Why is this safe?')):
+            with self.subTest(findings=findings, questions=questions):
+                self.assertIsNone(green_prose(template.format(findings, questions)))
+
     def test_completed_review_before_503_preserves_verdict_and_error(self):
         body = ('Review complete.\n```review-findings\n'
                 '{"verdict":"GREEN","findings":[],"questions":[],"residual_risk":"race"}\n```')

@@ -231,12 +231,26 @@ class GoldenTasksCase(unittest.TestCase):
 
     def test_laravel_migration(self):
         got, out = self.select(["database/migrations/2026_create_orders.php"], ["composer:laravel/framework"])
-        self.assertEqual(got, [("laravel-testing/test-isolation-guard", "trigger_path"), ("php/database", "trigger_path")])
+        self.assertEqual(got, [
+            ("laravel-testing/laravel-testing", "trigger_dep"),
+            ("laravel-testing/test-isolation-guard", "trigger_path"),
+            ("php-packages/laravel-package-service-provider", "trigger_dep"),
+            ("php/code-style-spatie", "trigger_path"),
+            ("php/database", "trigger_path"),
+            ("php/dependency-injection", "trigger_path"),
+            ("php/laravel-structure", "trigger_dep"),
+            ("php/named-arguments", "trigger_path"),
+            ("php/naming-conventions", "trigger_path"),
+        ])
         self.assertEqual(out["excluded"], [])
 
     def test_vue_component(self):
         got, _ = self.select(["resources/js/Components/OrderList.vue"], ["npm:vue"])
-        self.assertEqual(got, [("frontend-vue/vue-best-practices", "trigger_path")])
+        self.assertEqual(got, [
+            ("frontend-linting/js-code-style", "trigger_path"),
+            ("frontend-tailwind/tailwind-conventions", "trigger_path"),
+            ("frontend-vue/vue-best-practices", "trigger_path"),
+        ])
 
     def test_python_cli(self):
         got, _ = self.select(["src/tool/cli.py", "pyproject.toml"], ["pip:click"])

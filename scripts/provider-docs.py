@@ -157,6 +157,7 @@ _PROVIDER_LABELS = {
     ProviderId.CODEX: "Codex",
     ProviderId.CURSOR: "Cursor",
     ProviderId.GROK: "Grok",
+    ProviderId.ANTIGRAVITY: "Antigravity",
 }
 
 

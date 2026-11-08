@@ -2,5 +2,14 @@
   "schema": "skill-selection/v1",
   "kind": "contract",
   "decision": "KEEP",
-  "exclusive_group": "vitest"
+  "exclusive_group": "vitest",
+  "triggers": {
+    "paths": [
+      "*.spec.ts",
+      "*.test.ts"
+    ],
+    "deps": [
+      "npm:@vue/test-utils"
+    ]
+  }
 }

@@ -74,7 +74,7 @@ class ProfilesFileTests(unittest.TestCase):
         self.assertEqual(contract.problems(doc, "isolation-profiles"), [])
         self.assertEqual(isolation.profile_problems(doc), [])
         self.assertEqual(json.loads(SHIPPED.read_text(encoding="utf-8")), doc)
-        self.assertEqual(sorted(isolation.load_profiles()), ["claude-code", "codex", "grok"])
+        self.assertEqual(sorted(isolation.load_profiles()), ["antigravity", "claude-code", "codex", "grok"])
 
     def test_i_a_damaged_profiles_file_is_a_stop(self):
         with tempfile.TemporaryDirectory() as tmp:

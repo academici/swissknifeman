@@ -27,7 +27,8 @@ _SEMVER_RE = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 _IDENTIFIER_RE = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
 _DATE_RE = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 _DISPLAY_NAMES = {ProviderId.CLAUDE_CODE: "Claude Code", ProviderId.CODEX: "Codex",
-                  ProviderId.CURSOR: "Cursor", ProviderId.GROK: "Grok"}
+                  ProviderId.CURSOR: "Cursor", ProviderId.GROK: "Grok",
+                  ProviderId.ANTIGRAVITY: "Antigravity"}
 _ENVELOPE_KEYS = frozenset({"contract_version", "catalog_version", "providers",
                             "capabilities", "native_extensions"})
 _PROVIDER_KEYS = frozenset({"id", "display_name"})

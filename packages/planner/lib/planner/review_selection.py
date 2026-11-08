@@ -13,7 +13,7 @@ from planner import COMMAND_NAMESPACE
 _REVIEW_ONLY_COMMANDS = frozenset(f"{COMMAND_NAMESPACE}:{name}" for name in ("review", "plan-audit"))
 _REVIEW_COMMANDS = _REVIEW_ONLY_COMMANDS | frozenset(
     f"{COMMAND_NAMESPACE}:{name}" for name in ("plan-run", "dev", "design", "make-workflow"))
-_SELECTOR = re.compile(r"^(claude-code|codex|cursor|grok)/([A-Za-z0-9][A-Za-z0-9._:-]*)$")
+_SELECTOR = re.compile(r"^(claude-code|codex|cursor|grok|antigravity)/([A-Za-z0-9][A-Za-z0-9._:-]*)$")
 
 
 class ReviewError(ValueError):

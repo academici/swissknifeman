@@ -53,7 +53,7 @@ def run_bounded(argv, *, timeout, **kwargs):
                                            (text(expired.stderr) + "\n" + note).strip())
 
 CONTRACT_VERSION = "exec/v1"
-PROVIDERS = ("claude-code", "codex", "grok")
+PROVIDERS = ("claude-code", "codex", "grok", "antigravity")
 BINDINGS = ("native", "cao", "claude-only")
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
 SKILL_MD_BYTES = 64 * 1024

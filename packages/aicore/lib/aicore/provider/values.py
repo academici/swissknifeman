@@ -22,6 +22,7 @@ class ProviderId(str, Enum):
     CODEX = "codex"
     CURSOR = "cursor"
     GROK = "grok"
+    ANTIGRAVITY = "antigravity"
 
 
 class SupportLevel(str, Enum):

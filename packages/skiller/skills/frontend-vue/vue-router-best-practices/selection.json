@@ -1,5 +1,14 @@
 {
   "schema": "skill-selection/v1",
   "kind": "domain",
-  "decision": "KEEP"
+  "decision": "KEEP",
+  "triggers": {
+    "paths": [
+      "router/**/*.ts",
+      "src/router/**/*.ts"
+    ],
+    "deps": [
+      "npm:vue-router"
+    ]
+  }
 }

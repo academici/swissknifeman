@@ -1,6 +1,6 @@
 {
   "name": "brain",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "brain — Obsidian vault for the ecosystem: vault lookup, document sync and notes from ecosystem events; skill brain-locator.",
   "author": { "name": "Dmitry Vostrikov", "email": "dv.vostrikov@gmail.com" },
   "homepage": "https://github.com/academici/swissknifeman",

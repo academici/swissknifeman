@@ -110,7 +110,7 @@ def envelope(key, value, *, ttl_hours=DEFAULT_TTL_HOURS, source="internal", now=
     now = time.time() if now is None else now
     writer = next((name for name, var in (("grok", "GROK_SESSION_ID"),
                   ("codex", "CODEX_THREAD_ID"), ("claude-code", "CLAUDE_SESSION_ID"),
-                  ("cursor", "CURSOR_SESSION_ID")) if os.environ.get(var)), "unknown")
+                  ("cursor", "CURSOR_SESSION_ID"), ("antigravity", "ANTIGRAVITY_SESSION_ID")) if os.environ.get(var)), "unknown")
     meta = {"key": key, "created_at": now,
             "expires_at": now + (min(ttl_hours * 3600, 300) if key == "health-probe"
                                   else ttl_hours * 3600), "source": source, "writer": writer}

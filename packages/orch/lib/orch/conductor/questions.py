@@ -318,7 +318,10 @@ def answer(file_doc: dict, question: str, *, option: Optional[str] = None, text:
                                 + (", ".join(options) or "it has no options"))
         value = option
     else:
-        if options and entry["kind"] != "clarification":
+        if options and entry["kind"] != "clarification" and not any(
+            isinstance(text, str) and (text == opt or text.startswith(f"{opt}:") or text.startswith(f"{opt} "))
+            for opt in options
+        ):
             raise QuestionError("ANSWER_INVALID", f"{question} is answered by one of its options: {', '.join(options)}")
         if text and redact_text(text) != text:
             # an answer goes into questions.json and into the prompt of the executor (a provider): never a secret

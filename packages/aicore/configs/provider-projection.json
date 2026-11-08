@@ -17,6 +17,10 @@
     "grok": {
       "instructions": {"project_common": false},
       "command_invocation": {"style": "slash"}
+    },
+    "antigravity": {
+      "instructions": {"project_common": false},
+      "command_invocation": {"style": "slash"}
     }
   }
 }

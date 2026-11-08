@@ -770,12 +770,12 @@ def cmd_agent_packs(env, argv):
         print("harness agent-packs <list|render|upgrade|remove|doctor> "
               "[--pack P] [--target DIR] [--auto] [--answer K=V] "
               "[--install-only] [--allow-shell off|safe|full] [--dry-run] [--json] "
-              "[--drift [--strict]] [--provider claude-code|codex|cursor|grok]")
+              "[--drift [--strict]] [--provider claude-code|codex|cursor|grok|antigravity]")
         return
     shell_policy = opts.get("allow_shell") or "safe"
     provider = opts.get("provider") or "claude-code"
-    if provider not in ("claude-code", "codex", "cursor", "grok"):
-        die(f"--provider unknown: {provider} (claude-code|codex|cursor|grok)")
+    if provider not in ("claude-code", "codex", "cursor", "grok", "antigravity"):
+        die(f"--provider unknown: {provider} (claude-code|codex|cursor|grok|antigravity)")
 
     if provider == "codex":
         if sub not in ("render", "remove", "doctor"):
@@ -796,7 +796,7 @@ def cmd_agent_packs(env, argv):
         raise SystemExit(do_codex_role_doctor(env, target, json_out=bool(opts.get("json")),
                                               strict=bool(opts.get("strict"))))
 
-    if provider in ("cursor", "grok"):
+    if provider in ("cursor", "grok", "antigravity"):
         if sub not in ("render", "remove", "doctor"):
             die(f"--provider {provider} does not support the subcommand "
                 f"'{sub}' (consumer mapping only: render/remove/doctor)")
@@ -1156,7 +1156,7 @@ def load_cursor_agent_consumer_mapping(path):
         create_cursor_agents=value["create_cursor_agents"],
         disconnect_policy=value["disconnect_policy"],
     )
-    if (mapping.provider_id not in {"cursor", "grok"}
+    if (mapping.provider_id not in {"cursor", "grok", "antigravity"}
             or mapping.mapping_version != "1.0.0"
             or mapping.projection_owner != "claude-code"
             or mapping.provider_id not in mapping.projection_consumers
@@ -1178,6 +1178,7 @@ def cursor_consumer_target(role: AgentRole, mapping: CursorAgentConsumerMapping,
     if (not target.startswith(".claude/agents/")
             or ".cursor/agents" in target
             or ".grok/agents" in target
+            or ".antigravity/agents" in target
             or ".." in Path(target).parts):
         raise ValueError("HARNESS_MAPPING_MISSING")
     return target
@@ -1426,7 +1427,7 @@ def do_codex_role_doctor(env, target, *, json_out=False, strict=False):
 def expected_cursor_role_consumers(env, target, mapping_path=None, catalog_path=None, *,
                                    pack=None, provider="cursor"):
     """Resolve consumer targets over shared Claude role projections."""
-    if provider not in {"cursor", "grok"}:
+    if provider not in {"cursor", "grok", "antigravity"}:
         raise ValueError("HARNESS_MAPPING_MISSING")
     mapping_path = mapping_path or (Path(env.root) / "configs" / provider /
                                     "agent-packs" / "consumer-mapping.json")

@@ -2,5 +2,13 @@
   "schema": "skill-selection/v1",
   "kind": "procedure",
   "decision": "KEEP",
-  "exclusive_group": "php-packages"
+  "exclusive_group": "php-packages",
+  "triggers": {
+    "paths": [
+      "tests/**/*.php"
+    ],
+    "deps": [
+      "composer:orchestra/testbench"
+    ]
+  }
 }

@@ -16,48 +16,48 @@ process. Details Claude Code — in [developer's runbook](docs/develop.md).
 <!-- BEGIN GENERATED PROVIDER CAPABILITIES -->
 ### Provider support (generated)
 
-Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
+Single manifest: contract `1.0.0`, catalog `1.0.0`, canonical SHA-256 `0bd3a971c7fa4d33f97d336c9c1cc51c22f6ba06b92557e1b348bb47caf2aa67`. Manifest (`packages/aicore/configs/provider-capabilities.json`) — source of truth, hand-edited, no generator: `root.generated-artifacts` does not apply to it. Details and operations: [provider support](docs/provider-support.md).
 
-| Capability | Claude Code | Codex | Cursor | Grok |
-|:--|:--:|:--:|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | adapted | adapted | adapted |
-| `agents.catalog` | adapted | adapted | adapted | adapted |
-| `analytics.legacy-migration` | adapted | unsupported | unsupported | unsupported |
-| `analytics.normalized-events` | adapted | adapted | adapted | adapted |
-| `analytics.run-report` | adapted | adapted | adapted | adapted |
-| `command.external-research` | adapted | adapted | adapted | adapted |
-| `command.filesystem-read` | native | native | native | native |
-| `command.filesystem-write` | native | native | native | native |
-| `command.git-read` | native | native | native | native |
-| `command.git-write` | native | native | native | native |
-| `command.subagents` | native | native | native | native |
-| `command.workflow-carrier` | native | adapted | adapted | adapted |
-| `context.observer` | unsupported | native | adapted | adapted |
-| `context.output-style` | native | unsupported | unsupported | unsupported |
-| `context.plans-directory` | native | unsupported | unsupported | unsupported |
-| `doctor.environment` | adapted | adapted | adapted | adapted |
-| `doctor.provider` | adapted | adapted | adapted | adapted |
-| `instructions.project` | native | native | native | native |
-| `lifecycle.auto-approval` | adapted | native | adapted | adapted |
-| `lifecycle.changelog-gate` | adapted | adapted | adapted | adapted |
-| `lifecycle.command-log` | adapted | adapted | adapted | adapted |
-| `lifecycle.daemon-safety` | adapted | adapted | adapted | adapted |
-| `lifecycle.git-guardrails` | unsupported | adapted | adapted | adapted |
-| `lifecycle.memory` | adapted | adapted | adapted | adapted |
-| `lifecycle.notification` | adapted | unsupported | unsupported | unsupported |
-| `lifecycle.pack-guard` | adapted | adapted | adapted | adapted |
-| `lifecycle.plan-guard` | adapted | adapted | adapted | adapted |
-| `lifecycle.plan-regen` | adapted | unsupported | unsupported | unsupported |
-| `lifecycle.review-gate` | adapted | adapted | adapted | adapted |
-| `lifecycle.router` | adapted | adapted | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted | adapted | adapted |
-| `lifecycle.tool-telemetry` | unsupported | adapted | adapted | adapted |
-| `mcp.catalog` | adapted | adapted | native | native |
-| `security.safe-dirs` | adapted | adapted | adapted | adapted |
-| `settings.audit` | adapted | adapted | adapted | adapted |
-| `settings.permissions` | adapted | adapted | adapted | adapted |
-| `skills.repository` | native | native | native | native |
-| `workflows.status` | adapted | unsupported | unsupported | unsupported |
+| Capability | Antigravity | Claude Code | Codex | Cursor | Grok |
+|:--|:--:|:--:|:--:|:--:|:--:|
+| `agent-packs.lifecycle` | adapted | adapted | adapted | adapted | adapted |
+| `agents.catalog` | adapted | adapted | adapted | adapted | adapted |
+| `analytics.legacy-migration` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `analytics.normalized-events` | adapted | adapted | adapted | adapted | adapted |
+| `analytics.run-report` | adapted | adapted | adapted | adapted | adapted |
+| `command.external-research` | adapted | adapted | adapted | adapted | adapted |
+| `command.filesystem-read` | native | native | native | native | native |
+| `command.filesystem-write` | native | native | native | native | native |
+| `command.git-read` | native | native | native | native | native |
+| `command.git-write` | native | native | native | native | native |
+| `command.subagents` | native | native | native | native | native |
+| `command.workflow-carrier` | adapted | native | adapted | adapted | adapted |
+| `context.observer` | adapted | unsupported | native | adapted | adapted |
+| `context.output-style` | unsupported | native | unsupported | unsupported | unsupported |
+| `context.plans-directory` | unsupported | native | unsupported | unsupported | unsupported |
+| `doctor.environment` | adapted | adapted | adapted | adapted | adapted |
+| `doctor.provider` | adapted | adapted | adapted | adapted | adapted |
+| `instructions.project` | native | native | native | native | native |
+| `lifecycle.auto-approval` | adapted | adapted | native | adapted | adapted |
+| `lifecycle.changelog-gate` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.command-log` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.daemon-safety` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.git-guardrails` | adapted | unsupported | adapted | adapted | adapted |
+| `lifecycle.memory` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.notification` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-guard` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-regen` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.router` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.run-report` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.tool-telemetry` | adapted | unsupported | adapted | adapted | adapted |
+| `mcp.catalog` | native | adapted | adapted | native | native |
+| `security.safe-dirs` | adapted | adapted | adapted | adapted | adapted |
+| `settings.audit` | adapted | adapted | adapted | adapted | adapted |
+| `settings.permissions` | adapted | adapted | adapted | adapted | adapted |
+| `skills.repository` | native | native | native | native | native |
+| `workflows.status` | unsupported | adapted | unsupported | unsupported | unsupported |
 
 Unsupported reasons legend: `not implemented` (adapter/binding not shipped), `API-capped` (provider has no suitable project-scoped API), `not applicable` (intent has no provider object to migrate/read).
 <!-- END GENERATED PROVIDER CAPABILITIES -->

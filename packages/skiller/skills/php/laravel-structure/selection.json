@@ -5,5 +5,10 @@
   "also": [
     "OVERLAY"
   ],
-  "exclusive_group": "php-architecture"
+  "exclusive_group": "php-architecture",
+  "triggers": {
+    "deps": [
+      "composer:laravel/framework"
+    ]
+  }
 }

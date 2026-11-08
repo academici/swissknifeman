@@ -197,6 +197,9 @@ def config_layer(conductor: dict) -> dict:
         layer["limits"] = limits
     if conductor.get("session_executor") is not None:
         layer["session"] = {"executor": conductor["session_executor"]}
+    if conductor.get("skills_bridge") and conductor.get("skills") is None:
+        layer["skills"] = [{"role": role, "names": [AUTO_SKILLS]}
+                           for role in ("executor", "bounded-implementer", "reviewer")]
     return layer
 
 

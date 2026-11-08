@@ -6,8 +6,8 @@
 
 - Contract: `1.0.0`
 - Catalog: `1.0.0`
-- Canonical JSON SHA-256 (without carrier LF): `0d8193b9020dfbc76fbf42e3714dffe97cb3456275e6580d6da019a00a2ff4c6`
-- Carrier SHA-256 (canonical bytes plus one LF): `f93aae540a71f9e01e215b2dd07625d61724b89ce99b93105699caeadf6f2ab5`
+- Canonical JSON SHA-256 (without carrier LF): `0bd3a971c7fa4d33f97d336c9c1cc51c22f6ba06b92557e1b348bb47caf2aa67`
+- Carrier SHA-256 (canonical bytes plus one LF): `7df7cdce32d3b679f5abd58bb331d2d2168f65437f009551558d73cd5d9c0ed4`
 - Common capabilities: `38`; Native Extensions: `0`
 
 Support levels, provider bindings, limitations, evidence and diagnostics below come only from [`packages/aicore/configs/provider-capabilities.json`](../packages/aicore/configs/provider-capabilities.json). Package catalogs own semantic intent and requirements, not a second support matrix.
@@ -18,46 +18,46 @@ Support levels, provider bindings, limitations, evidence and diagnostics below c
 
 ## Capability matrix
 
-| Capability | Claude Code | Codex | Cursor | Grok |
-|:--|:--:|:--:|:--:|:--:|
-| `agent-packs.lifecycle` | adapted | adapted | adapted | adapted |
-| `agents.catalog` | adapted | adapted | adapted | adapted |
-| `analytics.legacy-migration` | adapted | unsupported | unsupported | unsupported |
-| `analytics.normalized-events` | adapted | adapted | adapted | adapted |
-| `analytics.run-report` | adapted | adapted | adapted | adapted |
-| `command.external-research` | adapted | adapted | adapted | adapted |
-| `command.filesystem-read` | native | native | native | native |
-| `command.filesystem-write` | native | native | native | native |
-| `command.git-read` | native | native | native | native |
-| `command.git-write` | native | native | native | native |
-| `command.subagents` | native | native | native | native |
-| `command.workflow-carrier` | native | adapted | adapted | adapted |
-| `context.observer` | unsupported | native | adapted | adapted |
-| `context.output-style` | native | unsupported | unsupported | unsupported |
-| `context.plans-directory` | native | unsupported | unsupported | unsupported |
-| `doctor.environment` | adapted | adapted | adapted | adapted |
-| `doctor.provider` | adapted | adapted | adapted | adapted |
-| `instructions.project` | native | native | native | native |
-| `lifecycle.auto-approval` | adapted | native | adapted | adapted |
-| `lifecycle.changelog-gate` | adapted | adapted | adapted | adapted |
-| `lifecycle.command-log` | adapted | adapted | adapted | adapted |
-| `lifecycle.daemon-safety` | adapted | adapted | adapted | adapted |
-| `lifecycle.git-guardrails` | unsupported | adapted | adapted | adapted |
-| `lifecycle.memory` | adapted | adapted | adapted | adapted |
-| `lifecycle.notification` | adapted | unsupported | unsupported | unsupported |
-| `lifecycle.pack-guard` | adapted | adapted | adapted | adapted |
-| `lifecycle.plan-guard` | adapted | adapted | adapted | adapted |
-| `lifecycle.plan-regen` | adapted | unsupported | unsupported | unsupported |
-| `lifecycle.review-gate` | adapted | adapted | adapted | adapted |
-| `lifecycle.router` | adapted | adapted | adapted | adapted |
-| `lifecycle.run-report` | adapted | adapted | adapted | adapted |
-| `lifecycle.tool-telemetry` | unsupported | adapted | adapted | adapted |
-| `mcp.catalog` | adapted | adapted | native | native |
-| `security.safe-dirs` | adapted | adapted | adapted | adapted |
-| `settings.audit` | adapted | adapted | adapted | adapted |
-| `settings.permissions` | adapted | adapted | adapted | adapted |
-| `skills.repository` | native | native | native | native |
-| `workflows.status` | adapted | unsupported | unsupported | unsupported |
+| Capability | Antigravity | Claude Code | Codex | Cursor | Grok |
+|:--|:--:|:--:|:--:|:--:|:--:|
+| `agent-packs.lifecycle` | adapted | adapted | adapted | adapted | adapted |
+| `agents.catalog` | adapted | adapted | adapted | adapted | adapted |
+| `analytics.legacy-migration` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `analytics.normalized-events` | adapted | adapted | adapted | adapted | adapted |
+| `analytics.run-report` | adapted | adapted | adapted | adapted | adapted |
+| `command.external-research` | adapted | adapted | adapted | adapted | adapted |
+| `command.filesystem-read` | native | native | native | native | native |
+| `command.filesystem-write` | native | native | native | native | native |
+| `command.git-read` | native | native | native | native | native |
+| `command.git-write` | native | native | native | native | native |
+| `command.subagents` | native | native | native | native | native |
+| `command.workflow-carrier` | adapted | native | adapted | adapted | adapted |
+| `context.observer` | adapted | unsupported | native | adapted | adapted |
+| `context.output-style` | unsupported | native | unsupported | unsupported | unsupported |
+| `context.plans-directory` | unsupported | native | unsupported | unsupported | unsupported |
+| `doctor.environment` | adapted | adapted | adapted | adapted | adapted |
+| `doctor.provider` | adapted | adapted | adapted | adapted | adapted |
+| `instructions.project` | native | native | native | native | native |
+| `lifecycle.auto-approval` | adapted | adapted | native | adapted | adapted |
+| `lifecycle.changelog-gate` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.command-log` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.daemon-safety` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.git-guardrails` | adapted | unsupported | adapted | adapted | adapted |
+| `lifecycle.memory` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.notification` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `lifecycle.pack-guard` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-guard` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.plan-regen` | unsupported | adapted | unsupported | unsupported | unsupported |
+| `lifecycle.review-gate` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.router` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.run-report` | adapted | adapted | adapted | adapted | adapted |
+| `lifecycle.tool-telemetry` | adapted | unsupported | adapted | adapted | adapted |
+| `mcp.catalog` | native | adapted | adapted | native | native |
+| `security.safe-dirs` | adapted | adapted | adapted | adapted | adapted |
+| `settings.audit` | adapted | adapted | adapted | adapted | adapted |
+| `settings.permissions` | adapted | adapted | adapted | adapted | adapted |
+| `skills.repository` | native | native | native | native | native |
+| `workflows.status` | unsupported | adapted | unsupported | unsupported | unsupported |
 
 ## Unsupported reason legend
 
@@ -112,6 +112,11 @@ Codex:       $ planner:fix <brief>
 
 Render, check, upgrade, remove and diagnose locked packs.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.agent-packs.lifecycle`.
+  Diagnostic: Antigravity consumer mapping resolves role lifecycle over the shared .claude/agents projection
+  Limitations: Antigravity acts as a consumer mapping over .claude/agents/*.md with projection_owner=claude-code; Antigravity disconnect/remove preserves .claude/agents; shared projection lifecycle stays owned by claude-code; no .antigravity/agents directory is created.
+  Evidence: [2026-09-18] provider audit verifies every semantic role resolves through agy consumer mapping to .claude/agents/*.md without creating a grok-owned agents tree — `packages/harness/lib/harness/provider_audit.py` (agy agent-packs.lifecycle consumer mapping over shared Claude projection).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.agent-packs.lifecycle`.
   Diagnostic: deterministic harness adapter satisfies claude-code agent-packs.lifecycle
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -135,6 +140,11 @@ Render, check, upgrade, remove and diagnose locked packs.
 ### `agents.catalog`
 
 Render semantic agent requirements into native targets.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.agents.catalog`.
+  Diagnostic: Antigravity resolves semantic agent roles through the shared .claude/agents catalog projection
+  Limitations: uses Antigravity compatibility loading of the existing Claude-format role projection; does not introduce a Antigravity-owned agents directory.
+  Evidence: [2026-09-18] provider audit verifies every semantic role maps to a grok-consumable .claude/agents target while preserving claude-code ownership — `packages/harness/lib/harness/provider_audit.py` (agy agents.catalog consumer mapping over shared Claude projection).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.agents.catalog`.
   Diagnostic: deterministic harness adapter satisfies claude-code agents.catalog
@@ -160,6 +170,11 @@ Render semantic agent requirements into native targets.
 
 Plan, dry-run, check and copy-verify supported legacy analytics into the neutral store without changing source bytes.
 
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: no committed legacy Antigravity analytics carrier exists; migration intent does not apply
+  Limitations: reason: not applicable — no legacy Antigravity analytics carrier exists to migrate; new Antigravity analytics evidence writes directly to the neutral store.
+  Evidence: [2026-09-17] no committed legacy Antigravity analytics carrier exists to migrate; new Antigravity evidence is written directly to the neutral store — `docs/provider-support.md` (agy analytics.legacy-migration applicability).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `analyst.claude-legacy-migration`.
   Diagnostic: bounded Claude legacy migration is available through explicit plan/dry-run/check/apply operations
   Limitations: supports only the frozen Claude SCHEMA=2 legacy source and never deletes source bytes.
@@ -183,6 +198,11 @@ Plan, dry-run, check and copy-verify supported legacy analytics into the neutral
 ### `analytics.normalized-events`
 
 Normalize allowlisted provider evidence into the project-local append-only neutral analytics event store with opaque provenance.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `analyst.grok-capture-reader`.
+  Diagnostic: Antigravity schema=1 hook envelopes are normalized only through the named fail-closed reader
+  Limitations: normalizes only allowlisted schema=1 fields; session_id is required; reuses the Codex capture reader with provider_id grok; raw command output, prompts and transcript keys are refused fail-closed.
+  Evidence: [2026-10-03] Antigravity schema=1 run-summary envelopes are normalized through the Codex-shaped reader and rejected when raw output/reason markers violate the allowlist — `packages/analyst/tests/test_provider_readers.py` (agy reader normalization, redaction and schema checks).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `analyst.claude-run-report-reader`.
   Diagnostic: Claude SCHEMA=2 input is normalized only through the named fail-closed reader
@@ -208,6 +228,11 @@ Normalize allowlisted provider evidence into the project-local append-only neutr
 
 Build a deterministic one-project/session run report from normalized semantic events while preserving contributing provenance.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `analyst.neutral-run-report`.
+  Diagnostic: provider-neutral run-report projection is available for Antigravity-origin normalized events
+  Limitations: requires Antigravity events normalized through analyst.grok-capture-reader; missing semantic metrics remain omitted and are never inferred as zero.
+  Evidence: [2026-09-18] the agy schema=1 envelope path reaches neutral run-report through normalize -&gt; append_event -&gt; neutral_run_report without provider-specific fallback — `packages/analyst/tests/test_provider_readers.py` (agy envelope to neutral run-report end-to-end chain).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `analyst.neutral-run-report`.
   Diagnostic: provider-neutral run-report projection is available for Claude-origin normalized events
   Limitations: missing semantic evidence remains absent and is never inferred as zero.
@@ -231,6 +256,11 @@ Build a deterministic one-project/session run report from normalized semantic ev
 ### `command.external-research`
 
 Use an explicitly available research or retrieval surface.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `planner.antigravity.external-research`.
+  Diagnostic: deterministic agy adapter satisfies command.external-research
+  Limitations: availability depends on an explicitly configured research surface and WebFetch permission token.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `planner.claude-code.external-research`.
   Diagnostic: deterministic claude-code adapter satisfies command.external-research
@@ -256,6 +286,11 @@ Use an explicitly available research or retrieval surface.
 
 Read declared repository and plan inputs.
 
+- **antigravity** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies command.filesystem-read
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `native`; binding: `{"surface": "provider-native filesystem read"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.filesystem-read
   Limitations: none.
@@ -279,6 +314,11 @@ Read declared repository and plan inputs.
 ### `command.filesystem-write`
 
 Write only declared task or plan-item targets.
+
+- **antigravity** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies command.filesystem-write
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
 
 - **claude-code** — `native`; binding: `{"surface": "provider-native filesystem write"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.filesystem-write
@@ -304,6 +344,11 @@ Write only declared task or plan-item targets.
 
 Inspect declared repository history and diffs.
 
+- **antigravity** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies command.git-read
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `native`; binding: `{"surface": "provider-native Git read"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.git-read
   Limitations: none.
@@ -327,6 +372,11 @@ Inspect declared repository history and diffs.
 ### `command.git-write`
 
 Create only task-authorized commits.
+
+- **antigravity** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies command.git-write
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
 
 - **claude-code** — `native`; binding: `{"surface": "provider-native Git write"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.git-write
@@ -352,6 +402,11 @@ Create only task-authorized commits.
 
 Run declared subagent and reviewer stages.
 
+- **antigravity** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies command.subagents
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `native`; binding: `{"surface": "provider-native subagents"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.subagents
   Limitations: none.
@@ -375,6 +430,11 @@ Run declared subagent and reviewer stages.
 ### `command.workflow-carrier`
 
 Resolve a semantic orchestration carrier through the provider projection.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `planner.antigravity.workflow-carrier`.
+  Diagnostic: Antigravity workflow-carrier is a generated instruction carrier; Antigravity also has native Rhai workflows that remain provider-owned
+  Limitations: managed planner carrier is an instruction projection over native subagents; Antigravity-native Rhai workflow runs are not a swissknifeman workflows.status store.
+  Evidence: [2026-09-18] the Antigravity command renderer generates provider-qualified instruction carriers and command projections from the frozen semantic command catalog — `packages/planner/lib/planner/command_render.py` (agy command.workflow-carrier generated instruction projection).
 
 - **claude-code** — `native`; binding: `{"surface": "Workflow({scriptPath})"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies command.workflow-carrier
@@ -400,6 +460,11 @@ Resolve a semantic orchestration carrier through the provider projection.
 
 Activate the read-oriented observer context policy.
 
+- **antigravity** — `adapted`; binding: `{"surface": "SessionStart", "target": ".antigravity/hooks/swissknifeman.json"}`; adapter: `harness.antigravity.context.observer`.
+  Diagnostic: Antigravity context.observer uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)
+  Limitations: hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop); handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok; inactive by default unless registered via harness hooks --provider grok.
+  Evidence: [2026-10-03] Antigravity context.observer uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names) — `packages/harness/lib/harness/hooks.py` (agy context.observer Claude-shaped hook projection).
+
 - **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported claude-code context.observer; required use fails closed with HARNESS_ACTIVATION_UNSUPPORTED
   Limitations: no committed native binding or deterministic adapter satisfies the frozen surface intent.
@@ -423,6 +488,11 @@ Activate the read-oriented observer context policy.
 ### `context.output-style`
 
 Select a provider-native output/context style.
+
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: no project-scoped output-style binding exists
+  Limitations: reason: API-capped — Antigravity exposes no project-scoped output-style binding; repository rules can suggest formatting, but they are not provider-native output-style configuration.
+  Evidence: [2026-09-17] Antigravity exposes no project-scoped output-style binding in managed project configuration surfaces — `docs/provider-support.md` (agy context.output-style capability cap).
 
 - **claude-code** — `native`; binding: `{"surface": "outputStyle"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies context.output-style
@@ -448,6 +518,11 @@ Select a provider-native output/context style.
 
 Declare the project plan directory through a native configuration binding.
 
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: no project-scoped plans-directory binding exists
+  Limitations: reason: API-capped — Antigravity exposes no project-scoped plan-directory binding; .antigravity/plans is a repository convention, not a provider configuration surface.
+  Evidence: [2026-09-17] Antigravity exposes no project-scoped plan-directory binding; plan paths remain repository convention only — `docs/provider-support.md` (agy context.plans-directory capability cap).
+
 - **claude-code** — `native`; binding: `{"surface": "plansDirectory"}`; adapter: `—`.
   Diagnostic: native claude-code binding satisfies context.plans-directory
   Limitations: activation remains subject to the frozen trust, approval and sandbox axes.
@@ -471,6 +546,11 @@ Declare the project plan directory through a native configuration binding.
 ### `doctor.environment`
 
 Diagnose harness prerequisites without mutation.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.doctor.environment`.
+  Diagnostic: deterministic agy adapter satisfies doctor.environment
+  Limitations: requires the committed harness agy adapter and managed-boundary checks.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.doctor.environment`.
   Diagnostic: deterministic harness adapter satisfies claude-code doctor.environment
@@ -496,6 +576,11 @@ Diagnose harness prerequisites without mutation.
 
 Compose named provider validators and catalog diagnostics.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.doctor.provider`.
+  Diagnostic: deterministic agy adapter satisfies doctor.provider
+  Limitations: reports the unmanaged approval-mode axis per D2; Claude-compat delivery depends on the user toggle "Include Third-Party Plugins, Skills, and Other Configs", so compat is not treated as a managed provider binding.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.doctor.provider`.
   Diagnostic: deterministic harness adapter satisfies claude-code doctor.provider
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -519,6 +604,11 @@ Compose named provider validators and catalog diagnostics.
 ### `instructions.project`
 
 Activate repository-scoped operator instructions after provider trust checks.
+
+- **antigravity** — `native`; binding: `{"surface": "AGENTS.md+.antigravity/rules/*.md"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies instructions.project
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
 
 - **claude-code** — `native`; binding: `{"surface": "CLAUDE.md"}`; adapter: `—`.
   Diagnostic: native Claude Code project instructions; activation remains trust-gated
@@ -544,6 +634,11 @@ Activate repository-scoped operator instructions after provider trust checks.
 
 Apply selected approval policy through a native lifecycle binding.
 
+- **antigravity** — `adapted`; binding: `{"approval_surface": "launch-flag", "project_surface": "[permission] deny"}`; adapter: `harness.antigravity.lifecycle.auto-approval`.
+  Diagnostic: Antigravity lifecycle.auto-approval has a local harness projection; live native activation is unverified
+  Limitations: Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.; Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation..
+  Evidence: [2026-11-08] Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation. — `packages/harness/lib/harness/provider_audit.py` (Antigravity lifecycle.auto-approval project projection).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.auto-approval`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.auto-approval
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -567,6 +662,11 @@ Apply selected approval policy through a native lifecycle binding.
 ### `lifecycle.changelog-gate`
 
 Gate declared release-sensitive operations.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.changelog-gate`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.changelog-gate through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; reads release-sensitive commit type only from git commit -m messages; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-10-03] Antigravity and Codex changelog-gate adapters consume one shared release-sensitive commit-type core and apply off/warn/strict via provider mode files — `packages/harness/lib/harness/hooks.py` (agy lifecycle.changelog-gate shared-core routing and mode behavior).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.changelog-gate`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.changelog-gate
@@ -592,6 +692,11 @@ Gate declared release-sensitive operations.
 
 Record provider-native command execution evidence.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.command-log`.
+  Diagnostic: deterministic agy adapter captures PreToolUse Bash commands through the shared lifecycle handler
+  Limitations: records only tool calls Antigravity exposes as Bash on PreToolUse; writes the agy state log, not ~/.claude/logs/bash-commands.jsonl.
+  Evidence: [2026-10-03] Antigravity command-log reads PreToolUse tool_input.command for tool_name Bash and writes ~/.antigravity/logs/bash-commands.jsonl; it does not use Cursor afterShellExecution — `packages/harness/tests/test_grok_provider_surface.py` (agy lifecycle.command-log shared handler).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.command-log`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.command-log
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -615,6 +720,11 @@ Record provider-native command execution evidence.
 ### `lifecycle.daemon-safety`
 
 Reject unsafe shared-daemon operations.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.daemon-safety`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.daemon-safety through the shared policy core
+  Limitations: inactive unless explicitly registered via harness hooks --provider agy --daemon-safety; fail closed when the shared policy core is unreachable; uses the documented environment kill switch PERPLEXITY_DAEMON_GUARD=off.
+  Evidence: [2026-10-03] Antigravity and Codex daemon-safety adapters consume one shared declarative policy core and fail closed with exit 2 in strict mode — `packages/harness/lib/harness/hooks.py` (agy lifecycle.daemon-safety policy-core routing and enforcement behavior).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.daemon-safety`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.daemon-safety
@@ -640,6 +750,11 @@ Reject unsafe shared-daemon operations.
 
 Reject declared dangerous version-control operations.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.git-guardrails`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.git-guardrails through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; pattern-based refusal remains intentionally unchanged on this pass; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-10-03] Antigravity and Codex git-guardrails adapters consume one shared declarative policy core with off/warn/strict mode handling — `packages/harness/lib/harness/hooks.py` (agy lifecycle.git-guardrails shared-core enforcement and warning behavior).
+
 - **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported claude-code lifecycle.git-guardrails; committed implementation is not registered by any preset or install branch
   Limitations: the implementation is committed (configs/claude-code/hooks/git-guardrails/block-dangerous-git.sh) but no registration ships: no preset, install branch or operator flag activates it, so the surface fails closed; activating it fleet-wide is a behaviour change of the live contour and is not part of the parity phase.
@@ -663,6 +778,11 @@ Reject declared dangerous version-control operations.
 ### `lifecycle.memory`
 
 Activate selected memory lifecycle integration.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.memory`.
+  Diagnostic: deterministic agy adapter activates lifecycle.memory through sessionStart env
+  Limitations: activation is explicit and mode-driven via .antigravity/memory.env.ini; sessionStart additional_context is intentionally not used for this surface; memory backend state remains owned by skiller/maind; this adapter only exports non-secret env hints.
+  Evidence: [2026-10-03] Antigravity memory adapter reads .antigravity/memory.env.ini on SessionStart and emits systemMessage from maind memory status; it does not inject additional_context — `packages/harness/lib/harness/hooks.py` (agy lifecycle.memory sessionStart environment activation).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.memory`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.memory
@@ -688,6 +808,11 @@ Activate selected memory lifecycle integration.
 
 Notify on provider-native waiting or approval events.
 
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: notifications are global-only and outside project-scoped control
+  Limitations: reason: API-capped — notification settings are machine-global and not project-overridable; no repository-scoped binding can satisfy provider-native notification semantics.
+  Evidence: [2026-09-17] Antigravity notification control is global CLI configuration and cannot be managed through repository-scoped bindings — `docs/provider-support.md` (agy lifecycle.notification capability cap).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.notification`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.notification
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -711,6 +836,11 @@ Notify on provider-native waiting or approval events.
 ### `lifecycle.pack-guard`
 
 Guard managed agent-pack assets before mutation.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.pack-guard`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.pack-guard through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; matches managed targets through serialized preToolUse payload inspection; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-10-03] Antigravity and Codex pack-guard adapters consume one shared declarative policy core that evaluates managed-target rules under off/warn/strict — `packages/harness/lib/harness/hooks.py` (agy lifecycle.pack-guard managed-target guard behavior).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.pack-guard`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.pack-guard
@@ -736,6 +866,11 @@ Guard managed agent-pack assets before mutation.
 
 Block hand edits of files generated by plan.py inside a plan directory.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.plan-guard`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.plan-guard through the shared policy core
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; matches only the apply_patch tool; fail closed when the shared policy core is unreachable.
+  Evidence: [2026-10-05] Antigravity and Codex plan-guard adapters share one dispatcher and one policy core for generated plan files — `packages/harness/lib/harness/hooks.py` (agy lifecycle.plan-guard generated-file guard behavior).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.plan-guard`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.plan-guard
   Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; guards the Claude Edit, Write and MultiEdit tools only; a shell command that writes a generated file is out of this gate.
@@ -759,6 +894,11 @@ Block hand edits of files generated by plan.py inside a plan directory.
 ### `lifecycle.plan-regen`
 
 Check and re-render a planner plan after a JSON edit.
+
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: no PostToolUse surface is mapped by the harness for lifecycle.plan-regen
+  Limitations: generated views are refreshed by plan.py mutations and plan.py render; run plan.py check after a hand edit of plan JSON.
+  Evidence: [2026-10-05] harness hooks.py maps no PostToolUse lifecycle surface for Antigravity — `packages/harness/lib/harness/hooks.py` (Antigravity lifecycle.plan-regen activation state).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.plan-regen`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.plan-regen
@@ -784,6 +924,11 @@ Check and re-render a planner plan after a JSON edit.
 
 Gate declared review-sensitive lifecycle completion.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.review-gate`.
+  Diagnostic: deterministic agy adapter satisfies lifecycle.review-gate via subagentStop continuation
+  Limitations: inactive by default; MODE=warn|strict must be set explicitly via harness hooks; continuation followups are emitted only when subagentStop status is completed; if a Claude-compat review-gate registration is already present, Antigravity-native continuation is skipped to avoid double triggering.
+  Evidence: [2026-10-03] Antigravity review-gate runs on SubagentStop, stores attempt counts in .antigravity/review-gate.state.json, exits 2 in strict mode, and otherwise emits systemMessage — `packages/harness/lib/harness/hooks.py` (agy lifecycle.review-gate continuation behavior and dedup safeguards).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.review-gate`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.review-gate
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -807,6 +952,11 @@ Gate declared review-sensitive lifecycle completion.
 ### `lifecycle.router`
 
 Project semantic routing into native lifecycle activation.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.router`.
+  Diagnostic: Antigravity lifecycle.router uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names)
+  Limitations: hook events are Claude-compatible (PreToolUse/SessionStart/UserPromptSubmit/Stop); handler is the parameterized Codex lifecycle dispatcher with state_dir=.grok; inactive by default unless registered via harness hooks --provider grok.
+  Evidence: [2026-10-03] Antigravity lifecycle.router uses the shared Codex-shaped hook dispatcher over .antigravity/hooks/swissknifeman.json (Claude event names) — `packages/harness/lib/harness/hooks.py` (agy lifecycle.router Claude-shaped hook projection).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.router`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.router
@@ -832,6 +982,11 @@ Project semantic routing into native lifecycle activation.
 
 Capture a provider-qualified run report at a native lifecycle boundary.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.run-report`.
+  Diagnostic: deterministic agy adapter writes a SessionEnd run record with provider_id grok
+  Limitations: provider_id is agy when the shared handler is rendered with state_dir=.grok; tool counts come from the .antigravity/state sidecar.
+  Evidence: [2026-10-03] Antigravity run-report writes .antigravity/runs/&lt;session&gt;.json on SessionEnd and stamps provider_id antigravity — `packages/harness/lib/harness/hooks.py` (agy lifecycle.run-report schema=1 envelope checks).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.lifecycle.run-report`.
   Diagnostic: deterministic harness adapter satisfies claude-code lifecycle.run-report
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -855,6 +1010,11 @@ Capture a provider-qualified run report at a native lifecycle boundary.
 ### `lifecycle.tool-telemetry`
 
 Capture provider-native tool-call sidecar evidence for run-report enrichment.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.lifecycle.tool-telemetry`.
+  Diagnostic: deterministic agy adapter records PreToolUse tool_name into .antigravity/state/&lt;session&gt;.tools.jsonl
+  Limitations: correlates records by session_id, not Cursor conversation_id; sidecar path is .antigravity/state, not .cursor/state.
+  Evidence: [2026-10-03] Antigravity tool-telemetry appends tool_name under .antigravity/state/&lt;session_id&gt;.tools.jsonl; SessionEnd run-report merges that sidecar — `packages/harness/lib/harness/hooks.py` (agy lifecycle.tool-telemetry shared handler).
 
 - **claude-code** — `unsupported`; binding: `—`; adapter: `—`.
   Diagnostic: unsupported claude-code lifecycle.tool-telemetry; run-report derives tool counts from the SessionEnd transcript instead
@@ -880,6 +1040,11 @@ Capture provider-native tool-call sidecar evidence for run-report enrichment.
 
 Render semantic MCP descriptors with secret references only.
 
+- **antigravity** — `native`; binding: `{"surface": ".antigravity/config.toml"}`; adapter: `—`.
+  Diagnostic: Antigravity mcp.catalog has a local harness projection; live native activation is unverified
+  Limitations: Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.; Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation..
+  Evidence: [2026-11-08] Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation. — `packages/harness/lib/harness/provider_audit.py` (Antigravity mcp.catalog project projection).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.mcp.catalog`.
   Diagnostic: deterministic harness adapter satisfies claude-code mcp.catalog
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -903,6 +1068,11 @@ Render semantic MCP descriptors with secret references only.
 ### `security.safe-dirs`
 
 Maintain a fail-closed destructive-operation allowlist.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.security.safe-dirs`.
+  Diagnostic: deterministic agy adapter denies rm/rmdir on PreToolUse Bash through the shared allowlist core
+  Limitations: matcher is ^Bash$ on PreToolUse, not Cursor beforeShellExecution; unreachable harness checkout is a refusal, not a pass.
+  Evidence: [2026-10-03] Antigravity safe-dirs is a PreToolUse Bash hook in .antigravity/hooks/swissknifeman.json that calls the shared safedirs verdict and fails closed when the harness checkout is unreachable — `packages/harness/tests/test_grok_provider_surface.py` (agy security.safe-dirs hook document and handler).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.security.safe-dirs`.
   Diagnostic: deterministic harness adapter satisfies claude-code security.safe-dirs
@@ -928,6 +1098,11 @@ Maintain a fail-closed destructive-operation allowlist.
 
 Read layered settings and report named policy conformance.
 
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.settings.audit`.
+  Diagnostic: deterministic agy adapter satisfies settings.audit
+  Limitations: read-only audit of documented layers; unreadable layer is a finding.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.settings.audit`.
   Diagnostic: deterministic harness adapter satisfies claude-code settings.audit
   Limitations: requires the committed harness catalog, provider projection and managed-boundary checks.
@@ -951,6 +1126,11 @@ Read layered settings and report named policy conformance.
 ### `settings.permissions`
 
 Render named permission/settings presets without replacing user-owned values.
+
+- **antigravity** — `adapted`; binding: `—`; adapter: `harness.antigravity.settings.permissions`.
+  Diagnostic: Antigravity settings.permissions has a local harness projection; live native activation is unverified
+  Limitations: Harness renders a project TOML policy projection; native AGY consumption and enforcement of that file have not been verified.; Use installed agy --help for launch mode and session-only settings; rendered policy does not establish OS isolation..
+  Evidence: [2026-11-08] Local harness rendering and provider inventory are checked; this is not evidence of native CLI activation. — `packages/harness/lib/harness/provider_audit.py` (Antigravity settings.permissions project projection).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.settings.permissions`.
   Diagnostic: deterministic harness adapter satisfies claude-code settings.permissions
@@ -976,6 +1156,11 @@ Render named permission/settings presets without replacing user-owned values.
 
 Load repository-owned skills and task adapters through the provider-native repository/plugin projection.
 
+- **antigravity** — `native`; binding: `{"surface": ".agents/skills"}`; adapter: `—`.
+  Diagnostic: native agy binding satisfies skills.repository
+  Limitations: none.
+  Evidence: [2026-09-17] committed support level — `docs/provider-support.md` (agy capability matrix).
+
 - **claude-code** — `native`; binding: `{"surface": ".claude-plugin/marketplace.json"}`; adapter: `—`.
   Diagnostic: native Claude Code repository/plugin skill projection is available
   Limitations: none.
@@ -999,6 +1184,11 @@ Load repository-owned skills and task adapters through the provider-native repos
 ### `workflows.status`
 
 Read and report provider-qualified workflow run status.
+
+- **antigravity** — `unsupported`; binding: `—`; adapter: `—`.
+  Diagnostic: unsupported for Antigravity: no provider-native workflow status store exists
+  Limitations: reason: API-capped — Antigravity exposes no provider-native workflow run store to query; generated workflow carriers orchestrate native subagents but do not create a queryable run directory.
+  Evidence: [2026-09-17] Antigravity exposes no provider-native workflow run store; generated workflow carriers are instruction-only — `docs/provider-support.md` (agy workflows.status capability cap).
 
 - **claude-code** — `adapted`; binding: `—`; adapter: `harness.claude-code.workflows.status`.
   Diagnostic: deterministic harness adapter satisfies claude-code workflows.status

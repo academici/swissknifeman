@@ -34,7 +34,13 @@ HOOK_KEYS = {
 }
 
 # Legacy per-provider mode files `<provider-dir>/<name>.env.ini`; read, never written.
-LEGACY_DIRS = {"claude-code": ".claude", "cursor": ".cursor", "codex": ".codex", "grok": ".grok"}
+LEGACY_DIRS = {
+    "claude-code": ".claude",
+    "cursor": ".cursor",
+    "codex": ".codex",
+    "grok": ".grok",
+    "antigravity": ".antigravity",
+}
 
 
 def hook_name(hook):

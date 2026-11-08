@@ -260,8 +260,8 @@ SKILL_LISTING_CONTEXT_WINDOW = 1_000_000
 CODEX_LISTING_FALLBACK_CHARS = 8_000
 CODEX_LISTING_BUDGET_FRACTION = 0.02
 
-LISTING_PROVIDERS = ("claude-code", "codex", "cursor", "grok")
-CHAR_LISTING_PROVIDERS = frozenset({"codex", "cursor", "grok"})
+LISTING_PROVIDERS = ("claude-code", "codex", "cursor", "grok", "antigravity")
+CHAR_LISTING_PROVIDERS = frozenset({"codex", "cursor", "grok", "antigravity"})
 DEFAULT_LISTING_PROVIDER = "claude-code"
 
 MEASUREMENT_SURFACES = frozenset({"listing", "loaded-body", "runtime"})

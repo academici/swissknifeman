@@ -9,7 +9,7 @@
   "requires": [
     {"unit": "aicore", "range": "^0.1", "description": "Foundation."},
     {"unit": "orch", "range": "^0.1", "description": "Role manifests and capability seeds."},
-    {"unit": "skiller", "range": "^0.20", "description": "Skill resolver command line (bin/skiller resolve)."}
+    {"unit": "skiller", "range": "^0.21", "description": "Skill resolver command line (bin/skiller resolve)."}
   ],
   "provides": {
     "cli": ["resolve_role.py"]

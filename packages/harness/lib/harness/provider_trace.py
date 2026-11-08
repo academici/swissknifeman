@@ -8,7 +8,7 @@ boundary: "no normalization logic lives here"). stdlib-only, no import of `analy
 (harness stays independently testable, mirroring the rest of the package)."""
 import hashlib
 
-PROVIDER_IDS = ("claude-code", "codex", "cursor", "grok")
+PROVIDER_IDS = ("claude-code", "codex", "cursor", "grok", "antigravity")
 READER_VERSION = "1.0.0"
 
 # Same six nullable fields `analyst.trace` scores completeness over — kept here as a
@@ -104,3 +104,14 @@ def build_grok_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, co
         plan_ref=plan_ref, contract_ref=contract_ref, route=route, dispatch=dispatch,
         finding_refs=finding_refs, public_outcome=public_outcome,
         reason="grok-hook-not-integrated")
+
+
+def build_antigravity_raw(*, raw_ref, occurred_at, source_bytes=None, plan_ref=None, contract_ref=None,
+                          route=None, dispatch=None, finding_refs=None, public_outcome=None):
+    """Antigravity lifecycle hooks are Codex-shaped; capture completeness follows the same
+    unintegrated envelope until a dedicated run-report lands."""
+    return _build_unintegrated_raw(
+        "antigravity", raw_ref=raw_ref, occurred_at=occurred_at, source_bytes=source_bytes,
+        plan_ref=plan_ref, contract_ref=contract_ref, route=route, dispatch=dispatch,
+        finding_refs=finding_refs, public_outcome=public_outcome,
+        reason="antigravity-hook-not-integrated")

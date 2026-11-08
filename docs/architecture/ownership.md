@@ -16,7 +16,7 @@
 | gui-orch | bridge | 0.1.0 | hub | alpha | aicore, gui, orch |
 | gui-planner | bridge | 0.1.0 | hub | alpha | aicore, gui, planner |
 | gui-workspace | bridge | 0.1.0 | hub | alpha | aicore, gui, workspace |
-| harness | capability | 0.8.0 | hub | beta | aicore |
+| harness | capability | 0.8.1 | hub | beta | aicore |
 | maind | capability | 0.6.8 | hub | beta | aicore |
 | orch | capability | 0.1.0 | own-repo | alpha | aicore |
 | orch-harness | bridge | 0.1.0 | hub | alpha | aicore, orch, harness |

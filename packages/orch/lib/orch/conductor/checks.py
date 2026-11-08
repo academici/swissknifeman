@@ -119,8 +119,8 @@ def check_env(cwd: Path, environ=None, run_env=None, parallel: int = 1) -> dict:
     unbuffered Python output (a Python test runner writing to the log file shows its progress, so the silence ceiling
     ``check_idle_timeout_s`` measures a hang, not a buffer). ``run_env`` adds the names of the run (``SKM_CHECK_*``).
     ``SKM_TEST_JOBS`` shares the owner's jobs budget (else the CPUs) between ``parallel`` checks; internal launch variables are removed."""
-    base = dict(os.environ if environ is None else environ)
-    base.setdefault("PYTHONUNBUFFERED", "1")
+    base = {"PYTHONUNBUFFERED": "1", "COMPOSER_PROCESS_TIMEOUT": "0",
+            **dict(os.environ if environ is None else environ)}
     project = Path(cwd).resolve()
     for name in INSTALL_ROOTS:
         value = base.get(name)

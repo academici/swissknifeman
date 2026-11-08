@@ -45,13 +45,6 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
-    "perplexity-web": {
-      "command": "${PERPLEXITY_WEB_MCP_BIN}",
-      "args": [],
-      "env": {
-        "PERPLEXITY_SESSION_TOKEN": "${PERPLEXITY_SESSION_TOKEN}"
-      }
-    },
     "serena": {
       "command": "uvx",
       "args": [

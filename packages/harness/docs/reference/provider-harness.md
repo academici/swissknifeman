@@ -17,7 +17,7 @@ No live target write, activation, apply authority, MCP start, hook start or work
 | source:configs/antigravity/agent-packs/consumer-mapping.json | `sha256:ac5f029d73de2d172e4bcdaa85b9c8ef2e0320006d4b4dc3c47d2b05a5c0d510` |
 | source:configs/antigravity/config/profile-bindings.json | `sha256:1f7de6603874a1fa97513c257a7ac415c02a6fbe2265d246d2a91ba50f36edab` |
 | source:configs/antigravity/hooks/lifecycle-context-bindings.json | `sha256:4cbfeafca5f863c76b735474c40f119063973b7fd19452af5c6fb2c26e5c6f6a` |
-| source:configs/antigravity/mcp/bindings.json | `sha256:e4a016b932f65b5672753534fa2107a45481c41edda925b3168a0a7b588b3c30` |
+| source:configs/antigravity/mcp/bindings.json | `sha256:75c5347038495b84bcdaa6768218030cbb292403ae0bf9dcaa90c71f0aab33c6` |
 | source:configs/claude-code/agent-packs/role-bindings.json | `sha256:d619828f8a5ea9a6e5fff0c7f6b87940e6aaaf40c92269e2bf955c85c403614b` |
 | source:configs/claude-code/mcp/bindings.json | `sha256:80fcf080664a04c51bf950568b468a7acb4b3bc829866023c3708a08241089aa` |
 | source:configs/codex/config/profile-bindings.json | `sha256:9de3078c203f0cebd1a66e0f243efd96cb78a829341ed8f1faa6bc6ed0b1542e` |

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- **Harness: нейтральная конфигурация Antigravity.** Убран персональный MCP research-route из поставляемых bindings.
+
+- **Orch: таймаут Composer и временные файлы.** Проверки по умолчанию получают `COMPOSER_PROCESS_TIMEOUT=0`, сохраняя явно заданное значение и ограничения времени conductor; после завершения агента удаляется его scratch-каталог, артефакты результатов сохраняются.
+
 ## [0.36.0] - 2026-11-08
 
 - **Antigravity: интеграция с окружением проекта.** Добавлены provider manifest, профили permissions, управляемые hooks, MCP и инструкции; skiller публикует активные skills через `.agents/skills.json`, planner распознаёт сессию, orch читает подключённые skills и восстанавливает валидный fenced review. Разбор prose сохраняет отказ при findings или questions.

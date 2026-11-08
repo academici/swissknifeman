@@ -1359,6 +1359,9 @@ A check command tests the project, so it does not inherit the install roots of t
 project (a frozen or installed copy of the orchestrator would otherwise be tested instead of the project's own code, as a
 piece that adds a module to the foundation found out). Roots inside the project stay.
 
+Checks default `COMPOSER_PROCESS_TIMEOUT` to `0`, leaving timeout enforcement to the conductor's wall and silence
+limits. An explicit value from the inherited environment or run environment takes precedence.
+
 The run names itself to the check: `SKM_CHECK_RUN` (the run id), `SKM_CHECK_ITEM` (the piece reference) and `SKM_CHECK_ROUND`
 (the number of the round), so a test runner can keep a result only inside one run. `SKM_TEST_JOBS` is the jobs budget the
 check may use: the budget of the owner (its own `SKM_TEST_JOBS`, else the CPUs) divided by the checks that run together
@@ -2094,6 +2097,8 @@ for.
   matching its 200-character prefix is required; otherwise `SESSION_NOT_PERSISTABLE` keeps `--no-session-persistence`
   and disables resume. Previews create no transcript directories. The session authority comparison excludes only the
   ephemeral agent TMPDIR grant; each recorded launch envelope still hashes its exact scratch path.
+  On agent completion, its scratch directory is removed on a best-effort basis; request, result, usage and stream
+  artifacts remain available.
 - **Setting sources.** An isolated Claude Code role (`instructions.isolate_roles`, isolation not `off`) starts with
   `--setting-sources user` (the catalog value `user,project` of the writers is replaced): the project's
   `.claude/settings*.json` no longer reach it, so their context-economy Read denies cannot become sandbox masks of

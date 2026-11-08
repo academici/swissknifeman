@@ -6,6 +6,7 @@ from __future__ import annotations
 import contextlib
 import os
 from pathlib import Path
+import shutil
 import time
 from typing import Callable, NamedTuple, Optional
 
@@ -188,6 +189,7 @@ def agent_end(self, handle: dict, error: Optional[dict] = None, succeeded: bool 
         extra["error"] = {"class": failure.get("class") or "unknown",
                           **({"code": failure["code"]} if failure.get("code") else {})}
     self._agent_event("orch.agent.failed" if failure else "orch.agent.finished", handle, extra)
+    shutil.rmtree(handle["directory"] / "tmp", ignore_errors=True)
     self._local.agent = handle["previous"]
 
 

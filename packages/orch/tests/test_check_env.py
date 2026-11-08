@@ -9,6 +9,15 @@ from orch.conductor import checks
 
 
 class CheckEnvTests(unittest.TestCase):
+    def test_composer_uses_conductor_timeout_unless_explicitly_configured(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            self.assertEqual(checks.check_env(project, {})["COMPOSER_PROCESS_TIMEOUT"], "0")
+            self.assertEqual(checks.check_env(project, {"COMPOSER_PROCESS_TIMEOUT": "120"})[
+                "COMPOSER_PROCESS_TIMEOUT"], "120")
+            self.assertEqual(checks.check_env(project, {}, {"COMPOSER_PROCESS_TIMEOUT": "240"})[
+                "COMPOSER_PROCESS_TIMEOUT"], "240")
+
     def test_roots_outside_the_project_are_dropped_and_roots_inside_are_kept(self):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"

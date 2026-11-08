@@ -285,7 +285,7 @@ class DenialRunTests(ConductorCase):
         for call in launched.call_args_list:
             folder = Path(call.kwargs["agent_directory"])
             scratch = folder / "tmp"
-            self.assertTrue(scratch.is_dir())
+            self.assertFalse(scratch.exists())
             self.assertEqual(call.kwargs["env"]["TMPDIR"], str(scratch))
             agents[folder] = scratch
             doc = json.loads(next((folder / "authority").glob("a*.json")).read_text())

@@ -3,7 +3,7 @@
   "id": "harness",
   "title": "Provider environment setup: permissions, MCP, hooks, instructions",
   "kind": "capability",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "stability": "beta",
   "destination": "hub",
   "requires": [

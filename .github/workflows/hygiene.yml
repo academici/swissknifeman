@@ -16,7 +16,7 @@ jobs:
     steps:
       # fetch-depth: 0 — default checkout@v4 (fetch-depth: 1) does not lay the base PR to clone
       # (in t.h. For fork-PR); docs-impact.py diff by merge-base, he needs the full story.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
 
@@ -92,7 +92,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0  # Immutable tuples are compared with earlier source tags.
 

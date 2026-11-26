@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {
+    "W1": {
+      "skills_auto": [{"id": "lib:python", "name": "python"}],
+      "steps": {}
+    }
+  },
+  "status": "running",
+  "tokens": {"input": 0, "output": 0}
+}

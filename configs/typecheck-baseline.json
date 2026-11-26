@@ -1,0 +1,16 @@
+{
+  "errors": {
+    "aicore": 192,
+    "analyst": 65,
+    "brain": 0,
+    "gui": 42,
+    "harness": 117,
+    "maind": 104,
+    "orch": 144,
+    "planner": 135,
+    "skiller": 85,
+    "workspace": 0
+  },
+  "mode": "basic",
+  "pyright": "1.1.414"
+}

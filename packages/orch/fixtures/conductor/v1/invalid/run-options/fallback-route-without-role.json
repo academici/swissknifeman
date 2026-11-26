@@ -1,0 +1,8 @@
+{
+  "fallback_routes": [
+    {
+      "provider": "codex",
+      "model_class": "economy"
+    }
+  ]
+}

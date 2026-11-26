@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:config:v1",
+  "title": "workspace config",
+  "description": "Settings of the workspace module: publish-safety limits, the git lock, the plans migrator and the optional links plans/ and tasks/ in a checkout. All but `link_folders` are machine-wide: a project file cannot set them.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "publish": {
+      "type": "object",
+      "description": "Limits of publish-safety (what may enter the workspace git).",
+      "additionalProperties": false,
+      "properties": {
+        "max_tracked_bytes": {
+          "type": "integer",
+          "description": "Files larger than this many bytes stay local-only (not in git).",
+          "default": 5242880,
+          "minimum": 1,
+          "x-skm-layers": [
+            "defaults",
+            "machine"
+          ]
+        },
+        "max_binary_tracked_bytes": {
+          "type": "integer",
+          "description": "Binary files larger than this many bytes stay local-only (not in git).",
+          "default": 1048576,
+          "minimum": 1,
+          "x-skm-layers": [
+            "defaults",
+            "machine"
+          ]
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "description": "Git operations on the workspace.",
+      "additionalProperties": false,
+      "properties": {
+        "lock_timeout_s": {
+          "type": "integer",
+          "description": "Seconds to wait for the workspace git lock before WORKSPACE_GIT_LOCKED.",
+          "default": 60,
+          "minimum": 1,
+          "x-skm-layers": [
+            "defaults",
+            "machine"
+          ]
+        }
+      }
+    },
+    "plans_migrator": {
+      "type": "string",
+      "description": "Id of the bridge that fills the plans-migrator extension point.",
+      "default": "workspace-planner",
+      "minLength": 1,
+      "x-skm-layers": [
+        "defaults",
+        "machine"
+      ]
+    },
+    "link_folders": {
+      "type": "boolean",
+      "description": "Link plans/ and tasks/ in the checkout to the folders of the project in the workspace (symbolic links listed in .git/info/exclude), so an IDE sees them. `workspace project attach|add` and `workspace sync` keep the links of a project while this is true; `workspace project link|unlink` set it for one project (projects/<code>/local/config.toml).",
+      "default": false,
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "project"
+      ]
+    }
+  }
+}

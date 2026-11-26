@@ -1,0 +1,168 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/gui-hub/scripts/test.sh",
+    "bridges/gui-orch/scripts/test.sh",
+    "bridges/gui-planner/scripts/test.sh",
+    "bridges/orch-harness/scripts/test.sh",
+    "bridges/orch-skiller/scripts/test.sh",
+    "bridges/planner-orch/scripts/test.sh",
+    "bridges/workspace-planner/scripts/test.sh",
+    "docs/project-launcher.md",
+    "docs/skm-environment.md",
+    "docs/workspace.md",
+    "install.sh",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/bin/aicore",
+    "packages/aicore/lib/aicore/cli.py",
+    "packages/aicore/lib/aicore/ext/environment.py",
+    "packages/aicore/lib/aicore/project/cli.py",
+    "packages/aicore/lib/aicore/state/__init__.py",
+    "packages/aicore/lib/aicore/state/envtable.py",
+    "packages/aicore/lib/aicore/state/locations.py",
+    "packages/aicore/lib/aicore/state/shellenv.py",
+    "packages/aicore/lib/aicore/state/shellenv_cli.py",
+    "packages/aicore/schemas/workspace/v1/resolution-vectors.json",
+    "packages/aicore/scripts/test.sh",
+    "packages/aicore/tests/state/test_shellenv.py",
+    "packages/analyst/scripts/test.sh",
+    "packages/brain/scripts/test.sh",
+    "packages/gui/scripts/test.sh",
+    "packages/harness/configs/claude-code/hooks/auto-approve/lib/safedirs.py",
+    "packages/harness/configs/claude-code/hooks/memory/lib/common.sh",
+    "packages/harness/tests/test_skm_env_table.py",
+    "packages/maind/CHANGELOG.md",
+    "packages/maind/install.sh",
+    "packages/maind/tests/test_install.py",
+    "packages/orch/scripts/test.sh",
+    "packages/planner/lib/planner/plan/workspace.py",
+    "packages/planner/scripts/test.sh",
+    "packages/planner/scripts/validate.sh",
+    "packages/skiller/docs/guide/installation.md",
+    "packages/skiller/install.sh",
+    "packages/skiller/tests/test_install.py",
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/lib/workspace/doctor.py",
+    "packages/workspace/scripts/test.sh",
+    "packages/workspace/tests/test_cli.py",
+    "packages/workspace/tests/test_doctor.py",
+    "scripts/test-bridges.sh",
+    "scripts/test-integration.sh"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "one deliverable of the goal (skills tell the project to read the variables and use the launcher) is open; the variables, snippet, doctors and docs are done",
+      "kind": "pending",
+      "next": "an owner or coordinator step outside the sandbox: add the section as a new section of packages/skiller/skills/general/shell/SKILL.md (a growing cookbook, version bump) or to the maind ecosystem-setup template, then run `bin/skiller registry` and `python3 scripts/golden.py capture`",
+      "severity": "medium",
+      "text": "Skill instructions that tell a project to read SKM_HOME/SKM_WORKSPACES/SKM_WORKSPACE and to use the launcher are NOT inserted into any SKILL.md or generated instruction surface. Every candidate is hash/golden-gated and cannot be regenerated from this sandbox: the shell skill and any registered skill (packages/skiller/skills.json holds version, sha256 and content_sha256; the file is unreadable here), the maind managed template templates/skills/ecosystem-setup/SKILL.md (digest in tests/golden/generation.json, generated copies in .claude/skills and .agents/skills, .claude/skills is write-denied), and the harness instruction fragments (sha256 in catalog.json, rendered into CLAUDE.md/AGENTS.md). Editing them would turn `skiller registry --check` and `golden.py check` red under V1. I reverted my draft of the shell-skill section. The canonical text is in docs/skm-environment.md (section 'What a skill or a project instruction says')."
+    },
+    {
+      "class": "environment",
+      "impact": "V1 may be red in a sandbox that cannot read these files; with readable files only the skill registry matters, and I left the skills untouched",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Skills could not be validated in this sandbox: packages/skiller/skills.json and requirements.lock files are unreadable, so `skiller registry --check`, packages/skiller/scripts/validate.sh and `golden.py check` report drift/permission errors that are sandbox artifacts (they also failed with the HEAD version of SKILL.md). scripts/test-root-install.py fails 3 tests for the same reason (GUI_DEPS_UNAVAILABLE reading packages/gui/requirements.lock), not because of this piece. Apart from skills.json, golden.py check shows no difference."
+    },
+    {
+      "impact": "on a not yet migrated machine the snippet exports only SKM_WORKSPACES (and SKM_WORKSPACE); the owner may prefer to export SKM_HOME unconditionally or to teach machine_locations that SKM_HOME equal to the default home is not a sandbox",
+      "kind": "assumption",
+      "next": "owner decision if the unconditional export is wanted",
+      "text": "Exporting SKM_HOME marks a machine as isolated: locations.machine_locations switches the lookup of the old XDG folders off and `config migrate-home` is refused under SKM_HOME. To avoid breaking a machine that has not migrated, planned_values leaves SKM_HOME out (with a note, also shown by the doctors) while Locations.legacy is non-empty and SKM_HOME is not already set. A machine that has migrated, or any new one, exports it."
+    },
+    {
+      "impact": "two names for one setting until a later rename; the gui-workspace bridge allowlist may need SKM_WORKSPACES, SKM_WORKSPACE, SKM_HOME",
+      "kind": "assumption",
+      "next": "decide whether to retire SKM_WORKSPACES_ROOT; widen the bridge env allowlists if the GUI must honour the exported names",
+      "text": "The goal names SKM_WORKSPACES for the workspaces folder, but the code and tests use SKM_WORKSPACES_ROOT everywhere (bridge env allowlists, scripts, vectors). I kept SKM_WORKSPACES_ROOT as the stronger, older name that is read first and never exported, and made SKM_WORKSPACES the exported name that is read when ROOT is unset (aicore, planner copy, two new shared vectors). The bridge manifests (gui.json, extension.json) still list only SKM_WORKSPACES_ROOT in their env allowlists, so a GUI-run workspace command does not see SKM_WORKSPACES."
+    },
+    {
+      "impact": "multi-workspace machines: the exported default can shadow the marker",
+      "kind": "note",
+      "next": "owner: consider letting the marker win over the exported default",
+      "text": "An exported SKM_WORKSPACE now wins over the workspace named by a project's marker in the workspace CLI (precedence in workspace/cli.py: --workspace, SKM_WORKSPACE, marker, the only workspace). With a single workspace this is the same; with several, a shell that exports workspace A and a checkout whose marker names B resolves to A. The snippet exports SKM_WORKSPACE only when there is exactly one workspace (or the shell already names one), and the doctor warns about a code that is not a workspace of the machine."
+    },
+    {
+      "impact": "the remedy text of the doctors names `aicore shell-env install`; the command must be on PATH or called by path",
+      "kind": "note",
+      "next": "optional: add an umbrella route and a profile for ~/.profile",
+      "text": "No `swissknifeman env` alias: `env` is already the harness alias in configs/umbrella.json, so the command is `aicore shell-env`, reached through bin/aicore, not through the umbrella router. Only bash (~/.bashrc) and zsh (~/.zshrc) profiles are written; fish and login-only profiles (~/.profile, ~/.bash_profile) are not (SHELL_UNSUPPORTED, `--profile FILE` exists)."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "install.sh",
+        "scripts/test-bridges.sh",
+        "scripts/test-integration.sh",
+        "bridges/gui-hub/scripts/test.sh"
+      ],
+      "impact": "the commit takes these paths with the piece",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Changed outside packages/**: install.sh (flag --no-shell-env), CHANGELOG.md, docs/project-launcher.md, docs/workspace.md, docs/skm-environment.md, bridges/*/scripts/test.sh (7 files), scripts/test-bridges.sh, scripts/test-integration.sh (unset the three variables so a developer's exports never reach a sandboxed test). Also edited planner and the harness hook libraries."
+    },
+    {
+      "impact": "noisy stderr in installer runs against the stale copy; no failure",
+      "kind": "note",
+      "next": "none",
+      "text": "The AICORE_ROOT of the conductor environment is the frozen copy that has no `shell-env` group. The installers then print `aicore: unknown group 'shell-env'` plus the WARN line and go on (exit 0, tested). My runs used AICORE_ROOT=packages/aicore."
+    },
+    {
+      "impact": "tests changed to the new contract of the doctor",
+      "kind": "note",
+      "next": "none",
+      "text": "The workspace doctor test 'a fresh workspace is all ok' and workspace tests.test_cli.test_init_status_doctor_in_json now exclude workspace.env-snippet/env-variables (they depend on the shell and the profile of the machine); test_doctor.EnvTests covers them. workspace.IDS in test_doctor lists the two new check ids."
+    },
+    {
+      "impact": "the role could not use them",
+      "kind": "note",
+      "next": "widen allowedTools in the launch catalog or change the plan",
+      "text": "tools denied without a prompt: Read"
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "CHANGELOG.md",
+        "bridges/gui-hub/scripts/test.sh",
+        "bridges/gui-orch/scripts/test.sh",
+        "bridges/gui-planner/scripts/test.sh",
+        "bridges/orch-harness/scripts/test.sh",
+        "bridges/orch-skiller/scripts/test.sh",
+        "bridges/planner-orch/scripts/test.sh",
+        "bridges/workspace-planner/scripts/test.sh",
+        "docs/project-launcher.md",
+        "docs/skm-environment.md",
+        "docs/workspace.md",
+        "install.sh",
+        "scripts/test-bridges.sh",
+        "scripts/test-integration.sh"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: CHANGELOG.md, bridges/gui-hub/scripts/test.sh, bridges/gui-orch/scripts/test.sh, bridges/gui-planner/scripts/test.sh, bridges/orch-harness/scripts/test.sh, bridges/orch-skiller/scripts/test.sh, bridges/planner-orch/scripts/test.sh, bridges/workspace-planner/scripts/test.sh, docs/project-launcher.md, docs/skm-environment.md, docs/workspace.md, install.sh, scripts/test-bridges.sh, scripts/test-integration.sh"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/aicore/lib/aicore/state/shellenv.py (profile writes: symlinked dotfiles, broken markers, round trip) and the SKM_HOME legacy-skip rule in planned_values",
+      "packages/aicore/lib/aicore/state/locations.py workspaces_root (SKM_WORKSPACES fallback, mirrored in packages/planner/lib/planner/plan/workspace.py and the shared vectors)",
+      "install.sh edits of maind/skiller/root (they write into the user's shell profile)"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed",
+      "scope_expanded",
+      "other"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "SKM environment variables and shell export. New aicore.state.envtable (the one table: SKM_HOME, SKM_WORKSPACES, SKM_WORKSPACE; SKM_WORKSPACES_ROOT stays the older, stronger name of the workspaces folder) and aicore.state.shellenv (planned values, managed idempotent block in ~/.bashrc / ~/.zshrc where a value already in the environment wins, install/uninstall/inspect, doctor checks) with the command `aicore shell-env show|install|uninstall|doctor`. maind/skiller/root install.sh run the snippet install (--no-shell-env / SKM_NO_SHELL_ENV=1; a failure only warns; maind skips it when aicore is not found). project doctor and workspace doctor report env-snippet and env-variables. workspaces_root (aicore and the planner stdlib copy, with two new shared vectors) reads SKM_WORKSPACES after SKM_WORKSPACES_ROOT; plugin env allowlist passes the three names; harness hook libraries carry copies pinned to the table by a parity test. Test scripts of packages and bridges unset the three variables. Tests: new aicore tests/state/test_shellenv.py (44: table, values, install/uninstall idempotency, a fresh interactive bash, the command, doctors, the launcher with and without the variables), skiller and maind install tests, workspace test_doctor/test_cli, harness test_skm_env_table. Full aicore (OK) and workspace (OK after fixing test_cli) suites run, plus single files of harness, maind, skiller, planner. Docs: docs/skm-environment.md, project-launcher.md, workspace.md, READMEs, changelogs. NOT done: the skill instructions (see open_issues)."
+}

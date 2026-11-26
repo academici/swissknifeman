@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-sync-pushed:v1",
+  "title": "workspace.sync.pushed",
+  "description": "HEAD of the workspace was pushed to origin.",
+  "type": "object",
+  "properties": {
+    "head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$",
+      "description": "HEAD that was pushed."
+    }
+  },
+  "required": [
+    "head"
+  ],
+  "additionalProperties": false
+}

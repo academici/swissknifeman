@@ -1,0 +1,23 @@
+{
+  "schema_version": "schema-tags/v1",
+  "_doc": "Short document tags that are already published map to the schema $id. The tag string does not change. An alias whose $id is not in the tree yet is pending until the contract that owns it lands (orch records/v1 is P4.3).",
+  "aliases": {
+    "skill-descriptor/v1": "urn:swissknifeman:aicore:skill-descriptor:v1",
+    "skill-selection/v1": "urn:swissknifeman:aicore:skill-selection:v1",
+    "eval-context/v1": "urn:swissknifeman:aicore:eval-context:v1",
+    "provider-errors/v1": "urn:swissknifeman:aicore:provider-errors:v1",
+    "release-unit-policy/v1": "urn:swissknifeman:aicore:release-unit-policy:v1",
+    "reliability-metrics-digest/v1": "urn:swissknifeman:analyst:reliability-metrics-digest:v1",
+    "unified-agent-trace/v1": "urn:swissknifeman:analyst:unified-agent-trace:v1",
+    "skiller.resolve/v1": "urn:swissknifeman:skiller:resolve:v1",
+    "effective-source-doctor/v1": "urn:swissknifeman:skiller:effective-source-doctor:v1",
+    "exclusive-groups/v1": "urn:swissknifeman:skiller:exclusive-groups:v1",
+    "umbrella-units/v1": "urn:swissknifeman:hub:umbrella-units:v1",
+    "prompt-manifest/v1": "urn:swissknifeman:orch:conductor:prompt-manifest:v1",
+    "provider-gates/v1": "urn:swissknifeman:orch:records:provider-gates:v1",
+    "orch-conductor-observer/v1": "urn:swissknifeman:orch:records:observer-report:v1",
+    "orch-conductor-review-verdict/v1": "urn:swissknifeman:orch:records:review-verdict:v1",
+    "prompt-diff/v1": "urn:swissknifeman:orch:records:prompt-diff:v1",
+    "orch-conformance/v1": "urn:swissknifeman:orch:records:conformance-report:v1"
+  }
+}

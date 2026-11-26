@@ -1,0 +1,13 @@
+{
+  "skill": "mcp-blender",
+  "snippets": [
+    {
+      "file": "role.md",
+      "description": "Agent Role - Automation Architect Blender 5.x on Python",
+      "tags": [
+        "blender",
+        "role"
+      ]
+    }
+  ]
+}

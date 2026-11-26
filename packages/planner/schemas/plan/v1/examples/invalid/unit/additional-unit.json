@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P1.1",
+  "title": "a",
+  "goal": "a",
+  "files": [],
+  "route": {
+    "class": "economy",
+    "effort": "low"
+  },
+  "mode": "self",
+  "status": "todo",
+  "updated_at": "2026-01-02T03:04:05Z",
+  "not-a-field": 1
+}

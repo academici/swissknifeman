@@ -1,0 +1,20 @@
+{
+  "skill": "plan-protocol",
+  "scenarios": [
+    {
+      "id": 1,
+      "tempts": "What the agent is tempted to do, MISSING the skill (for example: immediately write code instead of checking the fact).",
+      "prompt": "Scenario-temptation under pressure. Replace with your own.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "skill-compliance-sign"
+        },
+        {
+          "type": "not_contains",
+          "value": "violation-sign"
+        }
+      ]
+    }
+  ]
+}

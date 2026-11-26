@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# gui — CLI of the SKM GUI module: the local control plane for desktop and browser mode.
+# Thin launcher: checks the environment and transfers control to the package lib/gui
+# (python3 -m gui.cli). All logic is in lib/ (importable and testable: see tests/).
+# gui needs Python >= 3.11 (lib/gui MIN_PYTHON); an older interpreter fails with PYTHON_TOO_OLD.
+#
+# Usage: gui [--version] [-h] <command> [options]
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: gui requires python3" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/lib/gui" ]]; then
+  echo "ERROR: package lib/gui not found in $REPO_ROOT/lib" >&2
+  exit 1
+fi
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m gui.cli "$@"

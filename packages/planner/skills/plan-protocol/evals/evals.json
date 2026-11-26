@@ -1,0 +1,19 @@
+{
+  "skill": "plan-protocol",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Real user request in the ecosystem language (specifics: paths, names). Replace with your own.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "expected-substring"
+        },
+        {
+          "type": "not_contains",
+          "value": "forbidden-substring"
+        }
+      ]
+    }
+  ]
+}

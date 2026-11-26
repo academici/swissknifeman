@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:event-data:workspace-sync-committed:v1",
+  "title": "workspace.sync.committed",
+  "description": "A sync commit of the workspace was made on this machine.",
+  "type": "object",
+  "properties": {
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40,64}$",
+      "description": "Id of the commit."
+    },
+    "files": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of files in the commit."
+    }
+  },
+  "required": [
+    "sha",
+    "files"
+  ],
+  "additionalProperties": false
+}

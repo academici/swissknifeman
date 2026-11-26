@@ -1,0 +1,118 @@
+"""Identifiers, status enums and ordering for v4 plan documents (stdlib only).
+
+The ID patterns here are the same literals as ``schemas/plan/v1/*.schema.json``; a test keeps them in sync.
+Match them with ``fullmatch`` — ``$`` alone would also accept a trailing newline.
+"""
+from __future__ import annotations
+
+from enum import Enum
+import re
+from typing import Iterable, NamedTuple
+
+PLAN_ID = re.compile(r"^[A-Z0-9](?:[A-Z0-9._№-]*[A-Z0-9])?$", re.ASCII)
+SHORT_ID = re.compile(r"^PLAN[1-9][0-9]*$", re.ASCII)
+PHASE_ID = re.compile(r"^P[0-9]+$", re.ASCII)
+ITEM_ID = re.compile(r"^P[0-9]+\.[0-9]+$", re.ASCII)
+DECISION_ID = re.compile(r"^D[0-9]+$", re.ASCII)
+# Reference grammar (knowledge/read-api#ref-grammar): [[repo:]PLAN<N>.] Pn | Pn.m | Pn.m/U# | D# | knowledge/<id>[#<section>] | artifact/<id>
+REF = re.compile(r"^((?:[a-z0-9-]+:)?PLAN[0-9]+\.)?(P[0-9]+(\.[0-9]+(/U[0-9]+)?)?|D[0-9]+"
+                 r"|knowledge/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?(#[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?"
+                 r"|artifact/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)$", re.ASCII)
+_REF_PARTS = re.compile(
+    r"^(?:(?:(?P<repo>[a-z0-9-]+):)?(?P<plan>PLAN[0-9]+)\.)?"
+    r"(?:(?P<unit>P[0-9]+\.[0-9]+/U[0-9]+)|(?P<local>P[0-9]+(?:\.[0-9]+)?|D[0-9]+)"
+    r"|knowledge/(?P<knowledge>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)(?:#(?P<section>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?))?"
+    r"|artifact/(?P<artifact>[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?))$", re.ASCII)
+_SORTABLE = re.compile(r"^(?P<prefix>[A-Z]+)(?P<nums>[0-9]+(?:\.[0-9]+)*)$", re.ASCII)
+
+CLASS_ORDER = ("economy", "implementation", "frontier")
+EFFORT_ORDER = ("low", "medium", "high", "xhigh", "max", "ultra")
+
+
+class ItemStatus(str, Enum):
+    """Item statuses; members compare equal to their JSON string values."""
+
+    todo = "todo"
+    in_progress = "in_progress"
+    done = "done"
+    done_with_deviations = "done_with_deviations"
+    blocked = "blocked"
+    skipped = "skipped"
+
+
+# Terminal items are finished by the lifecycle; only SATISFYING ones unblock a dependent item.
+TERMINAL = frozenset({ItemStatus.done, ItemStatus.done_with_deviations, ItemStatus.blocked, ItemStatus.skipped})
+SATISFYING = frozenset({ItemStatus.done, ItemStatus.done_with_deviations, ItemStatus.skipped})
+
+STATUS_LABEL = {
+    ItemStatus.todo: "⬜ Not started",
+    ItemStatus.in_progress: "🟡 In progress",
+    ItemStatus.done: "🟢 Done",
+    ItemStatus.done_with_deviations: "🟠 Done with deviations",
+    ItemStatus.blocked: "🔴 Blocked",
+    ItemStatus.skipped: "⛔ Skipped by decision",
+}
+
+# Worst-of order for phase closure: later entries win.
+_PHASE_RESULT_ORDER = (ItemStatus.skipped, ItemStatus.done, ItemStatus.done_with_deviations, ItemStatus.blocked)
+
+
+class PlanError(Exception):
+    """Single refusal type of the plan API: a stable ``code``, a message and optional schema issues."""
+
+    def __init__(self, code: str, message: str, issues=()):
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+        self.issues = tuple(issues)
+
+
+class Ref(NamedTuple):
+    repo: str | None
+    plan: str | None
+    target: str  # Pn | Pn.m | Pn.m/U# | D# | knowledge id | artifact id
+    kind: str  # "phase" | "item" | "unit" | "decision" | "knowledge" | "artifact"
+    section: str | None = None  # knowledge sections only
+
+
+def parse_ref(ref: str) -> Ref:
+    """Split a local or qualified reference; raise ValueError when it is malformed."""
+    if not isinstance(ref, str) or not REF.fullmatch(ref):
+        raise ValueError(f"invalid ref: {ref!r}")
+    parts = _REF_PARTS.fullmatch(ref)
+    assert parts is not None  # REF guarantees the shape
+    if parts["unit"]:
+        return Ref(parts["repo"], parts["plan"], parts["unit"], "unit")
+    if parts["knowledge"]:
+        return Ref(parts["repo"], parts["plan"], parts["knowledge"], "knowledge", parts["section"])
+    if parts["artifact"]:
+        return Ref(parts["repo"], parts["plan"], parts["artifact"], "artifact")
+    target = parts["local"]
+    kind = "decision" if target.startswith("D") else ("item" if "." in target else "phase")
+    return Ref(parts["repo"], parts["plan"], target, kind)
+
+
+def item_phase(item_id: str) -> str:
+    """Phase id of an item id: ``P1.2`` -> ``P1``."""
+    if not isinstance(item_id, str) or not ITEM_ID.fullmatch(item_id):
+        raise ValueError(f"invalid item id: {item_id!r}")
+    return item_id.split(".", 1)[0]
+
+
+def id_sort_key(identifier: str) -> tuple:
+    """Numeric sort key so that ``P1.10`` follows ``P1.9`` and a phase precedes its items."""
+    match = _SORTABLE.fullmatch(identifier) if isinstance(identifier, str) else None
+    if match is None:
+        raise ValueError(f"invalid id: {identifier!r}")
+    return (match["prefix"], *(int(n) for n in match["nums"].split(".")))
+
+
+def phase_status(statuses: Iterable[str]) -> str | None:
+    """Closure result of a phase from its item statuses, or None while it is still open.
+
+    Worst-of: blocked > done_with_deviations > done; all skipped -> skipped.
+    """
+    members = [ItemStatus(s) for s in statuses]
+    if not members or any(s not in TERMINAL for s in members):
+        return None
+    return max(members, key=_PHASE_RESULT_ORDER.index).value

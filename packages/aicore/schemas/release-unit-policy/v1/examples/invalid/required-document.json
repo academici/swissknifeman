@@ -1,0 +1,8 @@
+{
+  "plugins": {
+    "a": {
+      "version_owner": "umbrella"
+    }
+  },
+  "default_plugin_version_owner": "a"
+}

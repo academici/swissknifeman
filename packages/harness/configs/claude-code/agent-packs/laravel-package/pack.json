@@ -1,0 +1,328 @@
+{
+  "schema": 1,
+  "pack": "laravel-package",
+  "version": "0.2.3",
+  "description": "Dev-loop for Laravel-composer-packages: agents slice-builder/test-writer/reviewer are tailored to a public contract (BC/SemVer), ServiceProvider register-vs-boot, publishables, Testbench-infra - instead app-canon access-layer. Fork backend-laravel under the world of packages (see notes.origin): recon-set added api-surface (BC-public surface diff), review-gate/settings/hooks fumbling around with backend-laravel via src_pack.",
+  "stack": {
+    "shape": "backend",
+    "language": "php",
+    "framework": "laravel",
+    "project_type": "php-package",
+    "detect": {
+      "all_of": [
+        "composer.json"
+      ],
+      "none_of": [
+        "artisan"
+      ],
+      "_note": "information block for a person/future auto-prompt pack - agentpacks.py resolve ONLY interview[].detect (per-answer samples), stack.detect (all_of/any_of/none_of) is not readable by anyone right now (see resolve_interview/_run_detect); none_of here as a working note of differences from backend-laravel (package does not have artisan-login), semantics not implemented by runtime"
+    }
+  },
+  "requires": {
+    "skills": [
+      "laravel-package-testing",
+      "laravel-package-service-provider",
+      "laravel-package-compatibility",
+      "laravel-package-scaffold",
+      "laravel-packages",
+      "release-engineering",
+      "dependency-injection",
+      "code-style-spatie",
+      "named-arguments",
+      "test-isolation-guard"
+    ],
+    "harness_presets": [
+      "base",
+      "php-package"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Agent name prefix/work flow?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    },
+    {
+      "id": "PROJECT_DIR",
+      "q": "Absolute path to the project?",
+      "detect": "pwd"
+    },
+    {
+      "id": "PHP_RUNNER",
+      "q": "Binary PHP for tests/composer?",
+      "detect": "command -v php8.4 || command -v php",
+      "default": "php"
+    },
+    {
+      "id": "PACKAGE_SRC_ROOT",
+      "q": "Package source root (src / packages/*/src in monorepo)?",
+      "detect": "test -d src && echo src ; test ! -d src && ls -d packages/*/src >/dev/null 2>&1 && echo 'packages/*/src'",
+      "default": "src"
+    },
+    {
+      "id": "PACKAGE_NAMESPACE",
+      "q": "Root PSR-4 namespace package?",
+      "detect": "php -r 'echo rtrim((array_key_first((@json_decode(@file_get_contents(\"composer.json\"), true) ?: [])[\"autoload\"][\"psr-4\"] ?? []) ?: array_reduce(array_filter(array_map(fn ($p) => (string) array_key_first((@json_decode(@file_get_contents($p), true) ?: [])[\"autoload\"][\"psr-4\"] ?? []), glob(\"packages/*/composer.json\") ?: [])), fn ($c, $n) => ($c === \"\" or strlen($n) < strlen($c)) ? $n : $c, \"\")) ?: \"\", \"\\\\\") ?>'",
+      "default": "",
+      "_note": "monorepo fallback: at root composer.json psr-4 is often empty - take the SHORTEST psr-4 from packages/*/composer.json (in short = root: AzGuard\\ y core vs AzGuard\\Context\\). Test INTENTIONALLY with one expression without ';' and '||' (closed via ?>, disjunction via or): _probe_allowed when shell_policy=safe naively cuts by ;/|/&& and would reject the sample (field feedback azguard)"
+    },
+    {
+      "id": "TEST_FRAMEWORK",
+      "q": "Pest or PHPUnit-native?",
+      "detect": "composer.json:require-dev.pestphp/pest",
+      "enum": [
+        "pest",
+        "phpunit"
+      ],
+      "default": "pest"
+    },
+    {
+      "id": "TEST_RUNNER_CMD",
+      "q": "Test run command?",
+      "default": "composer test"
+    },
+    {
+      "id": "TEST_DB",
+      "q": "Test database (Testbench)?",
+      "default": ":memory:"
+    },
+    {
+      "id": "BASE_BRANCH",
+      "q": "Basic run branch?",
+      "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
+      "default": "main"
+    },
+    {
+      "id": "CHECK_CMD",
+      "q": "Shortcut review-gate (static)?",
+      "default": "vendor/bin/phpstan analyse"
+    },
+    {
+      "id": "HAS_MIGRATIONS",
+      "q": "Does the package distribute migrations?",
+      "kind": "bool",
+      "detect": "ls -d database/migrations packages/*/database/migrations >/dev/null 2>&1 && echo true || echo false",
+      "default": false
+    },
+    {
+      "id": "BC_CHECK_CMD",
+      "q": "Command BC-checks (Roave), if installed?",
+      "detect": "test -x vendor/bin/roave-backward-compatibility-check && echo vendor/bin/roave-backward-compatibility-check",
+      "default": ""
+    },
+    {
+      "id": "DOCS_DIR",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
+      "default": ".claude/guidelines"
+    },
+    {
+      "id": "MODEL_REVIEWER",
+      "q": "Model reviewer-agent (Lean-tiered: Opus — judges BC/risk)?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SLICE_BUILDER",
+      "q": "Model slice-builder (Lean-tiered: Sonnet — mass implementation)?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_TEST_WRITER",
+      "q": "Model test-writer (Lean-tiered: Sonnet)?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SPEC_WRITER",
+      "q": "Model spec-writer (Lean-tiered: Opus — design/synthesis)?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_RECON",
+      "q": "Model read-only recon-subagents (api-surface/test-verifier/security-review — cheap intelligence)?",
+      "default": "economy",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "GATE_COVERAGE_MIN",
+      "q": "Min. behavior change coverage (%)?",
+      "default": "80"
+    },
+    {
+      "id": "GATE_MAX_CRITICAL",
+      "q": "Acceptable critical-finds?",
+      "default": "0"
+    },
+    {
+      "id": "GATE_MAX_COMPLEXITY",
+      "q": "Cyclomatic complexity threshold for a method?",
+      "default": "10"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/slice-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/test-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-writer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-reviewer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/spec-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/api-surface.md",
+      "target": ".claude/agents/{PACK_PREFIX}-api-surface.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/test-verifier.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-verifier.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/security-review.md",
+      "target": ".claude/agents/{PACK_PREFIX}-security-review.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "workflows/dev-loop.js",
+      "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js",
+      "kind": "template",
+      "role": "workflow"
+    },
+    {
+      "src": "hooks/review-gate.sh",
+      "src_pack": "backend-laravel",
+      "target": ".claude/hooks/review-gate.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "hooks/review-gate.env.ini",
+      "src_pack": "backend-laravel",
+      "target": ".claude/review-gate.env.ini",
+      "kind": "template",
+      "role": "config",
+      "user_owned": true
+    },
+    {
+      "src": "settings/settings.fragment.json",
+      "src_pack": "backend-laravel",
+      "target": ".claude/settings.json",
+      "kind": "merge",
+      "role": "settings",
+      "merge": "hooks.SubagentStop[] append-if-absent"
+    },
+    {
+      "src": "docs/subagents-and-workflows.md",
+      "target": "{DOCS_DIR}/subagents-and-workflows.md",
+      "kind": "template",
+      "role": "doc"
+    },
+    {
+      "src": "rules/public-api.md",
+      "target": ".claude/rules/public-api.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/service-provider.md",
+      "target": ".claude/rules/service-provider.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/package-migrations.md",
+      "target": ".claude/rules/package-migrations.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/tests.md",
+      "target": ".claude/rules/tests.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "rules/reviewer-overrides.md",
+      "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md",
+      "kind": "template",
+      "user_owned": true,
+      "role": "override"
+    }
+  ],
+  "expect_globs": [
+    "{PACKAGE_SRC_ROOT}",
+    "{PACKAGE_SRC_ROOT}/**/*ServiceProvider.php"
+  ],
+  "notes": {
+    "origin": "Fork backend-laravel under the world Laravel-packages (composer-is a package, not an application): reviewer/slice-builder/test-writer/spec-writer rewritten to public contract (BC/SemVer, ServiceProvider register-vs-boot, publishables, Testbench instead app-canon access-layer); recon-set added {{PACK_PREFIX}}-api-surface (BC-public surface diff) instead app-specific route-mapper/db-impact/blade-review. review-gate.sh/settings.fragment.json/review-gate.env.ini are not duplicated - taken from backend-laravel via src_pack (owner of files in the project - laravel-package, see header).",
+    "verify_workflow": "dev-loop.js uses top-level return/await (Workflow-runtime) — node --check DO NOT apply to it; check by balancing brackets and non-emptiness (like backend-laravel)."
+  }
+}

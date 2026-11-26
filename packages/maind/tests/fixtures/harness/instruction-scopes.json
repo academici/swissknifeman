@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:harness:instruction-scopes:v1",
+  "scopes": [
+    "root",
+    "skiller",
+    "harness",
+    "maind",
+    "analyst",
+    "planner",
+    "brain",
+    "orch"
+  ],
+  "catalog_version": "1.9.0",
+  "contract_version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:gui:plugin-api:v1",
+  "kind": "grant_request",
+  "capability": "network",
+  "project_id": null,
+  "expires_at": null,
+  "confirm": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

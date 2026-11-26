@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "description": "GUI queries of the planner: the plans of a project, one plan as overview, phases, board, dependency graph, decisions and timeline, one item with its evidence, and the raw documents, read from the planner command line as view-data.",
+  "entrypoint": [
+    "adapter.py"
+  ],
+  "example_input": {
+    "context": {},
+    "id": "gui-planner.plans",
+    "params": {}
+  },
+  "id": "gui-planner",
+  "kind": "command",
+  "permissions": {
+    "env": [
+      "SKM_UMBRELLA"
+    ],
+    "filesystem": [
+      "project"
+    ],
+    "network": false,
+    "shell": true
+  },
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "points": [
+      "gui:query",
+      "gui:command"
+    ]
+  },
+  "timeout_seconds": 60,
+  "version": "0.1.0"
+}

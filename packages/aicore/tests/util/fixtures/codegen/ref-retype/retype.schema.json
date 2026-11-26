@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:retype:v1",
+  "description": "Fixture: a sibling of a $ref gives a key another type.",
+  "$defs": {
+    "base": {"type": "object", "properties": {"status": {"type": "string"}}},
+    "tight": {"$ref": "#/$defs/base", "additionalProperties": false,
+              "properties": {"status": {"type": "integer"}}}
+  }
+}

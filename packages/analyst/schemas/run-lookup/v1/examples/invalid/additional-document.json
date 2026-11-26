@@ -1,0 +1,13 @@
+{
+  "$schema": "urn:swissknifeman:analyst:run-lookup:v1",
+  "project": "a",
+  "lookup": {
+    "status": "found",
+    "path": "a",
+    "reason": "a"
+  },
+  "report": {},
+  "codegraph": {},
+  "events": [],
+  "not-a-field": 1
+}

@@ -1,0 +1,47 @@
+{
+  "changed_paths": [
+    "packages/aicore/lib/aicore/config/model.py",
+    "packages/aicore/tests/config/test_layer_write.py",
+    "packages/gui/frontend/src/forms/PreviewDialog.tsx",
+    "packages/gui/frontend/src/forms/fields/ScalarListField.tsx"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/aicore/tests/config/test_layer_write.py"
+      ],
+      "impact": "the commit takes the test file",
+      "kind": "difficulty",
+      "outcome": "accepted",
+      "text": "deviation: Edited packages/aicore/tests/config/test_layer_write.py outside write_set: two rollback tests simulated corruption by replacing the file during write, which is now treated as an external writer; they now patch _verify_written, and one new test covers the external-writer case."
+    },
+    {
+      "impact": "frontend fixes verified only by tsc and the 3 runnable vitest files",
+      "kind": "difficulty",
+      "next": "coordinator runs npm --prefix packages/gui/frontend run check and vitest outside the sandbox and shares the failure output if still red",
+      "text": "Sandbox denies reading node_modules/**/*.min.js: 7 vitest files (incl. ConfigEditor.test.tsx) and eslint do not start. The frontend component tests for PreviewDialog and ScalarListField were not run, so V1 may be red for this reason or for a failure I cannot see."
+    },
+    {
+      "impact": "must not be committed with this piece",
+      "kind": "note",
+      "next": "coordinator excludes them from the commit",
+      "text": "git status shows modified lock files (docs/package-lock.json, packages/gui/frontend/package-lock.json, packages/gui/requirements.lock, packages/maind/package-lock.json, packages/skiller/package-lock.json, packages/skiller/skills.json) that I did not touch."
+    },
+    {
+      "impact": "minor residual UI edge case",
+      "kind": "note",
+      "severity": "low",
+      "text": "ScalarListField: an invalid local text with an unchanged draft value is not cleared by a discard."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "CHECKS_RED: acceptance checks V1 stay red after 1 correction(s): past the target of 1 for check_fixes the last correction made no progress"
+    }
+  ],
+  "summary": "No new code change in this round: the previous fixes stand (model.py rollback only when the file still equals what was written; PreviewDialog clears preview/error when a new preview starts; ScalarListField drops local text that no longer matches the draft value). Re-ran the tests of the touched code: aicore config unittest 374 OK, tsc clean, vitest 3 files/19 tests pass. 7 vitest files (including ConfigEditor.test.tsx, which covers PreviewDialog and ScalarListField) and eslint cannot start in the sandbox because reads of node_modules/**/*.min.js are denied (EACCES), so the red V1 could not be reproduced or diagnosed here.",
+  "status": "blocked"
+}

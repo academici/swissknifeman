@@ -1,0 +1,23 @@
+{
+  "changed_paths": [
+    "bridges/gui-workspace/README.md",
+    "bridges/gui-workspace/adapter.py",
+    "bridges/gui-workspace/gui.json",
+    "bridges/gui-workspace/run.py",
+    "bridges/gui-workspace/tests/test_commands.py",
+    "bridges/gui-workspace/tests/test_queries.py",
+    "packages/gui/frontend/src/pages/Projects.tsx"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "the lint fix is not verified by me",
+      "kind": "difficulty",
+      "next": "coordinator re-runs V5 and V6",
+      "text": "ESLint cannot run in this sandbox (EACCES reading node_modules/esquery/dist/esquery.min.js); only tsc --noEmit was run (clean). V5 and V6 are for the coordinator to run."
+    }
+  ],
+  "summary": "Fixed the ESLint no-useless-assignment error in Projects.tsx (cellPaths: `let list: unknown;` without the initial null). tsc --noEmit is clean. ESLint could not run in this sandbox (EACCES on esquery.min.js), so the lint result is unverified by me.",
+  "status": "done"
+}

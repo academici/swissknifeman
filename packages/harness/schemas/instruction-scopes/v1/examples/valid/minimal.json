@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:harness:instruction-scopes:v1",
+  "scopes": [
+    "a"
+  ],
+  "catalog_version": "a",
+  "contract_version": "a"
+}

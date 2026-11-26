@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "board",
+  "columns": [
+    {
+      "id": "todo",
+      "title": "To do",
+      "cards": [
+        {
+          "id": "P1.3",
+          "title": "API contracts",
+          "status": "unknown"
+        }
+      ]
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "cards": [
+        {
+          "id": "P1.1",
+          "title": "Skeleton",
+          "subtitle": "done_with_deviations",
+          "status": "ok",
+          "link": {
+            "route": "gui-planner.plan",
+            "params": {
+              "plan": "PLAN5"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

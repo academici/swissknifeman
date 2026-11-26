@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:project:v1",
+  "title": "project",
+  "description": "Projects trusted by the gui control plane (GET/POST /v1/projects): one project or the list of them, chosen by the const field kind.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/project_document",
+      "description": "One project."
+    },
+    {
+      "$ref": "#/$defs/project_list",
+      "description": "Every registered project."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:project:v1",
+      "description": "Contract id of this document."
+    },
+    "project": {
+      "type": "object",
+      "description": "A registered project without the document envelope.",
+      "required": [
+        "id",
+        "name",
+        "root",
+        "trusted",
+        "source",
+        "added_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,40}-[0-9a-f]{8}$",
+          "description": "Project id: slug of the root folder name and the first 8 hex characters of the sha256 of its real path."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name: the base name of the root folder."
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^/.*$",
+          "description": "Absolute real path of the project root (symlinks resolved when it was added)."
+        },
+        "trusted": {
+          "type": "boolean",
+          "description": "Whether commands may run in the project; a project is added only by an explicit act of the owner, so it is always true in v1."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "open",
+            "user"
+          ],
+          "description": "How the project was added: open (gui open/serve with --project or the current folder) or user (a confirmed POST /v1/projects)."
+        },
+        "added_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the project was added."
+        }
+      },
+      "additionalProperties": false
+    },
+    "project_document": {
+      "type": "object",
+      "description": "One registered project.",
+      "required": [
+        "$schema",
+        "kind",
+        "id",
+        "name",
+        "root",
+        "trusted",
+        "source",
+        "added_at"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "project",
+          "description": "Document kind."
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,40}-[0-9a-f]{8}$",
+          "description": "Project id: slug of the root folder name and the first 8 hex characters of the sha256 of its real path."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name: the base name of the root folder."
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^/.*$",
+          "description": "Absolute real path of the project root (symlinks resolved when it was added)."
+        },
+        "trusted": {
+          "type": "boolean",
+          "description": "Whether commands may run in the project; a project is added only by an explicit act of the owner, so it is always true in v1."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "open",
+            "user"
+          ],
+          "description": "How the project was added: open (gui open/serve with --project or the current folder) or user (a confirmed POST /v1/projects)."
+        },
+        "added_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the project was added."
+        }
+      },
+      "additionalProperties": false
+    },
+    "project_list": {
+      "type": "object",
+      "description": "Every registered project, sorted by name and id.",
+      "required": [
+        "$schema",
+        "kind",
+        "projects"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "project_list",
+          "description": "Document kind."
+        },
+        "projects": {
+          "type": "array",
+          "description": "The projects.",
+          "items": {
+            "$ref": "#/$defs/project",
+            "description": "One project."
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

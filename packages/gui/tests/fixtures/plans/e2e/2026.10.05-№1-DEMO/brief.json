@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:brief:v1",
+  "messages": [
+    {
+      "id": "M1",
+      "date": "2026-10-05",
+      "text": "E2E fixture plan."
+    }
+  ],
+  "requirements": []
+}

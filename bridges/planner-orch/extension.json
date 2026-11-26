@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "planner-orch",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "The planner as the work source of orch: claim an item for a run, brief it as a content-addressed artifact, register its outcome with owner fencing and an evidence gate.",
+  "protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "entrypoint": [
+    "worksource.py"
+  ],
+  "provides": {
+    "points": [
+      "orch:work-source",
+      "planner:check"
+    ]
+  },
+  "permissions": {
+    "filesystem": [
+      "project",
+      "state"
+    ],
+    "network": false,
+    "shell": true,
+    "env": [
+      "PLANNER_ROOT",
+      "PLANNER_PLAN_PY",
+      "PLANNER_ORCH_CONTEXT_DELIVERY",
+      "SKM_PLANNER_BRIDGES__ROOTS",
+      "SKM_PLANNER_TEMPORARY_ROUTES",
+      "SKM_ORCH_ROOT",
+      "SKM_ORCH_AGY_UNSAFE_EXECUTOR",
+      "AICORE_ROOT",
+      "SKM_AICORE_EVENTS__DELIVERY"
+    ]
+  },
+  "timeout_seconds": 300
+}

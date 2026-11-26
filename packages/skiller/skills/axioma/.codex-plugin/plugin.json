@@ -1,0 +1,11 @@
+{
+  "name": "axioma",
+  "version": "0.4.1",
+  "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+  "skills": [
+    "./axioma-doctrine",
+    "./axioma-glossary",
+    "./axioma-stack",
+    "./ecosystem-map"
+  ]
+}

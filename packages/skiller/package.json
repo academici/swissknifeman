@@ -1,0 +1,18 @@
+{
+  "name": "@academici/swissknifeman",
+  "version": "0.21.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Universal personal registry AI-skills and snippets: one source of truth, installation in any project and any IDE",
+  "type": "module",
+  "scripts": {
+    "docs:standalone:dev": "vitepress dev docs",
+    "docs:standalone:build": "vitepress build docs",
+    "docs:standalone:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "mermaid": "^11.14.0",
+    "vitepress": "^1.6.3",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  }
+}

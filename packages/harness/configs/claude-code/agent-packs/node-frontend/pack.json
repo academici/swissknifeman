@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "pack": "node-frontend",
+  "version": "0.5.3",
+  "description": "Frontend dev-loop for Vue/Vite (SPA or Inertia): agents component-builder/slice-builder/test-writer/reviewer (preloaded frontend-skills), serial one-branch workflow, SubagentStop review-gate (tsc/eslint) + PostToolUse-validator (does not block). Roles are universal, stack - Vue/Vite/Tailwind/Pinia.",
+  "stack": {
+    "shape": "frontend",
+    "language": "typescript",
+    "framework": "vue",
+    "project_type": "node-frontend",
+    "detect": {
+      "all_of": [
+        "package.json"
+      ],
+      "any_of": [
+        "vite.config.ts",
+        "vite.config.js",
+        "nuxt.config.ts"
+      ]
+    }
+  },
+  "requires": {
+    "skills": [
+      "vue",
+      "vue-composition-api",
+      "vue-best-practices",
+      "vite",
+      "tailwind-conventions",
+      "pinia",
+      "ts-library",
+      "js-code-style",
+      "eslint-flat-config",
+      "inertia-vue",
+      "vitest",
+      "vitest-vue",
+      "vue-testing-best-practices",
+      "code-simplifier"
+    ],
+    "harness_presets": [
+      "base",
+      "node"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Agent name prefix/work flow?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    },
+    {
+      "id": "PROJECT_DIR",
+      "q": "Absolute path to the project?",
+      "detect": "pwd"
+    },
+    {
+      "id": "PKG_MANAGER",
+      "q": "Package manager?",
+      "detect": "test -f pnpm-lock.yaml && echo pnpm || (test -f yarn.lock && echo yarn || echo npm)",
+      "enum": [
+        "pnpm",
+        "yarn",
+        "npm"
+      ],
+      "default": "npm"
+    },
+    {
+      "id": "TEST_RUNNER_CMD",
+      "q": "Test team?",
+      "default": "{PKG_MANAGER} run test"
+    },
+    {
+      "id": "TYPECHECK_CMD",
+      "q": "Command typecheck?",
+      "default": "{PKG_MANAGER} run typecheck"
+    },
+    {
+      "id": "LINT_CMD",
+      "q": "Lint command?",
+      "default": "{PKG_MANAGER} run lint"
+    },
+    {
+      "id": "VUE_VARIANT",
+      "q": "Inertia, SPA(vue-router) or Nuxt?",
+      "detect": "package.json:dependencies.@inertiajs/vue3",
+      "enum": [
+        "inertia",
+        "spa",
+        "nuxt"
+      ],
+      "default": "spa"
+    },
+    {
+      "id": "BASE_BRANCH",
+      "q": "Basic branch?",
+      "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
+      "default": "main"
+    },
+    {
+      "id": "CHECK_CMD",
+      "q": "Fast review-gate check?",
+      "default": "{PKG_MANAGER} run typecheck && {PKG_MANAGER} run lint"
+    },
+    {
+      "id": "DOCS_DIR",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
+      "default": ".claude/guidelines"
+    },
+    {
+      "id": "MODEL_REVIEWER",
+      "q": "Model reviewer?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_COMPONENT_BUILDER",
+      "q": "Model component-builder?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SLICE_BUILDER",
+      "q": "Model slice-builder?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_TEST_WRITER",
+      "q": "Model test-writer?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SPEC_WRITER",
+      "q": "Model spec-writer?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "GATE_COVERAGE_MIN",
+      "q": "Min. coating (%)?",
+      "default": "80"
+    },
+    {
+      "id": "GATE_MAX_CRITICAL",
+      "q": "Acceptable critical-finds?",
+      "default": "0"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/component-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-component-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/slice-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/test-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-writer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-reviewer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/spec-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "workflows/dev-loop.js",
+      "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js",
+      "kind": "template",
+      "role": "workflow"
+    },
+    {
+      "src": "hooks/review-gate.sh",
+      "target": ".claude/hooks/review-gate.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "hooks/review-gate.env.ini",
+      "target": ".claude/review-gate.env.ini",
+      "kind": "template",
+      "role": "config",
+      "user_owned": true
+    },
+    {
+      "src": "hooks/validate-frontend.sh",
+      "target": ".claude/hooks/validate-frontend.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "settings/settings.fragment.json",
+      "target": ".claude/settings.json",
+      "kind": "merge",
+      "role": "settings",
+      "merge": "hooks.SubagentStop[]+hooks.PostToolUse[] append-if-absent"
+    },
+    {
+      "src": "rules/components.md",
+      "target": ".claude/rules/components.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/state.md",
+      "target": ".claude/rules/state.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/tests.md",
+      "target": ".claude/rules/tests.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "docs/subagents-and-workflows.md",
+      "target": "{DOCS_DIR}/subagents-and-workflows.md",
+      "kind": "template",
+      "role": "doc"
+    },
+    {
+      "src": "rules/reviewer-overrides.md",
+      "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md",
+      "kind": "template",
+      "user_owned": true,
+      "role": "override"
+    }
+  ],
+  "notes": {
+    "verify_workflow": "dev-loop.js uses top-level return/await — node --check DO NOT apply; check by balancing the brackets/non-void.",
+    "validator_hook": "validate-frontend.sh — PostToolUse on Edit/Write *.ts|*.vue: tsc+eslint, injects errors via additionalContext, DOES NOT block (exit 0).",
+    "orchestrator": "General orchestrator - in the package _common (install with the same PACK_PREFIX)."
+  }
+}

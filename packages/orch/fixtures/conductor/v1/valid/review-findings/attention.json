@@ -1,0 +1,17 @@
+{
+  "verdict": "ATTENTION",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "Major",
+      "confidence": "high",
+      "location": "lib/x.py:40",
+      "failure_scenario": "A float in data raises TypeError instead of exit 2.",
+      "basis": "correctness",
+      "reproduction": "python3 -c 'import x; x.f(1.5)'"
+    }
+  ],
+  "questions": [
+    "Is the retry intended to be unbounded?"
+  ]
+}

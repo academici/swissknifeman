@@ -1,0 +1,5 @@
+{
+  "verdict": "GREEN",
+  "findings": [],
+  "residual_risk": "Concurrency of two runs on one plan was not exercised."
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-mutation:v1",
+  "kind": "commit_request",
+  "preview_id": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "confirmed": true
+}

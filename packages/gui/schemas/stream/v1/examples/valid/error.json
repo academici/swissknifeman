@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "error",
+  "sub": "main",
+  "error": {
+    "code": "AUTH_INVALID",
+    "class": "unauthorized",
+    "message": "The session ended.",
+    "retryable": false,
+    "correlation_id": "ws-00000001"
+  }
+}

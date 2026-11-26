@@ -1,0 +1,10 @@
+{
+  "name": "laravel-auth",
+  "version": "0.4.2",
+  "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+  "skills": [
+    "./attribute-authorization",
+    "./laravel-permissions",
+    "./laravel-security-audit"
+  ]
+}

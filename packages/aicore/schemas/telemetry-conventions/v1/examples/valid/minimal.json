@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:aicore:telemetry-conventions:v1",
+  "namespace": "skm",
+  "spans": [
+    {
+      "name": "skm.run",
+      "parent": null,
+      "description": "One run.",
+      "genai": null
+    }
+  ],
+  "attributes": [
+    {
+      "name": "skm.module",
+      "type": "string",
+      "cardinality": "low",
+      "description": "Module id."
+    }
+  ],
+  "metric_label_rule": "low-cardinality-only"
+}

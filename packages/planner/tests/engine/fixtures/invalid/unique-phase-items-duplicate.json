@@ -1,0 +1,46 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P1",
+  "title": "Config validation",
+  "design": "detailed",
+  "goal": "load_config() rejects invalid configs with one aggregated error.",
+  "context": "Loader lives in lib/pkg/config.py; tests in tests/test_config.py.",
+  "scope": {
+    "include": [
+      "load_config validation"
+    ],
+    "exclude": [
+      "CLI flags"
+    ]
+  },
+  "pitfalls": [
+    "Do not change behaviour for valid configs"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "validated loader"
+  ],
+  "items": [
+    "P1.1",
+    "P1.1"
+  ],
+  "batches": [
+    {
+      "id": "B1",
+      "items": [
+        "P1.1",
+        "P1.2"
+      ],
+      "mode": "recommended",
+      "note": "shared files and tests"
+    }
+  ],
+  "closed": null
+}

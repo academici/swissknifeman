@@ -1,0 +1,26 @@
+{
+  "skill": "model-verification",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Verify every printable part and mating context of this parametric Blender model before export. The model provides an inventory provider, interface catalogue, and local verification instruction.",
+      "assertions": [
+        {"type": "regex", "value": "provenance|preflight"},
+        {"type": "regex", "value": "inventory|evaluated"},
+        {"type": "regex", "value": "primary|oblique|xray|section"},
+        {"type": "regex", "value": "restore|finally|transaction"},
+        {"type": "regex", "value": "expected.{0,20}observed|observed.{0,20}expected"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a model-local verification instruction for a new Blender model while keeping reusable mechanics in the shared skill.",
+      "assertions": [
+        {"type": "regex", "value": "inventory.*interface|interface.*inventory"},
+        {"type": "regex", "value": "expected_observations|expected observations"},
+        {"type": "regex", "value": "red_conditions|RED conditions"},
+        {"type": "regex", "value": "claim_boundary|claim boundary"}
+      ]
+    }
+  ]
+}

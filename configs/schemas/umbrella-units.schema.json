@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:hub:umbrella-units:v1",
+  "title": "umbrella-units",
+  "description": "Output of swissknifeman units --json.",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "umbrella-units/v1", "description": "Format identifier."},
+    "hub_root": {"type": "string", "minLength": 1, "description": "Absolute path of the hub root that relative unit roots resolve against."},
+    "units": {
+      "type": "array",
+      "description": "Every module found by unit.json, sorted by id.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Module id."},
+          "kind": {"enum": ["foundation", "capability", "bridge"], "description": "Role of the module."},
+          "version": {"type": "string", "description": "Module version."},
+          "stability": {"type": "string", "description": "Stability stage."},
+          "destination": {"enum": ["own-repo", "hub"], "description": "Where the module lives after the split."},
+          "root": {"type": "string", "description": "Module folder relative to hub_root, or an absolute path when the folder is outside the hub."},
+          "cli": {"type": "array", "items": {"type": "string"}, "description": "provides.cli entries."},
+          "plugins": {"type": "array", "items": {"type": "string"}, "description": "Names of provides.plugins."},
+          "doctor": {"type": "integer", "minimum": 0, "description": "Number of provides.doctor checks."},
+          "install": {"type": "boolean", "description": "Whether the module declares provides.install."}
+        },
+        "required": ["id", "kind", "version", "stability", "destination", "root", "cli", "plugins", "doctor", "install"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "units"],
+  "additionalProperties": false
+}

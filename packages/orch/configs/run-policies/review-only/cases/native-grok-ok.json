@@ -1,0 +1,12 @@
+{
+  "description": "The native engine prepares a Grok reviewer using the protected jsonl launch entry.",
+  "input": "fixtures/exec/v1/valid/execution-input/review-only.json",
+  "provider": "grok",
+  "binding": "native",
+  "expect": {
+    "result": "ok",
+    "stages": ["review"],
+    "refusals": [],
+    "policy_decision": "allow"
+  }
+}

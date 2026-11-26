@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:aicore:workspace-bindings:v1",
+  "projects": {
+    "billium": {
+      "paths": [
+        "src/skm"
+      ],
+      "primary": "src/skm",
+      "bound_at": "2026-10-17T09:30:00Z"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:hub:bench-checks:v1",
+  "label": "a",
+  "at": "a",
+  "cpu_count": 1,
+  "jobs": 1,
+  "python": "a",
+  "loadavg": [],
+  "target_ratio": 0,
+  "pairs_run": 1,
+  "before": {
+    "rev": "a",
+    "commands": []
+  },
+  "after": {
+    "rev": "a",
+    "commands": []
+  },
+  "ratio": {},
+  "total": {
+    "before_s": 0,
+    "after_s": 0,
+    "ratio": 0,
+    "counted": []
+  },
+  "pairs": [],
+  "coverage": {
+    "workload": {
+      "before": [],
+      "after": [],
+      "equal": true,
+      "only_before": [],
+      "only_after": []
+    },
+    "cases": {}
+  },
+  "result": {
+    "target_met": true,
+    "failed_runs": 0,
+    "note": "a"
+  }
+}

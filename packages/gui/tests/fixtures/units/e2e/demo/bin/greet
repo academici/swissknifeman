@@ -1,0 +1,3 @@
+#!/bin/sh
+# Greets; with --dry-run it says what it would do.
+if [ "${2:-}" = "--dry-run" ]; then echo "would greet $1 (dry run)"; else echo "hello $1"; fi

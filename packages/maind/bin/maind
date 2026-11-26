@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# maind — CLI central node of the ecosystem academici (memory + graph + agents).
+# Thin launcher: checks the environment and transfers control to the package lib/maind
+# (python3 -m maind). All logic is in lib/ (importable and testable: see tests/).
+#
+# Commands (node root = installation directory maind):
+#   start     start node workers (--only memory|graph)
+#   status    summary status: memory, graph, agents, projects
+#   memory    memory daemon: start | run (foreground) | stop | status
+#   service   systemd --user for the memory daemon: install | start | stop | logs | ...
+#   graph     graph (federation): query | stats | neighbors | view | derive | rebuild
+#   agents    agent registry: list | kill | heartbeat | register
+#   projects  project registry: list | status | sync (--namespace NS filters)
+#   namespaces namespace-ecosystem groups and their member projects
+#   deploy    roll out MCP-hub servers for projects (--project X | --all)
+#   sync      roll out controlled artifacts: --only ... (--project|--namespace|--all)
+#   health    healthcheck project connection with the hub: --cwd | --project X [--plan-repair|--apply-repair]
+#   workspace single trust Claude to ecosystem projects: sync | status
+#   run       execute the command of the neighboring package: run <proj> <cap> (--list)
+#   fleet     cross-project layer: manifest | duplicates | similar
+#   onboard   unified project onboarding: skills (swissknifeman) + connection to the brain
+#   migrate   import: from-brain <.projects.json> | from-agentmemory <dir>
+#   mcp       run maind like MCP-server (stdio JSON-RPC)
+#   doctor    environment diagnostics
+#   verify    proof of work: is it written to memory/graph/code-graph or idle (--json)
+#   analyze   post-run analysis of the run: run-report+bash-log+git+health → GREEN/ATTENTION/RED
+#   topology  machine topology map (init|show --json) — <state>/maind/topology.json
+#   version   version (git SHA) and path to node
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: maind requires python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/lib/maind" ]]; then
+  echo "ERROR: package lib/maind not found in $REPO_ROOT/lib" >&2
+  echo "The node is damaged or it is an old copy - git pull / restart install.sh." >&2
+  exit 1
+fi
+
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,28p'; }
+
+CMD="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  version)
+    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "maind $sha ($REPO_ROOT)"
+    exit 0 ;;
+  start|status|memory|service|graph|agents|projects|namespaces|deploy|sync|health|workspace|run|fleet|onboard|migrate|mcp|doctor|verify|analyze|topology) ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
+esac
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+exec env PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -m maind "$REPO_ROOT" "$CMD" "$@"

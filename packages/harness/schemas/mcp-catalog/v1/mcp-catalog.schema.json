@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:harness:mcp-catalog:v1",
+  "title": "mcp-catalog",
+  "description": "Output of `harness mcp catalog --json`: the common MCP server catalog, the per-provider bindings and the lock source records of both, as the package ships them.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "Contract identifier.",
+      "const": "urn:swissknifeman:harness:mcp-catalog:v1"
+    },
+    "catalog": {
+      "description": "configs/common/mcp/catalog.json as stored (value-free server inventory).",
+      "type": "object",
+      "properties": {
+        "catalog_version": {
+          "description": "Catalog format version.",
+          "type": "string"
+        },
+        "servers": {
+          "description": "Servers in their declared order.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "transport": {
+                "description": "Transport.",
+                "enum": [
+                  "http",
+                  "stdio"
+                ]
+              },
+              "capability_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "secret_refs": {
+                "description": "Secret references the server needs.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "transport",
+              "capability_id",
+              "secret_refs"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "catalog_version",
+        "servers"
+      ],
+      "additionalProperties": false
+    },
+    "bindings": {
+      "description": "Provider id to its configs/<provider>/mcp/bindings.json as stored.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "properties": {
+            "binding_version": {
+              "description": "Bindings format version.",
+              "type": "string"
+            },
+            "provider_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target_scope": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target_path": {
+              "description": "Project-relative native target file.",
+              "type": "string",
+              "minLength": 1
+            },
+            "servers": {
+              "description": "Server id to its native record (open: the shape is the provider's).",
+              "type": "object"
+            }
+          },
+          "required": [
+            "binding_version",
+            "provider_id",
+            "target_scope",
+            "target_path",
+            "servers"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "sources": {
+      "description": "Lock source records.",
+      "type": "object",
+      "properties": {
+        "catalog": {
+          "description": "A lock source record: stable id, hub-relative path and tagged SHA-256 digest of the file.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Source label recorded in the lock.",
+              "type": "string",
+              "minLength": 1
+            },
+            "path": {
+              "description": "Path recorded in the lock.",
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "description": "Tagged digest, sha256:<64 hex>.",
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "id",
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "bindings": {
+          "description": "Provider id to its bindings source record.",
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "description": "A lock source record: stable id, hub-relative path and tagged SHA-256 digest of the file.",
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "Source label recorded in the lock.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "path": {
+                  "description": "Path recorded in the lock.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "description": "Tagged digest, sha256:<64 hex>.",
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "id",
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      },
+      "required": [
+        "catalog",
+        "bindings"
+      ],
+      "additionalProperties": false
+    },
+    "adapters": {
+      "description": "Provider id to the adapter identity the MCP artifact is locked under.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "catalog",
+    "bindings",
+    "sources",
+    "adapters"
+  ],
+  "additionalProperties": false
+}

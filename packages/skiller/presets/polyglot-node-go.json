@@ -1,0 +1,12 @@
+{
+  "name": "polyglot-node-go",
+  "description": "Polyglot stack Node + Go: general engineering + OSS-practices + frontend (Vue) + DevOps. Baketov node/go is not in the registry - take language-agnostic (architect/oss-dev/general/devops) + frontend for Node-front.",
+  "buckets": [
+    "architect",
+    "oss-dev",
+    "general",
+    "frontend",
+    "frontend-vue",
+    "devops"
+  ]
+}

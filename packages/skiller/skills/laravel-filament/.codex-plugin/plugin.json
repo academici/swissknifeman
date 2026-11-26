@@ -1,0 +1,8 @@
+{
+  "name": "laravel-filament",
+  "version": "0.4.2",
+  "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
+  "skills": [
+    "./filament"
+  ]
+}

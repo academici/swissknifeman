@@ -1,0 +1,10 @@
+{
+  "skill": "session-observer",
+  "snippets": [
+    {
+      "file": "analyze-session.md",
+      "description": "jq/grep-session parsing recipes: toggle-gate, log search, 3-axis analytics (agents/skills/settings), entry learnings via memory-hook",
+      "tags": ["observer", "jsonl", "jq", "analysis"]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "log",
+  "seq": 43,
+  "sub": "runs",
+  "run_id": "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "stream": "stdout",
+  "chunk": 0,
+  "text": "started P1.3\n",
+  "truncated": false
+}

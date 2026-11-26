@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-event:v1",
+  "contract_version": "exec/v1",
+  "run_id": "synthetic-run",
+  "stage_id": "primary",
+  "attempt": 1,
+  "seq": 2,
+  "ts": "2026-10-05T17:00:00Z",
+  "kind": "quota_block",
+  "summary": "Synthetic quota limit."
+}

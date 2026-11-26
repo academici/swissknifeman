@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:review-strategy:v1",
+  "title": "review-strategy.json of a batch",
+  "description": "How the batch of a run is reviewed (<run>/review-strategy.json, application/review_plan.py decide): the mode, the groups of pieces read together and the effort of the reviewer. Chosen once before the first piece; the same plan is state.review_strategy, and a resume that finds the file but not the state takes the file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "groups", "reviewer", "reason", "source"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:review-strategy:v1"},
+    "mode": {"description": "each (every piece on its own), groups, single (the batch at once) or none.", "type": "string", "enum": ["each", "groups", "single", "none"]},
+    "groups": {"description": "Groups of piece references, in order; numbered from 1 by settle --group.", "type": "array", "items": {"description": "One group.", "type": "array", "items": {"description": "A piece reference.", "type": "string", "minLength": 1}}},
+    "reviewer": {"$ref": "#/$defs/reviewer"},
+    "reason": {"description": "Why this plan.", "type": "string"},
+    "source": {"description": "Who chose it: rules, option (review.strategy) or model (the strategist).", "type": "string", "enum": ["rules", "option", "model"]},
+    "decided_at": {"description": "UTC time of the choice.", "type": "string"}
+  },
+  "$defs": {
+    "reviewer": {
+      "description": "The reviewer of the groups.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effort"],
+      "properties": {
+        "effort": {"description": "Planned effort of the group reviewer.", "type": "string", "minLength": 1}
+      }
+    }
+  }
+}

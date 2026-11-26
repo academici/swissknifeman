@@ -1,0 +1,61 @@
+{
+ "$schema": "urn:swissknifeman:orch:layering-baseline:v1",
+ "bindings": 236,
+ "facade_calls": {
+  "application": 47,
+  "infrastructure": 26,
+  "stages": 41
+ },
+ "largest_self_scc": 6,
+ "measured_at": "404279208a619d4a4539111e96fb38aa881df50c",
+ "oversized_modules": {
+  "checks.py": 991
+ },
+ "port_calls": {
+  "infrastructure.role_ports.admit_budget": 2,
+  "infrastructure.role_ports.budget": 1,
+  "infrastructure.role_ports.knows": 1,
+  "infrastructure.role_ports.launch_facts": 1,
+  "infrastructure.role_ports.note_isolation": 1,
+  "infrastructure.role_ports.prompt_for_route": 2,
+  "infrastructure.role_ports.provider_disabled": 1,
+  "infrastructure.role_ports.provider_failure": 1,
+  "infrastructure.role_ports.routed_blocks": 1,
+  "infrastructure.role_ports.run_clock": 1,
+  "infrastructure.role_ports.skills_excluded": 1,
+  "infrastructure.role_ports.start_route": 2,
+  "infrastructure.role_ports.unmetered": 1
+ },
+ "private_facade_access": {},
+ "private_facade_access_total": 0,
+ "self_functions": {
+  "application": 108,
+  "domain": 0,
+  "infrastructure": 60,
+  "policies": 0,
+  "stages": 118
+ },
+ "staticmethod_bindings": 45,
+ "targets": {
+  "P5.2": {
+   "private_facade_access_total": "== 0",
+   "self_functions.policies": "== 0",
+   "upward_self_calls.policies->stages": "absent"
+  },
+  "P5.3": {
+   "infrastructure/roles.py": "<= 300 lines",
+   "upward_self_calls.infrastructure->*": "absent"
+  },
+  "P5.4": {
+   "oversized_modules.context/*": "absent",
+   "oversized_modules.prompts.py": "absent",
+   "oversized_modules.prompts/*": "absent"
+  }
+ },
+ "unlayered_self_functions": {},
+ "upward_self_calls": {
+  "stages->application": 14
+ },
+ "upward_total": 14,
+ "version": 1
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {},
+  "status": "running",
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}

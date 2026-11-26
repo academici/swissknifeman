@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:plan:v1",
+  "title": "Plan",
+  "description": "Plan identity, goal, rules, phase order and settings (plan.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:plan:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:plan:v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Plan id, equals the plan directory name. Current date/ordinal ids and preserved legacy ids are valid.",
+      "minLength": 1,
+      "pattern": "^[A-Z0-9](?:[A-Z0-9._№-]*[A-Z0-9])?$"
+    },
+    "short_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short id like PLAN7, or null only when a migrated source never had a short id.",
+      "minLength": 1,
+      "pattern": "^PLAN[1-9][0-9]*$"
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Plan title; starts with 'Plan №N —' for new plans."
+    },
+    "status": {
+      "type": "string",
+      "description": "Plan status; done is set by lifecycle when every phase is closed.",
+      "minLength": 1,
+      "enum": [
+        "active",
+        "paused",
+        "done",
+        "archived"
+      ]
+    },
+    "pause": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Machine-readable pause reason preserved from the source, or null when the plan is not paused.",
+      "properties": {
+        "reason": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Why execution is paused and what must change."
+        },
+        "since": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",
+          "description": "Source date of the pause when known."
+        },
+        "by": {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+          "description": "Source actor or controlling plan when known."
+        }
+      },
+      "required": [
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "created": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",
+      "description": "Creation date."
+    },
+    "updated_at": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+      "description": "Last save time, written by the store."
+    },
+    "repository": {
+      "type": "string",
+      "description": "Repository the plan belongs to.",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "description": "Approval owner.",
+      "minLength": 1
+    },
+    "authoring": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Actor that authored the plan."
+    },
+    "goal": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Owner-visible outcome in 1-5 sentences."
+    },
+    "context": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Self-contained Markdown context."
+    },
+    "non_goals": {
+      "type": "array",
+      "description": "Explicit non-goals.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Execution rules, one line each.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "phases": {
+      "type": "array",
+      "description": "Phase ids in execution order.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId"
+      },
+      "uniqueItems": true
+    },
+    "links": {
+      "type": "object",
+      "description": "Links to other plans.",
+      "properties": {
+        "predecessor": {
+          "type": "string",
+          "description": "Predecessor plan id or short id.",
+          "minLength": 1
+        },
+        "supersedes": {
+          "type": "string",
+          "description": "Superseded plan id or short id.",
+          "minLength": 1
+        },
+        "related_plans": {
+          "type": "array",
+          "description": "Related plan ids or short ids.",
+          "items": {
+            "type": "string",
+            "description": "One string.",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "contracts": {
+      "type": "object",
+      "description": "Contracts exported to or consumed from other plans.",
+      "properties": {
+        "exported": {
+          "type": "array",
+          "description": "Contracts this plan exports.",
+          "items": {
+            "type": "object",
+            "description": "One exported contract.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Contract name.",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "description": "Contract version.",
+                "minLength": 1
+              },
+              "status": {
+                "type": "string",
+                "description": "Contract status.",
+                "minLength": 1
+              },
+              "consumers": {
+                "type": "string",
+                "description": "Known consumers.",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "consumed": {
+          "type": "array",
+          "description": "Contracts this plan consumes.",
+          "items": {
+            "type": "object",
+            "description": "One consumed contract.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Contract name.",
+                "minLength": 1
+              },
+              "donor": {
+                "type": "string",
+                "description": "Plan or package that provides it.",
+                "minLength": 1
+              },
+              "pinned": {
+                "type": "string",
+                "description": "Pinned version or digest.",
+                "minLength": 1
+              },
+              "reaction": {
+                "type": "string",
+                "description": "What to do when the donor changes it.",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "settings": {
+      "type": "object",
+      "description": "Plan-level settings; defaults are stored explicitly.",
+      "properties": {
+        "design_audit": {
+          "type": "string",
+          "description": "Whether a design audit gates execution.",
+          "minLength": 1,
+          "enum": [
+            "none",
+            "required"
+          ],
+          "default": "none"
+        },
+        "scout": {
+          "type": "string",
+          "description": "Scout mode for context maps.",
+          "minLength": 1,
+          "enum": [
+            "off",
+            "auto"
+          ],
+          "default": "off"
+        },
+        "language": {
+          "type": "string",
+          "description": "Document language hint.",
+          "minLength": 1
+        },
+        "commit": {
+          "type": "object",
+          "description": "Optional defaults for task-plan-commit/v1 messages.",
+          "properties": {
+            "scope": {"type": "string", "minLength": 1, "description": "Default Conventional Commit scope."},
+            "trailers": {"type": "array", "description": "Additional Key: value attribution trailers.", "items": {"type": "string", "minLength": 1}}
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Whether check outcomes need evidence files; absent means optional.",
+          "minLength": 1,
+          "enum": [
+            "optional",
+            "required"
+          ],
+          "default": "optional"
+        },
+        "context_pack": {
+          "type": "string",
+          "description": "Context pack scope: legacy sends unbound content everywhere, scoped sends only bound or global content; absent means legacy.",
+          "minLength": 1,
+          "enum": [
+            "legacy",
+            "scoped"
+          ],
+          "default": "legacy"
+        },
+        "context_budget_kb": {
+          "type": "integer",
+          "description": "Context pack size warning threshold in KB, at least 1; absent means 256."
+        },
+        "review_receipt": {
+          "type": "string",
+          "description": "Required gates requested reviews on done outcomes; absent means optional.",
+          "enum": [
+            "optional",
+            "required"
+          ],
+          "default": "optional"
+        }
+      },
+      "required": [
+        "design_audit",
+        "scout"
+      ],
+      "additionalProperties": false
+    },
+    "orchestration": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/orchestration",
+      "description": "Orchestration."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      },
+      "description": "Sections."
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "short_id",
+    "title",
+    "status",
+    "created",
+    "updated_at",
+    "repository",
+    "owner",
+    "authoring",
+    "goal",
+    "context",
+    "phases",
+    "settings"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+{
+  "skill": "context-economy",
+  "should_trigger": [
+    "my session context is huge, help me trim CLAUDE.md and MCP servers",
+    "should I /compact or /clear right now, and what's the Plan→Clear→Execute pattern"
+  ],
+  "should_not": [
+    "explain what this function's return value means",
+    "write a new feature from scratch"
+  ]
+}

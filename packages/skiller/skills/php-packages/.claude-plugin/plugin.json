@@ -1,0 +1,5 @@
+{
+  "name": "php-packages",
+  "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
+  "skills": "./"
+}

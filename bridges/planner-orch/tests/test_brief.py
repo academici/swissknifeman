@@ -1,0 +1,920 @@
+"""plan.py bridge planner-orch brief (exec/v1 execution-input): field mapping, units, inline reads, refusals, determinism,
+read-only, ``--out``, and the core no longer knowing the verb."""
+import hashlib
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+_BRIDGE = Path(__file__).resolve().parents[1]
+for _path in (_BRIDGE, _BRIDGE / "tests"):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
+
+import bridge_fixture  # noqa: E402  (skips the module without a planner)
+import partners  # noqa: E402
+
+_PLANNER = bridge_fixture.PLANNER
+_ORCH = partners.find_orch_root()
+_ENGINE_TESTS = str(_PLANNER / "tests" / "engine")
+if _ENGINE_TESTS not in sys.path:
+    sys.path.insert(0, _ENGINE_TESTS)
+
+import brief  # noqa: E402
+context, lifecycle, ops, store, units, model = partners.planner_engine(
+    "plan.context", "plan.lifecycle", "plan.ops", "plan.store", "plan.units", "plan.model")
+PlanError = model.PlanError
+import test_context  # noqa: E402
+import test_lifecycle  # noqa: E402
+import test_refs  # noqa: E402
+
+SCRIPT = _PLANNER / "scripts" / "plan.py"
+BRIDGE = ("bridge", "planner-orch", "brief")
+
+
+def tree_hashes(root: Path) -> dict:
+    return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+class BriefCase(test_lifecycle.LifeCase):
+    def setUp(self):
+        super().setUp()
+        self.repo = self.plans.parent
+        (self.repo / "lib").mkdir()
+        (self.repo / "lib" / "x.py").write_text("print('x')\n", encoding="utf-8")
+        (self.repo / "data.bin").write_bytes(b"\xff\xfe\x00binary")
+        ops.patch(self.root, "P1", {"pitfalls": ["watch the lock"]})
+        ops.patch(self.root, "P1.1", {
+            "rules": ["no network"], "guidance": "do it", "sections": [{"id": "s1", "title": "T", "text": "body"}],
+            "reads": [{"path": "lib/x.py", "why": "source", "required": True},
+                      {"path": "data.bin", "why": "blob", "required": False}]})
+        ops.patch(self.root, "P1.1", {"scope": {"include": ["a", "b"], "exclude": ["c"]}})
+        ops.set_plan(self.root, {"rules": ["stdlib only"]})
+
+    def brief(self, item="P1.1", **kwargs):
+        return brief.build(self.load(), item, **kwargs)
+
+
+class FloatContentTests(unittest.TestCase):
+    def test_a_read_with_float_content_becomes_json_text_so_the_digest_can_be_computed(self):
+        entry = {"path": "schema.json", "why": "w", "required": True, "exists": False,
+                 "content": {"b": {"default": 0.6}, "a": [1, 0.95]}}
+        read = brief._read(None, entry, False)
+        self.assertEqual(read["content"], '{"a":[1,0.95],"b":{"default":0.6}}')
+        brief.canonical_digest({"reads": [read]})  # no floats left
+        plain = {"path": "x", "exists": False, "content": {"n": 1}}
+        self.assertEqual(brief._read(None, plain, False)["content"], {"n": 1})
+
+
+class MappingTests(BriefCase):
+    def test_item_fields_follow_the_mapping_table(self):
+        doc = self.brief()
+        item = self.load().items["P1.1"]
+        self.assertEqual(doc["$schema"], "urn:swissknifeman:orch:exec:execution-input:v1")
+        self.assertEqual(doc["contract_version"], "exec/v1")
+        self.assertEqual(doc["goal"], f"{item['title']}: {item['summary']}")
+        self.assertEqual(doc["why"], item["why"])
+        self.assertEqual(doc["scope"], {"include": ["a", "b"], "exclude": ["c"], "write_set": ["lib/x.py"],
+                                        "read_only": False})
+        self.assertEqual(doc["guidance"], "do it")
+        self.assertEqual(doc["sections"], [{"id": "s1", "title": "T", "text": "body"}])
+        self.assertEqual(doc["acceptance"], {"checks": item["validation"], "deliverables": ["d"]})
+        self.assertEqual(doc["route"], {"minimum": item["route"]})
+        self.assertEqual(doc["result_contract"], {"report": brief.REPORT, "write_authority": "code_scope",
+                                                  "commit_owner": "coordinator", "plan_mutation": "forbidden"})
+        self.assertEqual(doc["escalation"], brief.ESCALATION)
+
+    def test_the_research_need_of_the_item_is_carried_with_its_notes(self):
+        self.assertEqual(self.brief()["research"], {"need": "none"})  # the planner default: no research
+        ops.patch(self.root, "P1.1", {"rag": {"need": "required", "status": "pending", "notes": "check the flags"}})
+        doc = self.brief()
+        self.assertEqual(doc["research"], {"need": "required", "notes": "check the flags"})
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+        ops.patch(self.root, "P1.1", {"rag": {"need": "optional", "status": "pending"}})
+        self.assertEqual(self.brief()["research"], {"need": "optional", "notes": "check the flags"})
+
+    def test_the_review_mode_of_the_item_reaches_the_input(self):
+        plan = self.load()
+        plan.items["P1.1"]["review"] = {"mode": "none"}
+        doc = brief.build(plan, "P1.1")
+        self.assertEqual(doc["review_mode"], "none")
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+        self.assertNotIn("review_route", doc)  # only what the plan sets reaches the input
+        self.assertNotIn("review_rounds_max", doc)
+
+    def test_the_reviewer_and_rounds_of_the_item_reach_the_input(self):
+        plan = self.load()
+        plan.items["P1.1"]["review"] = {"mode": "requested", "rounds_max": 1, "covers": ["P1.2"],
+                                        "reviewer": {"provider": "grok", "model": "grok-4.7", "effort": "high",
+                                                     "note": "reads the schema"}}
+        doc = brief.build(plan, "P1.1")
+        self.assertEqual(doc["review_route"], {"provider": "grok", "model": "grok-4.7", "effort": "high"})
+        self.assertEqual(doc["review_rounds_max"], 1)
+        self.assertNotIn("covers", json.dumps(doc))  # a declaration for people, not executed
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+
+    def test_an_item_without_rag_gets_no_research_field(self):
+        plan = self.load()
+        plan.items["P1.1"].pop("rag")
+        self.assertNotIn("research", brief.build(plan, "P1.1"))
+
+    def test_constraints_keep_order_and_source(self):
+        self.assertEqual(self.brief()["constraints"], [
+            {"text": "stdlib only", "source": "plan.rules[0]"},
+            {"text": "watch the lock", "source": "phase.pitfalls[0]"},
+            {"text": "no network", "source": "item.rules[0]"}])
+
+    def test_decisions_upstream_and_lessons(self):
+        other = ops.new_plan("OTHER", "Other", plans_root=self.plans, repository="r", owner="o",
+                             authoring=test_lifecycle.OPUS, message="m", date="2026.10.08").root
+        ops.add_decision(other, "Elsewhere", data={"options": [{"id": "A", "text": "yes"}]})
+        lifecycle.decide(other, "D1", "A", "why", by="owner", actor=test_lifecycle.OPUS)
+        ops.patch(self.root, "P1.2", {"decisions": ["PLAN2.D1"]})
+        self.start("P1.1")
+        self.finish("P1.1", "done", notes="shipped")
+        lifecycle.log(self.root, "P1.1", "difficulty", "slow", impact="minor")
+        doc = self.brief("P1.2")
+        foreign = doc["decisions"][0]
+        self.assertEqual((foreign["ref"], foreign["loaded"], foreign["status"], foreign["title"]),
+                         ("PLAN2.D1", True, "accepted", "Elsewhere"))
+        self.assertEqual(doc["upstream"][0]["ref"], "P1.1")
+        self.assertEqual(doc["upstream"][0]["status"], "done")
+        self.assertEqual(doc["upstream"][0]["notes"], "shipped")
+        lesson = doc["lessons"][0]
+        self.assertEqual((lesson["type"], lesson["summary"], lesson["impact"]), ("difficulty", "slow", "minor"))
+        self.assertNotIn("actor", lesson)
+
+    def test_local_decisions_are_loaded_with_their_text(self):
+        ops.add_decision(self.root, "Format", data={"options": [{"id": "A", "text": "English"}]})  # D1, open
+        lifecycle.decide(self.root, "D1", "A", "simple", by="owner", actor=test_lifecycle.OPUS)
+        ops.patch(self.root, "P1.1", {"decisions": ["D1"]})
+        entry = self.brief()["decisions"][0]
+        self.assertEqual((entry["ref"], entry["loaded"], entry["status"], entry["title"]),
+                         ("D1", True, "accepted", "Format"))
+        self.assertEqual(entry["rationale"], "simple")
+        self.assertIn("decision", entry)
+
+    def test_a_recorded_answer_carries_its_question_key_and_digest_into_the_brief(self):
+        origin = {"kind": "question", "run": "run-a", "item": "P1.1", "question_id": "Q1", "question_key": "qk-" + "a1" * 8,
+                  "question_digest": "a1" * 32, "revision": 1}
+        ops.add_decision(self.root, "P1.1 Q1: Keep?", data={
+            "status": "accepted", "question": "Keep?", "decision": "keep: keep it", "rationale": "Answered by owner",
+            "applies_to": ["P1.1"], "answered_by": "owner", "origin": origin})
+        ops.add_decision(self.root, "Plain", data={"status": "accepted", "question": "q", "decision": "d", "rationale": "r",
+                                                   "applies_to": ["P1.1"]})
+        doc = self.brief()
+        recorded, plain = doc["decisions"]
+        self.assertEqual((recorded["question_key"], recorded["question_digest"]), ("qk-" + "a1" * 8, "a1" * 32))
+        self.assertEqual(recorded["decision"], "keep: keep it")
+        self.assertNotIn("question_key", plain)  # a decision nobody recorded from a question stays as it was
+
+    def test_provenance_context_refs_and_hints(self):
+        ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
+                                     "sections": [{"id": "a", "title": "A", "text": "t"}]})
+        (self.root / "context").mkdir()
+        (self.root / "context" / "P1.1.scout.json").write_text(json.dumps({
+            "$schema": "urn:swissknifeman:task:plan:scout-map:v1", "item": "P1.1", "provider": "codex",
+            "model": "gpt-mini", "created_at": "2026-10-22T10:00:00Z",
+            "entries": [{"path": "lib/x.py", "why": "entry"}, {"path": "lib/y.py", "symbol": "load", "why": "reads it"},
+                        {"path": None, "why": "Unknowns:"}, {"path": None, "why": "- who calls load"}]}))
+        doc = self.brief()
+        prov = doc["provenance"]
+        self.assertEqual((prov["kind"], prov["plan"], prov["item"]), ("plan", "PLAN1", "P1.1"))
+        self.assertEqual(prov["plan_dir"], f"plans/{self.root.name}")
+        self.assertNotIn("unit", prov)
+        self.assertEqual(prov["generated_by"]["tool"], "planner-orch brief")
+        self.assertEqual(prov["source_digest"],
+                         hashlib.sha256(context.render(self.load(), "P1.1", with_scout=False).encode()).hexdigest())
+        pack, document = doc["context_refs"]
+        self.assertEqual(pack["kind"], "pack")
+        self.assertEqual(pack["path"], f"plans/{self.root.name}/context/P1.1.json")
+        self.assertEqual((document["kind"], document["ref"]), ("document", "knowledge/design"))
+        self.assertEqual(document["sha256"], hashlib.sha256((self.root / "knowledge" / "design.json").read_bytes()).hexdigest())
+        self.assertEqual([hint["text"] for hint in doc["hints"]],
+                         ["lib/x.py — entry", "lib/y.py:load — reads it", "Unknowns:", "- who calls load"])
+        self.assertEqual({hint["source"] for hint in doc["hints"]}, {"scout"})
+
+    def test_a_scout_file_of_an_older_planner_gives_no_hints(self):
+        (self.root / "context").mkdir()
+        (self.root / "context" / "P1.1.scout.json").write_text(json.dumps({"entries": ["lib/x.py — entry"]}))
+        self.assertNotIn("hints", self.brief())
+
+    def test_owner_gate_adds_an_escalation_line(self):
+        ops.patch(self.root, "P1.1", {"authority": {"kind": "owner_gate", "gate": "RELEASE", "scope": "tag"}})
+        self.assertEqual(self.brief()["escalation"][-1], "Owner gate RELEASE: tag")
+
+    def test_route_minimum_is_the_item_route(self):
+        ops.patch(self.root, "P1.1", {"route": {"class": "frontier", "effort": "max"}})
+        self.assertEqual(self.brief()["route"]["minimum"], {"class": "frontier", "effort": "max"})
+
+
+    def test_route_minimum_leaves_out_correction_and_settings_and_stays_a_valid_execution_input(self):
+        route = {"class": "frontier", "effort": "max", "provider": "claude-code", "model": "claude-opus-5-5",
+                 "correction": {"class": "economy", "effort": "medium"}, "settings": {"native": True}}
+        ops.patch(self.root, "P1.1", {"route": route})
+        doc = self.brief()
+        self.assertEqual(doc["route"]["minimum"], {"class": "frontier", "effort": "max", "provider": "claude-code",
+                                                   "model": "claude-opus-5-5"})
+        self.assertNotIn("correction", json.dumps(doc["route"]))
+        self.assertNotIn("settings", json.dumps(doc["route"]))
+        if partners.find_orch_root() is None:
+            self.skipTest("orch not found")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "input.json"
+            path.write_text(json.dumps(doc), encoding="utf-8")
+            code, out = partners.orch_validate("execution-input", path)
+        self.assertEqual(code, 0, out)
+
+
+class PhaseChecksTests(BriefCase):
+    FULL = {"id": "V9", "cmd": "python3 scripts/affected-tests.py --tier all --run", "expect": "exit 0", "kind": "acceptance"}
+
+    def test_only_the_item_that_closes_the_phase_gets_the_phase_checks(self):
+        ops.patch(self.root, "P1", {"validation": [dict(self.FULL)]})
+        ids = [check["id"] for check in self.brief()["acceptance"]["checks"]]
+        self.assertNotIn("V9", ids)  # P1.2 is still open
+        self.start("P1.1")
+        self.finish("P1.1")
+        self.start("P1.2")
+        checks = self.brief("P1.2")["acceptance"]["checks"]
+        self.assertEqual(checks[-1], dict(self.FULL, cadence="phase"))
+        self.assertEqual(brief.verify(self.load(), "P1.2", self.brief("P1.2")), [])
+
+class ReadsTests(BriefCase):
+    def test_on_demand_repo_json_keeps_required_identity_without_inline_even_when_requested(self):
+        path = self.repo / "manifest.json"
+        raw = (json.dumps({"rows": list(range(50000))}) + "\n").encode()
+        path.write_bytes(raw)
+        read = {"path": "manifest.json", "why": "inspect fixture provenance", "required": True,
+                "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [read]})
+        for inline in (False, True):
+            item, = self.brief(inline_reads=inline)["reads"]
+            self.assertTrue(item["required"])
+            self.assertTrue(item["exists"])
+            self.assertEqual(item["sha256"], hashlib.sha256(raw).hexdigest())
+            self.assertEqual(item["delivery"], "on-demand")
+            self.assertNotIn("content", item)
+        altered = self.brief()
+        altered["reads"][0].pop("delivery")
+        self.assertTrue(any("reads: missing manifest.json" in error for error in brief.verify(self.load(), "P1.1", altered)))
+        ops.patch(self.root, "P1.1", {"reads": [{k: v for k, v in read.items() if k != "delivery"}]})
+        self.assertEqual(self.brief()["reads"][0]["content"], json.loads(raw))  # legacy default remains intact
+
+    def test_a_deferred_json_read_cannot_hide_a_later_inline_read_of_the_same_file(self):
+        (self.repo / "manifest.json").write_text('{"required": [1, 2]}\n', encoding="utf-8")
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "manifest.json", "why": "identity", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "why": "inline contract", "required": True},
+        ]})
+        first, second = self.brief()["reads"]
+        self.assertNotIn("content", first)
+        self.assertNotIn("included", first)
+        self.assertEqual(second["content"], {"required": [1, 2]})
+
+    def test_on_demand_rejects_unreachable_plan_sections_and_missing_or_invalid_required_json(self):
+        for invalid in (
+            {"ref": "knowledge/design", "why": "w", "required": True, "delivery": "on-demand"},
+            {"ref": "knowledge/design", "path": "manifest.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "@plan/knowledge/design.json", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "manifest.json", "section": "rows", "why": "w", "required": True, "delivery": "on-demand"},
+            {"path": "lib/x.py", "why": "w", "required": True, "delivery": "on-demand"},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(PlanError):
+                ops.patch(self.root, "P1.1", {"reads": [invalid]})
+        valid = {"path": "missing.json", "why": "w", "required": True, "delivery": "on-demand"}
+        ops.patch(self.root, "P1.1", {"reads": [valid]})
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
+        (self.repo / "missing.json").write_text("{bad json", encoding="utf-8")
+        entry = context.read_entry(self.load(), valid)
+        self.assertIn("error", entry)
+        self.assertNotIn("content", entry)
+        with self.assertRaises(PlanError) as caught:
+            self.brief()
+        self.assertEqual(caught.exception.code, "READ_MISSING")
+    def test_existing_files_carry_sha256_and_missing_ones_do_not(self):
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "lib/x.py", "why": "source", "required": True},
+            {"path": "gone.py", "why": "optional", "required": False}]})
+        by_path = {r["path"]: r for r in self.brief()["reads"]}
+        self.assertEqual(by_path["lib/x.py"]["sha256"], hashlib.sha256(b"print('x')\n").hexdigest())
+        self.assertNotIn("content", by_path["lib/x.py"])
+        self.assertFalse(by_path["gone.py"]["exists"])
+        self.assertNotIn("sha256", by_path["gone.py"])
+
+    def test_inline_reads_embed_full_text_and_flag_binary(self):
+        text = "\n".join(f"line {n}" for n in range(800)) + "\n"
+        (self.repo / "lib" / "x.py").write_text(text, encoding="utf-8")
+        by_path = {r["path"]: r for r in self.brief(inline_reads=True)["reads"]}
+        self.assertEqual(by_path["lib/x.py"]["content"], text)
+        self.assertEqual(by_path["data.bin"]["error"], "binary or non-utf8")
+        self.assertNotIn("content", by_path["data.bin"])
+
+    def test_inline_reads_keep_section_content_of_json_sources(self):
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy"}})  # scoped drops reads held by documents
+        ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
+                                     "sections": [{"id": "a", "title": "A", "text": "t"}, {"id": "b", "title": "B", "text": "u"}]})
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "@plan/knowledge/design.json", "section": "a", "why": "w", "required": True}]})
+        for flag in (False, True):
+            read = self.brief(inline_reads=flag)["reads"][0]
+            self.assertEqual([s["id"] for s in read["content"]["sections"]], ["a"])
+            self.assertEqual(len(read["sha256"]), 64)
+
+
+class WorkspacePlanTests(BriefCase):
+    """The plan folder lives in the workspace, outside the checkout: the executor cannot read it, so the brief carries it."""
+    PID = "billium"
+
+    def setUp(self):
+        super().setUp()
+        import os
+        import shutil
+        import tempfile
+        from unittest import mock
+        (self.root / "research").mkdir()
+        (self.root / "research" / "notes.txt").write_text("plain notes\n", encoding="utf-8")
+        (self.root / "research" / "blob.bin").write_bytes(b"\xff\xfe\x00")
+        ops.add_document(self.root, {"id": "design", "title": "Design", "applies_to": ["P1.1"],
+                                     "sections": [{"id": "a", "title": "A", "text": "text-a"},
+                                                  {"id": "b", "title": "B", "text": "text-b"}]})
+        ops.patch(self.root, "P1.1", {"reads": [
+            {"path": "lib/x.py", "why": "source", "required": True},
+            {"ref": "knowledge/design#a", "why": "design", "required": True},
+            {"path": "@plan/research/notes.txt", "why": "notes", "required": True},
+            {"path": "@plan/research/blob.bin", "why": "blob", "required": False}]})
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(os.path.realpath(tmp.name))
+        self.ws, home = base / "workspace-secret-root" / "axioma", base / "home"
+        marker = self.repo / ".swissknifeman" / "project.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:project-marker:v1",
+                                      "workspace": "axioma", "project_id": self.PID,
+                                      "plans_store": "workspace"}), encoding="utf-8")
+        bindings = home / "state" / "workspaces" / "axioma" / "bindings.json"
+        bindings.parent.mkdir(parents=True)
+        bindings.write_text(json.dumps({"$schema": "urn:swissknifeman:aicore:workspace-bindings:v1", "projects": {
+            self.PID: {"paths": [str(self.repo)], "primary": str(self.repo), "bound_at": "2026-10-17T09:30:00Z"}}}),
+            encoding="utf-8")
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("SKM_", "XDG_"))}
+        env.update(HOME=str(home), SKM_HOME=str(home), SKM_WORKSPACES_ROOT=str(self.ws.parent))
+        patcher = mock.patch.dict(os.environ, env, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        target = self.ws / "projects" / self.PID / "plans"
+        target.mkdir(parents=True)
+        self.moved = Path(shutil.move(str(self.root), str(target / self.root.name)))
+
+    def ws_brief(self, item="P1.1", **kwargs):
+        plan = store.load_plan(self.moved)
+        self.assertNotEqual(plan.source_root, None)
+        return brief.build(plan, item, **kwargs)
+
+    def test_every_plan_read_carries_its_content_without_the_inline_flag(self):
+        by_path = {r["path"]: r for r in self.ws_brief()["reads"]}
+        self.assertEqual(by_path["@plan/research/notes.txt"]["content"], "plain notes\n")
+        section = by_path["@plan/knowledge/design.json"]
+        self.assertEqual([x["id"] for x in section["content"]["sections"]], ["a"])
+        self.assertNotIn("text-b", json.dumps(section))
+        self.assertNotIn("content", by_path["lib/x.py"])  # repository reads keep the flag behaviour
+
+    def test_a_binary_plan_read_is_not_embedded_and_says_not_text(self):
+        read = {r["path"]: r for r in self.ws_brief()["reads"]}["@plan/research/blob.bin"]
+        self.assertEqual(read["error"], "not-text")
+        self.assertNotIn("content", read)
+
+    def test_the_pack_travels_in_context_refs_under_a_plan_relative_path(self):
+        doc = self.ws_brief()
+        pack, = [r for r in doc["context_refs"] if r["kind"] == "pack"]
+        self.assertEqual(pack["path"], "@plan/context/P1.1.json")
+        self.assertEqual(pack["content"]["item"]["id"], "P1.1")
+        self.assertTrue(all(r["path"].startswith("@plan/") for r in doc["context_refs"]))
+        self.assertEqual(doc["provenance"]["plan_dir"], "@plan")
+
+    def test_no_absolute_workspace_path_is_in_the_serialized_brief(self):
+        text = brief.render(store.load_plan(self.moved), "P1.1", inline_reads=True)
+        self.assertNotIn(str(self.ws), text)
+        self.assertNotIn("workspace-secret-root", text)
+
+    @unittest.skipUnless(_ORCH, "orch not found")
+    def test_context_supplement_crosses_native_cli_without_losing_unique_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["goal"] = "sentinel-plan-goal"
+        plan.plan["links"] = {"related_plans": ["sentinel-related-plan"]}
+        plan.plan["rules"].append("sentinel-plan-rule")
+        plan.plan["contracts"] = {"consumed": [{"name": "sentinel-consumed-contract", "reaction": "preserve-owner-boundary"}]}
+        plan.brief["requirements"] = [{"id": "R1", "text": "sentinel-brief-requirement"}]
+        plan.phases["P1"]["contract"] = {"produces": ["sentinel-phase-contract"]}
+        plan.items["P1.1"]["task_files"][0]["note"] = "sentinel-item-file-note"
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "sentinel-active-decision",
+                                  "rationale": "reason", "question": "sentinel-decision-question", "applies_to": ["P1.1"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        legacy = brief.build(plan, "P1.1")
+        pack = next(x for x in doc["context_refs"] if x["kind"] == "pack")
+        self.assertEqual(pack["content"], brief._worker_context(legacy["context_refs"][0]["content"]))
+        self.assertEqual(pack["delivery"], "supplement")
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "input.json"
+            target.write_text(json.dumps(doc), encoding="utf-8")
+            validated = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "validate",
+                                        "execution-input", str(target)], cwd=self.repo, capture_output=True, text=True)
+            self.assertEqual(validated.returncode, 0, validated.stderr or validated.stdout)
+            result = subprocess.run([sys.executable, str(_ORCH / "scripts/orch.py"), "render-prompt", "--input",
+                                     str(target), "--role", "executor"], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for sentinel in ("sentinel-plan-goal", "sentinel-brief-requirement", "sentinel-phase-contract",
+                         "sentinel-item-file-note", "sentinel-active-decision", "sentinel-related-plan",
+                         "sentinel-plan-rule", "sentinel-consumed-contract", "text-a", "text-b", "plain notes"):
+            self.assertIn(sentinel, result.stdout)
+        self.assertNotIn("sentinel-decision-question", result.stdout)
+        self.assertNotIn("workspace-secret-root", result.stdout)
+        self.assertEqual(brief.verify(plan, "P1.1", doc), [])
+
+    def test_context_supplement_allowlist_excludes_process_history_and_unknown_fields(self):
+        plan = store.load_plan(self.moved)
+        plan.plan["orchestration"] = {"instructions": "run plan.py finish coordinator-process-sentinel"}
+        plan.plan["new_secret_field"] = "unknown-secret-sentinel"
+        plan.brief["messages"] = [{"text": "owner-history-sentinel"}]
+        plan.phases["P1"]["batches"] = [{"note": "batch-process-sentinel"}]
+        plan.items["P1.1"]["orchestration"] = {"options": {"rules": ["run-process-sentinel"]}}
+        plan.items["P1.1"]["result"] = {"notes": "old-result-history-sentinel"}
+        plan.decisions["D99"] = {"id": "D99", "title": "D", "status": "accepted", "decision": "active-contract",
+                                  "rationale": "active-reason", "applies_to": ["P1.1"],
+                                  "context": "historical-launch-command-sentinel", "evidence": ["private-actor-path-sentinel"]}
+        doc = brief.build(plan, "P1.1", context_delivery="supplement")
+        text = json.dumps(doc["context_refs"][0]["content"])
+        for forbidden in ("coordinator-process-sentinel", "unknown-secret-sentinel", "owner-history-sentinel",
+                          "batch-process-sentinel", "run-process-sentinel", "old-result-history-sentinel",
+                          "historical-launch-command-sentinel", "private-actor-path-sentinel"):
+            self.assertNotIn(forbidden, text)
+        self.assertIn("owner-history-sentinel", json.dumps(context.collect(plan, "P1.1")))
+
+    def test_context_supplement_still_refuses_lifecycle_in_worker_contracts(self):
+        plan = store.load_plan(self.moved)
+        plan.phases["P1"]["context"] = "Run plan.py finish now"
+        with self.assertRaises(PlanError) as caught:
+            brief.build(plan, "P1.1", context_delivery="supplement")
+        self.assertEqual(caught.exception.code, "BRIEF_INCOMPLETE")
+
+    def test_context_delivery_cli_and_environment_are_supported_and_default_unchanged(self):
+        import os
+        from unittest import mock
+        before = tree_hashes(self.moved)
+        for extra, env in ((("--context-delivery", "supplement"), {}),
+                           ((), {"PLANNER_ORCH_CONTEXT_DELIVERY": "supplement"})):
+            with mock.patch.dict(os.environ, {"SKM_PLANNER_BRIDGES__ROOTS": json.dumps([str(_BRIDGE.parent)]), **env}):
+                done = bridge_fixture.plan_py(self.repo, *BRIDGE, str(self.moved), "P1.1", *extra)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            self.assertEqual(json.loads(done.stdout)["context_refs"][0]["delivery"], "supplement")
+        self.assertNotIn("delivery", self.ws_brief()["context_refs"][0])
+        self.assertEqual(tree_hashes(self.moved), before)
+
+    def test_unknown_context_delivery_fails_closed(self):
+        with self.assertRaises(PlanError) as caught:
+            self.ws_brief(context_delivery="drop-required-content")
+        self.assertEqual(caught.exception.code, "CONTEXT_DELIVERY_INVALID")
+
+    def test_a_legacy_plan_keeps_relative_paths_and_no_forced_content(self):
+        import shutil
+        shutil.move(str(self.moved), str(self.plans / self.moved.name))
+        marker = self.repo / ".swissknifeman" / "project.json"
+        marker.unlink()
+        doc = brief.build(store.load_plan(self.plans / self.moved.name), "P1.1")
+        self.assertTrue(doc["provenance"]["plan_dir"].startswith("plans/"))
+        by_path = {r["path"]: r for r in doc["reads"]}
+        self.assertNotIn("content", by_path["@plan/research/notes.txt"])
+        self.assertTrue(all("content" not in r for r in doc["context_refs"]))
+
+
+class UnitTests(BriefCase):
+    def test_unit_brief_uses_unit_goal_files_and_checks(self):
+        unit_id = units.add_unit(self.root, "P1.1", "Part", {
+            "goal": "do the part", "files": ["lib/x.py"], "instructions": "careful", "checks": ["V2"],
+            "reads": [{"path": "data.bin", "why": "blob"}],
+            "route": {"class": "economy", "effort": "low"}})
+        doc = self.brief(unit_id=unit_id)
+        self.assertEqual(doc["goal"], "do the part")
+        self.assertEqual(doc["scope"]["write_set"], ["lib/x.py"])
+        self.assertFalse(doc["scope"]["read_only"])
+        self.assertEqual([c["id"] for c in doc["acceptance"]["checks"]], ["V2"])
+        self.assertEqual(doc["constraints"][-1], {"text": "careful", "source": "unit.instructions"})
+        self.assertEqual(doc["route"]["minimum"], {"class": "economy", "effort": "low"})
+        self.assertEqual(doc["provenance"]["unit"], unit_id)
+        self.assertTrue(doc["input_id"].startswith(f"PLAN1.P1.1/{unit_id}@"))
+        self.assertIn("data.bin", [r["path"] for r in doc["reads"]])
+
+    def test_unit_without_files_is_read_only_with_no_write_authority(self):
+        unit_id = units.add_unit(self.root, "P1.1", "Review", {"goal": "look", "files": [], "checks": ["V1"]})
+        doc = self.brief(unit_id=unit_id)
+        self.assertEqual(doc["scope"]["write_set"], [])
+        self.assertTrue(doc["scope"]["read_only"])
+        self.assertEqual(doc["result_contract"]["write_authority"], "none")
+
+
+class InputDigestTests(BriefCase):
+    def test_digest_and_input_id_follow_the_convention(self):
+        doc = self.brief()
+        self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+        self.assertTrue(doc["input_id"].endswith("@" + doc["digest"][:12]))
+        self.assertTrue(doc["input_id"].startswith("PLAN1.P1.1@"))
+        tampered = {**doc, "goal": "other"}
+        self.assertNotEqual(brief.canonical_digest(tampered), doc["digest"])
+
+    def test_two_calls_give_the_same_document(self):
+        self.assertEqual(brief.render(self.load(), "P1.1"), brief.render(self.load(), "P1.1"))
+        self.assertEqual(self.brief()["digest"], self.brief()["digest"])
+
+    def test_no_lifecycle_or_report_api_content(self):
+        text = brief.render(self.load(), "P1.1")
+        for phrase in ("report_api", "unit return", "plan.py start", "plan.py finish", "planner:plan-run"):
+            self.assertNotIn(phrase, text)
+        doc = json.loads(text)
+        for key in ("orchestration", "ready_units", "units", "plan", "brief"):
+            self.assertNotIn(key, doc)
+
+
+class CompletenessTests(BriefCase):
+    def verify(self, doc, item="P1.1", **kwargs):
+        return brief.verify(self.load(), item, doc, **kwargs)
+
+    def test_a_read_that_names_forbidden_inputs_is_not_lifecycle_content(self):
+        doc = self.brief()
+        doc["reads"] = list(doc["reads"]) + [{"path": "roles/x.json", "content": {"forbidden_inputs": ["report_api"]}}]
+        self.assertFalse([line for line in self.verify(doc) if "lifecycle" in line])
+        doc["reads"][-1]["content"]["forbidden_inputs"] = ["run plan.py start and go on"]  # a sentence is not a denied token
+        self.assertTrue([line for line in self.verify(doc) if "lifecycle phrase" in line])
+        doc["reads"][-1]["content"]["forbidden_inputs"] = ["report_api"]
+        doc["reads"][-1]["content"]["note"] = "call report_api"
+        self.assertTrue([line for line in self.verify(doc) if "lifecycle phrase 'report_api'" in line])
+
+    def test_complete_document_has_no_omissions(self):
+        self.assertEqual(self.verify(self.brief()), [])
+
+    def test_removed_check_is_reported_once(self):
+        doc = self.brief()
+        removed = doc["acceptance"]["checks"].pop()
+        self.assertEqual(self.verify(doc), [f"acceptance.checks: missing {removed['id']}"])
+
+    def test_removed_rule_is_reported_once(self):
+        doc = self.brief()
+        doc["constraints"] = [c for c in doc["constraints"] if c["source"] != "item.rules[0]"]
+        self.assertEqual(self.verify(doc), ["constraints: missing item.rules[0]"])
+
+    def test_removed_required_read_is_reported_once(self):
+        doc = self.brief()
+        doc["reads"] = [r for r in doc["reads"] if r["path"] != "lib/x.py"]
+        self.assertEqual(self.verify(doc), ["reads: missing lib/x.py"])
+
+    def test_removed_decision_is_reported_once(self):
+        ops.add_decision(self.root, "Format", data={"options": [{"id": "A", "text": "English"}]})
+        lifecycle.decide(self.root, "D1", "A", "simple", by="owner", actor=test_lifecycle.OPUS)
+        ops.patch(self.root, "P1.1", {"decisions": ["D1"]})
+        doc = self.brief()
+        doc["decisions"] = [d for d in doc["decisions"] if d["ref"] != "D1"]
+        self.assertEqual(self.verify(doc), ["decisions: missing D1"])
+
+    def test_scope_goal_route_and_deliverables_must_match(self):
+        doc = self.brief()
+        doc["scope"]["include"] = ["other"]
+        doc["goal"] = " "
+        doc["route"] = {}
+        doc["acceptance"]["deliverables"] = []
+        self.assertEqual(self.verify(doc), [
+            "scope.include: differs from the item", "goal: empty", "route.minimum: missing",
+            "deliverables: differ from the item"])
+
+    def test_lifecycle_phrase_in_guidance_is_refused(self):
+        ops.patch(self.root, "P1.1", {"guidance": "then run plan.py finish P1.1"})
+        with self.assertRaises(Exception) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "BRIEF_INCOMPLETE")
+        self.assertIn("/guidance: lifecycle phrase 'plan.py finish'", str(ctx.exception))
+
+    def test_a_rule_that_describes_a_gate_passes_and_one_that_orders_the_command_does_not(self):
+        described = ["Перед `plan.py finish` пункта: проверки зелёные, evidence записан",
+                     "Run every check before plan.py finish and keep the evidence",
+                     "Never run plan.py finish yourself; the coordinator closes the item",
+                     "Не вызывай plan.py start и plan.py finish: пункт ведёт оркестратор",
+                     "G1: after `plan.py finish` the item is done and committed"]
+        ops.patch(self.root, "P1.1", {"rules": described})
+        self.assertEqual(self.verify(self.brief()), [])
+        for order in ("запусти plan.py finish P1.1", "Then run `plan.py finish P1.1 --status done`",
+                      "Закрой пункт: python3 scripts/plan.py finish P1.1", "Call unit return when done",
+                      "Close it with:\n```bash\nplan.py finish P1.1\n```", "$ plan.py start P1.2"):
+            with self.subTest(order=order):
+                ops.patch(self.root, "P1.1", {"rules": [order]})
+                with self.assertRaises(Exception) as ctx:
+                    self.brief()
+                self.assertEqual(ctx.exception.code, "BRIEF_INCOMPLETE")
+                self.assertIn("lifecycle phrase", str(ctx.exception))
+
+    def test_the_report_api_is_refused_even_when_only_named(self):
+        self.assertEqual(brief.lifecycle_phrase("the report_api is not yours"), "report_api")
+        self.assertEqual(brief.lifecycle_phrase("do not use the report API"), "report API")
+        self.assertIsNone(brief.lifecycle_phrase("before plan.py finish the gates must be green"))
+
+    def test_lifecycle_phrase_in_plan_rules_is_data(self):
+        ops.set_plan(self.root, {"rules": ["never call plan.py finish by hand"]})
+        self.assertEqual(self.verify(self.brief()), [])
+
+    def test_large_item_is_not_truncated(self):
+        reads = [{"path": f"absent/{i}.py", "why": "optional", "required": False} for i in range(200)]
+        ops.patch(self.root, "P1.1", {"reads": reads + [{"path": "lib/x.py", "why": "source", "required": True}],
+                                      "rules": [f"rule {i}" for i in range(50)]})
+        doc = self.brief()
+        self.assertEqual(self.verify(doc), [])
+        self.assertEqual(len(doc["constraints"]), 50 + 1 + 1)  # item rules + plan rule + phase pitfall
+        self.assertEqual(len(doc["reads"]), 201)
+
+
+class RefusalTests(BriefCase):
+    def test_unknown_item_and_unit(self):
+        with self.assertRaises(Exception) as ctx:
+            self.brief("P9.9")
+        self.assertEqual(ctx.exception.code, "REF_UNKNOWN")
+        with self.assertRaises(Exception) as ctx:
+            self.brief(unit_id="U7")
+        self.assertEqual(ctx.exception.code, "REF_UNKNOWN")
+
+    def test_skeleton_phase_is_refused(self):
+        with self.assertRaises(Exception) as ctx:
+            self.brief("P2.1")
+        self.assertEqual(ctx.exception.code, "PHASE_NOT_DETAILED")
+
+    def test_missing_required_read_is_refused(self):
+        ops.patch(self.root, "P1.1", {"reads": [{"path": "gone.py", "why": "needed", "required": True}]})
+        with self.assertRaises(Exception) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "READ_MISSING")
+
+    def test_required_read_the_item_deleted_does_not_refuse_the_brief_of_an_item_in_progress(self):
+        self.start("P1.1")
+        (self.repo / "lib" / "x.py").unlink()  # the item retires its own read; the claim after a stop builds the brief again
+        doc = self.brief()
+        self.assertEqual(doc["reads"][0]["path"], "lib/x.py")
+        self.assertFalse(doc["reads"][0]["exists"])
+
+    def test_human_views_never_supply_input(self):
+        # A detailed phase refuses this read at patch time (PLAN_INVALID). The brief still refuses a view that is
+        # already on the item, which is what this case guards: human views never become execution input.
+        plan = self.load()
+        plan.items["P1.1"]["reads"] = [{"path": "@plan/views/plan.md", "section": "Goal", "why": "bad",
+                                         "required": False}]
+        with self.assertRaises(PlanError) as ctx:
+            brief.build(plan, "P1.1")
+        self.assertEqual(ctx.exception.code, "HUMAN_VIEW")
+
+
+class ReadOnlyTests(BriefCase):
+    def test_build_and_cli_leave_every_plan_file_untouched(self):
+        before = tree_hashes(self.root)
+        self.brief()
+        subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"],
+                       capture_output=True, text=True, timeout=30, check=True, cwd=self.root)
+        self.assertEqual(tree_hashes(self.root), before)
+        self.assertFalse((self.root / "context").exists())
+
+
+class CliTests(BriefCase):
+    def run_cli(self, *args, output=None):
+        head = ["--output", output] if output else []
+        return subprocess.run([sys.executable, str(SCRIPT), *head, *BRIDGE, str(self.root), *args],
+                              capture_output=True, text=True, timeout=30, cwd=self.root)
+
+    def test_stdout_is_the_document(self):
+        result = self.run_cli("P1.1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(result.stdout.endswith("}\n"))
+        self.assertEqual(json.loads(result.stdout), self.brief())
+
+    def test_out_writes_the_file_and_prints_its_path(self):
+        target = self.repo / "out" / "brief.json"
+        result = self.run_cli("P1.1", "--out", str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), str(target))
+        self.assertEqual(json.loads(target.read_text(encoding="utf-8")), self.brief())
+
+    def test_unit_and_inline_flags(self):
+        unit_id = units.add_unit(self.root, "P1.1", "Part", {"goal": "g", "files": ["lib/x.py"], "checks": ["V1"]})
+        result = self.run_cli("P1.1", "--unit", unit_id, "--inline-reads")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        doc = json.loads(result.stdout)
+        self.assertEqual(doc["provenance"]["unit"], unit_id)
+        self.assertEqual(doc["reads"][0]["content"], "print('x')\n")
+
+    def test_bridge_owns_its_output_and_refusal_codes(self):
+        ok = self.run_cli("P1.1", output="json")  # the dispatcher passes bridge output through, no envelope
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertEqual(json.loads(ok.stdout)["contract_version"], "exec/v1")
+        for output in (None, "json"):
+            bad = self.run_cli("P2.1", output=output)
+            self.assertEqual(bad.returncode, 1)
+            self.assertTrue(bad.stderr.startswith("PHASE_NOT_DETAILED:"), bad.stderr)
+
+    def test_main_takes_the_plan_reference_and_plans_root(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, self.root.name, "P1.1", "--plans-root",
+                                 str(self.plans)], capture_output=True, text=True, timeout=30, cwd=self.root)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.brief())
+        missing = subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, "absent", "P1.1", "--plans-root",
+                                  str(self.plans)], capture_output=True, text=True, timeout=30, cwd=self.root)
+        self.assertEqual(missing.returncode, 1)
+        self.assertTrue(missing.stderr.startswith("PLAN_NOT_FOUND:"), missing.stderr)
+
+    def test_usage_errors_exit_2(self):
+        self.assertEqual(self.run_cli().returncode, 2)
+        self.assertEqual(self.run_cli("P1.1", "--repo", "bad").returncode, 2)
+
+    def test_malformed_unit_id_is_refused_by_the_api(self):
+        result = self.run_cli("P1.1", "--unit", "x")
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(result.stderr.startswith("REF_INVALID:"))
+
+
+class OutTests(BriefCase):
+    """``--out`` (formerly in the core envelope tests)."""
+
+    def run_cli(self, *args):
+        return subprocess.run([sys.executable, str(SCRIPT), *BRIDGE, str(self.root), *args],
+                              capture_output=True, text=True, timeout=30, cwd=self.root)
+
+    def test_out_must_be_a_file_outside_the_plan(self):
+        plan = store.load_plan(self.root)
+        for bad in ("", str(self.root / "brief-copy.json"), str(self.root / "phases" / "P1" / "P1.1.json"),
+                    str(self.root), str(self.plans)):
+            with self.subTest(out=bad):
+                with self.assertRaises(PlanError) as ctx:
+                    brief.write(plan, "P1.1", bad)
+                self.assertEqual(ctx.exception.code, "OUT_INVALID")
+        self.assertFalse((self.root / "brief-copy.json").exists())
+
+    def test_a_refused_out_leaves_the_plan_untouched(self):
+        before = (self.root / "phases" / "P1" / "P1.1.json").read_bytes()
+        result = self.run_cli("P1.1", "--out", str(self.root / "phases" / "P1" / "P1.1.json"))
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(result.stderr.startswith("OUT_INVALID:"), result.stderr)
+        self.assertEqual((self.root / "phases" / "P1" / "P1.1.json").read_bytes(), before)
+
+    def test_malformed_ids_are_refused_by_the_api_not_the_parser(self):
+        for argv, code in ((("P1.1", "--unit", "x"), "REF_INVALID"), (("P1", ), "REF_INVALID"),
+                           (("P1.1", "--unit", "U9"), "REF_UNKNOWN")):
+            with self.subTest(argv=argv):
+                result = self.run_cli(*argv)
+                self.assertEqual(result.returncode, 1)
+                self.assertTrue(result.stderr.startswith(f"{code}:"), result.stderr)
+
+    def test_out_writes_a_new_file_and_reports_its_path(self):
+        target = self.plans.parent / "briefs" / "p1.json"
+        result = self.run_cli("P1.1", "--out", str(target))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, f"{target.resolve()}\n")
+        self.assertEqual(json.loads(target.read_text())["input_id"].split("@")[0], "PLAN1.P1.1")
+
+
+class RefReadTests(test_lifecycle.LifeCase):
+    """Reads by reference (formerly in the core context tests): exec/v1 reads stay path-based."""
+
+    add_design = test_context.JsonContextTests.add_design
+
+    def test_the_brief_keeps_exec_reads_path_based(self):
+        self.add_design()
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "knowledge/design#steps", "why": "steps", "required": True}]})
+        read, = brief.build(self.load(), "P1.1")["reads"]
+        self.assertNotIn("ref", read)
+        self.assertEqual((read["path"], read["section"]), ("@plan/knowledge/design.json", "steps"))
+
+    def test_required_ref_sections_refuse_the_brief_without_mutation(self):
+        self.add_design()
+        for extra in ({"ref": "knowledge/design#missing"},
+                      {"ref": "knowledge/design", "section": "missing"},
+                      {"ref": "knowledge/design#Steps"}):  # fragments name ids, not titles
+            with self.subTest(extra=extra):
+                test_context.force_patch(self.root, "P1.1", {"reads": [{**extra, "why": "needed", "required": True}]})
+                self.refused("READ_MISSING", lambda root: brief.build(self.load(), "P1.1"))
+
+    def test_required_ref_section_titles_remain_readable_via_section_key(self):
+        self.add_design()
+        ops.patch(self.load(), "plan", {"settings": {"context_pack": "legacy"}})  # scoped drops reads held by documents
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "knowledge/design", "section": "Steps", "why": "needed", "required": True}]})
+        self.assertEqual(brief.build(self.load(), "P1.1")["reads"][0]["content"]["sections"][0]["id"], "steps")
+
+    def test_unresolved_optional_ref_refuses_brief_but_declared_missing_file_is_allowed(self):
+        test_context.force_patch(self.root, "P1.1", {"reads": [
+            {"ref": "artifact/catalog", "why": "optional", "required": False}]})
+        self.refused("REF_UNRESOLVED", lambda root: brief.build(self.load(), "P1.1"))
+        test_context.force_patch(self.root, "P1.2", {"artifacts": [
+            {"id": "catalog", "path": "catalog.json", "role": "output"}]})
+        read, = brief.build(self.load(), "P1.1")["reads"]
+        self.assertEqual((read["path"], read["exists"]), ("catalog.json", False))
+        self.assertNotIn("ref", read)
+
+
+class CrossPlanTests(test_refs.RefsCase):
+    """Decisions of other plans (formerly in the core refs tests): resolved, refused, foreign repositories."""
+
+    def setUp(self):
+        super().setUp()
+        (self.plans.parent / "lib").mkdir()
+        (self.plans.parent / "lib" / "x.py").write_text("x\n", encoding="utf-8")
+
+    def brief(self, **kwargs):
+        return brief.build(self.load(), "P1.1", **kwargs)
+
+    def test_resolved_decision_is_in_the_brief_within_the_closed_schema(self):
+        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1"]})
+        entry = self.brief()["decisions"][0]
+        self.assertEqual(set(entry), {"ref", "loaded", "title", "status", "decision", "rationale", "source"})
+        self.assertEqual(entry["source"]["sha256"],
+                         hashlib.sha256((self.other / "decisions" / "D1.json").read_bytes()).hexdigest())
+
+    def test_unresolved_required_decision_refuses(self):
+        ops.patch(self.root, "P1.1", {"decisions": ["PLAN2.D1", "PLAN8.D3"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+        self.assertIn("PLAN8.D3", ctx.exception.message)
+        self.assertNotIn("PLAN2.D1", ctx.exception.message)
+
+    def test_not_accepted_required_decision_refuses(self):
+        key = ops.add_decision(self.other, "Open question", data={"options": [{"id": "A", "text": "x"}]})
+        ops.patch(self.root, "P1.1", {"decisions": [f"PLAN2.{key}"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+
+    def test_foreign_repository_via_repos(self):
+        repo, _ = self.foreign_repo()
+        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
+        with self.assertRaises(PlanError) as ctx:
+            self.brief()
+        self.assertEqual(ctx.exception.code, "REF_UNRESOLVED")
+        self.assertTrue(self.brief(repos={"ext": str(repo)})["decisions"][0]["loaded"])
+
+    def test_cli_brief_refuses_and_accepts_repo(self):
+        repo, _ = self.foreign_repo()
+        ops.patch(self.root, "P1.1", {"decisions": ["ext:PLAN1.D1"]})
+        base = [sys.executable, str(SCRIPT), *BRIDGE, str(self.root), "P1.1"]
+        refused = subprocess.run(base, capture_output=True, text=True, timeout=30, cwd=self.root)
+        self.assertEqual(refused.returncode, 1)
+        self.assertTrue(refused.stderr.startswith("REF_UNRESOLVED: "), refused.stderr)
+        ok = subprocess.run([*base, "--repo", f"ext={repo}"], capture_output=True, text=True, timeout=30, cwd=self.root)
+        self.assertEqual(ok.returncode, 0, ok.stderr)
+        self.assertTrue(json.loads(ok.stdout)["decisions"][0]["loaded"])
+
+    def test_local_decisions_are_untouched(self):
+        key = test_refs.accepted(self.root, "Local")
+        ops.patch(self.root, "P1.1", {"decisions": [key]})
+        self.assertTrue(self.brief()["decisions"][0]["loaded"])
+
+
+def legacy_digest(doc: dict) -> str:
+    """The formula the bridge used before it took the canonical form from the foundation."""
+    payload = {key: value for key, value in doc.items() if key != "digest"}
+    if isinstance(payload.get("input_id"), str):
+        payload["input_id"] = payload["input_id"].rsplit("@", 1)[0]
+    encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+class DigestTests(unittest.TestCase):
+    def test_digest_equals_the_legacy_formula_on_a_crafted_document(self):
+        doc = {"b": 1, "a": ["ф", {"z": None, "y": True}], "input_id": "PLAN@abcdef012345", "digest": "0" * 64}
+        self.assertEqual(brief.canonical_digest(doc), legacy_digest(doc))
+        self.assertEqual(brief.canonical_digest({**doc, "input_id": "PLAN@other"}), brief.canonical_digest(doc))
+        self.assertNotEqual(brief.canonical_digest({**doc, "b": 2}), brief.canonical_digest(doc))
+
+    def test_digest_equals_the_legacy_formula_on_the_demo_plan(self):
+        import tempfile
+        for item in ("P1.1", "P1.2"):
+            with self.subTest(item=item), tempfile.TemporaryDirectory() as tmp:
+                doc = bridge_fixture.brief_of_demo_plan(tmp, item)
+                self.assertEqual(doc["digest"], legacy_digest(doc))
+                self.assertEqual(doc["digest"], brief.canonical_digest(doc))
+
+
+class CoreVerbTests(unittest.TestCase):
+    def test_brief_is_no_longer_a_core_verb(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = bridge_fixture.plan_py(tmp, "brief", "PLAN1", "P1.1")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("invalid choice: 'brief'", result.stderr)
+
+    def test_bridge_list_names_the_brief_verb(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = bridge_fixture.plan_py(tmp, "--output", "json", "bridge", "list")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        row, = [r for r in json.loads(result.stdout)["data"]["bridges"] if r["name"] == "planner-orch"]
+        self.assertIn("brief", row["verbs"])
+        self.assertEqual(row["contract"], "exec/v1")
+
+
+if __name__ == "__main__":
+    unittest.main()

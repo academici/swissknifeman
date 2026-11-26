@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": "0",
+  "decisions": [],
+  "duration_s": 1.0,
+  "stream": null,
+  "lingered": false
+}

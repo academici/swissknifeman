@@ -1,0 +1,111 @@
+name: Hygiene
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v[0-9]*']
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — default checkout@v4 (fetch-depth: 1) does not lay the base PR to clone
+      # (in t.h. For fork-PR); docs-impact.py diff by merge-base, he needs the full story.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: docs-impact (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 scripts/docs-impact.py \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}"
+
+      - name: docs-impact (push)
+        if: github.event_name == 'push'
+        run: python3 scripts/docs-impact.py --base HEAD~1 --head HEAD
+
+      - name: Test docs-impact gate
+        run: python3 scripts/test-docs-impact.py -v
+
+      # Shell errors only (the warnings are reviewed by hand); SC2148: sourced fragments such as the aicore locator
+      # carry no shebang on purpose. Skill snippets are content, not scripts of this repository.
+      - name: shellcheck (errors)
+        run: git ls-files -z '*.sh' ':!:plans/**' ':!:**/snippets/**' | xargs -0 shellcheck -S error -e SC2148
+
+      # The tracked site copies docs/<module> of packages/<module>/docs must not lag (docs/planner did).
+      - name: docs-sync (site copies are fresh)
+        run: bash scripts/docs-sync.sh --check
+
+      - name: managed-blocks (canonical exports ↔ generated copies)
+        run: |
+          python3 scripts/test-sync-managed-blocks.py -v
+          python3 scripts/sync-managed-blocks.py --check --root .
+
+      - name: config-inventory (owner + consumer per config)
+        run: python3 scripts/test-config-inventory.py -v
+
+      - name: status-check (capability matrix)
+        run: |
+          python3 scripts/test-status-check.py -v
+          python3 scripts/status-check.py docs/status.md
+
+      - name: public-hygiene (forbidden paths in a tree)
+        run: |
+          python3 scripts/test-public-hygiene.py -v
+          python3 scripts/public-hygiene.py
+
+      - name: provider-docs (conformity of the manifesto of providers' capabilities)
+        run: |
+          python3 scripts/test-provider-docs.py -v
+          python3 scripts/provider-docs.py --check
+
+      - name: Skiller host bindings (planner release surfaces, root installers)
+        run: |
+          python3 scripts/test-planner-plugin-cache-revision.py -v
+          python3 scripts/test-root-install.py -v
+
+      - name: aicore locator (module wrappers and runners)
+        run: python3 scripts/test-aicore-locator.py -v
+
+      - name: dev-sandbox (scripts/dev-sandbox.sh)
+        run: python3 scripts/test-dev-sandbox.py -v
+
+      - name: ecosystem-units (manifests, ownership map, schemas, boundaries against the baseline)
+        run: |
+          python3 scripts/test-ecosystem-units.py -v
+          python3 scripts/ecosystem-units.py check
+          python3 scripts/ecosystem-units.py render --check
+
+      - name: agent-framework freshness (Skiller canon ↔ Harness pack.json)
+        run: |
+          python3 scripts/test-agent-framework-freshness.py -v
+          python3 scripts/agent-framework-freshness.py
+
+  release-tag:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        with:
+          fetch-depth: 0  # Immutable tuples are compared with earlier source tags.
+
+      # v0.28.4-v0.28.6 were tagged on a side branch and never reached main: their manifests and
+      # CHANGELOG headings are missing from the line every later release is built on.
+      - name: tag is on main
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "RELEASE_TAG_OFF_MAIN: ${GITHUB_REF_NAME} ($GITHUB_SHA) is not on main; merge first, then tag" >&2
+            exit 1; }
+
+      - name: verify-tag (tag ↔ CHANGELOG.md)
+        run: |
+          python3 scripts/test-verify-tag.py -v
+          python3 scripts/test-version-guard.py -v
+          python3 scripts/verify-tag.py "${GITHUB_REF_NAME}"

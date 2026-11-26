@@ -1,0 +1,8 @@
+{
+  "stages": [
+    {
+      "role": "deterministic",
+      "model_class": "economy"
+    }
+  ]
+}

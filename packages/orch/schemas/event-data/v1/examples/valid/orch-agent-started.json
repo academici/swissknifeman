@@ -1,0 +1,13 @@
+{
+  "run_id": "a",
+  "work_id": "a",
+  "agent_run_id": "a",
+  "role": "a",
+  "route": {
+    "provider": "a"
+  },
+  "session": {
+    "resumed": false,
+    "reason": "first_round"
+  }
+}

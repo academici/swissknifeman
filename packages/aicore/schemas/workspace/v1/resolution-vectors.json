@@ -1,0 +1,506 @@
+{
+ "$schema": "urn:swissknifeman:aicore:workspace-resolution-vectors:v1",
+ "description": "Vectors of the plan-store resolution rule. `op` is `resolve` (resolve_plans_store(project_root)) or `source_root` (source_root_of(plan_dir, launcher=)). `files` maps a path relative to a fresh temporary directory to its text; `{tmp}` in files, env and paths is that directory (real path). `env` is the whole environment of the call. `expect`: for `resolve` {kind, plans_root, project_id, reason} or {error: code}; for `source_root` {source_root: path or null} or {error: code}.",
+ "vectors": [
+  {
+   "name": "no marker: legacy plans folder",
+   "op": "resolve",
+   "files": {
+    "proj/plans/p1/plan.json": "{}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "legacy",
+    "plans_root": "{tmp}/proj/plans",
+    "project_id": null,
+    "reason": "no-marker"
+   }
+  },
+  {
+   "name": "marker legacy: legacy plans folder",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"legacy\"\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "legacy",
+    "plans_root": "{tmp}/proj/plans",
+    "project_id": "billium",
+    "reason": "marker-legacy"
+   }
+  },
+  {
+   "name": "marker workspace and the project folder exists",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/workspaces/axioma/projects/billium/plans/p1/plan.json": "{}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "marker workspace and the project folder is missing",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "WORKSPACE_PROJECT_MISSING"
+   }
+  },
+  {
+   "name": "marker workspace: a plans file instead of the folder counts as missing",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/workspaces/axioma/projects/billium/plans": "x"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "WORKSPACE_PROJECT_MISSING"
+   }
+  },
+  {
+   "name": "invalid marker: not JSON",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{not json"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "PROJECT_MARKER_INVALID"
+   }
+  },
+  {
+   "name": "invalid marker: not an object",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "[]\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "PROJECT_MARKER_INVALID"
+   }
+  },
+  {
+   "name": "invalid marker: unknown plans_store",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"cloud\"\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "PROJECT_MARKER_INVALID"
+   }
+  },
+  {
+   "name": "invalid marker: extra field",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\", \"workspace\": \"axioma\",\n  \"project_id\": \"billium\", \"plans_store\": \"legacy\", \"plans_root\": \"/x\"}"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "error": "PROJECT_MARKER_INVALID"
+   }
+  },
+  {
+   "name": "SKM_WORKSPACES_ROOT moves the workspace",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "custom/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "SKM_WORKSPACES_ROOT": "{tmp}/custom"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/custom/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "SKM_WORKSPACES moves the workspace",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "folder/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "SKM_WORKSPACES": "{tmp}/folder"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/folder/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "SKM_WORKSPACES_ROOT wins over SKM_WORKSPACES",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "custom/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "SKM_WORKSPACES": "{tmp}/folder",
+    "SKM_WORKSPACES_ROOT": "{tmp}/custom"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/custom/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "SKM_HOME places the workspace in its workspaces folder",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "SKM_HOME wins over XDG_DATA_HOME",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home",
+    "XDG_DATA_HOME": "{tmp}/xdg"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/home/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "XDG_DATA_HOME is a legacy place: used while the new workspaces folder does not exist",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "xdg/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "HOME": "{tmp}/h",
+    "XDG_DATA_HOME": "{tmp}/xdg"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/xdg/swissknifeman/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "the new workspaces folder wins over the legacy XDG_DATA_HOME one",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": "",
+    "xdg/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "HOME": "{tmp}/h",
+    "XDG_DATA_HOME": "{tmp}/xdg"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "default places the workspace under HOME/.local/share",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "HOME": "{tmp}/h"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "a relative XDG_DATA_HOME is ignored",
+   "op": "resolve",
+   "files": {
+    "proj/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans/.keep": ""
+   },
+   "env": {
+    "HOME": "{tmp}/h",
+    "XDG_DATA_HOME": "relative/dir"
+   },
+   "project_root": "{tmp}/proj",
+   "expect": {
+    "kind": "workspace",
+    "plans_root": "{tmp}/h/.local/share/swissknifeman/workspaces/axioma/projects/billium/plans",
+    "project_id": "billium",
+    "reason": "marker-workspace"
+   }
+  },
+  {
+   "name": "source root: the primary binding",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "co2/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/co2\",\n        \"{tmp}/co1\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": "{tmp}/co1"
+   }
+  },
+  {
+   "name": "source root: a binding whose marker names another project is skipped",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"commerz\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "co2/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/co1\",\n        \"{tmp}/co2\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": "{tmp}/co2"
+   }
+  },
+  {
+   "name": "source root: a primary that does not exist is skipped",
+   "op": "source_root",
+   "files": {
+    "co2/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/gone\",\n        \"{tmp}/co2\"\n      ],\n      \"primary\": \"{tmp}/gone\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": "{tmp}/co2"
+   }
+  },
+  {
+   "name": "source root: a bound checkout without a marker is skipped",
+   "op": "source_root",
+   "files": {
+    "co1/.keep": "",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/co1\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": null
+   }
+  },
+  {
+   "name": "source root: the project has no binding",
+   "op": "source_root",
+   "files": {
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"commerz\": {\n      \"paths\": [\n        \"{tmp}/co1\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": null
+   }
+  },
+  {
+   "name": "source root: no bindings file",
+   "op": "source_root",
+   "files": {
+    "home/.keep": ""
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": null
+   }
+  },
+  {
+   "name": "source root: the plans folder itself of a workspace project",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/co1\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans",
+   "expect": {
+    "source_root": "{tmp}/co1"
+   }
+  },
+  {
+   "name": "source root: an archived plan of a workspace project",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n",
+    "home/state/workspaces/axioma/bindings.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:workspace-bindings:v1\",\n  \"projects\": {\n    \"billium\": {\n      \"paths\": [\n        \"{tmp}/co1\"\n      ],\n      \"primary\": \"{tmp}/co1\",\n      \"bound_at\": \"2026-10-17T09:30:00Z\"\n    }\n  }\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/archive/p1",
+   "expect": {
+    "source_root": "{tmp}/co1"
+   }
+  },
+  {
+   "name": "source root: the launcher project with the same id",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"billium\",\n  \"plans_store\": \"workspace\"\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "source_root": "{tmp}/co1"
+   },
+   "launcher": "{tmp}/co1"
+  },
+  {
+   "name": "source root: the launcher project with another id",
+   "op": "source_root",
+   "files": {
+    "co1/.swissknifeman/project.json": "{\n  \"$schema\": \"urn:swissknifeman:aicore:project-marker:v1\",\n  \"workspace\": \"axioma\",\n  \"project_id\": \"commerz\",\n  \"plans_store\": \"workspace\"\n}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/home/workspaces/axioma/projects/billium/plans/p1",
+   "expect": {
+    "error": "PROJECT_CONTEXT_CONFLICT"
+   },
+   "launcher": "{tmp}/co1"
+  },
+  {
+   "name": "source root: a plan folder outside the workspace is the parent of plans",
+   "op": "source_root",
+   "files": {
+    "proj/plans/p1/plan.json": "{}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/proj/plans/p1",
+   "expect": {
+    "source_root": "{tmp}/proj"
+   }
+  },
+  {
+   "name": "source root: an archived plan folder outside the workspace",
+   "op": "source_root",
+   "files": {
+    "proj/plans/archive/p1/plan.json": "{}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/proj/plans/archive/p1",
+   "expect": {
+    "source_root": "{tmp}/proj"
+   }
+  },
+  {
+   "name": "source root: a folder that is not under plans has no source root",
+   "op": "source_root",
+   "files": {
+    "elsewhere/p1/plan.json": "{}\n"
+   },
+   "env": {
+    "SKM_HOME": "{tmp}/home"
+   },
+   "plan_dir": "{tmp}/elsewhere/p1",
+   "expect": {
+    "source_root": null
+   }
+  }
+ ]
+}

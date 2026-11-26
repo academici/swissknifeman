@@ -1,0 +1,12 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "triggers": {
+    "paths": [
+      "*State*.php",
+      "*Status*.php",
+      "app/Enums/**/*.php"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"files_checked": 12, "block": [{"rule": "PS-TOP", "path": ".env", "detail": "secret file"}], "warn": [], "local_only": [], "verdict": "block"}

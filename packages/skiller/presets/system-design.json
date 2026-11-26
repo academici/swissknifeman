@@ -1,0 +1,12 @@
+{
+  "name": "system-design",
+  "description": "System Design: Architecture/ADR, stack selection, observability, packet contribution gate",
+  "include": [
+    "architect/architecture",
+    "architect/tech-stack-selection",
+    "architect/observability-design",
+    "architect/package-contribution-protocol",
+    "architect/codebase-design",
+    "architect/domain-modeling"
+  ]
+}

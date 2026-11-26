@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:brain:config:v1",
+  "title": "brain config",
+  "description": "Settings of the brain module: Obsidian vault location, project catalog, document sync and notes.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "vault_path": {
+      "type": "string",
+      "description": "Root directory of the Obsidian vault; a leading ~ is expanded. Machine-wide: a project file cannot set it.",
+      "minLength": 1,
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "invocation",
+        "flags"
+      ]
+    },
+    "catalog": {
+      "type": "object",
+      "description": "How a project is matched to its folder in the vault.",
+      "additionalProperties": false,
+      "properties": {
+        "projects_dir": {
+          "type": "string",
+          "description": "Folder with the control notes of projects, relative to the vault root.",
+          "default": "05-Projects",
+          "minLength": 1
+        }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "description": "Document sync between a project and its folder in the vault.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether document sync is on for the project.",
+          "default": false
+        },
+        "direction": {
+          "type": "string",
+          "description": "Default direction of the document sync.",
+          "default": "pull",
+          "enum": [
+            "pull",
+            "push",
+            "bidirectional"
+          ]
+        },
+        "patterns": {
+          "type": "array",
+          "description": "Glob patterns relative to the vault project folder and to the project root.",
+          "default": [
+            "docs/**/*.md",
+            "README.md"
+          ],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One glob pattern."
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "object",
+      "description": "Notes written to the vault for ecosystem events.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether notes are written for events.",
+          "default": true
+        },
+        "folder": {
+          "type": "string",
+          "description": "Folder of the notes inside the project folder in the vault: a relative path without .. and outside the synchronized folders.",
+          "default": "Ecosystem/Plans",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$)).+$"
+        },
+        "fallback_folder": {
+          "type": "string",
+          "description": "Folder of the notes from the vault root for events whose project is not found in the vault.",
+          "default": "Ecosystem/Plans",
+          "minLength": 1,
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    }
+  }
+}

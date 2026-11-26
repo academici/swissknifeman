@@ -1,0 +1,4 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "ping"
+}

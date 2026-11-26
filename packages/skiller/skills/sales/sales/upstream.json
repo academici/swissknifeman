@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/sales-super-skill",
+  "strategy": "notify",
+  "license": "MIT",
+  "body_path": "references/full.md",
+  "files": [
+    {
+      "path": "references/full.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/sales-super-skill/main/SKILL.md",
+      "sha256": "da24f14917633cb5882b98e8ac029aef9c580d09fc456e4e463b3ff2439a40fd",
+      "fetched_at": "2026-06-11"
+    }
+  ],
+  "notes": "Local copy adapted for swissknifeman (bucket frontmatter added); do not auto-replace. P7.3 thin-navigator: upstream body lives in references/full.md, SKILL.md is a hand-written navigator.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "da24f14917633cb5882b98e8ac029aef9c580d09fc456e4e463b3ff2439a40fd"
+  }
+}

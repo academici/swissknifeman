@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+import sys
+print("first line", file=sys.stderr)
+print("maind: projects registry is broken \x1b[31mbadly\x1b[0m", file=sys.stderr)
+sys.exit(4)

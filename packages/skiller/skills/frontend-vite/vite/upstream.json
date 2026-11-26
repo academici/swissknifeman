@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/SKILL.md",
+      "sha256": "3cb7a75336e338faa9be15dd8b97479721ac8ceac6f1ff4061c9b9eefccd9983",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/build-and-ssr.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/build-and-ssr.md",
+      "sha256": "69c262c9bbc78676c66018f33b82d66c85d94bbf5178b2d6968494aa7bed8fe2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/core-config.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/core-config.md",
+      "sha256": "d207a85730c32eff47e343ea69644a6c7898af251098a60255efe8f1c922fb4b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/core-features.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/core-features.md",
+      "sha256": "5e784faa5314592bdbc9e918813d76dec94391a777fe2f32cfa048d5c0fa70f4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/core-plugin-api.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/core-plugin-api.md",
+      "sha256": "594520b9adcf610b4f3378d3ef6c68c10327c93c33a7b73b3103a5fcd58e8611",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/environment-api.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/environment-api.md",
+      "sha256": "658e4597b9cfe21b22c1677025a7a30866933f586d86c434ec139cd5149afaa2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/rolldown-migration.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vite/references/rolldown-migration.md",
+      "sha256": "ba9860f8960e9794c880454b238a3a3c1962c80f9b3860399938618730bf7f72",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/vite/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "023304761d21d64ba44f7b84d353f10521ab5eb71070b1f5d0e90aecc6e78293"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "context-scout",
+  "title": "Context scout",
+  "description": "Find the files and symbols that matter for `goal`, `scope.include` and the acceptance checks:",
+  "instructions": [
+    {
+      "path": "roles/context-scout.md",
+      "purpose": "canonical role text",
+      "sha256": "ab2875e3cc64914bf2452cdede713fca6bdc3d3ea16f55fed3d8756a4cc043ac"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "read_only",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "context-map",
+  "model_class_min": "economy",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ]
+}

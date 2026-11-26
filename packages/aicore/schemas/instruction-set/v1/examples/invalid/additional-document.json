@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:aicore:instruction-set:v1",
+  "layers": [],
+  "digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "targets": {},
+  "not-a-field": 1
+}

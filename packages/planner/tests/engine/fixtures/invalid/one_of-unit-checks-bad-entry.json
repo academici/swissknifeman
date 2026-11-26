@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:unit:v1",
+  "id": "U1",
+  "item": "P1.1",
+  "title": "Error collector",
+  "goal": "ConfigIssue/ConfigError types with tests",
+  "files": [
+    "lib/pkg/config_errors.py",
+    "tests/test_config_errors.py"
+  ],
+  "depends_on": [],
+  "checks": [
+    "X1"
+  ],
+  "route": {
+    "class": "economy",
+    "effort": "medium"
+  },
+  "mode": "delegate",
+  "instructions": "Pure dataclasses; message format from D1.",
+  "status": "todo",
+  "outcome": null,
+  "updated_at": "2026-10-05T10:00:00Z"
+}

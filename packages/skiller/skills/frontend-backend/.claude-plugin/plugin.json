@@ -1,0 +1,5 @@
+{
+  "name": "frontend-backend",
+  "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
+  "skills": "./"
+}

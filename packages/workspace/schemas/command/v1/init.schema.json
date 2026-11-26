@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:init:v1",
+  "title": "workspace init",
+  "description": "Stdout of `workspace init --code CODE [--remote URL] --json`: the workspace that was created, or that already existed at the root; with --remote also the remote it was bound to.",
+  "type": "object",
+  "properties": {
+    "code": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the workspace."
+    },
+    "root": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+      "description": "Folder of the workspace repository."
+    },
+    "workspace_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/workspace_id",
+      "description": "Id of the workspace, from its workspace.json."
+    },
+    "device_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/device_id",
+      "description": "Id of this machine's device file."
+    },
+    "created": {
+      "type": "boolean",
+      "description": "Whether this call created the workspace."
+    },
+    "already_initialized": {
+      "type": "boolean",
+      "description": "Whether the root already held this workspace; always the opposite of `created`."
+    },
+    "remote": {
+      "type": "object",
+      "description": "The remote the workspace was bound to as origin; present only when --remote was given.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The remote URL without user information."
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The branch the workspace pushes."
+        },
+        "classification": {
+          "enum": [
+            "empty",
+            "same"
+          ],
+          "description": "What the remote held: empty (no branch) or the same workspace."
+        }
+      },
+      "required": [
+        "url",
+        "branch",
+        "classification"
+      ],
+      "additionalProperties": false
+    },
+    "next": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The command to run next (the first push); present only when --remote was given."
+    }
+  },
+  "required": [
+    "code",
+    "root",
+    "workspace_id",
+    "device_id",
+    "created",
+    "already_initialized"
+  ],
+  "additionalProperties": false
+}

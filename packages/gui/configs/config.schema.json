@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:config:v1",
+  "title": "gui config",
+  "description": "Settings of the gui module: the local backend (port, browser), command runs, the event stream, log retention and queries. The backend listens on loopback only; there is no host key.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "port": {
+      "type": "integer",
+      "description": "TCP port of the loopback backend; 0 picks a free port at every start. Machine-wide: one backend serves every project.",
+      "default": 0,
+      "minimum": 0,
+      "maximum": 65535,
+      "x-skm-layers": [
+        "defaults",
+        "machine",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "open_browser": {
+      "type": "boolean",
+      "description": "Whether gui open starts the default browser with the session URL (the URL is printed either way).",
+      "default": true
+    },
+    "runs": {
+      "type": "object",
+      "description": "Limits of command runs started by the ExecutionBroker.",
+      "additionalProperties": false,
+      "properties": {
+        "max_global": {
+          "type": "integer",
+          "description": "Runs active at the same time on the machine; a new run beyond it is refused with CONCURRENCY_LIMIT.",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_per_project": {
+          "type": "integer",
+          "description": "Runs active at the same time in one project.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "max_per_owner": {
+          "type": "integer",
+          "description": "Runs active at the same time of one contribution owner.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 64
+        },
+        "chunk_bytes": {
+          "type": "integer",
+          "description": "Largest log chunk of one stream frame in bytes.",
+          "default": 16384,
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "log_max_bytes": {
+          "type": "integer",
+          "description": "Largest stored log of one output stream (stdout or stderr) of a run in bytes; the rest is dropped and marked.",
+          "default": 52428800,
+          "minimum": 65536
+        },
+        "idle_timeout_s": {
+          "type": "integer",
+          "description": "A run without output for this many seconds is stopped as timed_out; 0 never stops it.",
+          "default": 600,
+          "minimum": 0
+        },
+        "cancel_grace_s": {
+          "type": "integer",
+          "description": "Seconds between SIGTERM and SIGKILL of the process group when a run is cancelled.",
+          "default": 5,
+          "minimum": 0,
+          "maximum": 300
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "The event stream /v1/events.",
+      "additionalProperties": false,
+      "properties": {
+        "ring_frames": {
+          "type": "integer",
+          "description": "Frames kept in memory for resume after a reconnect.",
+          "default": 10000,
+          "minimum": 100
+        },
+        "queue_frames": {
+          "type": "integer",
+          "description": "Frames queued per subscription before the subscriber is told to resync.",
+          "default": 1000,
+          "minimum": 10
+        },
+        "heartbeat_s": {
+          "type": "integer",
+          "description": "Seconds between heartbeat frames of an idle subscription.",
+          "default": 15,
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "journal_poll_s": {
+          "type": "integer",
+          "description": "Seconds between reads of the project event journal.",
+          "default": 1,
+          "minimum": 1,
+          "maximum": 3600
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "description": "Retention of run logs.",
+      "additionalProperties": false,
+      "properties": {
+        "log_days": {
+          "type": "integer",
+          "description": "Run logs older than this many days are removed; 0 keeps them.",
+          "default": 30,
+          "minimum": 0
+        },
+        "log_total_mb": {
+          "type": "integer",
+          "description": "Run logs are removed oldest first above this total size in MiB; 0 has no ceiling.",
+          "default": 1024,
+          "minimum": 0
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "The configuration editor (/v1/config).",
+      "additionalProperties": false,
+      "properties": {
+        "lock_timeout_s": {
+          "type": "number",
+          "description": "Seconds a commit waits for the lock of a layer file held by another writer before it answers CONFIG_LOCKED.",
+          "default": 5,
+          "minimum": 0.1,
+          "maximum": 60
+        },
+        "preview_ttl_s": {
+          "type": "integer",
+          "description": "Seconds a preview can be committed after it was made; the store keeps at most 64 previews in memory.",
+          "default": 600,
+          "minimum": 10,
+          "maximum": 86400
+        }
+      }
+    },
+    "plugins": {
+      "type": "object",
+      "description": "Trust and life cycle of plugins (hub bridges and external extensions).",
+      "additionalProperties": false,
+      "properties": {
+        "drain_timeout_s": {
+          "type": "integer",
+          "description": "Seconds Disable waits for the calls and runs of a plugin to finish before it cancels the runs.",
+          "default": 10,
+          "minimum": 0,
+          "maximum": 300
+        },
+        "quarantine_failures": {
+          "type": "integer",
+          "description": "Plugin failures inside the window that put the plugin in quarantine.",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 20
+        },
+        "quarantine_window_s": {
+          "type": "integer",
+          "description": "Length in seconds of the window in which plugin failures are counted.",
+          "default": 300,
+          "minimum": 10,
+          "maximum": 86400
+        },
+        "history_limit": {
+          "type": "integer",
+          "description": "History entries kept per plugin; older ones are removed when a new one is written.",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 2000
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "description": "GUI queries of contributions.",
+      "additionalProperties": false,
+      "properties": {
+        "max_output_bytes": {
+          "type": "integer",
+          "description": "Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID.",
+          "default": 1048576,
+          "minimum": 1024
+        }
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "description": "The terminal of the host: a shell in a PTY in a trusted project. A privilege of the machine, off by default; every session needs a confirmation.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether sessions may start. Off: POST /v1/terminal/sessions is PERMISSION_DENIED and the feature terminal is absent.",
+          "default": false
+        },
+        "max_sessions": {
+          "type": "integer",
+          "description": "Sessions that run at the same time; a new one beyond it is TERMINAL_LIMIT.",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 8
+        },
+        "idle_timeout_s": {
+          "type": "integer",
+          "description": "A session without input and output for this many seconds is closed.",
+          "default": 900,
+          "minimum": 30,
+          "maximum": 86400
+        },
+        "max_session_s": {
+          "type": "integer",
+          "description": "Longest life of one session in seconds.",
+          "default": 14400,
+          "minimum": 60,
+          "maximum": 86400
+        },
+        "credit_bytes": {
+          "type": "integer",
+          "description": "Output bytes a client pays in one credit; the unpaid credit of a client stays at most four times this.",
+          "default": 65536,
+          "minimum": 4096,
+          "maximum": 1048576
+        },
+        "output_chunk_bytes": {
+          "type": "integer",
+          "description": "Largest output frame in bytes; also the most the server holds unsent per session.",
+          "default": 16384,
+          "minimum": 1024,
+          "maximum": 65536
+        }
+      }
+    }
+  }
+}

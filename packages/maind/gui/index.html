@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mAInd — command post</title>
+<style>
+  :root { --ok:#3fb950; --bad:#f85149; --muted:#8b949e; --bg:#0d1117; --fg:#e6edf3;
+          --card:#161b22; --line:#30363d; }
+  body { font:14px/1.5 system-ui,sans-serif; margin:0; background:var(--bg); color:var(--fg); }
+  header { padding:18px 24px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:18px; } h1 small { color:var(--muted); font-weight:400; }
+  .hub { display:flex; gap:24px; padding:14px 24px; flex-wrap:wrap; border-bottom:1px solid var(--line); }
+  .hub div { display:flex; gap:8px; align-items:center; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .up { background:var(--ok); } .down { background:var(--bad); }
+  main { padding:16px 24px; }
+  table { border-collapse:collapse; width:100%; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
+  .badge { padding:2px 8px; border-radius:10px; font-size:12px; font-weight:600; }
+  .connected { background:rgba(63,185,80,.18); color:#3fb950; }
+  .partial { background:rgba(210,153,34,.18); color:#d29922; }
+  .standalone { background:rgba(139,148,158,.18); color:#8b949e; }
+  .missing-path { background:rgba(248,81,73,.18); color:#f85149; }
+  code { background:var(--card); padding:1px 6px; border-radius:4px; }
+  .err { padding:24px; color:var(--muted); }
+  textarea { width:100%; height:120px; background:var(--card); color:var(--fg);
+             border:1px solid var(--line); border-radius:6px; padding:8px; box-sizing:border-box; }
+  button { background:#238636; color:#fff; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; }
+</style>
+</head>
+<body>
+<header><h1>mAInd <small>— ecosystem command post</small></h1></header>
+<div id="app"><div class="err">Loading <code>status.json</code>…</div></div>
+<script>
+// Source - output: maind projects status --json > gui/status.json
+const SRC = "status.json";
+const dot = up => `<span class="dot ${up ? "up" : "down"}"></span>`;
+function render(d) {
+  const h = d.hub || {}, m = h.memory || {}, g = h.graph || {}, w = h.docs_watcher || {};
+  const mcp = c => `${c.agentmemory_mcp ? "a" : "·"}${c.maind_mcp ? "m" : "·"}${c.graphify_mcp ? "g" : "·"}`;
+  const rows = (d.projects || []).map(p => {
+    const c = p.configured || {}, s = p.skills || {};
+    return `<tr>
+      <td><span class="badge ${p.status}">${p.status}</span></td>
+      <td><b>${p.id}</b></td>
+      <td><code>${mcp(c)}</code></td>
+      <td>${p.trusted ? "✓" : "<span style='color:var(--muted)'>·</span>"}</td>
+      <td>${s.total || 0} <small style="color:var(--muted)">(skm ${s.swissknifeman || 0} · boost ${s.laravel_boost || 0})</small></td>
+      <td>${c.boost ? "✓" : ""}</td>
+      <td><code>${p.memory_scope || ""}</code></td>
+    </tr>`;
+  }).join("");
+  document.getElementById("app").innerHTML = `
+    <div class="hub">
+      <div>${dot(m.running)} <b>Memory</b> ${m.running ? "up" : "down"} <code>${m.url || ""}</code></div>
+      <div>🕸 <b>Graph</b> ${g.nodes || 0} nodes / ${g.edges || 0} ribs</div>
+      <div>${dot(w.running)} <b>docs-watcher</b> ${w.running ? "up" : "down"}</div>
+    </div>
+    <main><table>
+      <thead><tr><th>status</th><th>project</th><th>mcp[a/m/g]</th><th>trust</th><th>skills</th><th>boost</th><th>scope</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="err">no projects</td></tr>'}</tbody>
+    </table></main>`;
+}
+fetch(SRC).then(r => r.json()).then(render).catch(() => {
+  document.getElementById("app").innerHTML = `<div class="err">
+    <p>Failed to load <code>status.json</code>. Generate it:</p>
+    <pre><code>maind projects status --json > gui/status.json</code></pre>
+    <p>and serve the folder (<code>python3 -m http.server</code>), or paste JSON below:</p>
+    <textarea id="paste" placeholder="output maind projects status --json"></textarea>
+    <p><button onclick="try{render(JSON.parse(document.getElementById('paste').value))}catch(e){alert(e)}">Show</button></p>
+  </div>`;
+});
+</script>
+</body>
+</html>

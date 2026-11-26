@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:isolation-probes:v1",
+  "title": "isolation-probes",
+  "description": "What the live isolation probes of this machine found (<state>/orch/isolation-probes.json, written by scripts/isolation-probe.py --live, read by policies/isolation.py): per provider and CLI version, whether each probed surface was loaded. A surface with false is confirmed off for that version and may raise the guarantee of its profile to full.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "probes"],
+  "properties": {
+    "$schema": {"description": "Document contract.", "const": "urn:swissknifeman:orch:conductor:isolation-probes:v1"},
+    "probes": {
+      "description": "One entry per provider and CLI version, the latest probe of each.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/probe"}
+    }
+  },
+  "$defs": {
+    "probe": {
+      "description": "One live probe.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "version", "at", "claims"],
+      "properties": {
+        "provider": {"description": "Provider id.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "version": {"description": "First line of <cli> --version.", "type": "string", "minLength": 1},
+        "at": {"description": "When it ran (UTC).", "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+        "claims": {
+          "description": "Surface -> whether the probe found it loaded (true) or not (false).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository_instructions": {"description": "The canary of the repository instructions was seen.", "type": "boolean"},
+            "memory": {"description": "Memory was loaded.", "type": "boolean"},
+            "plugins": {"description": "Plugins were loaded.", "type": "boolean"},
+            "hooks": {"description": "Hooks were loaded.", "type": "boolean"},
+            "mcp": {"description": "MCP servers were loaded.", "type": "boolean"},
+            "user_skills": {"description": "The canary of the personal skills was seen.", "type": "boolean"}
+          }
+        }
+      }
+    }
+  }
+}

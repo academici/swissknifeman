@@ -1,0 +1,52 @@
+{
+  "$schema": "urn:swissknifeman:gui:plugin-api:v1",
+  "kind": "action_result",
+  "plugin": {
+    "$schema": "urn:swissknifeman:gui:trust:v1",
+    "id": "gui-planner",
+    "source": "unit",
+    "state": "healthy",
+    "runtime_enabled": true,
+    "ui_enabled": true,
+    "manifest_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "compatibility": {
+      "protocol_ok": true,
+      "missing_contracts": []
+    },
+    "failures": {
+      "count": 0,
+      "window_s": 600
+    },
+    "permissions": [
+      {
+        "effect": "plan.write",
+        "declared": true,
+        "enforcement": "advisory"
+      },
+      {
+        "effect": "process.spawn",
+        "declared": true,
+        "enforcement": "enforced"
+      },
+      {
+        "effect": "network",
+        "declared": false,
+        "enforcement": "declared"
+      }
+    ],
+    "grants": [
+      {
+        "id": "grant-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "plugin": "gui-planner",
+        "capability": "plan.write",
+        "project_id": "swissknifeman",
+        "manifest_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "granted_at": "2026-10-16T14:00:00Z",
+        "expires_at": null,
+        "granted_by": "local"
+      }
+    ]
+  },
+  "drained": 1,
+  "cancelled": 0
+}

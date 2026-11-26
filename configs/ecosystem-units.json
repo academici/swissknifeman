@@ -1,0 +1,177 @@
+{
+  "schema_version": "ecosystem-units/v1",
+  "_doc": "Hub map of the module split, read by scripts/ecosystem-units.py. targets: final module ids; module_aliases: current folder id -> target id; retired: folders without unit.json that are being removed; foundation: the shared base module and the names its code is imported under today; transitional_roots: root-level trees still being moved; standalone: tools (modules outside the core verification: `standalone --baseline` and the core integration run skip them; they are checked on their own with `--with-tools` or by id), foundation_paths (tracked paths copied next to vendor/<id> as the foundation stand-in), foundation_free (modules whose copy gets no foundation_paths), unset_env, timeout_s per command; version_sources: where the version of each module is read from (unit.json must equal it); ownership: files that move to another module (longest path wins); path_patterns: regexes with a named group 'target' that find paths of other folders in module files (climb: count only ../ runs that leave the module); path_suffixes: file suffixes scanned for path patterns; path_allow: files exempt from the path patterns, each with a reason.",
+  "targets": [
+    "aicore",
+    "skiller",
+    "planner",
+    "orch",
+    "maind",
+    "analyst",
+    "harness",
+    "brain",
+    "gui",
+    "workspace",
+    "bridges/planner-orch",
+    "bridges/orch-skiller",
+    "bridges/orch-harness",
+    "bridges/gui-hub",
+    "bridges/gui-planner",
+    "bridges/gui-orch",
+    "bridges/gui-workspace",
+    "bridges/workspace-planner",
+    "hub"
+  ],
+  "module_aliases": {},
+  "retired": [],
+  "foundation": {
+    "id": "aicore",
+    "aliases": []
+  },
+  "transitional_roots": [],
+  "version_sources": {
+    "analyst": {
+      "path": "packages/analyst/package.json",
+      "read": "json:version"
+    },
+    "brain": {
+      "path": "packages/brain/lib/brain/__init__.py",
+      "read": "python:__version__"
+    },
+    "gui": {
+      "path": "packages/gui/lib/gui/__init__.py",
+      "read": "python:__version__"
+    },
+    "workspace": {
+      "path": "packages/workspace/lib/workspace/__init__.py",
+      "read": "python:__version__"
+    },
+    "harness": {
+      "path": "packages/harness/package.json",
+      "read": "json:version"
+    },
+    "maind": {
+      "path": "packages/maind/package.json",
+      "read": "json:version"
+    },
+    "orch": {
+      "path": "packages/orch/lib/orch/__init__.py",
+      "read": "python:__version__"
+    },
+    "skiller": {
+      "path": "packages/skiller/package.json",
+      "read": "json:version"
+    },
+    "planner": {
+      "path": "packages/planner/.claude-plugin/plugin.json",
+      "read": "json:version"
+    }
+  },
+  "path_patterns": [
+    {
+      "id": "sibling-package",
+      "regex": "packages/(?P<target>[a-z][a-z0-9-]*)/",
+      "reason": "a module must not name another module's folder; use a bridge or an event"
+    },
+    {
+      "id": "repo-escape",
+      "regex": "\\.\\./(?:\\.\\./)*(?P<target>configs|scripts|bin)\\b",
+      "reason": "a module must not reach into hub-level folders through relative paths",
+      "climb": true
+    }
+  ],
+  "path_suffixes": [
+    ".py",
+    ".sh",
+    ".js",
+    ".mjs",
+    ".json",
+    ".toml",
+    ".yml",
+    ".yaml"
+  ],
+  "path_allow": [
+    {
+      "path": "packages/aicore/configs/provider-capabilities.json",
+      "reason": "evidence[].source are pointers to the documents and checks of other modules, kept as data of the manifest; no code reads them as paths"
+    },
+    {
+      "path": "packages/harness/configs/common/instructions/catalog.json",
+      "reason": "hub instruction catalog: the target paths of module instruction files are data the hub generator writes; harness code names no module"
+    },
+    {
+      "path": "packages/harness/tests/fixtures_data/instruction-compatibility-v1.json",
+      "reason": "snapshot of the hub instruction catalog"
+    },
+    {
+      "path": "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json",
+      "reason": "snapshot of the hub instruction catalog"
+    },
+    {
+      "path": "packages/planner/tests/test_boundary.py",
+      "reason": "boundary test: the forbidden path samples are test data"
+    },
+    {
+      "path": "packages/skiller/tests/test_boundary.py",
+      "reason": "boundary test: the forbidden path samples are test data"
+    }
+  ],
+  "standalone": {
+    "foundation_paths": [],
+    "unset_env": [
+      "PYTHONPATH",
+      "SKILLER_HOST_CONFIG"
+    ],
+    "timeout_s": 1800,
+    "tools": [
+      "analyst",
+      "gui",
+      "maind"
+    ]
+  },
+  "schema_id_aliases": {
+    "task": {
+      "owner": "planner",
+      "reason": "urn:swissknifeman:task:plan:* is embedded in every plan document and is not renamed"
+    }
+  },
+  "mirrors": [
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "source": "packages/orch/schemas/conductor/v1/run-options.schema.json",
+      "reason": "byte-identical mirror of the orch run-options schema, kept by bridges/planner-orch/scripts/sync-schema.py"
+    }
+  ],
+  "legacy_schema_files": [
+    {
+      "path": "packages/skiller/schema/evals.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/host.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/swissknife.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/swissknifeman-config.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    },
+    {
+      "path": "packages/skiller/schema/upstream.schema.json",
+      "reason": "raw URL consumers; remove in 2.0"
+    }
+  ],
+  "ownership": [
+    {
+      "path": "scripts/ecosystem-units.py",
+      "target": "aicore",
+      "subsystem": "unit",
+      "phase": "P12",
+      "confidence": "hypothesis",
+      "note": "becomes the aicore unit check"
+    }
+  ]
+}

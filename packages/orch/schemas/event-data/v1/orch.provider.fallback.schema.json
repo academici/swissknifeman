@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-provider-fallback:v1",
+  "title": "orch.provider.fallback",
+  "description": "A role moved to a fallback route.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "role": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Role that moved."
+    },
+    "step": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Step of the role."
+    },
+    "from": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "additionalProperties": false,
+      "description": "A route: provider, model class, model, effort."
+    },
+    "to": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_class": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "additionalProperties": false,
+      "description": "A route: provider, model class, model, effort."
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Reason code."
+      },
+      "minItems": 1,
+      "description": "Why the route changed (CAPACITY_GATED, retry.decide codes, ...)."
+    }
+  },
+  "required": [
+    "run_id",
+    "role",
+    "from",
+    "to",
+    "reason_codes"
+  ],
+  "additionalProperties": false
+}

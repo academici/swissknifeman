@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:launch-plan:v1",
+  "contract_version": "exec/v1",
+  "binding": "claude-only",
+  "run_id": "dry-77492587d30e",
+  "input_digest": "77492587d30e5c55384a8d8fecb924ef144942ea5ddf605d3262722d7a67d1d6",
+  "policy_id": "solo",
+  "dry_run": true,
+  "stages": [
+    {
+      "stage_id": "primary",
+      "role": "executor",
+      "kind": "primary",
+      "provider": "claude-code",
+      "transport": "prompt",
+      "prompt_ref": "fixtures/synthetic-prompt.md",
+      "delivery": {
+        "mode": "prompt_inline",
+        "paths": []
+      }
+    }
+  ],
+  "created_at": "2026-10-05T17:00:00Z"
+}

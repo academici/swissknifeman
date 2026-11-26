@@ -1,0 +1,4 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-state:v1",
+  "runs": {"cnd-1": {"recoveries": "2026-10-24T10:00:00Z"}}
+}

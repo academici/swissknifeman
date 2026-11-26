@@ -1,0 +1,30 @@
+{
+  "checks": [
+    {
+      "id": "license",
+      "status": "ok",
+      "detail": "MIT"
+    },
+    {
+      "id": "provenance",
+      "status": "ok",
+      "detail": "upstream_sha equals the sha256 of a fetched file"
+    },
+    {
+      "id": "injection",
+      "status": "warn",
+      "detail": "accepted by upstream.json compat_accepted: secret-read in references/full.md: defense reference: attack lines quoted as examples to detect, inert markdown (reviewed P8.6); pipe-to-shell in references/full.md: defense reference: attack lines quoted as examples to detect, inert markdown (reviewed P8.6); prompt-injection in references/full.md: defense reference: attack lines quoted as examples to detect, inert markdown (reviewed P8.6)"
+    },
+    {
+      "id": "budget",
+      "status": "ok",
+      "detail": "675 tokens of 8000"
+    },
+    {
+      "id": "tools",
+      "status": "ok",
+      "detail": "0 allowed-tools, all known"
+    }
+  ],
+  "verdict": "clean"
+}

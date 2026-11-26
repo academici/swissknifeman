@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:autopilot-state:v1",
+  "plan": "PLAN9",
+  "project": "/home/user/project",
+  "pid": 4242,
+  "start_ticks": null,
+  "boot_id": null,
+  "started_at": "2026-10-24T10:00:00Z",
+  "updated_at": "2026-10-24T12:00:00Z",
+  "deadline_at": "2026-10-24T22:00:00Z",
+  "mode": "stopped",
+  "limits": {"max_runs": 5, "max_wall_s": 3600, "run_tokens_hard_max": 2000000, "max_no_progress_runs": 2,
+             "max_auto_decisions": 10, "quota_wait_max_s": 21600, "max_recoveries": 1, "poll_s": 0.2},
+  "counters": {"runs": 2, "items_closed": 2, "no_progress_streak": 0, "auto_decisions": 0, "recoveries": 0, "quota_waits": 0},
+  "current": null,
+  "quota_wait": null,
+  "waiting_runs": [],
+  "history": [{"run_id": "cnd-20261024T100001Z-0a1b2c", "started_at": "2026-10-24T10:00:01Z", "ended_at": null, "exit": null,
+               "status": "never_started", "reason_code": null, "items_closed": []}],
+  "last_blockers": [],
+  "stop": {"code": "AUTOPILOT_NO_WORK", "message": "the plan is done: terminal", "at": "2026-10-24T12:00:00Z"}
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:work-source:register-report:v1",
+  "title": "work-source register-report",
+  "description": "The stage-report a work source registers (the report field of a register request): the stage-report of the worker without status, questions, review_recommendation and self_check. Closed: a field the source does not record would be lost. The rules a schema cannot state are checked in code (orch.worksource_report.report_semantics, the check_report of the planner bridge): the ids of checks_run are unique, and every text keeps a character after Unicode whitespace is stripped.",
+  "type": "object",
+  "properties": {
+    "summary": {"description": "What changed and why, in a few lines.", "$ref": "#/$defs/text"},
+    "changed_paths": {
+      "description": "Every repository path created, modified or deleted.",
+      "type": "array",
+      "items": {"description": "Repository-relative path.", "$ref": "#/$defs/text"}
+    },
+    "checks_run": {
+      "description": "Checks that actually ran; an id appears once.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/check"}
+    },
+    "evidence": {
+      "description": "Paths of output files and evidence documents.",
+      "type": "array",
+      "items": {"description": "Repository-relative path.", "$ref": "#/$defs/text"}
+    },
+    "open_issues": {
+      "description": "Every surprise that matters to the plan, classified.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/issue"}
+    }
+  },
+  "required": ["summary"],
+  "additionalProperties": false,
+  "$defs": {
+    "text": {
+      "description": "Text with at least one non-whitespace character.",
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "checkId": {
+      "description": "Check id V<n>.",
+      "type": "string",
+      "pattern": "^V[0-9]+$"
+    },
+    "check": {
+      "description": "A command check with its exit, or a manual procedure with its verdict.",
+      "oneOf": [
+        {
+          "description": "Command check.",
+          "type": "object",
+          "properties": {
+            "id": {"description": "Check id.", "$ref": "#/$defs/checkId"},
+            "cmd": {"description": "Command as written in the input.", "$ref": "#/$defs/text"},
+            "exit": {"description": "Observed exit.", "type": "integer"}
+          },
+          "required": ["id", "cmd", "exit"],
+          "additionalProperties": false
+        },
+        {
+          "description": "Manual procedure.",
+          "type": "object",
+          "properties": {
+            "id": {"description": "Check id.", "$ref": "#/$defs/checkId"},
+            "procedure": {"description": "Procedure as written in the input.", "$ref": "#/$defs/text"},
+            "verdict": {"description": "Observed verdict.", "type": "string", "enum": ["pass", "fail"]}
+          },
+          "required": ["id", "procedure", "verdict"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "issue": {
+      "description": "One open issue; its kind decides what the source records.",
+      "type": "object",
+      "properties": {
+        "text": {"description": "What happened.", "$ref": "#/$defs/text"},
+        "kind": {
+          "description": "Class of the issue.",
+          "type": "string",
+          "enum": ["pending", "deviation", "blocker", "difficulty", "assumption", "note", "escalation"]
+        },
+        "impact": {"description": "What it affects.", "$ref": "#/$defs/text"},
+        "next": {"description": "What should happen next.", "$ref": "#/$defs/text"},
+        "class": {
+          "description": "Class of a deviation: what it deviates from.",
+          "type": "string",
+          "enum": ["write_set", "spec_mismatch", "test_env", "docs", "dependency", "environment", "other"]
+        },
+        "severity": {"description": "How serious it is.", "type": "string", "enum": ["low", "medium", "high", "critical"]},
+        "outcome": {
+          "description": "How the deviation ends: accepted as is, a follow-up for later work, or a decision of the owner.",
+          "type": "string",
+          "enum": ["accepted", "follow_up", "owner_decision"]
+        },
+        "auto_fixable": {"description": "True when the deviation can be repaired without a decision.", "type": "boolean"},
+        "evidence": {
+          "description": "Where it shows: path:line or a check id V<n>; when present, not empty.",
+          "type": "array",
+          "minItems": 1,
+          "items": {"description": "A path:line or a check id.", "$ref": "#/$defs/text"}
+        }
+      },
+      "required": ["text", "kind"],
+      "additionalProperties": false
+    }
+  }
+}

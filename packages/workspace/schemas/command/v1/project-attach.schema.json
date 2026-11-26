@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:project-attach:v1",
+  "title": "workspace project attach",
+  "description": "Stdout of `workspace project attach --json`: the checkout is bound to a project of the workspace, and its marker is written when it had none. Nothing is committed.",
+  "type": "object",
+  "properties": {
+    "workspace": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the workspace."
+    },
+    "project_id": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/code",
+      "description": "Code of the project."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name of the project."
+    },
+    "created": {
+      "type": "boolean",
+      "description": "Whether this call created the project record in the workspace."
+    },
+    "marker_written": {
+      "type": "boolean",
+      "description": "Whether this call wrote the marker into the checkout."
+    },
+    "plans_store": {
+      "enum": ["legacy", "workspace"],
+      "description": "Where the plans live: in the checkout (legacy) or in the workspace."
+    },
+    "binding": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/binding",
+      "description": "The checkouts of the project on this machine after the call."
+    },
+    "next": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The command that commits the marker; present only when the marker was written."
+    },
+    "links": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/links_result",
+      "description": "The links plans/ and tasks/ of the checkout, present only when links were made, kept or refused: `--link-folders` was given or workspace.link_folders is on."
+    }
+  },
+  "required": ["workspace", "project_id", "name", "created", "marker_written", "plans_store", "binding"],
+  "additionalProperties": false
+}

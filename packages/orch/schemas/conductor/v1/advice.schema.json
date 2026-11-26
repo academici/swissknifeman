@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:advice:v1",
+  "title": "advice",
+  "description": "Closed result of the advisor role: the options for one problem (a blocking question, red checks that stay red, a rejected finding), the one it recommends, and whether the owner must decide. Advice is a recommendation; the conductor applies it only when needs_owner is false and the category is not held by orch.advisor.human_gate.",
+  "type": "object",
+  "properties": {
+    "problem_ref": {
+      "description": "The problem advised on, as the prompt named it: question:<id>@<revision>, checks:<round> or findings:<review round>.",
+      "type": "string",
+      "minLength": 1
+    },
+    "options": {
+      "description": "The ways to go on, at least one; a question with options keeps their ids.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "description": "One way to go on.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Option id, unique in the advice.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "text": {
+            "description": "What this option does.",
+            "type": "string",
+            "minLength": 1
+          },
+          "pros": {
+            "description": "Reasons for the option.",
+            "type": "array",
+            "items": {
+              "description": "One reason.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "cons": {
+            "description": "Reasons against the option.",
+            "type": "array",
+            "items": {
+              "description": "One reason.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "pros",
+          "cons"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "recommendation": {
+      "description": "Id of the recommended option.",
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "description": "How sure the advisor is.",
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "sources": {
+      "description": "URLs or repository paths the advice rests on; empty when it rests on the evidence given.",
+      "type": "array",
+      "items": {
+        "description": "URL or path.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "needs_owner": {
+      "description": "True when only the owner can decide: the conductor then queues the problem with the advice.",
+      "type": "boolean"
+    },
+    "category": {
+      "description": "What kind of decision the advice touches; a category held by orch.advisor.human_gate (security, destructive, public-api, scope-expansion by default) is never applied without the owner.",
+      "type": "string",
+      "enum": [
+        "security",
+        "destructive",
+        "public-api",
+        "scope-expansion",
+        "other"
+      ]
+    }
+  },
+  "required": [
+    "problem_ref",
+    "options",
+    "recommendation",
+    "confidence",
+    "sources",
+    "needs_owner"
+  ],
+  "additionalProperties": false
+}

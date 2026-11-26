@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "heartbeat",
+  "seq": 45,
+  "at": "2026-10-16T15:20:05Z"
+}

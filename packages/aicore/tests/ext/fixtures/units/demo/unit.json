@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "demo",
+  "title": "Demo module for the extension tests",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Extension layer."}
+  ],
+  "provides": {
+    "events": ["demo.thing.happened"],
+    "overlay_slots": ["plan"],
+    "extension_points": [
+      {"id": "check", "description": "Extra checks of a demo run."}
+    ]
+  },
+  "subscribes": [
+    {"id": "log", "on": ["demo.*"], "run": ["bin/demo-sub"], "description": "Append events to a file."}
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "quality",
+  "description": "Code review, refactoring plans, tech debt audits, test strategy",
+  "skills": "./"
+}

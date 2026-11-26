@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:gui:run-api:v1",
+  "kind": "run_request",
+  "context": {
+    "project_id": "demo-1a2b3c4d"
+  },
+  "input": {
+    "name": "World",
+    "loud": true,
+    "count": 2
+  },
+  "dry_run": false,
+  "confirm": "XYZ"
+}

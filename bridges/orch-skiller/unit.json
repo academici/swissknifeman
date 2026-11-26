@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "orch-skiller",
+  "title": "Bridge between orch and skiller: the skill closure of a role and the skill delivery mode",
+  "kind": "bridge",
+  "version": "0.1.0",
+  "stability": "alpha",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation."},
+    {"unit": "orch", "range": "^0.1", "description": "Role manifests and capability seeds."},
+    {"unit": "skiller", "range": "^0.21", "description": "Skill resolver command line (bin/skiller resolve)."}
+  ],
+  "provides": {
+    "cli": ["resolve_role.py"]
+  },
+  "protocol": {"min": "1", "max": "1"},
+  "dev": {
+    "test": ["bash", "scripts/test.sh"]
+  }
+}

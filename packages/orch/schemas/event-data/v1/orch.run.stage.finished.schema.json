@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-run-stage-finished:v1",
+  "title": "orch.run.stage.finished",
+  "description": "A stage attempt of a run reached a final status.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "stage_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the stage."
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Stage attempt, at least one."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "cancelled",
+        "timeout",
+        "quota_blocked",
+        "auth_blocked",
+        "unknown_outcome",
+        "refused"
+      ],
+      "description": "Final stage status."
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$",
+      "description": "Id of the attempt that owns the run."
+    },
+    "error_class": {
+      "type": "string",
+      "enum": [
+        "authentication",
+        "authorization",
+        "quota",
+        "rate_limit",
+        "invalid_request",
+        "model_unavailable",
+        "content_policy",
+        "transport",
+        "provider_internal",
+        "timeout",
+        "context_limit",
+        "unknown",
+        "unknown_outcome"
+      ],
+      "description": "Failure class of error/v1, or unknown_outcome."
+    },
+    "input_digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Digest of the stage input."
+    },
+    "options_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the merged run options of the piece of work the stage belongs to."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "config_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the effective orch configuration."
+    }
+  },
+  "required": [
+    "run_id",
+    "stage_id",
+    "attempt",
+    "status"
+  ],
+  "additionalProperties": false
+}

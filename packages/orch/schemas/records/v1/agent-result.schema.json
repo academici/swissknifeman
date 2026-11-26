@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:agent-result:v1",
+  "title": "result.json of an agent run",
+  "description": "How a role ended (<item>/agents/<agent_run_id>/result.json, agents.py finish), however it ended. A role closed on resume after the conductor died has only error ORPHANED (agents.py orphan): nothing else is invented. Exactly one of the two variants: an empty or tag-only document is no result.",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "description": "A finished agent run (agents.finish): every field of its end, error only when it failed.",
+      "required": ["exit", "decisions", "duration_s", "stream", "lingered"]
+    },
+    {
+      "description": "An agent run closed on resume (agents.orphan): only the error ORPHANED.",
+      "required": ["error"],
+      "not": {"description": "No field of a finished run.", "required": ["exit"]},
+      "properties": {
+        "error": {
+          "description": "The orphan error.",
+          "type": "object",
+          "required": ["code"],
+          "properties": {"code": {"description": "Reason code.", "const": "ORPHANED"}}
+        }
+      }
+    }
+  ],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:agent-result:v1"},
+    "exit": {"description": "Exit code of the last process, null when none ended.", "type": ["integer", "null"]},
+    "error": {"$ref": "#/$defs/error"},
+    "decisions": {"description": "Decisions of retry.decide after failures at the provider, in order.", "type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "duration_s": {"description": "Wall time of the agent run.", "type": "number", "minimum": 0},
+    "stream": {"description": "Stream of the last attempt, relative to the project; null when none.", "type": ["string", "null"]},
+    "lingered": {"description": "The process lingered after its result and was stopped.", "type": "boolean"},
+    "env_denials": {
+      "description": "Environment refusals by category, accumulated across attempts; no error text.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]*$": {
+          "description": "Number of failed tool results.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "authority": {
+      "description": "The authority envelope of each process the agent run started (P6.2: authority/a<attempt>.json of the agent folder), in the order of the attempts; absent when no process started.",
+      "type": "array",
+      "items": {
+        "description": "One launch.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attempt", "provider", "digest"],
+        "properties": {
+          "attempt": {"description": "Attempt of the launch (the a<attempt>.json file).", "type": "integer", "minimum": 1},
+          "provider": {"description": "Provider of the route of the attempt.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+          "digest": {"description": "digest of the envelope.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "isolation": {
+      "description": "The isolation the stream of an isolated role showed (P6.1); absent when the stream had no init event.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed"],
+      "properties": {
+        "observed": {
+          "description": "The names of the first init event of the stream of the last attempt.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tools": {"$ref": "#/$defs/names"},
+            "mcp_servers": {"$ref": "#/$defs/names"},
+            "skills": {"$ref": "#/$defs/names"},
+            "plugins": {"$ref": "#/$defs/names"},
+            "slash_commands": {"$ref": "#/$defs/names"}
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "names": {
+      "description": "Names the init event listed.",
+      "type": "array",
+      "items": {"description": "A name.", "type": "string"}
+    },
+    "error": {
+      "description": "An error/v1 document when the failure was classified, else {code, message} of the stop.",
+      "type": "object"
+    },
+    "decision": {
+      "description": "One decision of retry.decide.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "reason_codes"],
+      "properties": {
+        "action": {"description": "Action decided (retry, wait, fallback, reconcile, stop).", "type": "string", "minLength": 1},
+        "reason_codes": {"description": "Reason codes of the decision.", "type": "array", "items": {"description": "A reason code.", "type": "string"}},
+        "wait_s": {"description": "Seconds waited before the repeat.", "type": "number"},
+        "route": {"description": "Fallback route taken.", "type": "object"}
+      }
+    }
+  }
+}

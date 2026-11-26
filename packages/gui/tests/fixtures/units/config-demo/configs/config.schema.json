@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:config-demo:config:v1",
+  "title": "config-demo config",
+  "type": "object",
+  "description": "Fixture module of the GUI configuration editor tests: every scalar type, an enum, an array, a map, a secret key and a machine-only key.",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "default": "demo",
+      "description": "Free text."
+    },
+    "limits": {
+      "type": "object",
+      "description": "Numeric limits.",
+      "additionalProperties": false,
+      "properties": {
+        "max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 4,
+          "description": "Largest count."
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "Share of the whole."
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Retry count; unset by default."
+        }
+      }
+    },
+    "verbose": {
+      "type": "boolean",
+      "default": false,
+      "description": "Print details."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "safe"],
+      "default": "safe",
+      "description": "Run mode."
+    },
+    "sources": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true,
+      "default": ["local"],
+      "description": "Where to read from."
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Profiles by name.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One profile.",
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9,
+              "default": 1,
+              "description": "Level of the profile."
+            },
+            "label": {
+              "type": "string",
+              "description": "Label of the profile."
+            }
+          }
+        }
+      }
+    },
+    "token": {
+      "type": "string",
+      "x-skm-secret": true,
+      "description": "Reference to the API token."
+    },
+    "cache_dir": {
+      "type": "string",
+      "default": "",
+      "x-skm-layers": ["defaults", "machine"],
+      "description": "Machine-local cache directory; never set per project."
+    }
+  }
+}

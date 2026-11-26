@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "gui",
+  "title": "GUI: desktop and browser control plane for Swiss Knife Man",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "own-repo",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: schema validator, digest, config, extension protocol, redaction, events."}
+  ],
+  "provides": {
+    "cli": ["bin/gui"],
+    "install": ["install.sh"],
+    "config": "configs/config.schema.json",
+    "events": ["gui.run.started", "gui.run.succeeded", "gui.run.failed", "gui.run.cancelled", "gui.run.timed-out",
+               "gui.run.lost", "gui.run.denied", "gui.config.changed"],
+    "contracts": [
+      {"id": "urn:swissknifeman:gui:contribution", "path": "schemas/contribution/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:view-data", "path": "schemas/view-data/v1", "version": "v1", "stability": "development", "direction": "output"},
+      {"id": "urn:swissknifeman:gui:api-error", "path": "schemas/api-error/v1", "version": "v1", "stability": "development", "direction": "output"},
+      {"id": "urn:swissknifeman:gui:bootstrap", "path": "schemas/bootstrap/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:run", "path": "schemas/run/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:stream", "path": "schemas/stream/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:trust", "path": "schemas/trust/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:config-mutation", "path": "schemas/config-mutation/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:catalog", "path": "schemas/catalog/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:project", "path": "schemas/project/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:run-api", "path": "schemas/run-api/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:config-view", "path": "schemas/config-view/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:plugin-api", "path": "schemas/plugin-api/v1", "version": "v1", "stability": "development"},
+      {"id": "urn:swissknifeman:gui:terminal", "path": "schemas/terminal/v1", "version": "v1", "stability": "development"}
+    ],
+    "extension_points": [
+      {"id": "query", "description": "Read-only GUI queries of a contribution: input {id, context, params}, output view-data/v1."},
+      {"id": "command", "description": "Short GUI commands of a contribution executed through the aicore plugin protocol."}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"]
+  }
+}

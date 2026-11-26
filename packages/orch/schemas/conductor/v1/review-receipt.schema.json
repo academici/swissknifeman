@@ -1,0 +1,362 @@
+{
+  "type": "object",
+  "description": "Last completed review round bound to its candidate contents.",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:conductor:review-receipt:v1",
+      "description": "Producer schema."
+    },
+    "subject": {
+      "type": "string",
+      "description": "subject",
+      "minLength": 1
+    },
+    "item": {
+      "type": "string",
+      "description": "item",
+      "minLength": 1
+    },
+    "run": {
+      "type": "string",
+      "description": "run",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "string",
+      "description": "attempt id",
+      "minLength": 1
+    },
+    "round": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Last completed review round."
+    },
+    "policy": {
+      "type": "object",
+      "description": "Resolved review policy.",
+      "additionalProperties": false,
+      "properties": {
+        "review_mode": {
+          "type": "string",
+          "description": "Requested review mode."
+        },
+        "strategy": {
+          "type": "string",
+          "description": "Resolved strategy."
+        },
+        "rounds_max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Review round bound."
+        },
+        "correct_min_severity": {
+          "type": "string",
+          "description": "Correction floor.",
+          "enum": [
+            "Blocker",
+            "Major",
+            "Minor",
+            "Nit"
+          ]
+        },
+        "pre_final": {
+          "type": "boolean",
+          "description": "Pre-final audit enabled."
+        },
+        "source": {
+          "type": "string",
+          "description": "Policy source."
+        }
+      },
+      "required": [
+        "review_mode",
+        "strategy",
+        "rounds_max",
+        "correct_min_severity",
+        "pre_final",
+        "source"
+      ]
+    },
+    "reviewer": {
+      "type": "object",
+      "description": "Actual reviewer route.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "provider",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "description": "model",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "description": "effort",
+          "minLength": 1
+        },
+        "session": {
+          "type": "string",
+          "description": "session",
+          "minLength": 1
+        },
+        "selector_source": {
+          "type": "string",
+          "description": "selector source",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider",
+        "model"
+      ]
+    },
+    "base": {
+      "type": "string",
+      "description": "Git revision.",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "candidate": {
+      "type": "object",
+      "description": "Contents at review time.",
+      "additionalProperties": false,
+      "properties": {
+        "head": {
+          "type": "string",
+          "description": "Git revision.",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "digest": {
+          "type": "string",
+          "description": "SHA-256 of sorted path-tab-fingerprint lines joined with newline.",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "paths": {
+          "type": "object",
+          "description": "Repository-relative paths to Git fingerprints.",
+          "patternProperties": {
+            "^.+$": {
+              "type": "string",
+              "description": "Git mode and blob, absent, or unsupported type.",
+              "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "head",
+        "digest",
+        "paths"
+      ]
+    },
+    "outside": {
+      "type": "object",
+      "description": "Repository-relative paths to Git fingerprints.",
+      "patternProperties": {
+        "^.+$": {
+          "type": "string",
+          "description": "Git mode and blob, absent, or unsupported type.",
+          "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "verdict": {
+      "type": "string",
+      "description": "Review verdict.",
+      "enum": [
+        "GREEN",
+        "ATTENTION",
+        "RED"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "description": "Findings retained across rounds by key.",
+      "items": {
+        "type": "object",
+        "description": "Finding and triage/correction status.",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Conductor finding identity; exact repeats only.",
+            "pattern": "^fk-[0-9a-f]{16}$"
+          },
+          "id": {
+            "type": "string",
+            "description": "Round-local id.",
+            "pattern": "^F[0-9]+$"
+          },
+          "severity": {
+            "type": "string",
+            "description": "Severity.",
+            "enum": [
+              "Blocker",
+              "Major",
+              "Minor",
+              "Nit"
+            ]
+          },
+          "location": {
+            "type": "string",
+            "description": "Repository path and optional line.",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "description": "Disposition.",
+            "enum": [
+              "confirmed",
+              "rejected",
+              "deferred",
+              "corrected",
+              "open"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "description": "confidence",
+            "minLength": 1
+          },
+          "failure_scenario": {
+            "type": "string",
+            "description": "failure scenario",
+            "minLength": 1
+          },
+          "basis": {
+            "type": "string",
+            "description": "basis",
+            "minLength": 1
+          },
+          "reproduction": {
+            "type": "string",
+            "description": "reproduction",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "key",
+          "id",
+          "severity",
+          "location",
+          "status"
+        ]
+      }
+    },
+    "open": {
+      "type": "object",
+      "description": "Uncorrected confirmed or untriaged findings.",
+      "additionalProperties": false,
+      "properties": {
+        "blocker": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "blocker"
+        },
+        "major": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "major"
+        }
+      },
+      "required": [
+        "blocker",
+        "major"
+      ]
+    },
+    "questions": {
+      "type": "array",
+      "description": "Reviewer questions.",
+      "items": {
+        "type": "string",
+        "description": "Question.",
+        "minLength": 1
+      }
+    },
+    "residual_risk": {
+      "type": "string",
+      "description": "Residual risk; empty means none."
+    },
+    "corrected_after": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Correction without another review.",
+      "additionalProperties": false,
+      "properties": {
+        "round": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Review round corrected."
+        },
+        "paths": {
+          "type": "array",
+          "description": "Paths changed by the correction.",
+          "items": {
+            "type": "string",
+            "description": "Repository path.",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "round",
+        "paths"
+      ]
+    },
+    "at": {
+      "type": "string",
+      "description": "Receipt timestamp.",
+      "minLength": 1
+    },
+    "producer": {
+      "type": "object",
+      "description": "Receipt producer.",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind.",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "description": "Version.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "version"
+      ]
+    }
+  },
+  "required": [
+    "$schema",
+    "subject",
+    "item",
+    "run",
+    "round",
+    "policy",
+    "reviewer",
+    "base",
+    "candidate",
+    "verdict",
+    "findings",
+    "open",
+    "questions",
+    "residual_risk",
+    "corrected_after",
+    "at",
+    "producer"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:review-receipt:v1",
+  "title": "review-receipt"
+}

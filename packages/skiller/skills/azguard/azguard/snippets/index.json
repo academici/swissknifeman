@@ -1,0 +1,50 @@
+{
+  "skill": "azguard",
+  "snippets": [
+    {
+      "file": "role-class.php",
+      "description": "Static role RoleInterface (getName/getLevel/permissions), wildcard super-admin, purpose and query scopes",
+      "tags": ["azguard", "rbac", "roles"]
+    },
+    {
+      "file": "permission-enum.php",
+      "description": "Permission backed enum with #[GateAbility]/#[RoleOnly], checks hasPermission/Gate::allows enum-cases",
+      "tags": ["azguard", "rbac", "permissions", "enum"]
+    },
+    {
+      "file": "panel-provider.php",
+      "description": "PanelProvider: isolated namespace is right (id/path/permissionEnums/roleClasses) + registration in config/az-guard.php",
+      "tags": ["azguard", "panels", "config"]
+    },
+    {
+      "file": "policy-gateability.php",
+      "description": "Policy with #[GuardPolicy(model:)] and #[GateAbility(permission:)] — auto-registration in Gate, calls via enum",
+      "tags": ["azguard", "policy", "gate", "attributes"]
+    },
+    {
+      "file": "scoped-roles.php",
+      "description": "Entity-scoped roles: InteractsWithAzScopes, assignScopedRole/hasScopedPermission, resolution order, Gate with entity",
+      "tags": ["azguard", "scoped-roles", "multi-tenant"]
+    },
+    {
+      "file": "direct-grants.php",
+      "description": "Direct grants: AzGuard::forUser()->on()->ttl()->give(), review, middleware az.grant, prune-grants, events",
+      "tags": ["azguard", "direct-grants", "ttl"]
+    },
+    {
+      "file": "abilities-dto.php",
+      "description": "Abilities DTO (ResolvesGateAbilities): readonly-flags from Gate::allows() + transfer to Inertia::render at page level",
+      "tags": ["azguard", "abilities", "inertia", "frontend"]
+    },
+    {
+      "file": "inertia-share.php",
+      "description": "Global rights map via HandleInertiaRequests::share + azguard:export-ts + consumption in Vue (computed by page.props)",
+      "tags": ["azguard", "inertia", "vue", "typescript", "frontend"]
+    },
+    {
+      "file": "testing.php",
+      "description": "Pest-patterns: factory states with roles, checks hasPermission, Gate via policy, direct grant and TTL in tests, AzGuardFake",
+      "tags": ["azguard", "testing", "pest"]
+    }
+  ]
+}

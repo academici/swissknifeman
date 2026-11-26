@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": null,
+  "decisions": [],
+  "duration_s": 0.2,
+  "stream": null,
+  "lingered": false,
+  "error": {"code": "PROVIDER_UNAVAILABLE", "message": "no-such-grok not found"}
+}

@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:eval-context:v1",
+  "title": "eval-context",
+  "type": "object",
+  "description": "What an evaluation result was produced from, so that two results can be compared: the skill content, the fixtures that were run, the grader rules and the runner. Produced by `aicore.content.eval.eval_context`; only observed values are recorded, anything not observed is null or an empty list.",
+  "properties": {
+    "schema": {
+      "const": "eval-context/v1",
+      "description": "Schema identifier."
+    },
+    "skill": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/skill"
+        }
+      ],
+      "description": "The evaluated skill, or null when the result is not about one skill (the system bank)."
+    },
+    "fixtures": {
+      "$ref": "#/$defs/fixtures",
+      "description": "The evaluation inputs that were run."
+    },
+    "grader": {
+      "$ref": "#/$defs/grader",
+      "description": "The rules that graded the runs."
+    },
+    "runner": {
+      "$ref": "#/$defs/runner",
+      "description": "What executed the runs."
+    }
+  },
+  "required": [
+    "schema",
+    "skill",
+    "fixtures",
+    "grader",
+    "runner"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "skill": {
+      "type": "object",
+      "description": "Identity and content of the evaluated skill.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "description": "Identity of the skill: `<bucket>/<name>`, the id of its skill descriptor."
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Tagged SHA-256 of the skill content (`aicore.content.skill.skill_digest`), so a changed skill is a different subject."
+        }
+      },
+      "required": [
+        "id",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "fixtures": {
+      "type": "object",
+      "description": "The cases that were run.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Kind of the fixtures: `evals` for the evals.json and pressure.json of a skill, `system-bank` for the system bank."
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Declared version of the fixtures (the bank version), or null when they carry none."
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Tagged SHA-256 of the canonical JSON of the fixtures (`aicore.util.digest.digest_json`)."
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "grader": {
+      "type": "object",
+      "description": "The grading rules.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Grader family: `skill-eval` or `system-bank`."
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Version of the grading rules; changes whenever the grading of an assertion changes. Null when the grader declares none."
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "runner": {
+      "type": "object",
+      "description": "The program that executed the runs.",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Provider of the runner, such as `claude-code`."
+        },
+        "cli_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Version printed by `<cli> --version`, or null when it was not observed."
+        },
+        "models": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Sorted names of the models the runs reported using (`modelUsage`); an empty list when none was observed.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One model name."
+          }
+        }
+      },
+      "required": [
+        "provider",
+        "cli_version",
+        "models"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

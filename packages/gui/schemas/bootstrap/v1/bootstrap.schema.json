@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:bootstrap:v1",
+  "title": "bootstrap",
+  "description": "Handshake GET /v1/bootstrap: versions and protocol of the backend (and of the desktop shell), supported contracts, units, features and platform. A frontend whose protocol is outside gui_protocol shows PROTOCOL_INCOMPATIBLE instead of the main UI.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/desktop",
+      "description": "Served by the desktop shell."
+    },
+    {
+      "$ref": "#/$defs/browser",
+      "description": "Served to a browser."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:bootstrap:v1",
+      "description": "Contract id of this document."
+    },
+    "epoch": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]{8,64}$",
+      "description": "Id of one backend process, new at every start."
+    },
+    "desktop": {
+      "type": "object",
+      "description": "Handshake in desktop mode.",
+      "required": [
+        "$schema",
+        "mode",
+        "epoch",
+        "backend",
+        "shell",
+        "gui_protocol",
+        "contracts",
+        "units",
+        "features",
+        "platform"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "mode": {
+          "const": "desktop",
+          "description": "How the frontend is served."
+        },
+        "epoch": {
+          "$ref": "#/$defs/epoch",
+          "description": "Id of this backend process; a new epoch resets the stream seq."
+        },
+        "backend": {
+          "type": "object",
+          "description": "The Python control plane.",
+          "required": [
+            "version",
+            "python"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+              "description": "Version of the gui module."
+            },
+            "python": {
+              "type": "string",
+              "pattern": "^3\\.[0-9]+\\.[0-9]+$",
+              "description": "Python version of the backend."
+            }
+          },
+          "additionalProperties": false
+        },
+        "shell": {
+          "type": "object",
+          "description": "The Tauri shell.",
+          "required": [
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+              "description": "Shell version."
+            }
+          },
+          "additionalProperties": false
+        },
+        "gui_protocol": {
+          "type": "object",
+          "description": "Host protocol versions the backend serves; min <= max.",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "Lowest protocol version."
+            },
+            "max": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "Highest protocol version."
+            }
+          },
+          "additionalProperties": false
+        },
+        "contracts": {
+          "type": "array",
+          "description": "Contracts the backend supports.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "description": "One contract.",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^urn:swissknifeman:[a-z0-9-]+:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                "description": "Contract id without the version."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^v[1-9][0-9]*$",
+                "description": "Contract major version."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "units": {
+          "type": "array",
+          "description": "Units the backend found.",
+          "items": {
+            "type": "object",
+            "description": "One unit.",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+                "description": "Unit id."
+              },
+              "version": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+                "description": "Unit version."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "features": {
+          "type": "array",
+          "description": "Optional features the backend has.",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]*$",
+            "description": "Feature name."
+          }
+        },
+        "platform": {
+          "type": "object",
+          "description": "Platform of the backend.",
+          "required": [
+            "os",
+            "arch"
+          ],
+          "properties": {
+            "os": {
+              "enum": [
+                "linux",
+                "darwin"
+              ],
+              "description": "Operating system."
+            },
+            "arch": {
+              "enum": [
+                "x86_64",
+                "aarch64"
+              ],
+              "description": "Processor architecture."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "browser": {
+      "type": "object",
+      "description": "Handshake in browser mode (no shell).",
+      "required": [
+        "$schema",
+        "mode",
+        "epoch",
+        "backend",
+        "gui_protocol",
+        "contracts",
+        "units",
+        "features",
+        "platform"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "mode": {
+          "const": "browser",
+          "description": "How the frontend is served."
+        },
+        "epoch": {
+          "$ref": "#/$defs/epoch",
+          "description": "Id of this backend process; a new epoch resets the stream seq."
+        },
+        "backend": {
+          "type": "object",
+          "description": "The Python control plane.",
+          "required": [
+            "version",
+            "python"
+          ],
+          "properties": {
+            "version": {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+              "description": "Version of the gui module."
+            },
+            "python": {
+              "type": "string",
+              "pattern": "^3\\.[0-9]+\\.[0-9]+$",
+              "description": "Python version of the backend."
+            }
+          },
+          "additionalProperties": false
+        },
+        "gui_protocol": {
+          "type": "object",
+          "description": "Host protocol versions the backend serves; min <= max.",
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "Lowest protocol version."
+            },
+            "max": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "description": "Highest protocol version."
+            }
+          },
+          "additionalProperties": false
+        },
+        "contracts": {
+          "type": "array",
+          "description": "Contracts the backend supports.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "description": "One contract.",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^urn:swissknifeman:[a-z0-9-]+:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                "description": "Contract id without the version."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^v[1-9][0-9]*$",
+                "description": "Contract major version."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "units": {
+          "type": "array",
+          "description": "Units the backend found.",
+          "items": {
+            "type": "object",
+            "description": "One unit.",
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+                "description": "Unit id."
+              },
+              "version": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+                "description": "Unit version."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "features": {
+          "type": "array",
+          "description": "Optional features the backend has.",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9.-]*$",
+            "description": "Feature name."
+          }
+        },
+        "platform": {
+          "type": "object",
+          "description": "Platform of the backend.",
+          "required": [
+            "os",
+            "arch"
+          ],
+          "properties": {
+            "os": {
+              "enum": [
+                "linux",
+                "darwin"
+              ],
+              "description": "Operating system."
+            },
+            "arch": {
+              "enum": [
+                "x86_64",
+                "aarch64"
+              ],
+              "description": "Processor architecture."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

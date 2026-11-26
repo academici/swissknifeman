@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:document:v1",
+  "id": "design",
+  "title": "Config validation design",
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "text": "Loader sketch; not needed by P1.2."
+    },
+    {
+      "id": "validation",
+      "title": "Validation",
+      "text": "## 1. Overview\n\nLoader sketch; not needed by P1.2.\n\n## 2. Validation\n\nCollect every problem into one `ConfigError`:\n\n```text\n## not a heading, just fenced text\n```\n\n- required keys are listed in `REQUIRED_KEYS`\n- types are checked after presence\n\n### 2.1 Error format\n\nOne line per issue: `key: problem`.\n\n## 3. Out of scope\n\nConfig file format stays as is."
+    },
+    {
+      "id": "non-goals",
+      "title": "Out of scope",
+      "text": "Config file format stays as is."
+    }
+  ]
+}

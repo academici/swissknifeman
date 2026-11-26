@@ -1,0 +1,200 @@
+# Frontend
+
+`packages/gui/frontend` is the one frontend build of the GUI: the browser mode serves it from `gui serve`, the desktop
+shell will load the same files. React, TypeScript, Vite, TanStack Query and react-router (library mode); exact
+versions are pinned by `package-lock.json` (`npm ci` reproduces the install; Node 22.22 or newer).
+
+## Scripts
+
+| Script | Does |
+| --- | --- |
+| `npm run dev` | Vite dev server; `/v1` and the WebSocket are proxied to `GUI_BACKEND` (default `http://127.0.0.1:8765`, a running `gui serve --port 8765`) |
+| `npm run build` | type check, then `dist/` (served by the backend; not in git) |
+| `npm run gen:types` | regenerate `src/contracts/generated/*.ts` from the contracts |
+| `npm run check` | generated types up to date (golden), `tsc`, `eslint`, `vitest run` |
+
+From the hub root: `npm --prefix packages/gui/frontend ci && npm --prefix packages/gui/frontend run build`.
+
+## Contract types
+
+`scripts/gen-types.mjs` runs `bin/gui schemas bundle --out <tmp>`: each contract of `unit.json` as one JSON Schema
+whose references (to this contract, other gui contracts and the foundation) are all local `#/$defs/<key>`
+(`gui.contracts.bundle`). json-schema-to-typescript turns them into `src/contracts/generated/<contract>.ts`, kept in
+git; `--check` fails when they differ from what the contracts give. `src/contracts/index.ts` names the types the app
+uses. The frontend never sees a path of another module.
+
+## Transport
+
+`src/transport/Transport.ts` is the only way the UI reaches the backend: `request(method, path, body)` (the path
+starts with `/v1/`) and `subscribe(filter, handlers)`. `HttpTransport` (browser mode) uses same-origin `fetch` with
+the session cookie and JSON bodies; a failed request throws `ApiError` (`code`, `message`, `retryable`,
+`correlationId`, `details`, `issues` of `api-error/v1`). All subscriptions share one WebSocket `/v1/events`; after a
+drop it reconnects with a backoff of 0.5 → 8 s and subscribes again from the last applied `seq` of each
+subscription with the backend `epoch` (set by the bootstrap gate). A frame with a `seq` already applied is dropped;
+`snapshot_required` resets the cursor and calls `onSnapshotRequired`, where the page reloads its data. The desktop
+shell will bring a second implementation with the same interface.
+
+The UI sends only typed bodies of the contracts (`context`, `params`, `input`, `dry_run`, `confirm`): it never builds
+an argv and knows no path of a program or an owner (I2).
+
+### Desktop transport
+
+In the Tauri shell (`withGlobalTauri`) `main.tsx` takes `TauriTransport` when `window.__TAURI__.core.invoke` exists and
+`HttpTransport` otherwise (`transport/select.ts`). `request` calls `api_request` and gets `{status, body}`: status >= 400
+becomes an `ApiError` from the envelope, 2xx the body, anything else `TRANSPORT_MALFORMED`; no header or secret reaches the
+UI. `subscribe` creates a `Channel` per subscription and calls `api_subscribe(filter, channel)`; frames arrive in batches
+(an array), `{dropped: N}` means `snapshot_required(overflow)`, `[{closed: true}]` makes the transport resubscribe with the
+backoff 0.5–8 s and ask for a snapshot (the shell does not resume from a cursor). `close()` clears `channel.onmessage` and
+calls `api_unsubscribe({id})`. The rules shared with `HttpTransport` (each seq once, reset on a new epoch or
+`snapshot_required`) live in `transport/stream.ts`.
+
+`desktop/Diagnostics.tsx`: until `sidecar_status` is `ready` the app is replaced by a screen with the state as a word
+(`starting|ready|restarting|failed`), the restart count, `last_error`, the log tail (<= 200 lines, as text) and
+`Restart sidecar`; the status is polled every 2 s. On `PROTOCOL_INCOMPATIBLE` the same screen shows the versions.
+
+## Shell and pages
+
+The bootstrap gate reads `/v1/bootstrap`; a backend whose `gui_protocol` excludes protocol 1 or that lacks a contract
+the frontend reads shows `PROTOCOL_INCOMPATIBLE` instead of the UI. The navigation lists the contribution routes of
+the sections `fleet`, `plan`, `settings`, `plugins` (by `nav.order`); project routes are tabs of a project page.
+
+| Path | Page |
+| --- | --- |
+| `/` | fleet widgets of the catalog, sized by `size` |
+| `/projects`, `/projects/:id` | trusted projects (add one with a confirmation); project widgets and routes |
+| `/x/:owner/<path>[?project=<id>]` | a contribution route: its query with context and path parameters, its actions |
+| `/runs`, `/runs/:id` | runs (live by `gui.run` frames); a run with its log and Cancel |
+| `/catalog` | accepted and rejected contributions with their codes |
+| `/settings/config`, `/settings/config/:module[?layer=&project=&mode=]` | the configuration editor (below) |
+
+## Host views
+
+`src/views/ViewDataView.tsx` picks the view by `view`: `resource-list`, `status-table` (with repair buttons that open
+the command form of the action), `metric-group`, `timeline`, `markdown` (react-markdown with `skipHtml`; links only
+relative or http(s)), `log-stream` (stored pages, then live `log` frames, merged by chunk number), `command-form`
+(typed fields from `/v1/commands`, Run and Dry run, the confirmation dialog of `428`, then the run page).
+`resource-detail` (fields by type, markdown sections through `MarkdownView`, actions through `onAction`), `board`
+(columns with counts, cards whose `link` is built from the catalog as `/x/<owner>/<path>?project=<id>`; a route that
+is not in the catalog is plain text) and `dependency-graph` (plain SVG, no library: one column per `group`, solid
+arrow for `blocks`, dashed for `related`, an edge to a missing node is skipped, and a "Dependencies as text" table
+repeats it). Every status is written as text as well as coloured. `schema-form` is the plan editor below. A `progress` cell or field is an integer percent from 0 to 100 (the backend's canonical JSON has no floats) drawn as `<progress aria-label>`.
+
+Route context: `QueryView` sends `context = {project_id, plan_id, item_id, run_id}` for the ids found in the path of
+the route (the host reads them from `context` only) and keeps every path parameter in `params` too, because the query
+declares them. `ContributionRoute` shows what is missing for a plan or item page without the ids and passes the same
+context to the commands of the page (`CommandRunner` takes an optional `context`).
+
+To add a host view: implement `src/views/<Name>View.tsx` for the view-data kind, add its `case` to `ViewDataView`,
+and the test of `views.test.tsx` renders every valid example of `schemas/view-data/v1/examples/valid` through it.
+
+## Plan item editor
+
+`views/SchemaFormView.tsx` draws a `schema-form` answer: the form comes from `forms[]` of the catalog (`useCatalog()`,
+the entry whose `id` is `data.form`), the values from `data.document`, and the host never loads the planner schema
+(D20). Fields are grouped by `groups` and sorted by `order`; the widget decides the control: `text`, `textarea`,
+`number`, `toggle`, `select` (choices from `views/plan-enums.ts`, which `SchemaFormView.test.tsx` compares with the
+enum table that the planner bridge exports from the planner schema; the reviewer provider comes from the model
+catalog), `list` (one entry per line for arrays of text), `json` (a textarea that must parse, else Save is disabled)
+and `model-picker` (a select over the `gui-planner.models` query; it writes `review.reviewer.provider` and `.model`;
+a model that is not in the catalog stays as it is with a "drift" note, it is never replaced). `readonly` fields and
+the identity and lifecycle roots (`status`, `result`, `updated_at`, `id`, `$schema`, `units`, `artifacts`, `sections`)
+are shown as text and never written.
+
+Save builds a merge patch of the changed root keys only (a root is sent whole), runs `gui-planner.item-set` with
+`patch` and `expected_revision` (the revision of the form) through `/v1/commands/{id}/runs`, handles the confirmation
+of the host, and waits for the run. A refusal is shown by its `plugin_code`: `PLAN_REVISION_CONFLICT` opens "The plan
+changed" with Reload (drop the draft) and Reapply (the same patch on the revision read now, only on a click);
+`ITEM_IN_PROGRESS`, `FIELD_NOT_EDITABLE`, `SCHEMA_INVALID` and `PLAN_LOCKED` have their own texts. The end-to-end test
+`e2e/planner.spec.ts` runs against a copy of `tests/fixtures/plans/e2e` in the throwaway project and the planner
+bridge, and checks the plan file and `planner check` afterwards.
+
+## Configuration editor
+
+`/settings/config` lists the modules of `GET /v1/config`; `/settings/config/:module` edits one module. Search
+parameters: `layer` (`machine` or `project`), `project` (a project id from `GET /v1/projects`), `mode`
+(`form`, `diff`, `raw`, `explain`). The view is `GET /v1/config/{module}/effective[?project_id=]`
+(`config-view/v1`, read again on window focus). The UI only reads those endpoints and sends `POST .../preview` and
+`PATCH .../layers/{layer}` through the Transport (I2); it writes no file and builds no path.
+
+Code: `src/forms/` (reusable by the plan forms of P4) and `src/pages/ConfigModules.tsx`, `ConfigEditor.tsx`.
+
+- `profile.ts` reads the closed profile of aicore into leaves, tables and maps. Keywords it knows: `type`, `title`,
+  `description`, `default`, `enum`, `minimum`, `maximum`, `minLength`, `pattern`, `items`, `properties`,
+  `additionalProperties`, `patternProperties`, `x-skm-secret`, `x-skm-layers`. A node with any other keyword is shown
+  read-only with the note `unsupported: <keyword>`; it never throws.
+- `draft.ts`: the draft is an ordered map of operations (`set`/`unset`) with the layer, the revision and the layer values
+  of the view it started on (the base). `toPatch` gives the `patch` of `config-mutation/v1` in the order of editing.
+  There is no schema validation in the browser (D6): input is parsed by type only (an integer field that is not an integer
+  shows an error and makes no operation); `minimum`, `pattern`, `enum` are hints and the backend preview decides.
+- `SchemaForm.tsx` and `fields/`: String, Integer/Number, Boolean, Enum, ScalarList, SecretRef and Map. A secret key takes
+  and shows only a reference `env://NAME` or `keyring://NAME`. A field is disabled when `allowed_layers` does not contain the
+  layer being edited; `env`, `invocation` and `flags` are read-only and shown in the provenance only. Emptying a field
+  removes the key (`unset`); a value equal to the one in the file takes the operation back.
+- `ProvenanceBadge.tsx`: the layer, the value and `file:line` (or the variable) of the effective value, `default`, and a list of the
+  values it overrides.
+- `PreviewDialog.tsx`: `POST preview` with the draft revision, the diff table (layer value and effective value with
+  layers), issues and `confirm_reasons`. Apply is disabled while there are issues; it sends
+  `{preview_id, expected_revision, confirmed: confirm_required}`. `PREVIEW_STALE` makes a new preview; `CONFIG_LOCKED`
+  (423) shows a message and Apply can be repeated.
+- `ConflictView.tsx`: `CONFIG_REVISION_CONFLICT` (409, from the preview or the commit) reads the view again and compares by
+  key: base (the file when the draft started), current (the file now), mine (the draft). Status `same` (applies cleanly),
+  `theirs` (only the file changed) or `conflict` (both changed differently). Reload drops the draft; Reapply keeps its
+  operations that still change something and makes a new preview on the current revision.
+- Modes: Form; Diff (the draft against the file, in the browser); Raw (`layers[].raw`, redacted by the backend, in a `<pre>`);
+  Explain (every key with its effective value and the overridden chain).
+
+Tests: `profile.test.ts`, `draft.test.ts`, `SchemaForm.golden.test.tsx` (golden markup in `src/forms/__golden__/*.html`,
+kept in git; `npm run check` compares them and never updates them — to change one on purpose run
+`npx vitest run -u src/forms` and read the diff), `src/pages/ConfigEditor.test.tsx` (request bodies, confirmation, conflict,
+lock) and the E2E `e2e/config.spec.ts` (edit, preview, apply, an outside change, Reapply) on the `demo` fixture unit, which
+provides `configs/config.schema.json`.
+
+## Plugins
+
+`/plugins` (`pages/Plugins.tsx`) lists every plugin of `GET /v1/plugins`: id (a link), source, state as text with a
+badge (colour only adds to the words), the flags `runtime` and `ui` as text, compatibility (`protocol ok` or
+`protocol mismatch`, missing contracts), failures (`count in window_s s`, last code) and the number of grants.
+`/plugins/:pluginId` (`pages/PluginPage.tsx`) has the blocks Health (state, failures, manifest digest, a quarantine
+notice with **Release**), Permissions, Grants, History and the buttons **Enable** and **Disable**. Every action button
+has the accessible name `<Action> <plugin id>` (`Enable ext-demo`, `Release ext-demo`, `Revoke network grant of
+ext-demo`). Types come only from `contracts/generated/plugin-api.ts`.
+
+- **Permissions** draw the `enforcement` value of the API as it is, always with its word (`declared`, `advisory`,
+  `enforced`); the UI never invents `enforced`. An extension effect other than `read` carries "start requires a
+  grant": the grant gates the start of work, it does not limit a running process.
+- **Confirmation.** A `428 CONFIRMATION_REQUIRED` answer opens a dialog with its `summary` and `risk`; only its button
+  repeats the same request with `details.confirm` (`plugins/useConfirmed.ts`). Disable of a plugin with active runs
+  shows the number of runs and the drain time of the backend summary first; Cancel sends nothing. A grant body is made
+  once, so the repeat is the request the token was made for.
+- **Grant dialog** (`plugins/GrantDialog.tsx`) offers the declared effects except `read` and `terminal`, a project
+  (or all projects) and an expiry (none, 1, 7 or 30 days; RFC 3339 UTC without fractions).
+- **Events.** The shell subscribes to `gui.plugin.*` (`plugins/useGuiPluginEvents.ts`); every frame and every
+  `snapshot_required` invalidate the plugin list, details, history and the catalog (`CATALOG_KEY`), so a plugin that is
+  enabled or disabled appears in or leaves the navigation at once.
+- **Enable** of an extension that fails the conformance check shows the findings lines of
+  `PLUGIN_CONFORMANCE_FAILED`.
+
+## Terminal
+
+`/terminal` (`pages/Terminal.tsx`) and the nav item `Terminal` exist for the user only when `bootstrap.features` has
+`terminal` (the owner turned on `[gui.terminal] enabled`; never in desktop mode, decision D30); without it the page says
+"Terminal is disabled" and names `[gui.terminal] enabled`. The page picks a project (`/v1/projects`), `Open terminal`
+sends `POST /v1/terminal/sessions`, the 428 summary of the backend is shown in a confirmation dialog and only `Confirm`
+repeats the request with the token. The active sessions (`GET /v1/terminal/sessions`) can be attached or closed.
+
+`terminal/TerminalView.tsx` imports `@xterm/xterm`, its CSS and `@xterm/addon-fit` dynamically (a chunk of their own,
+outside the initial bundle). Output goes only through `term.write(bytes, callback)`: no `innerHTML`, no clipboard (OSC
+52) and no link addon. `terminal/session.ts` is the client of the WebSocket `/v1/terminal/{id}/io` (same origin, `ws`
+or `wss` by the page): input is UTF-8 in base64 (pieces of 32 KiB), a `ResizeObserver` refits the terminal and sends
+`resize`, `exit` shows the code and reason. **Credit:** the first credit (16384 bytes, which fits the smallest server
+cap of 4 x 4096) is sent at once; credit for bytes goes back to the server only from the write callback, in batches of
+at least a quarter of the window and always before `exit`. Unmounting closes the socket (the server ends the session),
+disconnects the observer, disposes the terminal and sends `:close`. The frame types are written by hand in `session.ts`:
+the frames are in `$defs` of `terminal/v1`, which the type generator does not emit.
+
+## Security rules
+
+Data from the API is text: `dangerouslySetInnerHTML` and `innerHTML` are refused by eslint, markdown skips raw HTML.
+The build has no inline script or style and no eval-like code (`tests/test_frontend_build.py`), so it runs under the
+backend CSP (`script-src 'self'`, `style-src 'self'`, no `unsafe-eval`); there is no Ajv and no runtime schema
+compiler in the frontend.

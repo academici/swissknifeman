@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-view:v1",
+  "kind": "config_modules",
+  "modules": [
+    {
+      "id": "config-demo",
+      "title": "config-demo config",
+      "description": "Fixture module."
+    },
+    {
+      "id": "gui",
+      "title": null,
+      "description": null
+    }
+  ]
+}

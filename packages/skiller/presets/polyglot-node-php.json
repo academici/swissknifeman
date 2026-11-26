@@ -1,0 +1,15 @@
+{
+  "name": "polyglot-node-php",
+  "description": "Polyglot stack Node + PHP: general engineering + PHP-backend (packages) + frontend (Vue) + bridge front↔back + DevOps. Node-front cover frontend-buckets (separate bucket node no).",
+  "buckets": [
+    "architect",
+    "oss-dev",
+    "general",
+    "php",
+    "php-packages",
+    "frontend",
+    "frontend-vue",
+    "frontend-backend",
+    "devops"
+  ]
+}

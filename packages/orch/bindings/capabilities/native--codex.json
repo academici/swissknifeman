@@ -1,0 +1,51 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:capability-record:v1",
+  "contract_version": "exec/v1",
+  "binding": "native",
+  "provider": "codex",
+  "cli": {
+    "name": "codex"
+  },
+  "status": "declared",
+  "recorded_at": "2026-10-07T10:20:25Z",
+  "transport": "jsonl",
+  "auth_route": "subscription_oauth",
+  "model": {
+    "set": "supported",
+    "observe": "adapted"
+  },
+  "effort": {
+    "set": "supported",
+    "observe": "unknown"
+  },
+  "stream": "supported",
+  "attach": "unsupported",
+  "cancel": "supported",
+  "resume": "adapted",
+  "usage": "supported",
+  "restrictions": {
+    "tools_native": "adapted",
+    "sandbox_os": "supported",
+    "prompt_only": false
+  },
+  "skill_delivery": {
+    "mode": "isolated_home",
+    "per_run_isolation": "adapted"
+  },
+  "plan_write_prevention": "adapted",
+  "terminal_signal": "`turn.completed` or `turn.failed`, then exit",
+  "evidence": [
+    {
+      "kind": "doc",
+      "ref": "https://learn.chatgpt.com/docs/config-file/config-advanced"
+    },
+    {
+      "kind": "perplexity",
+      "ref": "docs/research/perplexity/Q12.md"
+    },
+    {
+      "kind": "perplexity",
+      "ref": "docs/research/perplexity/Q15.md"
+    }
+  ]
+}

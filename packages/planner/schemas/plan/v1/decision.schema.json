@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:decision:v1",
+  "title": "Decision",
+  "description": "One decision or open question (decisions/<D#>.json).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker, always urn:swissknifeman:task:plan:decision:v1.",
+      "minLength": 1,
+      "const": "urn:swissknifeman:task:plan:decision:v1"
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/decisionId",
+      "description": "Decision id, equals the file name."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Decision title."
+    },
+    "date": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/date",
+      "description": "Date recorded."
+    },
+    "status": {
+      "type": "string",
+      "description": "open is an open question; proposed records a concrete recommendation awaiting acceptance.",
+      "minLength": 1,
+      "enum": [
+        "open",
+        "proposed",
+        "accepted",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "question": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "The question; required when open."
+    },
+    "options": {
+      "type": "array",
+      "description": "Options considered.",
+      "items": {
+        "type": "object",
+        "description": "One option.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Option letter.",
+            "minLength": 1,
+            "pattern": "^[A-Z]$"
+          },
+          "text": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Option text."
+          },
+          "pros": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Advantages."
+          },
+          "cons": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Drawbacks."
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "context": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Background."
+    },
+    "decision": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "The rule itself; required when accepted."
+    },
+    "rationale": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Why; required when accepted."
+    },
+    "consequences": {
+      "type": "array",
+      "description": "Consequences.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text"
+      }
+    },
+    "applies_to": {
+      "type": "array",
+      "description": "Items or phases governed.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+      }
+    },
+    "global": {
+      "type": "boolean",
+      "description": "True sends the decision to every context pack; exclusive with a non-empty applies_to."
+    },
+    "supersedes": {
+      "type": "array",
+      "description": "Decisions superseded by this one.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/decisionId"
+      },
+      "uniqueItems": true
+    },
+    "superseded_by": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Decision that supersedes this one, or null.",
+      "minLength": 1,
+      "pattern": "^D[0-9]+$"
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Evidence behind the decision.",
+      "items": {
+        "type": "object",
+        "description": "One piece of evidence.",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Where it comes from.",
+            "minLength": 1,
+            "enum": [
+              "repo",
+              "rag",
+              "owner"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "description": "Path, capture or message reference.",
+            "minLength": 1
+          },
+          "note": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+            "description": "Remark."
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "actor": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who recorded the decision."
+    },
+    "origin": {
+      "type": "object",
+      "description": "Where the decision came from when an orchestration run recorded it: the question it answered. A later run asks the same question again and finds the decision by question_key.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "question: an owner's answer; advice: an advisor's recommendation; panel: an advisor panel's.",
+          "minLength": 1,
+          "enum": ["question", "advice", "panel"]
+        },
+        "run": {"type": "string", "description": "Orchestration run that recorded it.", "minLength": 1},
+        "item": {"type": "string", "description": "Piece of work the question was asked in.", "minLength": 1},
+        "question_id": {"type": "string", "description": "Id of the question in the piece.", "minLength": 1},
+        "question_key": {"type": "string", "description": "qk- and 16 hex characters of the digest of the meaning of the question.", "pattern": "^qk-[0-9a-f]{16}$"},
+        "question_digest": {"type": "string", "description": "SHA-256 hex digest of the canonical meaning of the question (item, kind, text, options, answer schema).", "pattern": "^[0-9a-f]{64}$"},
+        "revision": {"type": "integer", "description": "Revision of the question.", "minimum": 1}
+      },
+      "required": ["kind", "run", "item", "question_id", "question_key"],
+      "additionalProperties": false
+    },
+    "answered_by": {
+      "type": "string",
+      "description": "Who answered a formerly open question.",
+      "minLength": 1,
+      "enum": [
+        "owner",
+        "agent"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "description": "Complete supporting sections.",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "title",
+    "date",
+    "status",
+    "actor"
+  ],
+  "additionalProperties": false
+}

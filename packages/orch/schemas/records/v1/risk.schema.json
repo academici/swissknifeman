@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:risk:v1",
+  "title": "risk.json of a piece",
+  "description": "The risk score of a piece after its executor round (<run>/<item>/risk.json, stages/review.py dynamic_review): the score of risk.score, the facts it was computed from, the threshold of review.dynamic_threshold and whether it added a review. The same record without item and run is state.items.<ref>.risk; readers outside orch take the file as published.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["score", "features", "item", "run"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:risk:v1"},
+    "score": {"description": "Sum of the weights of the features found, capped at 100.", "type": "integer", "minimum": 0, "maximum": 100},
+    "features": {"description": "Features found, each with its weight and evidence.", "type": "array", "items": {"$ref": "#/$defs/feature"}},
+    "critical": {"description": "Names of the features found that add a review whatever the sum.", "type": "array", "items": {"description": "A feature name.", "type": "string"}},
+    "facts": {"$ref": "#/$defs/facts"},
+    "threshold": {"description": "review.dynamic_threshold of the piece.", "type": "number"},
+    "added": {"description": "The score or a critical feature added a review.", "type": "boolean"},
+    "announced": {"description": "REVIEW_ADDED was said (kept by a resume).", "type": "boolean"},
+    "item": {"description": "Reference of the piece.", "type": "string", "minLength": 1},
+    "run": {"description": "Conductor run id.", "type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "feature": {
+      "description": "One feature of the score.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "weight", "evidence"],
+      "properties": {
+        "name": {"description": "Feature name (public_cli, schema, security, shared, diff_size, red_first, deviation, outside_write_set, executor_recommended).", "type": "string", "minLength": 1},
+        "weight": {"description": "Weight of the feature.", "type": "integer"},
+        "evidence": {"description": "What was found.", "type": "string"}
+      }
+    },
+    "facts": {
+      "description": "Facts the score was computed from.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "changed": {"description": "Changed repository paths.", "type": "array", "items": {"description": "A path.", "type": "string"}},
+        "outside": {"description": "Changed paths outside the write set.", "type": "array", "items": {"description": "A path.", "type": "string"}},
+        "diff_lines": {"description": "Changed lines.", "type": "integer", "minimum": 0},
+        "red_first": {"description": "An acceptance check was red in the first round.", "type": "boolean"},
+        "deviation": {"description": "The executor reported a deviation (or one was fixed automatically).", "type": "boolean"},
+        "recommended": {"description": "The executor recommended a review.", "type": "boolean"}
+      }
+    }
+  }
+}

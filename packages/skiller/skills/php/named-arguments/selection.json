@@ -1,0 +1,10 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "OVERLAY",
+  "triggers": {
+    "paths": [
+      "*.php"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "run_id": "a",
+  "provider": "a",
+  "reason_code": "PROVIDER_WAIT",
+  "not-a-field": 1
+}

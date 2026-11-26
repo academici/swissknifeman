@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:skiller:evals:v1",
+  "title": "skiller skill evals (evals.json / pressure.json / triggers.json)",
+  "description": "Registry skill behavioral tests (eval-first). Lie in skills/<bucket>/<name>/evals/. Runner/grader — lib/skiller/eval.py (skiller eval). Manual runtime validation (validate.sh + eval.validate_*); scheme - for DX. evals/ is NOT a vendor or part of content-hash.",
+  "oneOf": [
+    { "$ref": "#/$defs/evals" },
+    { "$ref": "#/$defs/pressure" },
+    { "$ref": "#/$defs/triggers" }
+  ],
+  "$defs": {
+    "assertion": {
+      "type": "object",
+      "description": "Deterministic run output check (without LLM-judge — reproducible in CI).",
+      "required": ["type", "value"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["contains", "not_contains", "regex", "not_regex",
+                   "file_exists", "file_absent", "min_words"]
+        },
+        "value": {
+          "description": "Substring/pattern/path/number - depending on type."
+        },
+        "flags": {
+          "type": "object",
+          "properties": {
+            "case_sensitive": {
+              "type": "boolean",
+              "description": "Comparison is case insensitive by default (natural language is more robust)."
+            }
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "required": ["id", "prompt"],
+      "properties": {
+        "id": { "description": "Unique case identifier in the file." },
+        "prompt": { "type": "string", "description": "Request in the user's real language (specifics: paths, names)." },
+        "tempts": { "type": "string", "description": "Only for pressure: which is tempting the agent to do it, MISSING the skill." },
+        "files": {
+          "type": "array",
+          "description": "Files written to workspace before the run.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "content": { "type": "string" }
+            }
+          }
+        },
+        "assertions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/assertion" }
+        }
+      }
+    },
+    "evals": {
+      "type": "object",
+      "description": "evals.json — positive cases (what the skill should do).",
+      "required": ["skill", "cases"],
+      "properties": {
+        "skill": { "type": "string" },
+        "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+      }
+    },
+    "pressure": {
+      "type": "object",
+      "description": "pressure.json — temptation scenarios (TDD for documentation): withhold behavior under pressure.",
+      "required": ["skill", "scenarios"],
+      "properties": {
+        "skill": { "type": "string" },
+        "scenarios": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/case" } }
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "description": "triggers.json — response accuracy description (tier-0): should_trigger vs should_not.",
+      "required": ["should_trigger", "should_not"],
+      "properties": {
+        "skill": { "type": "string" },
+        "should_trigger": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "should_not": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    }
+  }
+}

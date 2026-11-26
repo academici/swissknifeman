@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "reviewer",
+  "title": "Reviewer",
+  "description": "Apply the review method of the skills listed in your role manifest (`skills`): the code-review",
+  "instructions": [
+    {
+      "path": "roles/reviewer.md",
+      "purpose": "canonical role text",
+      "sha256": "647d472d262924b30161a5cc7b6d91331489a191e88bc58c258060e877f7ab63"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "read_only",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "none",
+  "result_shape": "review-findings",
+  "model_class_min": "implementation",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ],
+  "agent_pack_roles": [
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "reviewer"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "reviewer"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "reviewer"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "reviewer"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "reviewer"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:document:v1",
+  "title": "Plan knowledge document",
+  "description": "Schema-backed design, runbook or evidence sections in knowledge/<id>.json.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "urn:swissknifeman:task:plan:document:v1",
+      "description": "$schema."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "description": "Id."
+    },
+    "title": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Title."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/section"
+      },
+      "description": "Sections."
+    },
+    "applies_to": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+      },
+      "description": "Applies to."
+    },
+    "global": {
+      "type": "boolean",
+      "description": "True sends the document to every context pack; exclusive with a non-empty applies_to."
+    },
+    "provenance": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/provenance",
+      "description": "Provenance."
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "title",
+    "sections"
+  ],
+  "additionalProperties": false
+}

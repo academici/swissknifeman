@@ -1,0 +1,30 @@
+{
+  "skill": "enum-attributes",
+  "snippets": [
+    {
+      "file": "attribute.php",
+      "description": "Metadata attribute classes: final readonly + TARGET_CLASS_CONSTANT (Label, Color, Description, multiparameter Dashboard)",
+      "tags": ["enum", "attributes", "metadata"]
+    },
+    {
+      "file": "concern-trait.php",
+      "description": "EnumCaseAttributeResolver (reflection + static cache) and Concern-traits HasLabelAttribute/HasColorAttribute with defaults",
+      "tags": ["enum", "trait", "reflection", "resolver"]
+    },
+    {
+      "file": "enum-example.php",
+      "description": "Enriched enum OrderStatus: attributes over cases, traits, selection allForStage() by domain attribute",
+      "tags": ["enum", "example", "filament"]
+    },
+    {
+      "file": "composer-path-repo.json",
+      "description": "Connecting a local package via repositories path + symlink with version commit",
+      "tags": ["composer", "path-repository", "local-package"]
+    },
+    {
+      "file": "enum-typescript.php",
+      "description": "Stack #[TypeScript] (export enum in .d.ts) over custom #[Label]/#[Priority]: Label-attribute, HasLabelAttribute concern, enum implements HasLabel and fragment config/typescript-transformer.php (App.Enums.* union)",
+      "tags": ["enum", "typescript", "spatie", "type-sync", "transformer"]
+    }
+  ]
+}

@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:analyst:unified-agent-trace:v1",
+  "title": "unified-agent-trace",
+  "description": "Unified agent trace.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Format identifier.",
+      "const": "unified-agent-trace/v1"
+    },
+    "trace_id": {
+      "description": "SHA-256 of the natural key.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Where the raw payload was read.",
+      "additionalProperties": false,
+      "properties": {
+        "provider_id": {
+          "description": "Provider that produced the turn.",
+          "enum": [
+            "claude-code",
+            "codex",
+            "cursor",
+            "grok",
+            "antigravity"
+          ]
+        },
+        "raw_ref": {
+          "description": "Pointer to the raw payload. The payload itself is not stored.",
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "description": "SHA-256 hex of the source bytes.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "reader_id": {
+          "description": "Reader that parsed the raw payload.",
+          "type": "string",
+          "minLength": 1
+        },
+        "reader_version": {
+          "description": "Version of that reader.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "provider_id",
+        "raw_ref",
+        "sha256",
+        "reader_id",
+        "reader_version"
+      ]
+    },
+    "occurred_at": {
+      "description": "UTC time of the turn.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "plan_ref": {
+      "description": "Plan item this turn served.",
+      "oneOf": [
+        {
+          "type": "null",
+          "description": "Missing; a reason is recorded."
+        },
+        {
+          "type": "object",
+          "description": "Plan item this turn served.",
+          "additionalProperties": false,
+          "properties": {
+            "plan_id": {
+              "description": "Plan id.",
+              "type": "string",
+              "minLength": 1
+            },
+            "item_id": {
+              "description": "Item id.",
+              "type": "string",
+              "minLength": 1
+            },
+            "command": {
+              "description": "Command that ran the item.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "plan_id",
+            "item_id",
+            "command"
+          ]
+        }
+      ]
+    },
+    "contract_ref": {
+      "description": "Contract the turn was checked against.",
+      "oneOf": [
+        {
+          "type": "null",
+          "description": "Missing; a reason is recorded."
+        },
+        {
+          "type": "object",
+          "description": "Contract the turn was checked against.",
+          "additionalProperties": false,
+          "properties": {
+            "contract_id": {
+              "description": "Contract id.",
+              "type": "string",
+              "minLength": 1
+            },
+            "version_hash": {
+              "description": "SHA-256 hex of the contract text.",
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "contract_id",
+            "version_hash"
+          ]
+        }
+      ]
+    },
+    "route": {
+      "description": "Model route that served the turn.",
+      "oneOf": [
+        {
+          "type": "null",
+          "description": "Missing; a reason is recorded."
+        },
+        {
+          "type": "object",
+          "description": "Model route that served the turn.",
+          "additionalProperties": false,
+          "properties": {
+            "model_class": {
+              "description": "Route class.",
+              "type": "string",
+              "minLength": 1
+            },
+            "effort": {
+              "description": "Effort the route asked for.",
+              "type": "string",
+              "minLength": 1
+            },
+            "model": {
+              "description": "Model name.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "model_class",
+            "effort",
+            "model"
+          ]
+        }
+      ]
+    },
+    "dispatch": {
+      "description": "Dispatch state and event.",
+      "oneOf": [
+        {
+          "type": "null",
+          "description": "Missing; a reason is recorded."
+        },
+        {
+          "type": "object",
+          "description": "Dispatch state and event.",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "description": "Dispatch state.",
+              "enum": [
+                "READY",
+                "EXECUTING",
+                "VERIFYING",
+                "FIXING",
+                "DONE",
+                "INCIDENT",
+                "OWNER_BOUNDARY",
+                "ESCALATED",
+                "SKIPPED"
+              ]
+            },
+            "event": {
+              "description": "Dispatch event.",
+              "enum": [
+                "dispatch",
+                "pre-mutation-allow",
+                "pre-mutation-deny",
+                "mutation-complete",
+                "validation-green",
+                "validation-red",
+                "typed-finding",
+                "same-finding-third",
+                "pre-final-allow",
+                "pre-final-deny",
+                "close-committed",
+                "audit-verdict",
+                "owner-decision",
+                "escalation-trigger",
+                "skip-by-decision"
+              ]
+            }
+          },
+          "required": [
+            "state",
+            "event"
+          ]
+        }
+      ]
+    },
+    "finding_refs": {
+      "description": "Findings attached to the turn. Empty is recorded as missing in quality.",
+      "type": "array",
+      "items": {
+        "description": "One finding reference.",
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "public_outcome": {
+      "description": "What was allowed to leave the run.",
+      "oneOf": [
+        {
+          "type": "null",
+          "description": "Missing; a reason is recorded."
+        },
+        {
+          "type": "object",
+          "description": "What was allowed to leave the run.",
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "description": "Who may see the outcome.",
+              "enum": [
+                "public",
+                "internal"
+              ]
+            },
+            "check": {
+              "description": "Check that produced the outcome.",
+              "type": "string",
+              "minLength": 1
+            },
+            "evidence_ref": {
+              "description": "Where the evidence lives.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "scope",
+            "check",
+            "evidence_ref"
+          ]
+        }
+      ]
+    },
+    "quality": {
+      "type": "object",
+      "description": "How much of the nullable set is present.",
+      "additionalProperties": false,
+      "properties": {
+        "completeness": {
+          "description": "Present nullable fields divided by the nullable set.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "missing": {
+          "description": "Nullable fields that are null or empty.",
+          "type": "array",
+          "items": {
+            "description": "Field name.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "degraded": {
+          "description": "True when at least one nullable field is missing.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "completeness",
+        "missing",
+        "degraded"
+      ]
+    },
+    "reasons": {
+      "type": "object",
+      "description": "Why each missing nullable field is missing.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "description": "Reason the field is missing.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "description": "Classes of content this record refuses to store.",
+      "additionalProperties": false,
+      "properties": {
+        "excluded": {
+          "description": "Excluded classes.",
+          "type": "array",
+          "items": {
+            "description": "One excluded class.",
+            "enum": [
+              "raw_transcript",
+              "chain_of_thought",
+              "tool_payload",
+              "secret"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "excluded"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "trace_id",
+    "provenance",
+    "occurred_at",
+    "plan_ref",
+    "contract_ref",
+    "route",
+    "dispatch",
+    "finding_refs",
+    "public_outcome",
+    "quality",
+    "reasons",
+    "privacy"
+  ]
+}

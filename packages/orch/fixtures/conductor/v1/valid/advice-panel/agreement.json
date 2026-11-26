@@ -1,0 +1,112 @@
+{
+  "problem_ref": "question:Q1@1",
+  "members": [
+    {
+      "member": 1,
+      "route": "grok/grok-4.7/high",
+      "file": "plans/T/artifacts/W1/advice-1-p1.json",
+      "advice": {
+        "problem_ref": "question:Q1@1",
+        "options": [
+          {
+            "id": "keep",
+            "text": "Keep the old flag name",
+            "pros": [
+              "no break"
+            ],
+            "cons": [
+              "two names"
+            ]
+          },
+          {
+            "id": "rename",
+            "text": "Rename the flag",
+            "pros": [
+              "one name"
+            ],
+            "cons": [
+              "breaks callers"
+            ]
+          }
+        ],
+        "recommendation": "keep",
+        "confidence": "high",
+        "sources": [
+          "README.md"
+        ],
+        "needs_owner": false
+      }
+    },
+    {
+      "member": 2,
+      "route": "claude-code/claude-opus-5-5/high",
+      "file": "plans/T/artifacts/W1/advice-1-p2.json",
+      "advice": {
+        "problem_ref": "question:Q1@1",
+        "options": [
+          {
+            "id": "keep",
+            "text": "Keep the old flag name",
+            "pros": [
+              "no break"
+            ],
+            "cons": [
+              "two names"
+            ]
+          },
+          {
+            "id": "rename",
+            "text": "Rename the flag",
+            "pros": [
+              "one name"
+            ],
+            "cons": [
+              "breaks callers"
+            ]
+          }
+        ],
+        "recommendation": "keep",
+        "confidence": "high",
+        "sources": [
+          "README.md"
+        ],
+        "needs_owner": false
+      }
+    }
+  ],
+  "synthesis": {
+    "kind": "agreement",
+    "chosen": "keep",
+    "advice": {
+      "problem_ref": "question:Q1@1",
+      "options": [
+        {
+          "id": "keep",
+          "text": "Keep the old flag name",
+          "pros": [
+            "no break"
+          ],
+          "cons": [
+            "two names"
+          ]
+        },
+        {
+          "id": "rename",
+          "text": "Rename the flag",
+          "pros": [
+            "one name"
+          ],
+          "cons": [
+            "breaks callers"
+          ]
+        }
+      ],
+      "recommendation": "keep",
+      "confidence": "high",
+      "sources": [
+        "README.md"
+      ],
+      "needs_owner": false
+    }
+  }
+}

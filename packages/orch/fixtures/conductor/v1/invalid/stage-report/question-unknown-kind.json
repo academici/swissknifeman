@@ -1,0 +1,34 @@
+{
+  "status": "blocked",
+  "summary": "needs a decision",
+  "changed_paths": [],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "text": "QUESTION Q1 waits for the owner",
+      "kind": "escalation"
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q1",
+      "revision": 1,
+      "kind": "chat",
+      "text": "Keep the old flag name?",
+      "options": [
+        {
+          "id": "keep",
+          "label": "keep"
+        },
+        {
+          "id": "rename",
+          "label": "rename"
+        }
+      ],
+      "default": "keep",
+      "blocking": true,
+      "risk": "medium"
+    }
+  ]
+}

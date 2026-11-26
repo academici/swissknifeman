@@ -1,0 +1,5 @@
+{
+  "name": "laravel-data-layer",
+  "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+  "skills": "./"
+}

@@ -1,0 +1,324 @@
+{
+  "schema": 1,
+  "pack": "backend-laravel",
+  "version": "0.12.3",
+  "description": "Backend dev-loop for Laravel: agents slice-builder/test-writer/reviewer, sequential single-branch workflow (slice→impl→test→review), SubagentStop review-gate. v0.5.0: risk-adaptive review-gate (risk_level/risk_markers in the schema, adversarial-mode on HIGH, severity-enum detect≠gating, config-honesty, fairness of tests [POSSIBLE-DEFECT]), Lean-tiered model/effort-lanes at risk of cutting (Sonnet impl, Opus review/HIGH, Haiku trivial), env-preflight in Setup, layout-agnostic globs rules. Summarized from retrospective chatom + overnight-artifacts memster.",
+  "stack": {
+    "shape": "backend",
+    "language": "php",
+    "framework": "laravel",
+    "project_type": "laravel-project",
+    "detect": {
+      "all_of": [
+        "artisan",
+        "composer.json"
+      ]
+    }
+  },
+  "requires": {
+    "skills": [
+      "repositories",
+      "laravel-structure",
+      "dependency-injection",
+      "laravel-data",
+      "laravel",
+      "database",
+      "code-style-spatie",
+      "named-arguments",
+      "laravel-testing",
+      "test-isolation-guard",
+      "laravel-security-audit"
+    ],
+    "harness_presets": [
+      "base",
+      "laravel"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Agent name prefix/work flow?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    },
+    {
+      "id": "PROJECT_DIR",
+      "q": "Absolute path to the project?",
+      "detect": "pwd"
+    },
+    {
+      "id": "PHP_RUNNER",
+      "q": "Binary PHP for artisan/tests?",
+      "detect": "command -v php8.4 || command -v php",
+      "default": "php"
+    },
+    {
+      "id": "TEST_FRAMEWORK",
+      "q": "PHPUnit-native or Pest?",
+      "detect": "composer.json:require-dev.pestphp/pest",
+      "enum": [
+        "phpunit",
+        "pest"
+      ],
+      "default": "phpunit"
+    },
+    {
+      "id": "TEST_RUNNER_CMD",
+      "q": "Test run command?",
+      "default": "{PHP_RUNNER} artisan test"
+    },
+    {
+      "id": "TEST_DB",
+      "q": "Isolated test database name?",
+      "default": "{PACK_PREFIX}_test"
+    },
+    {
+      "id": "BASE_BRANCH",
+      "q": "Basic run branch?",
+      "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
+      "default": "main"
+    },
+    {
+      "id": "CHECK_CMD",
+      "q": "Shortcut review-gate (static)?",
+      "default": "vendor/bin/pint --parallel --test -q"
+    },
+    {
+      "id": "ACCESS_LAYER",
+      "q": "Canon access-layer (thin controller, Action/Repository)?",
+      "kind": "bool",
+      "default": true
+    },
+    {
+      "id": "ACCESS_ROOT",
+      "q": "Code root access-layer (app / src / packages/*/src)?",
+      "detect": "test -d app/Http && echo app ; test ! -d app/Http && test -d src/Http && echo src ; test ! -d app/Http && test ! -d src/Http && ls -d packages/*/src/Http >/dev/null 2>&1 && echo 'packages/*/src' ; echo ''",
+      "default": "app"
+    },
+    {
+      "id": "SCAFFOLDS_SCHEMA",
+      "q": "Agents create migrations/models (greenfield/package), and not write on top of the finished diagram?",
+      "kind": "bool",
+      "detect": "test -d app/Models && echo false || echo true",
+      "default": true
+    },
+    {
+      "id": "DOCS_DIR",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
+      "default": ".claude/guidelines"
+    },
+    {
+      "id": "MODEL_REVIEWER",
+      "q": "Model reviewer-agent (Lean-tiered: Opus — judges the risk/architecture)?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SLICE_BUILDER",
+      "q": "Model slice-builder (Lean-tiered: Sonnet — mass implementation)?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_TEST_WRITER",
+      "q": "Model test-writer (Lean-tiered: Sonnet)?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SPEC_WRITER",
+      "q": "Model spec-writer (Lean-tiered: Opus — design/synthesis)?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_RECON",
+      "q": "Model read-only recon-subagents (route-map/db-impact/blade/test-verify/security — cheap intelligence)?",
+      "default": "economy",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "GATE_COVERAGE_MIN",
+      "q": "Min. behavior change coverage (%)?",
+      "default": "80"
+    },
+    {
+      "id": "GATE_MAX_CRITICAL",
+      "q": "Acceptable critical-finds?",
+      "default": "0"
+    },
+    {
+      "id": "GATE_MAX_COMPLEXITY",
+      "q": "Cyclomatic complexity threshold for a method?",
+      "default": "10"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/slice-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/test-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-writer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-reviewer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/spec-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/route-mapper.md",
+      "target": ".claude/agents/{PACK_PREFIX}-route-mapper.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/db-impact.md",
+      "target": ".claude/agents/{PACK_PREFIX}-db-impact.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/blade-review.md",
+      "target": ".claude/agents/{PACK_PREFIX}-blade-review.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/test-verifier.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-verifier.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/security-review.md",
+      "target": ".claude/agents/{PACK_PREFIX}-security-review.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "workflows/dev-loop.js",
+      "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js",
+      "kind": "template",
+      "role": "workflow"
+    },
+    {
+      "src": "hooks/review-gate.sh",
+      "target": ".claude/hooks/review-gate.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "hooks/review-gate.env.ini",
+      "target": ".claude/review-gate.env.ini",
+      "kind": "template",
+      "role": "config",
+      "user_owned": true
+    },
+    {
+      "src": "settings/settings.fragment.json",
+      "target": ".claude/settings.json",
+      "kind": "merge",
+      "role": "settings",
+      "merge": "hooks.SubagentStop[] append-if-absent"
+    },
+    {
+      "src": "docs/subagents-and-workflows.md",
+      "target": "{DOCS_DIR}/subagents-and-workflows.md",
+      "kind": "template",
+      "role": "doc"
+    },
+    {
+      "src": "rules/api-controllers.md",
+      "target": ".claude/rules/api-controllers.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/migrations.md",
+      "target": ".claude/rules/migrations.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/tests.md",
+      "target": ".claude/rules/tests.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "rules/reviewer-overrides.md",
+      "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md",
+      "kind": "template",
+      "user_owned": true,
+      "role": "override"
+    }
+  ],
+  "expect_globs": [
+    "{ACCESS_ROOT}/Http/Controllers"
+  ],
+  "notes": {
+    "project_specific_prose": "Agents carry infra-assumptions memster-origin (protected .env, pre-created Postgres test database). Projects with different infrastructure - edit the rendered agents after install.",
+    "verify_workflow": "dev-loop.js uses top-level return/await (Workflow-runtime) — node --check DO NOT apply to it; check the balance of brackets and non-emptiness.",
+    "access_layer": "For backend-laravel access-layer intense (default true). Disable (ACCESS_LAYER=false) — manual editing of rendered agents; placeholder-wiring will come with the pack version."
+  }
+}

@@ -1,0 +1,1 @@
+{"$schema": "urn:swissknifeman:gui:terminal:v1", "kind": "session_list", "sessions": [{"session_id": "term-0123456789abcdef0123456789abcdef", "project_id": "proj-0a1b2c3d", "shell": "/bin/sh", "cols": 80, "rows": 24, "started_at": "2026-10-17T10:00:00Z"}]}

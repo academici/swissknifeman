@@ -1,0 +1,8 @@
+{
+  "name": "botkit",
+  "version": "0.4.0",
+  "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
+  "skills": [
+    "./botkit"
+  ]
+}

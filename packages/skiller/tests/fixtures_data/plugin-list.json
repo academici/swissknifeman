@@ -1,0 +1,53 @@
+[
+  {
+    "id": "task@swissknifeman",
+    "version": "0.1.0",
+    "scope": "local",
+    "enabled": true,
+    "installPath": "/home/user/.claude/plugins/cache/swissknifeman/task/0.1.0",
+    "installedAt": "2026-07-01T12:23:05.062Z",
+    "lastUpdated": "2026-07-09T20:08:33.177Z",
+    "projectPath": "/home/user/Vaults/Brain"
+  },
+  {
+    "id": "task@swissknifeman",
+    "version": "0.9.0",
+    "scope": "project",
+    "enabled": true,
+    "installPath": "/home/user/.claude/plugins/cache/swissknifeman/task/0.9.0",
+    "installedAt": "2026-07-27T13:36:26.087Z",
+    "lastUpdated": "2026-07-27T13:36:26.087Z",
+    "projectPath": "/home/user/projects/packages/chatom"
+  },
+  {
+    "id": "codex@openai-codex",
+    "version": "1.0.6",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "/home/user/.claude/plugins/cache/openai-codex/codex/1.0.6",
+    "installedAt": "2026-07-29T06:07:07.255Z",
+    "lastUpdated": "2026-07-29T06:07:07.255Z"
+  },
+  {
+    "id": "brain@brain",
+    "version": "1.0.0",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "/home/user/.claude/plugins/cache/brain/brain/1.0.0",
+    "installedAt": "2026-06-16T14:49:18.183Z",
+    "lastUpdated": "2026-06-16T14:49:18.183Z",
+    "errors": [
+      "Plugin brain has an invalid manifest file at /home/user/Vaults/Brain/.claude-plugin/plugin.json.\n\nValidation errors: commands: Invalid input, skills: Invalid input"
+    ]
+  },
+  {
+    "id": "ai@swissknifeman",
+    "version": "43c71ea65a2c",
+    "scope": "local",
+    "enabled": false,
+    "installPath": "/home/user/.claude/plugins/cache/swissknifeman/ai/43c71ea65a2c",
+    "installedAt": "2026-06-29T10:23:55.551Z",
+    "lastUpdated": "2026-06-29T10:23:55.551Z",
+    "projectPath": "/home/user/projects/packages/chatom"
+  }
+]

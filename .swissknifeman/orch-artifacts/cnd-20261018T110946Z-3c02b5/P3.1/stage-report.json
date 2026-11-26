@@ -1,0 +1,114 @@
+{
+  "changed_paths": [
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/lib/aicore/workspace/__init__.py",
+    "packages/aicore/lib/aicore/workspace/documents.py",
+    "packages/aicore/lib/aicore/workspace/localconfig.py",
+    "packages/aicore/schemas/README.md",
+    "packages/aicore/schemas/project-local-config/v1/examples/invalid/no-version.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/invalid/relative-repo-path.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/invalid/repo-without-path.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/invalid/top-level-value.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/invalid/unknown-repo-key.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/valid/not-bound.json",
+    "packages/aicore/schemas/project-local-config/v1/examples/valid/with-repo.json",
+    "packages/aicore/schemas/project-local-config/v1/project-local-config.schema.json",
+    "packages/aicore/tests/test_localconfig.py",
+    "packages/aicore/unit.json",
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/lib/workspace/doctor.py",
+    "packages/workspace/lib/workspace/layout.py",
+    "packages/workspace/lib/workspace/policy.py",
+    "packages/workspace/lib/workspace/safety.py",
+    "packages/workspace/lib/workspace/sync.py",
+    "packages/workspace/tests/test_doctor.py",
+    "packages/workspace/tests/test_policy.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "none",
+      "kind": "note",
+      "next": "the conductor runs V1",
+      "text": "Unit tests run instead of V1 (not run, the conductor runs it): aicore tests.test_localconfig, test_contracts, test_architecture, test_workspace, test_python39, test_schema (138 OK); all of workspace tests (328; OK once AICORE_ROOT points at the repo), bridges/workspace-planner (65 OK), bridges/gui-workspace (27 OK, 2 skipped); scripts/ecosystem-units.py check exits 0."
+    },
+    {
+      "class": "test_env",
+      "evidence": [
+        "packages/workspace/lib/workspace/policy.py:18"
+      ],
+      "impact": "V1 may be red on test_the_launcher_runs_the_module while the frozen aicore copy is stale",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "medium",
+      "text": "In this environment AICORE_ROOT (and other SKM_*_ROOT) point to a frozen copy ~/.cache/skm-frozen-runs/run-20261018T150943-1919944 taken before my change. workspace tests.test_cli.ModuleFilesTests.test_the_launcher_runs_the_module runs bin/workspace in a subprocess, imports aicore from that copy and fails with ImportError: cannot import name 'LOCAL_DIRNAME'. It passes with AICORE_ROOT=<repo>/packages/aicore. If V1 runs with the frozen env, that test is red for a reason outside the code."
+    },
+    {
+      "class": "spec_mismatch",
+      "evidence": [
+        "packages/workspace/lib/workspace/policy.py:27"
+      ],
+      "impact": "TRACKED_PROJECT_ENTRIES in policy.py has 6 entries, not 3",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "severity": "low",
+      "text": "The tracked allowlist is wider than the three entries named in the goal (plans, decisions, project.json): it also keeps legacy-plans, migrations and local-only.json, which the existing migrate and sync code writes and publish-safety already allowed. Dropping them would break migrate and local-only."
+    },
+    {
+      "impact": "unknown files directly in projects/<code>/ are blocked at sync --commit, not silently ignored",
+      "kind": "assumption",
+      "next": "owner may ask for a stricter inverted .gitignore",
+      "text": "The allowlist is enforced by the ignore list, doctor (warn on tracked files outside it) and publish-safety PS-PROJECT-LEVEL (block). It is not an inverted .gitignore ('/projects/*/*' with negations), because that would hide unknown files from publish-safety and break existing safety and sync tests."
+    },
+    {
+      "impact": "the first sync --commit of an old workspace includes a .gitignore change",
+      "kind": "note",
+      "next": "none",
+      "text": "sync --commit now rewrites the policy block of the workspace .gitignore (policy.apply) before it scans and stages. An older workspace therefore gets a .gitignore change in its next sync commit. Behavior change of a public command."
+    },
+    {
+      "impact": "P3.2 scope",
+      "kind": "note",
+      "next": "P3.2",
+      "text": "For P3.2: nothing calls set_repo_path or repo_path yet. attach, bind, scan, rebind, detach, project_rows, doctor._bindings, doctor._legacy_plans, integration.check_project and projects.remove still read and write bindings.json. P3.2 must switch them to localconfig (repo.path is one primary path; bindings has many paths per project, so decide what happens to extra checkouts) and then retire bindings.py, workspace-bindings/v1 and the bindings README rows. Layer reading still uses project_config_file(root) = <checkout>/.swissknifeman/config.toml; the new project layer is <ws>/projects/<code>/local/config.toml, so aicore.config.resolve(project=...) and state.backups need the local/ paths (local_backups_dir, local_state_dir are ready). config.toml top level may hold only schema_version and module tables, so [repo] is read as a module table named repo and no module may claim that id."
+    },
+    {
+      "impact": "project remove after P3.2 writes local/config.toml",
+      "kind": "note",
+      "next": "P3.2",
+      "text": "For P3.2/P3.3: projects.remove treats every file in the project folder as held except project.json and plans/.gitkeep, so a project with a local/ folder is PROJECT_NOT_EMPTY. Decide whether local/ counts as held. doctor._layout accepts local and decisions as project entries; the launcher-only marker <checkout>/.swissknifeman/project.json is unchanged."
+    },
+    {
+      "impact": "compatibility with P3.4 and P3.5",
+      "kind": "note",
+      "next": "P3.4, P3.5",
+      "text": "For P3.4/P3.5: the layer file is TOML with schema_version and module tables only. Settings such as the optional plans/ and tasks/ links (D5) should be module settings in local/config.toml, not new top-level keys of project-local-config/v1. The schema accepts any module table, so no schema change is needed. SKM_* variables can read repo_path / local_dir through the localconfig helpers."
+    },
+    {
+      "impact": "the commit should not take them",
+      "kind": "note",
+      "next": "the coordinator checks the diff before commit",
+      "text": "git status of the tree shows modified lock files (packages/docs/package-lock.json, packages/gui/**/Cargo.lock, package-lock.json, requirements.lock, packages/skiller/skills.json) that I did not touch; the start snapshot was clean. They are not in changed_paths."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/aicore/lib/aicore/workspace/localconfig.py: set_repo_path / clear_repo_path (lock, TOML edit, validation before write)",
+      "packages/workspace/lib/workspace/policy.py: ignore list, apply, audit, local_ignored",
+      "packages/workspace/lib/workspace/sync.py: policy.apply before staging",
+      "packages/aicore/schemas/project-local-config/v1/project-local-config.schema.json"
+    ],
+    "reason_codes": [
+      "schema_changed",
+      "public_api_changed",
+      "shared_module_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added contract project-local-config/v1 (schema, examples, unit.json, README) and aicore.workspace.localconfig (local/ paths, ensure_local, read_local_config, repo_path, set_repo_path, clear_repo_path; new codes PROJECT_LOCAL_CONFIG_INVALID and PROJECT_LOCAL_CONFIG_LOCKED). In the workspace package added policy.py: the tracked allowlist and the ignore list (local/, run files, orch artifacts, model/provider settings, build output) as a managed block of the workspace .gitignore written by init and re-applied by sync --commit before staging, so projects/<code>/local/ is never staged. New doctor check workspace.git-policy; decisions added to the project entries of layout and publish-safety. Tests (test_localconfig, test_policy, updated test_doctor), READMEs and changelogs updated. bindings.json and its API are intentionally unchanged: readers move in P3.2."
+}

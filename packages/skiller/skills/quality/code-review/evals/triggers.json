@@ -1,0 +1,12 @@
+{
+  "skill": "code-review",
+  "should_trigger": [
+    "review this PR",
+    "which blocks the merging of these changes",
+    "look at the diffs and give comments on severity"
+  ],
+  "should_not": [
+    "write a new export function to CSV",
+    "which package to take for background queues"
+  ]
+}

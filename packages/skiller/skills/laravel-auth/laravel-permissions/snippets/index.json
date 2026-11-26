@@ -1,0 +1,35 @@
+{
+  "skill": "laravel-permissions",
+  "snippets": [
+    {
+      "file": "rbac-setup.php",
+      "description": "Spatie-style RBAC setup",
+      "tags": ["permissions", "rbac"]
+    },
+    {
+      "file": "policy-class.php",
+      "description": "Laravel Policy class",
+      "tags": ["permissions", "policy"]
+    },
+    {
+      "file": "gate-definition.php",
+      "description": "Gate definition",
+      "tags": ["permissions", "gate"]
+    },
+    {
+      "file": "authorization-context.php",
+      "description": "Entity-scoped authorization context value object",
+      "tags": ["permissions", "azguard", "context"]
+    },
+    {
+      "file": "context-middleware.php",
+      "description": "Middleware to set authorization context per request",
+      "tags": ["permissions", "azguard", "middleware"]
+    },
+    {
+      "file": "contextual-grant-source.php",
+      "description": "GrantSource for context-scoped roles",
+      "tags": ["permissions", "azguard", "rbac"]
+    }
+  ]
+}

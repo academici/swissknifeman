@@ -1,0 +1,17 @@
+{
+  "status": "done",
+  "summary": "Added the greet command, its test and a negative example.",
+  "changed_paths": [
+    "demo/cli.py",
+    "tests/test_cli.py"
+  ],
+  "checks_run": [],
+  "self_check": [
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 0
+    }
+  ],
+  "evidence": [],
+  "open_issues": []
+}

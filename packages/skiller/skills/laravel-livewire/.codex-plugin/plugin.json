@@ -1,0 +1,8 @@
+{
+  "name": "laravel-livewire",
+  "version": "0.4.1",
+  "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
+  "skills": [
+    "./livewire-blade-attributes"
+  ]
+}

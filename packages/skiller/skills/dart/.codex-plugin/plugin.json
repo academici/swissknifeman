@@ -1,0 +1,8 @@
+{
+  "name": "dart",
+  "version": "0.4.0",
+  "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+  "skills": [
+    "./dart-package-development"
+  ]
+}

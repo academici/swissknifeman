@@ -1,0 +1,6 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "procedure",
+  "decision": "WORKFLOW",
+  "exclusive_group": "pm-pipeline"
+}

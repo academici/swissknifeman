@@ -1,0 +1,21 @@
+{
+  "data": {
+    "attempt_id": "att-0001",
+    "config_digest": "abc",
+    "run_id": "run-1",
+    "scenario": "solo",
+    "source": {
+      "plugin": "planner-orch",
+      "ref": "P10.9"
+    },
+    "submission_id": "sub-0001"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-run-started:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "run-1",
+  "time": "2026-10-11T04:30:00.000Z",
+  "type": "orch.run.started"
+}

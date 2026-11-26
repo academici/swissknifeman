@@ -1,0 +1,598 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:harness:config:v1",
+  "title": "harness config",
+  "description": "Settings of the harness module: hook modes of a project (they are written to the committed .swissknifeman/hooks.env by `harness hooks sync`) and the expected policy profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hooks": {
+      "type": "object",
+      "description": "Modes of the hooks installed in the project, one table per hook.",
+      "additionalProperties": false,
+      "properties": {
+        "auto_approve": {
+          "type": "object",
+          "description": "Auto-approve hook (Bash and plan-exit permission decisions).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Autonomy mode: strict allows read-only commands, permissive allows all but the deny list, bypass also approves plan exit, off leaves the normal permission flow.",
+              "enum": [
+                "strict",
+                "permissive",
+                "bypass",
+                "off"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the auto-approve keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Autonomy mode: strict allows read-only commands, permissive allows all but the deny list, bypass also approves plan exit, off leaves the normal permission flow.",
+                      "enum": [
+                        "strict",
+                        "permissive",
+                        "bypass",
+                        "off"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "description": "Unified memory hook.",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Memory backend: maind delegates to the maind daemon, manual leaves memory to explicit MCP calls, file, federation and agentmemory use their stores, off disables the hook.",
+              "enum": [
+                "maind",
+                "manual",
+                "file",
+                "federation",
+                "agentmemory",
+                "off"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "brain": {
+              "type": "string",
+              "description": "Name of the brain the project is attached to (used by the providers that keep it with the mode).",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the memory keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Memory backend: maind delegates to the maind daemon, manual leaves memory to explicit MCP calls, file, federation and agentmemory use their stores, off disables the hook.",
+                      "enum": [
+                        "maind",
+                        "manual",
+                        "file",
+                        "federation",
+                        "agentmemory",
+                        "off"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    },
+                    "brain": {
+                      "type": "string",
+                      "description": "Name of the brain the project is attached to (used by the providers that keep it with the mode).",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "agent_router": {
+          "type": "object",
+          "description": "Agent-router hook (intent hints on prompt submit).",
+          "additionalProperties": false,
+          "properties": {
+            "policy": {
+              "type": "string",
+              "description": "Routing policy: propose and auto_dispatch enable keyword hints, off disables the router.",
+              "enum": [
+                "propose",
+                "auto_dispatch",
+                "off"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the agent-router keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "type": "string",
+                      "description": "Routing policy: propose and auto_dispatch enable keyword hints, off disables the router.",
+                      "enum": [
+                        "propose",
+                        "auto_dispatch",
+                        "off"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "run_report": {
+          "type": "object",
+          "description": "Run-report hook (session-end telemetry).",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "string",
+              "description": "Write the run report at the end of a session: on or off.",
+              "enum": [
+                "on",
+                "off"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "runs_keep": {
+              "type": "integer",
+              "description": "Number of run reports to keep; the hook keeps 30 when the key is not set.",
+              "minimum": 1,
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the run-report keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": "string",
+                      "description": "Write the run report at the end of a session: on or off.",
+                      "enum": [
+                        "on",
+                        "off"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    },
+                    "runs_keep": {
+                      "type": "integer",
+                      "description": "Number of run reports to keep; the hook keeps 30 when the key is not set.",
+                      "minimum": 1,
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pack_guard": {
+          "type": "object",
+          "description": "Pack-guard hook (edits of generated agent-pack files).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Gate mode: off, warn or strict.",
+              "enum": [
+                "off",
+                "warn",
+                "strict"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the pack-guard keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Gate mode: off, warn or strict.",
+                      "enum": [
+                        "off",
+                        "warn",
+                        "strict"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "plan_guard": {
+          "type": "object",
+          "description": "Plan-guard hook (hand edits of generated plan files).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Gate mode: off, warn or strict.",
+              "enum": [
+                "off",
+                "warn",
+                "strict"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the plan-guard keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Gate mode: off, warn or strict.",
+                      "enum": [
+                        "off",
+                        "warn",
+                        "strict"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "plan_regen": {
+          "type": "object",
+          "description": "Plan-regen hook (check and render a plan after a JSON edit).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Re-render plans after an edit: on or off.",
+              "enum": [
+                "off",
+                "on"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the plan-regen keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Re-render plans after an edit: on or off.",
+                      "enum": [
+                        "off",
+                        "on"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "changelog_gate": {
+          "type": "object",
+          "description": "Changelog-gate hook (content commits without a CHANGELOG edit).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Gate mode: off, warn or strict.",
+              "enum": [
+                "off",
+                "warn",
+                "strict"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the changelog-gate keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Gate mode: off, warn or strict.",
+                      "enum": [
+                        "off",
+                        "warn",
+                        "strict"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "review_gate": {
+          "type": "object",
+          "description": "Review-gate hook (stop and subagent-stop checks).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Gate mode: off, warn or strict.",
+              "enum": [
+                "off",
+                "warn",
+                "strict"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the review-gate keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Gate mode: off, warn or strict.",
+                      "enum": [
+                        "off",
+                        "warn",
+                        "strict"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "git_guardrails": {
+          "type": "object",
+          "description": "Git-guardrails hook (destructive git commands).",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "description": "Gate mode: off, warn or strict.",
+              "enum": [
+                "off",
+                "warn",
+                "strict"
+              ],
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the git-guardrails keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "description": "Gate mode: off, warn or strict.",
+                      "enum": [
+                        "off",
+                        "warn",
+                        "strict"
+                      ],
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "observer": {
+          "type": "object",
+          "description": "Observer capture layer (experimental).",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Write the observer runtime log; false makes the hook a no-op.",
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "project"
+              ]
+            },
+            "providers": {
+              "type": "object",
+              "description": "Overrides of the observer keys by provider id (claude-code, cursor, codex, grok).",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "object",
+                  "description": "Keys that replace the general ones for this provider.",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean",
+                      "description": "Write the observer runtime log; false makes the hook a no-op.",
+                      "x-skm-layers": [
+                        "defaults",
+                        "machine",
+                        "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "policy_profile": {
+      "type": "string",
+      "description": "Expected permission policy profile of the project; `harness doctor` reports a deviation.",
+      "x-skm-layers": [
+        "defaults",
+        "project"
+      ]
+    }
+  }
+}

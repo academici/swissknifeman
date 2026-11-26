@@ -1,0 +1,94 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:autopilot-status:v1",
+  "status": "asleep",
+  "alive": false,
+  "state": {
+    "$schema": "urn:swissknifeman:orch:records:autopilot-state:v1",
+    "plan": "PLAN9",
+    "project": "/home/user/project",
+    "pid": 4242,
+    "start_ticks": 123456,
+    "boot_id": "0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0",
+    "started_at": "2026-10-24T10:00:00Z",
+    "updated_at": "2026-10-24T11:30:00Z",
+    "deadline_at": "2026-10-24T22:00:00Z",
+    "mode": "running",
+    "limits": {
+      "max_runs": 20,
+      "max_wall_s": 43200,
+      "run_tokens_hard_max": 0,
+      "max_no_progress_runs": 2,
+      "max_auto_decisions": 10,
+      "quota_wait_max_s": 21600,
+      "max_recoveries": 1,
+      "poll_s": 30
+    },
+    "counters": {
+      "runs": 3,
+      "items_closed": 5,
+      "no_progress_streak": 0,
+      "auto_decisions": 1,
+      "recoveries": 0,
+      "quota_waits": 0
+    },
+    "recoveries": {
+      "cnd-20261024T110000Z-abc123": 0
+    },
+    "current": {
+      "run_id": "cnd-20261024T112900Z-def456",
+      "launch_id": "0123456789abcdef",
+      "state": "running",
+      "kind": "run",
+      "items": [
+        "P3.3"
+      ],
+      "pid": 4300,
+      "start_ticks": 130000,
+      "since": "2026-10-24T11:29:00Z",
+      "log": "/home/user/project/.swissknifeman/state/orch/conductor/detached/cnd-20261024T112900Z-def456.log"
+    },
+    "quota_wait": null,
+    "waiting_runs": [
+      {
+        "run_id": "cnd-20261024T110000Z-abc123",
+        "items": [
+          "P3.2"
+        ],
+        "since": "2026-10-24T11:20:00Z"
+      }
+    ],
+    "history": [
+      {
+        "run_id": "cnd-20261024T100100Z-012345",
+        "kind": "run",
+        "started_at": "2026-10-24T10:01:00Z",
+        "ended_at": "2026-10-24T10:50:00Z",
+        "exit": 0,
+        "status": "finished",
+        "reason_code": null,
+        "items_closed": [
+          "P3.1"
+        ]
+      },
+      {
+        "run_id": "cnd-20261024T110000Z-abc123",
+        "kind": "run",
+        "started_at": "2026-10-24T11:00:00Z",
+        "ended_at": "2026-10-24T11:20:00Z",
+        "exit": 4,
+        "status": "waiting",
+        "reason_code": "WAITING_DECISION",
+        "items_closed": []
+      }
+    ],
+    "last_blockers": [
+      {
+        "item": "P3.0",
+        "code": "CHECKS_RED",
+        "at": "2026-10-24T10:30:00Z"
+      }
+    ],
+    "stop": null
+  },
+  "request": null
+}

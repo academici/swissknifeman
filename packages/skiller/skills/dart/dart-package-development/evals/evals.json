@@ -1,0 +1,14 @@
+{
+  "skill": "dart-package-development",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "B Dart SDK I want to replace a public method parse on async and make the return ID nullable. What to check before editing?",
+      "assertions": [
+        {"type": "regex", "value": "sync|async|asynchronous"},
+        {"type": "regex", "value": "null|nullable|compatible"},
+        {"type": "regex", "value": "test|test|consumer"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:launch-plan:v1",
+  "contract_version": "exec/v1",
+  "binding": "native",
+  "run_id": "a",
+  "input_digest": "abababababababababababababababababababababababababababababababab",
+  "policy_id": "a",
+  "dry_run": true,
+  "stages": [],
+  "refusals": [],
+  "created_at": "2026-01-02T03:04:05Z"
+}

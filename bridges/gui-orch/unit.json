@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "destination": "hub",
+  "dev": {
+    "test": [
+      "bash",
+      "scripts/test.sh"
+    ]
+  },
+  "id": "gui-orch",
+  "kind": "bridge",
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "gui": "gui.json"
+  },
+  "requires": [
+    {
+      "description": "Foundation: the plugin protocol that carries the GUI queries.",
+      "range": "^0.1",
+      "unit": "aicore"
+    },
+    {
+      "description": "GUI host: the contribution and view-data contracts this bridge answers in.",
+      "range": "^0.1",
+      "unit": "gui"
+    },
+    {
+      "description": "Domain: the conductor command line (conduct runs, status, observe, questions, run, resume, release; doctor) the bridge calls.",
+      "range": "^0.1",
+      "unit": "orch"
+    }
+  ],
+  "stability": "alpha",
+  "title": "Bridge between the GUI and the orchestrator: runs, run status, items, observer report, questions, sandbox, run/resume/release commands",
+  "version": "0.1.0"
+}

@@ -1,0 +1,17 @@
+{
+  "correlationid": "PLAN9",
+  "data": {
+    "code": "AUTOPILOT_NO_WORK",
+    "items_closed": 0,
+    "plan": "PLAN9",
+    "runs": -1
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-autopilot-stopped:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "PLAN9",
+  "time": "2026-10-24T12:00:00.000Z",
+  "type": "orch.autopilot.stopped"
+}

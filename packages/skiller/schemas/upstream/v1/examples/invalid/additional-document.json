@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "strategy": "replace",
+  "files": [
+    {
+      "path": "a",
+      "url": "a",
+      "sha256": "a",
+      "fetched_at": "2026-01-02"
+    }
+  ],
+  "not-a-field": 1
+}

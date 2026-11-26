@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:plugin-response:v1",
+  "title": "plugin-response",
+  "description": "What a plugin writes to its standard output: one JSON object. Logs go to standard error.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:plugin-response:v1",
+      "description": "Schema identifier of the document."
+    },
+    "protocol": {
+      "const": "1",
+      "description": "Protocol version."
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$",
+      "description": "Id of the request being answered."
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "skipped",
+        "error"
+      ],
+      "description": "ok: done; skipped: nothing to do; error: failed, and error says why (checked by the host)."
+    },
+    "output": {
+      "type": "object",
+      "description": "Result of the call; for describe a plugin-describe document."
+    },
+    "error": {
+      "type": "object",
+      "description": "Why the call failed.",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable error code."
+        },
+        "message": {
+          "type": "string",
+          "description": "Text for people; it must not hold secrets."
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "diagnostics": {
+      "type": "array",
+      "description": "Notes for the log, at most 20 lines (checked by the host).",
+      "items": {
+        "type": "string",
+        "description": "One line."
+      },
+      "maxItems": 20
+    }
+  },
+  "required": [
+    "$schema",
+    "protocol",
+    "request_id",
+    "status"
+  ],
+  "additionalProperties": false
+}

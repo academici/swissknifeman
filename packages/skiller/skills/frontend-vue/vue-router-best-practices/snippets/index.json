@@ -1,0 +1,10 @@
+{
+  "skill": "vue-router-best-practices",
+  "snippets": [
+    {
+      "file": "router-guards.ts",
+      "description": "Typical navigation guards Vue Router 4 for return-API (return undefined/false/path/route/Error): migration next()→return next to the old code, async-guard via await, protection against endless redirect, beforeEnter, scrollBehavior, onError and processing NavigationFailure via isNavigationFailure",
+      "tags": ["vue-router", "navigation-guards", "migration", "next-deprecated", "async", "scroll-behavior", "error-handling", "typescript"]
+    }
+  ]
+}

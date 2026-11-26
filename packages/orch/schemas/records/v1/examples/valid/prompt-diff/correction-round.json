@@ -1,0 +1,20 @@
+{
+  "schema": "prompt-diff/v1",
+  "base": {"step": "executor.1", "prompt_sha256": "1111111111111111111111111111111111111111111111111111111111111111"},
+  "target": {"step": "executor.2", "prompt_sha256": "2222222222222222222222222222222222222222222222222222222222222222"},
+  "blocks": [
+    {"kind": "role", "origin": "roles/executor.md", "change": "same", "tokens": {"from": 400, "to": 400, "delta": 0},
+     "sha256": {"from": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "to": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+    {"kind": "input", "origin": "input.json", "change": "changed", "tokens": {"from": 300, "to": 350, "delta": 50},
+     "sha256": {"from": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "to": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}},
+    {"kind": "checks", "origin": null, "change": "removed", "tokens": {"from": 200, "to": 0, "delta": -200},
+     "sha256": {"from": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "to": null}},
+    {"kind": "correction", "origin": "checks.1", "change": "added", "tokens": {"from": 0, "to": 250, "delta": 250},
+     "sha256": {"from": null, "to": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}}
+  ],
+  "tokens": {"from": 900, "to": 1000, "delta": 100},
+  "counts": {"added": 1, "removed": 1, "changed": 1, "same": 1},
+  "run": "cnd-20261022T100000Z-a1b2c3",
+  "item": "W1",
+  "against": {"run": "cnd-20261022T100000Z-a1b2c3", "item": "W1", "step": "executor.1"}
+}

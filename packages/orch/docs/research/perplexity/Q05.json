@@ -1,0 +1,44 @@
+{
+  "id": "Q05",
+  "route": "perplexity-web-mcp existing default browser pool; search",
+  "started": "2026-10-05T15:27:10.151Z",
+  "completed": "2026-10-05T15:27:44.591Z",
+  "query": "Design a portable integration boundary for a tool package containing canonical plan JSON, canonical Markdown commands/skills and generated Claude Code/Codex/Grok provider projections. Need plug into CAO now or Claude-only reviewer harness later, also work without a plan. How separate plan lifecycle, workflow policy, execution engine, provider mappings and skill delivery; what should capability-negotiated adapters expose; which AGENTS.md/CLAUDE.md/skills/tool policies are truly portable versus semantic differences? Avoid hand-maintained per-provider copies, duplicate skill owners and competing nested supervisors. Check official primary sources CAO profiles/skills/tools docs, Claude Code skills/subagents and Codex agents/skills. Russian, max 1200 words.",
+  "result": {
+    "answer": "## Рекомендуемая граница\n\nРазделите систему на канонический пакет, политику workflow и исполнительные адаптеры. JSON-план — один из возможных входов, а не обязательный центр интеграции: reviewer harness должен уметь получить обычное задание без создания фиктивного плана.\n```\nTask / prompt / reviewer request │ Normalize to TaskRequest │ Workflow policy ─── optional PlanStore │ Execution adapter: CAO | Claude-only | later runner │ Provider adapter: Claude | Codex | Grok │ Skill delivery adapter + capability negotiation\n```\nНе отдавайте CAO одновременно владение планом и супервизией. Если CAO управляет агентами внутри шага, внешний workflow запускает лишь этот шаг; если Claude-only harness ведёт review, он же единственный supervisor. Иначе появятся конкурирующие владельцы порядка, статусов и делегирования.\n\n## Владельцы истины\n\n- Plan lifecycle — пакет Task: канонический JSON, схема и миграции, идентификаторы, зависимости, статусы, история переходов. Исполнитель получает неизменяемый снимок задачи и возвращает события/результат; только PlanStore применяет переход статуса. Не выводить статус плана из текста терминала или состояния CAO.\n- Workflow policy — внешний, детерминированный слой: какие этапы идут, где review, критерии остановки, retry/timeout, human approval и когда вызвать планировщик. Пакет публикует этапы и контракты, но не должен требовать конкретный CAO workflow.\n- Execution engine — CAO сейчас либо Claude-only harness позже. Его ответственность — старт/наблюдение/остановка сессии, передача задания и сбор результата. CAO действительно предоставляет профили агентов и общий каталог навыков; его skills доступны всем агентам без per-profile scope.\n- Provider mapping — перевод нейтральных ролей, ограничений и способов доставки в конкретные флаги, каталоги и форматы Claude/Codex/Grok. Сгенерированные файлы — кэш/артефакты сборки, не редактируемые источники истины.\n- Skill delivery — каталог canonical skills и его установщик/рендерер. Одна canonical папка на навык; сгенерированные provider-файлы помечать и воспроизводимо пересобирать.\nДля работы без плана нормализуйте всё во вход TaskRequest: request_id, objective, context, constraints, acceptance, artifacts, requested_role, plan_ref?. Обычный prompt или review получает временный request без фиктивных task ID и lifecycle.\n\n## Контракт адаптера\n\nНе делайте интерфейс «запустить агента» с предположением о возможностях. Адаптер должен объявлять provider_id, версию/режим, доступные capabilities и ограничения, а затем принимать TaskRequest и профиль исполнения. Полезные методы:\n- negotiate(requirements) → supported / unsupported / degraded + объяснение;\n- start(request, policy) → run_id;\n- observe(run_id) → events/status;\n- cancel(run_id) и, если реально поддерживается, resume(run_id);\n- collect(run_id) → structured result, artifacts, logs, usage;\n- deliver_skill(skill, mode) и install_profile(profile) — либо явно сообщать, что это не поддерживается.\nCapabilities выражайте раздельно: sessions, streaming, cancel, resume, structured_output, tool_allowlist, skills.native, skills.lazy_load, subagents, supervisor_delegation, approval_gates, working_directory, parallelism. Каждая capability — native, emulated или unsupported, с известными пределами. До запуска политика проверяет обязательные требования; молчаливое «эмулирование» критичных гарантий запрещено.\n\n## Что переносимо\n\nAGENTS.md — хорошее место для кратких, постоянных репозиторных правил: устройство проекта, команды тестирования, ограничения на изменения. Codex прямо описывает его как переносимые инструкции проекта; для локальных переопределений у него есть собственные правила поиска и конфигурация.\nSKILL.md с name, description и Markdown-инструкциями — наиболее переносимое представление повторяемой процедуры: Claude следует Agent Skills open standard; Codex тоже использует каталог с SKILL.md и дополнительными материалами. Но переносим контент, не гарантии активации, путей, аргументов или инструментария.\nCLAUDE.md, .claude/agents/, allowed-tools, context: fork, команды /..., Codex config.toml и его subagent-конфигурация, CAO YAML-профили, MCP/load-skill механизмы и права инструментов — provider-specific проекции. Claude умеет отдельно preload-ить навыки в subagents, а Codex имеет свою конфигурацию subagents; это не общий переносимый смысл.\nПрактический принцип: в canonical-источнике хранить намерение — роль, инструкции, ограничения, ожидаемый результат; в адаптере — семантику исполнения и конкретные provider-поля. Общие инструкции, предназначенные только одному провайдеру, явно маркировать как расширения и не выдавать за portable policy.\n\n## Генерация без дрейфа\n\nХраните canonical skill один раз, например skills/<id>/SKILL.md; рядом — опциональные ресурсы и метаданные возможностей. Генератор строит .claude/skills/..., .agents/skills/.../Codex-конфигурацию и CAO-каталог, где это необходимо, плюс provider profiles. CI должен пересобирать проекции и падать при diff; ручные правки разрешены только в canonical-файлах.\nДля reviewer harness доставляйте лишь reviewer skill и минимальную постоянную инструкцию. Не устанавливайте CAO supervisor protocol в Claude-only режим и не включайте делегирование по умолчанию. В CAO режимах протокол супервизора добавляется только профилю, который действительно владеет делегированием. Это устраняет дублирование владельца навыка и «супервизора над супервизором».",
+    "sources": [
+      {
+        "title": "Профили CAO",
+        "url": "https://awslabs.github.io/cli-agent-orchestrator/docs/features/profiles/"
+      },
+      {
+        "title": "CAO skills",
+        "url": "https://github.com/awslabs/cli-agent-orchestrator/blob/main/docs/skills.md"
+      },
+      {
+        "title": "Codex AGENTS.md",
+        "url": "https://developers.openai.com/codex/agent-configuration/agents-md"
+      },
+      {
+        "title": "Codex customization",
+        "url": "https://developers.openai.com/codex/customization/overview"
+      },
+      {
+        "title": "Claude skills",
+        "url": "https://docs.anthropic.com/en/docs/claude-code/skills"
+      },
+      {
+        "title": "Codex skills",
+        "url": "https://developers.openai.com/codex/build-skills"
+      },
+      {
+        "title": "Claude subagents",
+        "url": "https://docs.anthropic.com/en/docs/claude-code/sub-agents"
+      },
+      {
+        "title": "Codex subagents",
+        "url": "https://developers.openai.com/codex/agent-configuration/subagents"
+      }
+    ]
+  }
+}

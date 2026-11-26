@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:workspace-bindings:v1",
+  "title": "workspace-bindings",
+  "type": "object",
+  "description": "Machine file (state/workspaces/<workspace>/bindings.json): which checkouts of this machine belong to which project. Not portable: it holds absolute paths and is never in git.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:workspace-bindings:v1",
+      "description": "Schema identifier."
+    },
+    "projects": {
+      "type": "object",
+      "description": "Bindings by project code.",
+      "patternProperties": {
+        "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Checkouts of one project on this machine.",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "description": "Absolute real paths of the checkouts.",
+              "items": {
+                "type": "string",
+                "pattern": "^(/|[A-Za-z]:[\\\\/]).+$",
+                "description": "One absolute checkout path."
+              }
+            },
+            "primary": {
+              "type": "string",
+              "pattern": "^(/|[A-Za-z]:[\\\\/]).+$",
+              "description": "The checkout used first; one of `paths`."
+            },
+            "bound_at": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+              "description": "Time of the first binding, UTC."
+            }
+          },
+          "required": [
+            "paths",
+            "primary",
+            "bound_at"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "projects"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,43 @@
+{
+  "changed_paths": [
+    "bridges/workspace-planner/apply.py",
+    "bridges/workspace-planner/inspector.py",
+    "packages/aicore/schemas/workspace-migration/v1/workspace-migration.schema.json",
+    "packages/workspace/lib/workspace/migrate.py",
+    "packages/workspace/tests/test_migrate.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "cd packages/workspace && HOME=$(mktemp -d) PYTHONPATH=lib:../aicore/lib python3 -m unittest tests.test_migrate",
+      "exit": 0,
+      "id": "V5"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/workspace/tests/test_migrate.py"
+      ],
+      "impact": "the commit takes the test file",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Added RecoveryTests to packages/workspace/tests/test_migrate.py (outside scope.write_set) as the regression checks the correction asked for."
+    },
+    {
+      "impact": "residual gap in metadata recovery",
+      "kind": "note",
+      "next": "have the bridge persist its decision, or add a verify-style repair command",
+      "text": "If the process dies in the short window between the bridge returning 'applied' and the intent being rewritten as confirmed, the retry finds only an unconfirmed intent and returns a plain noop with no report (chosen over writing a report from plan-time rows)."
+    },
+    {
+      "impact": "the run of this piece went its own way here",
+      "kind": "note",
+      "next": "a reviewer of the phase may look at it",
+      "text": "risk score 80 reached 60 (schema+25, shared+15, deviation+10, executor_recommended+30); the policy has no review, so a review and its triage were added"
+    }
+  ],
+  "summary": "Corrected F1-F3 in migrate.py. F1: per-op_id intent files; each apply unlinks only its own; the retry picks the newest unfinished confirmed intent. F2: the intent is rewritten with the bridge's real answer rows right after an applied answer and marked confirmed; only confirmed intents are used for recovery, so a plan-time action is never written. F3: a failed rollback removes a lock-only directory at the old path before renaming back, and keeps staging and raises MIGRATION_FAILED naming it when any folder cannot be restored. Added RecoveryTests (4 tests) to tests/test_migrate.py; tests.test_migrate passes (59 tests).",
+  "status": "done_with_deviations"
+}

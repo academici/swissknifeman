@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""Fake client (P4.3): broken (not-JSON) stdout, exit 0 — outcome `transport`."""
+import sys
+
+if "--version" in sys.argv:
+    print("2.1.220 (Claude Code)")
+    sys.exit(0)
+
+print("{not-json-at-all")
+sys.exit(0)

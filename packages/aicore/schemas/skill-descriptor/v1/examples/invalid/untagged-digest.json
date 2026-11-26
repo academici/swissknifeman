@@ -1,0 +1,25 @@
+{
+  "schema": "skill-descriptor/v1",
+  "id": "pm/product",
+  "name": "product",
+  "description": "Product thinking for planning work.",
+  "version": "1.2.0",
+  "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "license": null,
+  "compatibility": null,
+  "allowed_tools": [],
+  "adapters": [
+    "claude",
+    "codex"
+  ],
+  "requires": [
+    "pm/discovery"
+  ],
+  "risk": "low",
+  "metadata": {
+    "author": "Example Author"
+  },
+  "provenance": {
+    "source": "local"
+  }
+}

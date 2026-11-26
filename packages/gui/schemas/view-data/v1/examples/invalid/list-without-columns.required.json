@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "resource-list",
+  "rows": []
+}

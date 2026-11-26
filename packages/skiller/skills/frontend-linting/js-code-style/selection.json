@@ -1,0 +1,14 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "OVERLAY",
+  "exclusive_group": "js-style",
+  "triggers": {
+    "paths": [
+      "*.ts",
+      "*.tsx",
+      "*.js",
+      "*.vue"
+    ]
+  }
+}

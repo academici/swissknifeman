@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:extension:v1",
+  "title": "extension",
+  "description": "Manifest (extension.json) of an external plugin: identity, protocol range, entrypoint, what it provides and what it asks to be allowed.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:extension:v1",
+      "description": "Schema identifier of the document."
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+      "description": "Plugin id."
+    },
+    "kind": {
+      "enum": [
+        "command",
+        "subscriber"
+      ],
+      "description": "command answers invoke calls at extension points; subscriber receives events."
+    },
+    "version": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+      "description": "Plugin version."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line purpose of the plugin."
+    },
+    "protocol": {
+      "type": "object",
+      "description": "Supported protocol range.",
+      "properties": {
+        "min": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Lowest supported protocol version."
+        },
+        "max": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "Highest supported protocol version."
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ],
+      "additionalProperties": false
+    },
+    "entrypoint": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/argv",
+      "description": "Command that starts the plugin; the first element is a path relative to the folder of the manifest."
+    },
+    "requires": {
+      "type": "array",
+      "description": "Contracts the plugin needs from the host.",
+      "items": {
+        "type": "object",
+        "description": "One required contract.",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "pattern": "^urn:swissknifeman:aicore:[a-z][a-z0-9-]*$",
+            "description": "Contract id without the version."
+          },
+          "versions": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Accepted major versions.",
+            "items": {
+              "type": "string",
+              "pattern": "^v[0-9]+$",
+              "description": "Major version such as v1."
+            }
+          }
+        },
+        "required": [
+          "contract",
+          "versions"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "provides": {
+      "type": "object",
+      "description": "What the plugin offers. A command needs points and a subscriber needs events (checked by the host).",
+      "properties": {
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Extension points the plugin implements.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$",
+            "description": "Extension point <module>:<id>."
+          }
+        },
+        "gui": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/relpath",
+          "description": "GUI contribution file (gui.json, urn:swissknifeman:gui:contribution:v1) relative to the manifest folder; the gui module validates it."
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Event type patterns the plugin receives (shell-style wildcards).",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Event type pattern."
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "Capabilities the plugin declares.",
+          "items": {
+            "type": "object",
+            "description": "One capability.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9.-]*$",
+                "description": "Capability id."
+              },
+              "version": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "description": "Capability version."
+              },
+              "stability": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/stability",
+                "description": "Stability stage of the capability."
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "stability"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "$ref": "urn:swissknifeman:aicore:permissions:v1#/$defs/permissions",
+      "description": "Effects the plugin asks the host to allow."
+    },
+    "timeout_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "description": "Default deadline of one call, in seconds."
+    },
+    "limits": {
+      "type": "object",
+      "description": "Optional limits the plugin asks the host to apply to one call.",
+      "properties": {
+        "max_stdout_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864,
+          "description": "Largest stdout of one call in bytes; the default and the minimum are 1 MiB, the cap is 64 MiB."
+        }
+      },
+      "additionalProperties": false
+    },
+    "example_input": {
+      "type": "object",
+      "description": "Input of a sample call, used by the conformance check."
+    }
+  },
+  "required": [
+    "$schema",
+    "id",
+    "kind",
+    "version",
+    "description",
+    "protocol",
+    "entrypoint",
+    "provides"
+  ],
+  "additionalProperties": false
+}

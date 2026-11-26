@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:gui:terminal:v1",
+  "title": "terminal",
+  "description": "Terminal of the host: the request and the documents of POST/GET /v1/terminal/sessions and the JSON frames of the WebSocket /v1/terminal/{id}/io. A REST document is chosen by the const field kind; the frames of the WebSocket (client_frame and server_frame in $defs, chosen by the const field t) are not documents of their own and carry no $schema. Limits that the profile cannot state: an input frame carries at most 64 KiB of raw bytes, cols are 10..500 and rows 2..200; the unpaid credit of a client is at most 4 * credit_bytes.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/session_request",
+      "description": "Body of POST /v1/terminal/sessions."
+    },
+    {
+      "$ref": "#/$defs/session",
+      "description": "Answer of POST /v1/terminal/sessions and of :close."
+    },
+    {
+      "$ref": "#/$defs/session_list",
+      "description": "Answer of GET /v1/terminal/sessions."
+    }
+  ],
+  "$defs": {
+    "contract": {
+      "const": "urn:swissknifeman:gui:terminal:v1",
+      "description": "Contract id of this document."
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^term-[0-9a-f]{32}$",
+      "description": "Id of a terminal session: 128 random bits, not guessable."
+    },
+    "cols": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 500,
+      "description": "Terminal width in columns."
+    },
+    "rows": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 200,
+      "description": "Terminal height in rows."
+    },
+    "base64": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9+/]*={0,2}$",
+      "description": "Bytes in standard base64."
+    },
+    "end_reason": {
+      "enum": [
+        "exit",
+        "closed",
+        "idle",
+        "max",
+        "backend_stop",
+        "error"
+      ],
+      "description": "Why a session ended: the shell exited, the client closed it or went away, no input and output for idle_timeout_s, max_session_s passed, the backend stopped, or a failure."
+    },
+    "session_request": {
+      "type": "object",
+      "description": "Start a terminal session in a trusted project; the request needs the HMAC confirmation.",
+      "required": [
+        "$schema",
+        "kind",
+        "project_id",
+        "cols",
+        "rows"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "session_request",
+          "description": "Document kind."
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Id of a registered project; the shell starts in its root.",
+          "maxLength": 256
+        },
+        "cols": {
+          "$ref": "#/$defs/cols",
+          "description": "Initial width."
+        },
+        "rows": {
+          "$ref": "#/$defs/rows",
+          "description": "Initial height."
+        },
+        "confirm": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Confirmation from the CONFIRMATION_REQUIRED answer (details.confirm) to the same request."
+        }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "description": "One terminal session.",
+      "required": [
+        "$schema",
+        "kind",
+        "session_id",
+        "project_id",
+        "shell",
+        "cols",
+        "rows",
+        "started_at"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "session",
+          "description": "Document kind."
+        },
+        "session_id": {
+          "$ref": "#/$defs/session_id",
+          "description": "Session id; also the path of the WebSocket."
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Project of the session.",
+          "maxLength": 256
+        },
+        "shell": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path of the shell program.",
+          "maxLength": 4096
+        },
+        "cols": {
+          "$ref": "#/$defs/cols",
+          "description": "Current width."
+        },
+        "rows": {
+          "$ref": "#/$defs/rows",
+          "description": "Current height."
+        },
+        "started_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the shell started."
+        },
+        "ended_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the session ended; absent while it runs."
+        }
+      },
+      "additionalProperties": false
+    },
+    "session_list": {
+      "type": "object",
+      "description": "The sessions that run now.",
+      "required": [
+        "$schema",
+        "kind",
+        "sessions"
+      ],
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id of this document."
+        },
+        "kind": {
+          "const": "session_list",
+          "description": "Document kind."
+        },
+        "sessions": {
+          "type": "array",
+          "description": "The sessions, oldest first.",
+          "items": {
+            "$ref": "#/$defs/session_entry",
+            "description": "One session."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "session_entry": {
+      "type": "object",
+      "description": "A session inside a session_list (the same fields as a session without $schema and kind).",
+      "required": [
+        "session_id",
+        "project_id",
+        "shell",
+        "cols",
+        "rows",
+        "started_at"
+      ],
+      "properties": {
+        "session_id": {
+          "$ref": "#/$defs/session_id",
+          "description": "Session id."
+        },
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Project of the session.",
+          "maxLength": 256
+        },
+        "shell": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Absolute path of the shell program.",
+          "maxLength": 4096
+        },
+        "cols": {
+          "$ref": "#/$defs/cols",
+          "description": "Current width."
+        },
+        "rows": {
+          "$ref": "#/$defs/rows",
+          "description": "Current height."
+        },
+        "started_at": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/rfc3339_utc",
+          "description": "When the shell started."
+        }
+      },
+      "additionalProperties": false
+    },
+    "client_frame": {
+      "description": "Client to server: input bytes, a new size, or credit for output bytes.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/input_frame",
+          "description": "Keystrokes and pasted text."
+        },
+        {
+          "$ref": "#/$defs/resize_frame",
+          "description": "The window changed its size."
+        },
+        {
+          "$ref": "#/$defs/credit_frame",
+          "description": "Permission to send more output."
+        }
+      ]
+    },
+    "server_frame": {
+      "description": "Server to client: output bytes, the end of the session, or an error.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/output_frame",
+          "description": "Bytes the shell wrote."
+        },
+        {
+          "$ref": "#/$defs/exit_frame",
+          "description": "The session ended."
+        },
+        {
+          "$ref": "#/$defs/error_frame",
+          "description": "A refused or failed frame."
+        }
+      ]
+    },
+    "input_frame": {
+      "type": "object",
+      "description": "Input for the shell, at most 64 KiB of raw bytes.",
+      "required": [
+        "t",
+        "data"
+      ],
+      "properties": {
+        "t": {
+          "const": "input",
+          "description": "Frame type."
+        },
+        "data": {
+          "$ref": "#/$defs/base64",
+          "description": "The bytes."
+        }
+      },
+      "additionalProperties": false
+    },
+    "resize_frame": {
+      "type": "object",
+      "description": "New size of the terminal.",
+      "required": [
+        "t",
+        "cols",
+        "rows"
+      ],
+      "properties": {
+        "t": {
+          "const": "resize",
+          "description": "Frame type."
+        },
+        "cols": {
+          "$ref": "#/$defs/cols",
+          "description": "New width."
+        },
+        "rows": {
+          "$ref": "#/$defs/rows",
+          "description": "New height."
+        }
+      },
+      "additionalProperties": false
+    },
+    "credit_frame": {
+      "type": "object",
+      "description": "Credit in output bytes; the unpaid credit stays at most 4 * credit_bytes.",
+      "required": [
+        "t",
+        "bytes"
+      ],
+      "properties": {
+        "t": {
+          "const": "credit",
+          "description": "Frame type."
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Output bytes the server may send."
+        }
+      },
+      "additionalProperties": false
+    },
+    "output_frame": {
+      "type": "object",
+      "description": "Output of the shell, at most output_chunk_bytes of raw bytes.",
+      "required": [
+        "t",
+        "seq",
+        "data"
+      ],
+      "properties": {
+        "t": {
+          "const": "output",
+          "description": "Frame type."
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of the frame in the session, from 0, without gaps."
+        },
+        "data": {
+          "$ref": "#/$defs/base64",
+          "description": "The bytes."
+        }
+      },
+      "additionalProperties": false
+    },
+    "exit_frame": {
+      "type": "object",
+      "description": "The session ended; the server closes the socket after this frame.",
+      "required": [
+        "t",
+        "code",
+        "reason"
+      ],
+      "properties": {
+        "t": {
+          "const": "exit",
+          "description": "Frame type."
+        },
+        "code": {
+          "type": "integer",
+          "minimum": -1,
+          "description": "Exit status of the shell; -1 when a signal ended it or the status is unknown."
+        },
+        "signal": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Signal that ended the shell; absent otherwise."
+        },
+        "reason": {
+          "$ref": "#/$defs/end_reason",
+          "description": "Why the session ended."
+        }
+      },
+      "additionalProperties": false
+    },
+    "error_frame": {
+      "type": "object",
+      "description": "A frame was refused; the server closes the socket after it.",
+      "required": [
+        "t",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "t": {
+          "const": "error",
+          "description": "Frame type."
+        },
+        "code": {
+          "$ref": "urn:swissknifeman:gui:api-error:v1#/$defs/code",
+          "description": "Error code: INPUT_INVALID, NOT_FOUND, TERMINAL_BUSY or INTERNAL."
+        },
+        "message": {
+          "type": "string",
+          "description": "Text that is safe to show.",
+          "maxLength": 4096
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-readiness:v1",
+  "title": "Read Readiness",
+  "type": "object",
+  "description": "Read-only phase readiness status.",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema marker.",
+      "const": "urn:swissknifeman:task:plan:read-readiness:v1"
+    },
+    "plan": {
+      "type": "string",
+      "description": "Plan id.",
+      "minLength": 1
+    },
+    "phases": {
+      "type": "array",
+      "description": "Detailed phases in plan order.",
+      "items": {
+        "type": "object",
+        "description": "Readiness of one detailed phase.",
+        "properties": {
+          "id": {
+            "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId",
+            "description": "Phase id."
+          },
+          "status": {
+            "type": "string",
+            "description": "Current readiness status.",
+            "enum": [
+              "missing",
+              "ready",
+              "ready_with_advisories",
+              "not_ready",
+              "stale"
+            ]
+          },
+          "digest": {
+            "type": "string",
+            "description": "Semantic digest.",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "policy_digest": {
+            "type": "string",
+            "description": "Settings and validator digest.",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "certificate": {
+            "description": "Recorded certificate, or null when missing.",
+            "oneOf": [
+              {
+                "$ref": "urn:swissknifeman:task:plan:phase:v1#/$defs/readiness",
+                "description": "Recorded certificate."
+              },
+              {
+                "type": "null",
+                "description": "No certificate."
+              }
+            ]
+          },
+          "changed": {
+            "type": "array",
+            "description": "Digest components changed since recording.",
+            "items": {
+              "type": "string",
+              "description": "Changed component.",
+              "enum": [
+                "digest",
+                "policy"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "digest",
+          "policy_digest",
+          "certificate",
+          "changed"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "plan",
+    "phases"
+  ],
+  "additionalProperties": false
+}

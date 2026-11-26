@@ -1,0 +1,54 @@
+{
+  "description": "Managed provider-native lifecycle hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface context.observer"
+          }
+        ],
+        "matcher": "startup|resume|clear|compact"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface security.safe-dirs"
+          }
+        ],
+        "matcher": "^Bash$"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface lifecycle.command-log"
+          }
+        ],
+        "matcher": "^Bash$"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface lifecycle.tool-telemetry"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(d=$(git rev-parse --show-toplevel); while p=$(git -C \"$d/..\" rev-parse --show-toplevel 2>/dev/null) && [ -f \"$p/.codex/hooks/lifecycle.py\" ]; do d=$p; done; printf %s \"$d\")/.codex/hooks/lifecycle.py\" --surface lifecycle.run-report"
+          }
+        ]
+      }
+    ]
+  }
+}

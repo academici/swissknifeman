@@ -1,0 +1,11 @@
+{
+  "schema": "prompt-manifest/v1",
+  "step": "a",
+  "role": "a",
+  "route": {},
+  "blocks": [],
+  "excluded": [],
+  "estimated_tokens": 0,
+  "prompt_sha256": "abababababababababababababababababababababababababababababababab",
+  "not-a-field": 1
+}

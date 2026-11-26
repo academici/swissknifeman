@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:autopilot-request:v1",
+  "action": "stop",
+  "at": "2026-10-24T11:05:00Z",
+  "by": "owner"
+}

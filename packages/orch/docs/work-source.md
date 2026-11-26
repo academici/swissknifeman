@@ -1,0 +1,185 @@
+# Work source
+
+A work source supplies the work of orchestration runs and records their outcome. orch opens the extension point
+`orch:work-source` (`unit.json` `provides.extension_points`); a command plugin of `aicore.ext.plugins` serves it.
+The configuration key `work_source` of `[orch]` names the plugin (default `planner-orch`, the bridge between the
+planner and orch); the plugin itself is registered by the machine in `[aicore.plugins.<id>]`. orch never names the
+source or reads its files: it speaks the contract below.
+
+## Contract `work-source/v1`
+
+`schemas/work-source/v1/input.schema.json` (`urn:swissknifeman:orch:work-source:input:v1`) and
+`output.schema.json` (`…:output:v1`), contract `urn:swissknifeman:orch:work-source`, alpha. Both are closed and
+choose a branch by `op`.
+
+| Op | Input | Output |
+| --- | --- | --- |
+| `claim` | `plan`, `plans_root?`, `items?` (candidate refs in order), `batch?`, `scenario?` (the invocation's `--scenario`: wins over the scenario the source resolves), `run_id`, `submission_id`, `actor` (`provider`, `model`, `effort?`), `orch_config?` (the invocation configuration of the orch command, for the source's own calls to orch) | `status` `claimed` \| `none` \| `blocked`; `ref`, `title`, `scenario`, `scenario_source`, `route` (`class`, `effort`, and `correction?` — the minimum of a bounded correction of review findings, `{class, effort, provider?, model?}`), `depends_on?` (the pieces it depends on: the conductor holds it when one of them ended blocked in the run), `attempt_id`, `session` when claimed; `reason_code`, `message` when blocked |
+| `brief` | `plan`, `plans_root?`, `ref`, `unit?`, `run_id` | `input_ref` (`artifact-ref/v1`), `input_id`, `digest`, `reused`, `artifact_id` |
+| `register` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `status` (`done` \| `done_with_deviations` \| `blocked`), `report`, `evidence` (`{"V<n>": path}`), `registrar`, `executed_by`, `review_receipt?` | `outcome` `recorded` \| `no-op` \| `refused`; `gate` (`verdict` `pass` \| `missing` \| `red` \| `stale` \| `none`, `checks` `{"V<n>": exit or null}`); `receipt?`; `reason_code`, `message` when refused |
+| `commit` | `plan`, `plans_root?`, `ref`, `run_id`, `attempt_id`, `paths` (extra owned paths, such as the artifact folder), `actor?`, `role?` (`executor` \| `fix`), `stage?` (`implementation` \| `correction.<n>` \| `final`), `trailers?` (`Key: value` lines of the message) | `outcome` `committed` \| `no-op` \| `refused`; `sha` when committed; `reason_code`, `message` when refused |
+| `release` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `reason?`, `actor?` | `outcome` `released` \| `no-op` (the run does not hold the piece) \| `refused`; `reason_code`, `message` when refused |
+| `note` (optional) | `collection`, `plans_root?`, `text`, `refs` (a phase or an item of the collection), `run_id?`, `actor?` | `outcome` `recorded` \| `no-op` \| `refused`; `reason_code`, `message` when refused |
+| `research` (optional) | `plan`, `plans_root?`, `ref`, `run_id`, `number` (from 1), `result` (a `research-result`), `actor?` | `outcome` `recorded` \| `no-op` (the same result is already kept) \| `refused`; `path` (repository-relative) when kept; `reason_code`, `message` when refused |
+| `decision` (optional) | `collection`, `plans_root?`, `ref`, `run_id`, `attempt_id?`, `question` (`id`, `revision`, `kind` `clarification` \| `decision`, `text`, `options?`, `answer_schema?`), `question_key`, `question_digest`, `resolution` (`value`, `by`, `at?`), `authority` (`owner` \| `advisor` \| `panel`), `rationale`, `evidence` (repository paths), `actor?` | `outcome` `recorded` \| `no-op` (the question is already recorded) \| `refused` \| `unsupported` (the source does not serve the operation); `decision_id?`; `reason_code`, `message` when refused |
+| `readiness` (optional, read-only) | `collection`, `plans_root?` | `outcome` `ok` \| `refused`; when ok `phases` (every detailed phase: `id`, `status` `missing` \| `ready` \| `ready_with_advisories` \| `not_ready` \| `stale`, `digest` `sha256:<hex>`) and `next` (`kind`, `items`, `phase`, `message`); `reason_code`, `message` when refused (`READINESS_UNSUPPORTED`: the source does not serve the operation) |
+
+`readiness` tells autopilot whether a plan may run and what would run next, without claiming anything. `phases` are the
+readiness certificates of the plan as its source keeps them; `next` is the first lane the source would give work for:
+`run-items` with the `items` of the lane and its `phase` (`message` null), or another kind (`audit-phase`,
+`design-phase`, `waiting`, `archive`, `terminal`, …) with `items` empty and a `message` that says why nothing runs. The
+planner bridge reads the next lane with the same function `claim` uses, so the lane `readiness` names is the lane a
+claim would take. A plugin that answers the error `OP_UNSUPPORTED` (or `INPUT_INVALID`:
+a source older than the operation) is the refusal `READINESS_UNSUPPORTED` (`PluginWorkSource.readiness`); the file source
+refuses it the same way. The contract does not require `phases` and `next` of an `ok` answer; the conductor helper
+`source_readiness` does.
+
+`decision` records an answered question of a piece (an owner's answer, an advice or a panel recommendation the conductor
+applied) as an accepted decision that applies to the piece, so that a later run of the piece finds it ([Questions of
+the executor](conductor.md#questions-of-the-executor-d11)). `question_key` (`qk-` + 16 hex) and `question_digest` (SHA-256)
+come from the meaning of the question: the piece, the kind, the text, the full options and the answer schema. The source
+treats a repeat for the same `question_key` and piece as a no-op. The planner bridge adds a `D#` with
+`applies_to` the piece, `answered_by` `owner` (a person) or `agent` (advisor, panel) and an `origin`
+`{kind: question|advice|panel, run, item, question_id, question_key, question_digest, revision}`; its next brief carries
+`question_key` and `question_digest` in the `decisions` entry of `exec/v1`. A source without the operation answers an error
+or `unsupported`; the conductor then prints the info `DECISION_NOT_RECORDED` and the piece does not change.
+
+A claim may also answer `options`: the run-option layers of the work, general first (`[{source, options}]`, each a
+conductor `run-options` document that orch validates). A brief may answer `artifacts_dir`: the repository folder
+where a run keeps the committed artifacts of the work (stage-report, review verdict, check evidence). Without it the
+conductor keeps them in `.swissknifeman/orch-artifacts/<run>/<ref>/`: local records, not committed (ignored like the
+state folder). A `register` answer may name `evidence` (`{V#: path}`): where the source keeps the evidence of the work for
+good (the planner bridge copies the evidence of a workspace plan into the plan folder); the conductor then records
+those paths.
+
+The `report` of a `register` request is the kind `register-report` of the same contract
+(`register-report.schema.json`, `urn:swissknifeman:orch:work-source:register-report:v1`): the stage-report of the worker
+without `status`, `questions`, `review_recommendation` and `self_check`, closed (`summary`, `changed_paths`, `checks_run`
+as `{id, cmd, exit}` or `{id, procedure, verdict}`, `evidence`, `open_issues` with `text`, `kind`, `impact`, `next`,
+`class`, `severity`, `outcome`, `auto_fixable`, `evidence`), every text with a non-whitespace character, the `evidence`
+of an issue not empty when present. It carries no `$schema` tag: the report keeps the stage-report shape. Two rules stay
+in code (`orch.worksource_report.report_semantics`, and `check_report` of the planner bridge): an id of `checks_run`
+appears once, and a text keeps a character once Unicode whitespace is stripped. Each source refuses a report outside it
+with the same codes: `REGISTER_UNCLASSIFIED` for an issue that is not an object with a text and a known `kind`,
+`REGISTER_REPORT_INVALID` for anything else (a problem of the report itself comes first). The conductor checks the body
+before it writes `register-report.json` (a body outside it is a conductor defect: `REGISTER_REPORT_INVALID` stop), the
+file source before its gate, and the planner bridge runs `check_report` first and then the schema for parity
+(`REGISTER_REPORT_INVALID: schema parity: <pointer>: <message>`). `orch.py validate register-report|input|output FILE`
+checks a document by hand.
+
+A brief is an `exec/v1` execution-input: the planner bridge checks the document it built (`orch.py validate
+execution-input`) before it stores it (`BRIEF_INVALID`, nothing stored), and the conductor checks the stored brief before
+it writes `input.json` of the piece (`BRIEF_INVALID` stop), as the file source checks its input.
+
+`run_id` uses the characters of an attempt id (`[A-Za-z0-9._:-]`, at most 100) because the attempt id
+`att-<run_id>-<ref>` is built from it. A refusal of the source is an answer with a `reason_code`. A plugin that fails, answers an error or answers
+outside the contract is a failure of the source.
+
+## Client
+
+`orch.worksource.PluginWorkSource(plugin_id, *, project=None, env=None, config_file=None)` implements the
+`WorkSource` protocol (`claim(**fields)`, `brief(**fields)`, `register(**fields)`, `commit(**fields)`, `release(**fields)`, `note(**fields)`, `research(**fields)`, `decision(**fields)`, `readiness(**fields)`, each returning
+the output document). Every call looks the registration up again, validates the request (`INPUT_INVALID`, nothing is sent),
+describes and invokes the plugin through `aicore.ext.plugins.invoke_one`, and validates the answer.
+
+| Code | Meaning |
+| --- | --- |
+| `WORK_SOURCE_UNAVAILABLE` | no registration of the plugin, a disabled or unusable one, or a plugin without the point |
+| `WORK_SOURCE_FAILED` | the plugin failed, answered an error, or answered outside `work-source/v1` |
+| `INPUT_INVALID` | orch built a request outside `work-source/v1` |
+
+## The cycle: `orch.py source`
+
+Between `source prepare` and `source register` a session, a person or the [conductor](conductor.md) does the work.
+`--config FILE` applies to every command.
+
+```text
+orch.py source claim (--plan P | --input FILE [--commit]) [--plans-root DIR] [--item REF]… --actor P/M[/E] [--submission-id SUB]
+orch.py source brief --run RUN
+orch.py source prepare --run RUN --provider P [--binding B] [--model-catalog FILE]
+orch.py source register --run RUN --report FILE --status S [--evidence V#=PATH]… [--review-receipt PATH] --actor P/M[/E] [--executed-by P/M[/E]]
+orch.py source commit --run RUN [--path PATH]… [--actor P/M[/E]] [--role executor|fix] [--stage STAGE] [--trailer "Key: value"]…
+orch.py source release --run RUN [--reason TEXT] [--actor P/M[/E]]
+orch.py source research --run RUN --result FILE --number N [--actor P/M[/E]]
+orch.py source decision --run RUN --file FILE [--ref ITEM] [--actor P/M[/E]]
+orch.py source readiness (--plan P | --input FILE) [--plans-root DIR]
+```
+
+- `claim` derives `submission_id` = `sub-` + the first 24 hex characters of the SHA-256 of the canonical JSON
+  `{plan, items, actor}` (unless given) and `run_id` = `run-` + the first 24 hex characters of the SHA-256 of the
+  submission, so the same arguments give the same run. A claimed run writes `run.json` (`run_id`, `submission_id`,
+  `plugin`, `plan`, `plans_root`, `ref`, `attempt_id`, `scenario`, `session`) in the run directory and emits
+  `orch.run.started` once per attempt; a blocked claim emits `orch.run.refused` (step `claim`). The answer is printed
+  with `run_id` and `submission_id`. A repeated claim of a run asks the source for the run's own item, so a run never
+  moves on to other work after its item is closed.
+  With `--config FILE` the claim passes the file as `orch_config`, so the scenario check of the source sees the same
+  run-policy packs.
+- `decision` reads `FILE` (`question`, `question_key`, `question_digest`, `resolution`, `authority`, `rationale`, `evidence`),
+  adds the collection, the piece, the run and the attempt of the run, and sends it through the same intent-then-receipt path as
+  `register`: `receipts/decision-<question id>-request.json` before the call and `receipts/decision-<question id>.json`
+  after it. `--ref` must be the piece of the run (`INPUT_INVALID` otherwise). Exit 0 for `recorded` and `no-op`; a source that
+  failed or answered outside the contract (a plugin without the operation) prints `{"op": "decision", "outcome":
+  "unsupported", "message"}` and exits 1, a refusal exits 1, no source exits 3.
+- `readiness` needs no run and writes nothing (no run directory, no receipt, no event): it prints the answer of the source
+  of `--plan` (exit 0 for `ok`, 1 for `refused`, including `READINESS_UNSUPPORTED`); `--input` always prints the refusal of
+  the file source. A source that failed or answered outside the contract exits 1 with `WORK_SOURCE_FAILED` on stderr, no
+  source exits 3. The conductor helper `orch.conductor.infrastructure.work_source.source_readiness(owner, plan,
+  plans_root=None)` calls this verb through `owner._orch`, checks the answer against the contract and never raises:
+  a refusal, a failure, no source (`WORK_SOURCE_UNAVAILABLE`) or an answer outside the contract (an `ok` without `phases`
+  and `next` included: `WORK_SOURCE_FAILED`) all come back as `{op: readiness, outcome: refused, reason_code, message}`.
+- `brief` stores the brief through the source and records `input_ref` and `input_id` in `run.json`.
+- `prepare` reads the brief from the artifact store of the project, loads the run-policy pack of the run's scenario
+  (`orch.py policy show`), prepares a dry run with `out = <run>/prepare` and the run's `submission_id`, and writes
+  `launch-plan.json`. A refusal emits `orch.run.refused` (step `prepare`).
+- `register` sends the report and the evidence, writes `receipts/register.json`, and emits
+  `orch.run.stage.finished` (stage `primary`) and `orch.run.finished` when something was recorded, or
+  `orch.run.refused` (step `register`). A repeat that the source records as `no-op` emits nothing.
+- `commit` asks the source for one commit of the registered work and writes `receipts/commit.json`; nothing left
+  to commit is `no-op`, a refusal exits 1. A split run (`commit.mode: implementation-and-fixes`, see the conductor
+  documentation) calls it once per stage: `--stage implementation` and `--stage correction.<n>` (with `--role executor`
+  or `fix`) commit exactly the given paths, `--stage final` the rest; each stage keeps its own receipt,
+  `receipts/commit-<stage>.json` and `commit-<stage>-request.json` (`final` and no stage keep `commit.json`). The
+  `--trailer` lines go into the commit message; the planner bridge passes them to its commit as `--trailer` and a
+  stage before the final one as `--paths-only`, the file source appends them to its message (a commit of a
+  `review_followup` input also gets `Plan`, `Plan-Review`, `Plan-Findings` and `Plan-Items` from its provenance).
+- `release` gives a claim back to the source and writes `receipts/release.json`: the piece goes back to the state
+  before the claim, so that a later run can claim it (`ITEM_OWNED` no longer holds). The op is optional: a source that
+  does not serve it answers `INPUT_INVALID`/`WORK_SOURCE_FAILED`, which the conductor reports as `CLAIM_KEPT` and goes on.
+
+The run directory is `<project>/.swissknifeman/state/orch/runs/<run_id>/` inside a project (a git repository or a
+folder with `.swissknifeman`), else under the machine state. Exit codes: 0 ok (`claimed`, `none`, `recorded`,
+`no-op`), 1 refusal (`blocked`, `refused`, `RUN_UNKNOWN`, `RUN_NOT_BRIEFED`, `BRIEF_UNAVAILABLE`, a prepare
+refusal), 2 usage, 3 `WORK_SOURCE_UNAVAILABLE`.
+
+## The built-in file source
+
+`register` accepts optional `review_receipt` (a path), exposed as `orch.py source register --review-receipt PATH`.
+The conductor forwards the last per-item `review-receipt/v1` alongside check evidence. The planner bridge passes it
+to the source's `finish --review-receipt` command; the file source validates and copies it to `review-receipt.json` in its own
+artifact folder without applying a freshness gate. The receipt is a durable review record alongside the report and
+check evidence.
+
+`--input FILE` (`orch.py source claim --input`, `orch conduct run --input`) serves one execution-input document with no plan:
+`orch.worksource_file.FileWorkSource`, the same protocol and contract, checked on both sides. `claim` always succeeds for the one
+input (the reference is its `input_id`; a different candidate is `INPUT_UNKNOWN`; an input outside `exec/v1` is `INPUT_INVALID`);
+`brief` is the document itself in the artifact store (a file that changed since the claim is `INPUT_CHANGED`, a failure of the
+source); `register` refuses a report outside `register-report` with the codes of the planner bridge, applies the same
+evidence gate as the planner bridge (check-evidence with exit 0 for every acceptance check) and writes `stage-report.json`, `evidence/V#.json` and `register.json` (the idempotency receipt) into
+`.swissknifeman/orch-artifacts/<run_id>/<input_id>/` (local records, not committed); `commit` commits nothing unless `--commit`, then only the given paths with
+`adhoc(<input_id>): <title>`; `release` is a no-op; `note` is `refused` (`NOTE_UNSUPPORTED`): a file has no journal; `research` keeps `research-<n>.json` in the artifact folder of the input; `decision` appends the request to `decisions.json` there (a repeat of the same `question_key` changes nothing); `readiness` is `refused` (`READINESS_UNSUPPORTED`): a file has no phases. For provenance
+`plan_support` and `phase_support` the `register` command forwards the note to the configured plugin source
+(the CLI prints the answer with `note: {outcome: recorded | unsupported | refused, message?}`; `receipts/register.json` keeps the pure answer of the source and the note goes to `receipts/note.json`). The `input_id` of a file input names the artifact folder, so it must be one path component (`INPUT_INVALID` otherwise); `commit` uses literal git pathspecs, and a commit refused by a hook leaves the index as it was. `run.json` of the cycle gets
+`source = {kind: file, path, commit}` and `plugin: file`; the later commands read it.
+
+## Ownership and integrity
+
+- One owner per attempt: the claim starts the work under the session `run_id`; work held by another session is
+  `blocked` (`ITEM_OWNED` for the planner); the port never takes work over.
+- Fencing: `register` is refused (`REGISTER_STALE_OWNER`, gate `stale`) when the work is no longer held by the
+  run, for example after another session took it over; the planner bridge checks it before any write and again in
+  the closing `finish` under the plan lock.
+- Evidence gate: `done` and `done_with_deviations` need a check-evidence file with exit 0 for every acceptance
+  check (`REGISTER_EVIDENCE_MISSING`, `REGISTER_EVIDENCE_RED`); a claim in the report without a file is not a
+  result. `blocked` needs none.
+- Idempotency: a repeated claim of the same run returns the same attempt; a repeated register of the same attempt
+  is `no-op`; a repeated brief with unchanged inputs reuses the stored brief.

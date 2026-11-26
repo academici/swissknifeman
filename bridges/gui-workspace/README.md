@@ -1,0 +1,79 @@
+# gui-workspace
+
+Bridge between the GUI host (`gui`) and the portable workspace (`workspace`): overview, projects, migration, sync and
+conflicts as GUI views, and the workspace actions as broker commands. It is a hub unit (`unit.json`, kind `bridge`,
+requires `aicore`, `gui`, `workspace`) that contributes `gui.json` (`contribution/v1`) and answers queries through the
+aicore plugin protocol (`extension.json`, point `gui:query`).
+
+The bridge only runs `workspace ... --json` — `$SKM_WORKSPACE_MODULE_ROOT/bin/workspace`, else
+`swissknifeman workspace` (`$SKM_UMBRELLA` or `PATH`) — and moves fields of its JSON into `view-data/v1`. It reads no
+workspace file and imports no module. A URL with userinfo (`scheme://user@host`) in an answer is refused
+(`WORKSPACE_REMOTE_LEAK`) even if the CLI failed to redact it.
+
+| Query | Workspace command | View |
+| --- | --- | --- |
+| `gui-workspace.overview` | `status`, `doctor --publish-safety` | `metric-group`: projects, bound here, changed files, ahead/behind/diverged, remote connected, publish verdict |
+| `gui-workspace.projects` | `project list`, `status` | `resource-list`: project, status, bound here, paths, plans store, plans |
+| `gui-workspace.migration` | `migrate discover` | `status-table`: one row per checkout; a row with legacy plans offers `migrate-plan` |
+| `gui-workspace.sync` | `status`, `doctor --publish-safety` | `status-table`: push target (redacted remote, branch, ahead/behind; offers `sync-push`), publish-safety findings, last operation |
+| `gui-workspace.conflicts` | `status` (`last_sync`) | `resource-list`: path, project, plan, ref, decision made so far |
+
+Widget `gui-workspace.summary` (`metric-group`, fleet) shows the overview query.
+
+Pages: Overview, Projects, Migration, Sync, Conflicts. The contract asks for the navigation section `workspace`
+(orders 10–50); the contribution schema of the GUI knows only `fleet`, `project`, `plan`, `settings`, `plugins`, so the
+pages sit in `fleet` with orders 110–150 until the GUI adds the section.
+
+## Commands
+
+Declared only in `gui.json` as `exec.kind = argv` with the fixed argv `run.py <verb> <inputs>`; the frontend sends
+field values, never argv. All values are strings or enums, except the switch `link_folders` (a boolean: only the flag is passed when it is on); `run.py` checks them (exit 2, nothing runs) and builds the
+`workspace` argv as a list without a shell.
+
+| Command | Inputs | Runs | Confirmation |
+| --- | --- | --- | --- |
+| `init` | `code` | `init --code CODE` (the configured root) | risk-based |
+| `init-remote` | `code`, `remote` | `init --code CODE --remote URL`: create the workspace and bind it to an empty remote as `origin`; nothing is pushed | always |
+| `project-add` | `path` (absolute folder), `name`?, `project_code`?, `link_folders`? (switch) | `project add --path DIR [--name N] [--code CODE] [--link-folders]` (no `--yes`) | risk-based |
+| `project-remove` | `project_id` | `project remove CODE`: only a project without plans; otherwise `PROJECT_NOT_EMPTY` | always |
+| `project-attach` | `project` (absolute folder), `link_folders`? (switch) | `project attach --project DIR [--link-folders]` (no `--yes`: an existing project is never reused silently); the form "Bind a checkout" | risk-based |
+| `project-link` / `project-unlink` | `project` (absolute folder) | `project link --project DIR` / `project unlink --project DIR`: `plans/` and `tasks/` of the checkout as symbolic links into the project folders of the workspace (D5), kept for this project; a real folder is never replaced | risk-based |
+| `project-scan` | `dir` | `project scan DIR` | risk-based |
+| `project-rebind` | `project_id`, `path` | `project rebind ID --path DIR` | risk-based |
+| `migrate-plan` | `project`, `on_conflict`? | `migrate plan` (dry run) | none |
+| `migrate-apply` | `project`, `on_conflict`? | `migrate apply --yes` (timeout 7200 s) | always |
+| `migrate-verify` | `project` | `migrate verify` | none |
+| `migrate-cleanup` | `project`, `confirm` | `migrate cleanup --confirm ID` | always |
+| `sync-commit` / `sync-pull` | — | `sync --commit` / `sync --pull` | risk-based |
+| `sync-push` | — | `sync --push` (no force) | always |
+| `sync-resolve` | `path`, `side` (`local`/`remote`) | `sync --resolve PATH=side` | always |
+| `sync-resolve-reset` | — | `sync --resolve-reset` | risk-based |
+| `connect` | `remote`, `branch`? | `connect --remote URL [--branch]` | always |
+
+- `migrate-cleanup`: `confirm` must equal the `project_id` bound to the folder (looked up through `project list`);
+  checked in `run.py` before the CLI runs and again by the CLI.
+- `sync-push`: `run.py` prints `pushing to <redacted remote> branch <branch>` (from `status`) before it hands over to
+  the CLI, refuses a remote with userinfo and a workspace without a remote. The generic confirmation text of the GUI
+  does not name the target; the page Sync shows it in the row `push-target`.
+- Forms (D4): Overview offers `init`, `init-remote` and `connect` (create a workspace, create it on a remote, connect a
+  remote); Projects offers `project-add`, `project-remove`, `project-attach` (bind a checkout), `project-link`,
+  `project-unlink`, `project-scan` and `project-rebind`. The forms `project-add` and `project-attach` carry the toggle
+  "Link plans/ and tasks/ in the checkout" (D5). The host renders each form from the `input` of the command; `code`, `project_code` and `project_id`
+  carry the pattern of a code, so the browser refuses a bad value before the request and `run.py` again before the CLI.
+  `init` and `init-remote` are two commands because binding a remote needs the confirmation `always`.
+  `project-remove` cannot remove a project with plans (no force): such a project is refused with `PROJECT_NOT_EMPTY`.
+- `init-remote` and `connect`: a URL with a password or token (any scheme), or any userinfo on `http(s)`, is refused.
+- `sync-resolve`: `path` is relative, without `..`, `=` or a leading `-`.
+- Commands stream and can be cancelled; `migrate-apply` and `migrate-cleanup` have `timeout_s` ≥ 3600.
+
+## Tests
+
+```bash
+bash scripts/test.sh
+```
+
+Fixture tests use a fake workspace module (`tests/fixtures/module/bin/workspace`, canned JSON; switches `FAKE_*`
+from the environment or `$HOME/fake.json`). One scenario (init → attach → overview/projects) runs the real CLI in a
+throwaway `SKM_HOME` and `SKM_WORKSPACES_ROOT`; it is skipped when `SKM_WORKSPACE_MODULE_ROOT` is unset (the hub
+script `scripts/test-bridges.sh` sets it). The GUI host and aicore come from `SKM_GUI_ROOT` and `AICORE_ROOT`, else
+from `swissknifeman units list --json`.

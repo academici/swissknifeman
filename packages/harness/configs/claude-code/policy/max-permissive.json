@@ -1,0 +1,20 @@
+{
+  "name": "max-permissive",
+  "description": "Maximum pass mode for autonomous runs: bypassPermissions + empty ask (don't ask anything), guardrail-deny are inviolable. Standard field-case #2 (2026-07-10, vault Brain). Key skipDangerousModePermissionPrompt in expect NOT included - it is not documented (D3).",
+  "expect": {
+    "permissions.defaultMode": "bypassPermissions",
+    "permissions.ask": [],
+    "permissions.deny": {
+      "contains": [
+        "Read(~/.ssh/**)",
+        "Read(~/.aws/**)",
+        "Read(**/*.pem)",
+        "Bash(sudo *)"
+      ]
+    },
+    "vscode": {
+      "claudeCode.initialPermissionMode": "bypassPermissions",
+      "claudeCode.allowDangerouslySkipPermissions": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-request:v1",
+  "agent_run_id": "agent-20261022T100000Z-a1b2c3-2",
+  "role": "executor",
+  "route": {"provider": "claude-code", "argv": ["claude", "-p"]},
+  "step": "executor.1",
+  "started_at": "2026-10-22T10:01:00Z"
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "urn:swissknifeman:gui:run-api:v1",
+  "kind": "run_list",
+  "runs": [
+    {
+      "$schema": "urn:swissknifeman:gui:run:v1",
+      "run_id": "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "command": "demo.greet",
+      "owner": "demo",
+      "state": "succeeded",
+      "dry_run": false,
+      "context": {
+        "project_id": "demo-1a2b3c4d"
+      },
+      "input": {
+        "name": "World"
+      },
+      "created_at": "2026-10-16T12:00:00Z",
+      "finished_at": "2026-10-16T12:00:01Z",
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "actor": {
+        "kind": "user",
+        "id": "browser"
+      },
+      "permission": {
+        "decision": "allowed",
+        "effects": [
+          {
+            "effect": "process.spawn",
+            "enforcement": "advisory"
+          }
+        ],
+        "grants": []
+      },
+      "log": {
+        "stdout_bytes": 12,
+        "stderr_bytes": 0,
+        "truncated": false
+      },
+      "correlation_id": "cccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "next_cursor": "2026-10-16T12:00:00Z|run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

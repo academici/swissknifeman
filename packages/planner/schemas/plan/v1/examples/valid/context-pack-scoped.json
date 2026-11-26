@@ -1,0 +1,344 @@
+{
+  "ref": "P2.2",
+  "plan": {
+    "$schema": "urn:swissknifeman:task:plan:plan:v1",
+    "id": "2026.10.05-№1-DEMO",
+    "short_id": "PLAN3",
+    "title": "Plan №1 — Gold | pipes",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated_at": "2026-10-06T09:00:00Z",
+    "repository": "demo",
+    "owner": "repository owner",
+    "authoring": {
+      "provider": "claude-code",
+      "model": "claude-opus-5-5",
+      "effort": "high"
+    },
+    "goal": "Config errors are reported at load time with all problems at once.",
+    "context": "The loader crashes deep in runtime with KeyError …",
+    "non_goals": [
+      "Config format changes"
+    ],
+    "rules": [
+      "stdlib only",
+      "English diagnostics"
+    ],
+    "phases": [
+      "P1",
+      "P2"
+    ],
+    "contracts": {
+      "exported": [
+        {
+          "name": "config-api",
+          "version": "1",
+          "status": "stable",
+          "consumers": "cli"
+        }
+      ],
+      "consumed": [
+        {
+          "name": "schema",
+          "donor": "core",
+          "pinned": "v2",
+          "reaction": "re-run check"
+        }
+      ]
+    },
+    "settings": {
+      "design_audit": "required",
+      "scout": "off",
+      "context_pack": "scoped"
+    }
+  },
+  "brief": {
+    "$schema": "urn:swissknifeman:task:plan:brief:v1",
+    "messages": [
+      {
+        "id": "M1",
+        "date": "2026-10-05",
+        "text": "Make config errors aggregate.",
+        "channel": "chat"
+      }
+    ],
+    "requirements": [
+      {
+        "id": "B1",
+        "text": "Report all problems at once.",
+        "source": "M1",
+        "owners": [
+          "P1",
+          "P1.1"
+        ]
+      }
+    ],
+    "constraints": [
+      "stdlib only"
+    ],
+    "environment": [
+      "Python 3.12"
+    ],
+    "out_of_scope": [
+      "CLI flags"
+    ]
+  },
+  "phase": {
+    "$schema": "urn:swissknifeman:task:plan:phase:v1",
+    "id": "P2",
+    "title": "Reporting",
+    "design": "detailed",
+    "goal": "Errors are rendered for humans.",
+    "context": "Loader lives in lib/pkg/config.py; tests in tests/test_config.py.",
+    "scope": {
+      "include": [
+        "load_config validation"
+      ],
+      "exclude": [
+        "CLI flags"
+      ]
+    },
+    "pitfalls": [
+      "Do not change behaviour for valid configs"
+    ],
+    "validation": [
+      {
+        "id": "V1",
+        "cmd": "bash scripts/test.sh",
+        "expect": "exit 0",
+        "kind": "acceptance"
+      }
+    ],
+    "deliverables": [
+      "validated loader"
+    ],
+    "items": [
+      "P2.1",
+      "P2.2"
+    ],
+    "batches": [
+      {
+        "id": "B2",
+        "items": [
+          "P2.1"
+        ],
+        "mode": "required"
+      },
+      {
+        "id": "B3",
+        "items": [
+          "P2.2"
+        ],
+        "mode": "recommended"
+      }
+    ],
+    "closed": null
+  },
+  "item": {
+    "$schema": "urn:swissknifeman:task:plan:item:v1",
+    "id": "P2.2",
+    "title": "Publish report",
+    "status": "todo",
+    "summary": "load_config() checks required keys and types before first use.",
+    "why": "Broken configs crash later with unclear KeyError.",
+    "scope": {
+      "include": [
+        "load_config() and its tests"
+      ],
+      "exclude": [
+        "config file format"
+      ]
+    },
+    "depends_on": [
+      "P2.1"
+    ],
+    "related": [],
+    "decisions": [],
+    "reads": [
+      {
+        "path": "lib/pkg/config.py",
+        "why": "function to change",
+        "required": true
+      },
+      {
+        "path": "@plan/knowledge/design.json",
+        "section": "validation",
+        "why": "error format",
+        "required": true
+      }
+    ],
+    "task_files": [
+      {
+        "path": "lib/pkg/config.py",
+        "change": "modify"
+      },
+      {
+        "path": "tests/test_config.py",
+        "change": "modify"
+      }
+    ],
+    "artifacts": [],
+    "rules": [
+      "Collect all errors, raise once"
+    ],
+    "guidance": "Iterate REQUIRED_KEYS; append `ConfigIssue(key, problem)`; raise `ConfigError(issues)`.",
+    "examples": [
+      {
+        "path": "@plan/artifacts/design/examples.json",
+        "section": "E3"
+      }
+    ],
+    "validation": [
+      {
+        "id": "V1",
+        "cmd": "python3 -m unittest tests/test_config.py",
+        "expect": "OK",
+        "kind": "acceptance"
+      }
+    ],
+    "deliverables": [
+      "validation in config.py",
+      "3 new tests"
+    ],
+    "route": {
+      "class": "implementation",
+      "effort": "medium"
+    },
+    "review": {
+      "mode": "none"
+    },
+    "authority": {
+      "kind": "owner_gate",
+      "gate": "RELEASE-1",
+      "scope": "publish the report"
+    },
+    "rag": {
+      "need": "none",
+      "status": "not_needed"
+    },
+    "units": [],
+    "result": null,
+    "updated_at": "2026-10-05T10:00:00Z"
+  },
+  "decisions": [],
+  "upstream": [
+    {
+      "id": "P2.1",
+      "title": "Render report",
+      "status": "in_progress",
+      "summary": "load_config() checks required keys and types before first use.",
+      "deliverables": [
+        "validation in config.py",
+        "3 new tests"
+      ],
+      "artifacts": []
+    }
+  ],
+  "phase_dependencies": [
+    {
+      "id": "P1",
+      "title": "Config validation",
+      "goal": "load_config() rejects invalid configs with one aggregated error.",
+      "deliverables": [
+        "validated loader"
+      ],
+      "closed": {
+        "at": "2026-10-05T12:00:00Z",
+        "result": "blocked",
+        "summary": "P1.2 needs an owner decision."
+      }
+    }
+  ],
+  "reads": [
+    {
+      "path": "lib/pkg/config.py",
+      "why": "function to change",
+      "required": true,
+      "exists": false
+    },
+    {
+      "path": "@plan/knowledge/design.json",
+      "section": "validation",
+      "why": "error format",
+      "required": true,
+      "exists": true,
+      "content": {
+        "$schema": "urn:swissknifeman:task:plan:document:v1",
+        "id": "design",
+        "title": "Config validation design",
+        "sections": [
+          {
+            "id": "validation",
+            "title": "Validation",
+            "text": "## 1. Overview\n\nLoader sketch; not needed by P1.2.\n\n## 2. Validation\n\nCollect every problem into one `ConfigError`:\n\n```text\n## not a heading, just fenced text\n```\n\n- required keys are listed in `REQUIRED_KEYS`\n- types are checked after presence\n\n### 2.1 Error format\n\nOne line per issue: `key: problem`.\n\n## 3. Out of scope\n\nConfig file format stays as is."
+          }
+        ]
+      }
+    }
+  ],
+  "lessons": [
+    {
+      "v": 1,
+      "ts": "2026-10-06T08:30:00Z",
+      "type": "difficulty",
+      "item": "P2.1",
+      "actor": {
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "effort": "high"
+      },
+      "summary": "template cache is slow | needs care",
+      "next": "cache the parsed template"
+    }
+  ],
+  "documents": [],
+  "units": [],
+  "orchestration": {
+    "strategy": "dag",
+    "scenario": "solo",
+    "scenario_source": "config:default"
+  },
+  "ready_units": [],
+  "policy": {
+    "review_rounds_max": 2,
+    "corrections_max": 1
+  },
+  "batch": {
+    "id": "B3",
+    "items": [
+      "P2.2"
+    ],
+    "mode": "recommended",
+    "run_with": "planner:plan-run 2026.10.05-№1-DEMO P2.2"
+  },
+  "projection": {
+    "mode": "scoped",
+    "note": "reads[].included names the pack key that already holds the source; upstream and phase_dependencies are summaries, read them by ref for the full record"
+  },
+  "scout": {
+    "$schema": "urn:swissknifeman:task:plan:scout-map:v1",
+    "item": "P2.2",
+    "provider": "claude-code",
+    "model": "haiku",
+    "created_at": "2026-10-22T10:00:00Z",
+    "entries": [
+      {
+        "path": "lib/x.py",
+        "symbol": "load",
+        "why": "entry point"
+      },
+      {
+        "path": "lib/y.py",
+        "why": "helper"
+      },
+      {
+        "path": null,
+        "why": "Unknowns:"
+      },
+      {
+        "path": null,
+        "why": "- where the tests live"
+      }
+    ]
+  }
+}

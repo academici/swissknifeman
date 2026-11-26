@@ -1,0 +1,15 @@
+{
+  "id": "Q13",
+  "route": "perplexity-web-mcp stdio, default pool; search",
+  "started": "2026-10-05T16:00:54Z",
+  "completed": "2026-10-05T16:01:44Z",
+  "query": "Agent Client Protocol (ACP, agentclientprotocol.com) as a universal transport for driving coding agents programmatically in October 2026: which agents support ACP natively or via adapters — Claude Code (claude-code-acp / Agent SDK adapter), OpenAI Codex (codex-acp), xAI Grok Build (grok agent stdio)? Do these ACP paths keep the CLI's native subscription login, skills/plugins, permissions, and model/effort selection? Maturity, versioning, Python client libraries. Compare ACP vs per-CLI JSON streams vs tmux/TUI orchestration (CAO) vs Vercel AI SDK HarnessAgent (experimental) for an engine-agnostic orchestrator with a stable port/adapter contract. Recommend which transport to standardize the adapter port on. Primary-source URLs. Answer in Russian, max 700 words.\n",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "\"Агент\",\"ACP-путь\",\"Что подтверждается источниками\"\n\"Claude Code\",\"'@agentclientprotocol/claude-agent-acp — адаптер к официальному Claude Agent SDK; есть и отдельный адаптер Zed.\",\"SDK поддерживает skills и загрузку локальных plugins, а ACP-адаптер передаёт permission requests. Но это не эквивалент запуска произвольного интерактивного Claude Code CLI: настройки и поддержка зависят от SDK/адаптера. Не считайте автоматическое сохранение подписочного логина, всех CLI-плагинов или полного набора CLI-настроек гарантированным — проверяйте способ аутентификации и SDK options для закреплённой версии. [GitHub: ACP adapter]github [Claude SDK: plugins]code.claude [skills]code.claude\"\n\"OpenAI Codex\",\"'@agentclientprotocol/codex-acp — ACP stdio server, который запускает Codex App Server.\",\"Документированы ChatGPT login, API key и gateway auth; конфигурация модели, reasoning effort, approval и sandbox mode; также slash-команды и skills. Это наиболее явно подтверждённый путь сохранения Codex-специфичных настроек через ACP. [README]github\"\n\"Grok Build\",\"Нативный ACP: grok agent stdio; это не сторонний транспортный адаптер.\",\"Официальные документы подтверждают ACP, TUI/headless режимы, skills, plugins и выбор модели в CLI. Subscription/OAuth login доступен в CLI, но конкретное поведение ACP-аутентификации и конфигурирования нужно проверять на pinned-версии: «ACP поддерживается» само по себе не обещает одинаковый UX логина и полную переносимость режимов. [Grok Build docs]x [Grok ACP docs]zed\""
+      }
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "item": "adhoc@f0702e1aa343",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "Apply A writes migrate-<project>.intent.json and enters the bridge, which holds the migration lock through the copy and then switches the marker. Apply B was planned while the marker was still legacy, so it overwrites that intent and, on MIGRATION_LOCKED, unlinks it. If A's report write then fails (disk full or the process dying after write_marker), the retry sees a workspace marker and no intent and returns noop with no migrations/<op_id>.json.",
+          "id": "F1",
+          "location": "packages/workspace/lib/workspace/migrate.py:643",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "unittest of a MigrateCase subclass: wrap migrator_port.call so that after the real apply call the intent file is unlinked (the unlink a second apply does on MIGRATION_LOCKED, migrate.py apply() `intent_path.unlink()` on refusal); patch migrate.atomic_write_text to raise OSError for the migrations/ report; run `migrate apply`, then `migrate apply` again",
+            "exit": 0,
+            "observed": "first apply raised OSError('disk full') after the marker switch; the retry returned noop=True and migrations/ holds no report (reports: [])"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "The intent freezes plan-time actions. The bridge then decides again: a legacy folder that appears with the same digest becomes skipped-equal, or import-copy uses the real device suffix after _ensure_device while the plan recorded the fallback suffix 'device'. The caller dies after the marker switch. The retry's noop answer has the bridge's action and stored_as, but _read_intent keeps the intent rows because only (name, digest) is compared. The written report says copied or stored_as name~device. Rollback then removes the pre-existing workspace folder (including context/ and views/, which are outside the digest) or looks for a folder that was never created and refuses with MIGRATION_DIVERGED, leaving the real name~<device> copy untracked.",
+          "id": "F2",
+          "location": "packages/workspace/lib/workspace/migrate.py:576",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "unittest: apply, copy the workspace plans aside, rollback, then apply again with migrator_port.call wrapped to restore the saved same-digest folders into the workspace just before the real call, and with the report write failing; retry `migrate apply`; read the last report",
+            "exit": 0,
+            "observed": "the bridge found the folders equal, but the report written from the intent says 'copied' for every plan, for example {'2026.10.05-№7-DEMO': 'copied', 'old-thing': 'copied', ...}. The pre-existing workspace folder is recorded as brought in by the migration, so rollback would delete it."
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "medium",
+          "failure_scenario": "Rollback renames a v4 plan into .staging/rollback-<op_id>, so the PlanLock moves with that inode. _drop_local_only or write_marker then raises. A planner locks the old path; PlanLock mkdir's a new non-empty plan directory there. os.rename back fails with ENOTEMPTY, the OSError is suppressed, and shutil.rmtree(staging) deletes the only workspace copy. The marker is still workspace, so the product reads the planner's new directory and the previous plan body is gone.",
+          "id": "F3",
+          "location": "packages/workspace/lib/workspace/migrate.py:892",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "unittest: apply, then rollback with migrate._drop_local_only patched to first create <ws>/projects/<id>/plans/<PLAN>/.lock (what PlanLock does on the old path) and then raise OSError",
+            "exit": 0,
+            "observed": "rollback raised OSError. The restoring os.rename into the now non-empty directory was suppressed and the rmtree of staging ran. The target holds only ['.lock'], plan.json is gone, and the marker is still 'workspace'. The only copy of the plan body was deleted."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a14bcc-2c18-7bc2-987c-9c116671e360",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261017T212640Z-764810/adhoc-f0702e1aa343/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "rejected": [],
+        "session": "080dbf58-635d-44b2-886b-56480beba886"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a14be4-f60a-7ab2-822c-bd7b1afe180e",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261017T212640Z-764810/adhoc-f0702e1aa343/streams/review.2.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261017T212640Z-764810",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

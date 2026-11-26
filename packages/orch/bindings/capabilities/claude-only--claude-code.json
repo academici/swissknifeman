@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:capability-record:v1",
+  "contract_version": "exec/v1",
+  "binding": "claude-only",
+  "provider": "claude-code",
+  "cli": {
+    "name": "claude"
+  },
+  "status": "declared",
+  "recorded_at": "2026-10-07T10:20:25Z",
+  "transport": "prompt",
+  "auth_route": "subscription_oauth",
+  "model": {
+    "set": "unsupported",
+    "observe": "adapted"
+  },
+  "effort": {
+    "set": "unsupported",
+    "observe": "unknown"
+  },
+  "stream": "unsupported",
+  "attach": "unsupported",
+  "cancel": "unsupported",
+  "resume": "unsupported",
+  "usage": "unknown",
+  "restrictions": {
+    "tools_native": "unsupported",
+    "sandbox_os": "unsupported",
+    "prompt_only": true
+  },
+  "skill_delivery": {
+    "mode": "project_dir",
+    "per_run_isolation": "unsupported"
+  },
+  "plan_write_prevention": "unsupported",
+  "terminal_signal": "the session returns a report per result_contract",
+  "evidence": [
+    {
+      "kind": "doc",
+      "ref": "https://code.claude.com/docs/en/cli-reference"
+    }
+  ]
+}

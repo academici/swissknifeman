@@ -1,0 +1,5 @@
+{
+  "name": "frontend-figma",
+  "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
+  "skills": "./"
+}

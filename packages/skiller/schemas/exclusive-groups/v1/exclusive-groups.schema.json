@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:exclusive-groups:v1",
+  "title": "exclusive-groups",
+  "description": "Exclusive-groups document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "description": "Format identifier.",
+      "const": "exclusive-groups/v1"
+    },
+    "groups": {
+      "type": "object",
+      "description": "Group name to its rule.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "description": "One group: a description, members, and exactly one of max or router.",
+          "oneOf": [
+            {
+              "type": "object",
+              "description": "At most max of these skills are selected together.",
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Why the skills exclude each other.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "members": {
+                  "description": "Skills in the group.",
+                  "type": "array",
+                  "items": {
+                    "description": "Skill id (bucket/name).",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "max": {
+                  "description": "How many of the group may be selected together.",
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "description",
+                "members",
+                "max"
+              ]
+            },
+            {
+              "type": "object",
+              "description": "Selecting any member selects the router instead.",
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "description": "Why the skills exclude each other.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "members": {
+                  "description": "Skills in the group.",
+                  "type": "array",
+                  "items": {
+                    "description": "Skill id (bucket/name).",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "router": {
+                  "description": "The member that stands for the group.",
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "description",
+                "members",
+                "router"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "groups"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "skill": "skills-ssot",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "This repository commits generated AGENTS.md through Skiller and has Laravel Boost installed. Fix a stale skill without changing the chosen ownership model.",
+      "assertions": [
+        {
+          "type": "regex",
+          "value": "owner|generator|source|\u0432\u043b\u0430\u0434\u0435\u043b|\u0433\u0435\u043d\u0435\u0440\u0430\u0442\u043e\u0440|\u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a"
+        },
+        {
+          "type": "not_contains",
+          "value": "git rm --cached AGENTS.md"
+        }
+      ]
+    }
+  ]
+}

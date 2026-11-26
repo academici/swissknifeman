@@ -1,0 +1,56 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:item-routes:v1",
+  "context-scout": {
+    "argv": [
+      "claude",
+      "-p"
+    ],
+    "effort": "low",
+    "idle_timeout_s": 0,
+    "model": "haiku",
+    "model_class": "economy",
+    "provider": "claude-code",
+    "role": "context-scout",
+    "timeout_s": 900,
+    "transport": "text"
+  },
+  "executor": {
+    "argv": [
+      "claude",
+      "-p",
+      "--model",
+      "sonnet"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "sonnet",
+    "model_class": "implementation",
+    "provider": "claude-code",
+    "resume_argv": [
+      "claude",
+      "-p",
+      "--model",
+      "sonnet",
+      "--resume",
+      "{session}"
+    ],
+    "role": "executor",
+    "timeout_s": 0,
+    "transport": "stream-json"
+  },
+  "reviewer": {
+    "argv": [
+      "grok",
+      "--model",
+      "grok-4.7"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "grok-4.7",
+    "model_class": "frontier",
+    "provider": "grok",
+    "role": "reviewer",
+    "timeout_s": 3600,
+    "transport": "stream-json"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "v": 1,
+  "ts": "2026-10-05T10:05:00Z",
+  "type": "start",
+  "item": "P1.1",
+  "phase": "P1",
+  "actor": {
+    "provider": "codex",
+    "model": "gpt-6-sol",
+    "effort": "high"
+  },
+  "summary": "start P1.1 (batch B1)",
+  "data": {
+    "requested": [
+      "P1.1",
+      "P1.2"
+    ],
+    "route": "ok"
+  }
+}

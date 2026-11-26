@@ -1,0 +1,17 @@
+{
+  "name": "node-frontend",
+  "description": "Vue/Vite frontend (SPA or Inertia): components, state, e2e tests",
+  "buckets": ["system", "architect", "frontend", "frontend-vue", "frontend-vite", "frontend-linting", "frontend-tailwind", "quality", "devops"],
+  "include_meta": false,
+  "agent_pack": ["node-frontend", "_common"],
+  "harness_presets": ["base", "node"],
+  "mcp": ["context7", "playwright"],
+  "model_tiers": {
+    "reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "component-builder": "implementation",
+    "slice-builder": "implementation",
+    "test-writer": "implementation"
+  }
+}

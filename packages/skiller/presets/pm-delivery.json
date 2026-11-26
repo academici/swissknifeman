@@ -1,0 +1,9 @@
+{
+  "name": "pm-delivery",
+  "description": "Delivery: PRD from BRD, product roadmaps, MVPs, and business processes",
+  "include": [
+    "pm/prd-from-brd",
+    "pm/product-roadmap",
+    "pm/business-process"
+  ]
+}

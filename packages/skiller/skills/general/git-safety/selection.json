@@ -1,0 +1,6 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "reference",
+  "decision": "SCRIPT",
+  "replaced_by": "harness/configs/claude-code/hooks/git-guardrails"
+}

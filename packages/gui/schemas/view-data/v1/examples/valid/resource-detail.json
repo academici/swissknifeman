@@ -1,0 +1,37 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "resource-detail",
+  "title": "PLAN5 SKM GUI",
+  "fields": [
+    {
+      "label": "Status",
+      "value": "active",
+      "type": "status"
+    },
+    {
+      "label": "Items",
+      "value": 28,
+      "type": "number"
+    },
+    {
+      "label": "Owner",
+      "value": null,
+      "type": "text"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Goal",
+      "markdown": "Local control plane of **SKM**."
+    }
+  ],
+  "actions": [
+    {
+      "command": "gui-planner.run-item",
+      "input": {
+        "plan": "PLAN5",
+        "item": "P1.2"
+      }
+    }
+  ]
+}

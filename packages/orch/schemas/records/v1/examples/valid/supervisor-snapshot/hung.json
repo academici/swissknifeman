@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-snapshot:v1",
+  "at": "2026-10-24T10:00:00Z",
+  "run_id": "cnd-1",
+  "health": {"health": "hung", "reason_code": "HEARTBEAT_STALE", "detail": "the heartbeat is 400 s old"},
+  "status": {"run": "cnd-1", "status": "running"},
+  "heartbeat": {"run_id": "cnd-1", "pid": 4242, "seq": 7},
+  "lease": {"pid": 4242, "command": "run"},
+  "progress_tail": [{"ts": "2026-10-24T09:50:00Z", "run": "cnd-1", "event": "run.start"}],
+  "processes": [{"pid": 4242, "ppid": 1, "pgid": 4242, "stat": "T", "cpu_s": 1.5, "args": "python3 orch.py conduct run"}]
+}

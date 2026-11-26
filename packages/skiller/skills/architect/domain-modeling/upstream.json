@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/SKILL.md",
+      "sha256": "152e2c97239affb12a60c5f4a7e74ab546a49ae169688c81f4e2ccc42dafa579",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/CONTEXT-FORMAT.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/CONTEXT-FORMAT.md",
+      "sha256": "b8cc318f2a4285b530e908b6bc43901c3c5cd11100362636bbc4216639bef597",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/ADR-FORMAT.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/domain-modeling/ADR-FORMAT.md",
+      "sha256": "f1f36cd3f8d3b6474ddd5855da4e233bfc4ae1a1c5024909ccf11871819a41b2",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "From mattpocock/skills engineering/domain-modeling. Body saved (English) + RU description-router, sub-files -> snippets/, added multi-repo block (general ecosystem vocabulary) and fintech examples (SBP/libfptr10), section «Related skills» (ADR-delegate depth architect/architecture, so as not to duplicate). strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "376760cee9f20dcbf034c018f2aa4247523eb96b32c217049eccc25a160440a2"
+  }
+}

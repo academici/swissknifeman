@@ -1,0 +1,17 @@
+{
+  "name": "base",
+  "description": "Basic interactive development policy: acceptEdits + guardrail-deny (secrets/keys/sudo). Mirror configs/claude-code/settings.base.json; ask NOT limited to empty (confirmations of dangerous operations remain).",
+  "expect": {
+    "permissions.defaultMode": "acceptEdits",
+    "permissions.deny": {
+      "contains": [
+        "Read(.env)",
+        "Read(**/*.pem)",
+        "Read(**/*.key)",
+        "Read(~/.ssh/**)",
+        "Read(~/.aws/**)",
+        "Bash(sudo *)"
+      ]
+    }
+  }
+}

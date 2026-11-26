@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:project-local-config:v1",
+  "title": "project-local-config",
+  "type": "object",
+  "description": "The parsed content of projects/<code>/local/config.toml in the workspace: the project layer of the configuration plus `[repo] path`, the code repository of the project on this machine. Not portable: it holds an absolute path and is never in git (the workspace .gitignore lists local/). The TOML file has no `$schema` key; this contract is validated against the parsed tables.",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Version of the configuration file format (the same number every configuration layer file carries)."
+    },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The code repository of the project on this machine; replaces the entry of the project in bindings.json.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(/|[A-Za-z]:[\\\\/]).+$",
+          "description": "Absolute real path of the checkout (the primary one of the project)."
+        }
+      },
+      "required": [
+        "path"
+      ]
+    }
+  },
+  "patternProperties": {
+    "^(?!(?:schema_version|repo)$)[a-z][a-z0-9_-]*$": {
+      "type": "object",
+      "description": "The table of one module of the project layer, named by the module id (`[planner.bridges]`, `[orch.conductor]`, ...; any name but `schema_version` and `repo`); its keys belong to that module's own configuration schema and are checked there, not here."
+    }
+  },
+  "required": [
+    "schema_version"
+  ],
+  "additionalProperties": false
+}

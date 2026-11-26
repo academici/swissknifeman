@@ -1,0 +1,9 @@
+{
+  "run_id": "a",
+  "submission_id": "sub-a",
+  "ref": "a",
+  "attempt_id": "att-1",
+  "outcome": "done",
+  "gate": "pass",
+  "not-a-field": 1
+}

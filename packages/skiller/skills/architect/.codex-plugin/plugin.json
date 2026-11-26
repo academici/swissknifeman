@@ -1,0 +1,22 @@
+{
+  "name": "architect",
+  "version": "0.4.2",
+  "description": "Architecture, API and data design, security, observability, tech stack selection",
+  "skills": [
+    "./agent-design",
+    "./api-design",
+    "./architecture",
+    "./codebase-design",
+    "./data-schema",
+    "./domain-modeling",
+    "./ecosystem-reuse-gate",
+    "./engineering",
+    "./eval-design",
+    "./figma-mcp-core",
+    "./legal-compliance",
+    "./observability-design",
+    "./package-contribution-protocol",
+    "./security-design",
+    "./tech-stack-selection"
+  ]
+}

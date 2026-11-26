@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/SKILL.md",
+      "sha256": "fba52570068a715fef7d306e582a5993bf08a838b55465d3c3c7bff8ba70f731",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/advanced-hmr.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/advanced-hmr.md",
+      "sha256": "661ff58636eaca335805df317c93848aba710e5957aab5f921eba9b57b69192d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/advanced-nuxt.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/advanced-nuxt.md",
+      "sha256": "e12dd48df259c97c38722e87b368808188fcbc28208398505624007529b0e3a2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/advanced-ssr.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/advanced-ssr.md",
+      "sha256": "9fbc7b11da5cb7b1d4ef8b320935712ba3d356f7847344c56b01e80a3e1e3132",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/best-practices-outside-component.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/best-practices-outside-component.md",
+      "sha256": "1354224a5a9e41b2b7dea712b79ec948690a0d65e90dde905298e8b17e7ed49e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/best-practices-testing.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/best-practices-testing.md",
+      "sha256": "634ccd1d076c509af0fa9bae4ac428a536c2ba42a2ef11eda7fe7af683fa5252",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/core-stores.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/core-stores.md",
+      "sha256": "41627453eb019d1755dac787924bde52be162a3bdfc555119f88a8e59dda8f21",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/features-composables.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/features-composables.md",
+      "sha256": "e218809b50506ca8177eee9e3926a8e3601f636ea13b661c9a432b3af2251653",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/features-composing-stores.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/features-composing-stores.md",
+      "sha256": "2c4245338e3e3f368c6665775909eef5e062645e0252a6f760817a73f677df7e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/features-plugins.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/pinia/references/features-plugins.md",
+      "sha256": "f5cc105231d80f1fdf5e54369f283fda3acbad7da27f3a0b61c9b0c62fd6c3d7",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/pinia/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "781bce2f90c905d0e075c7d42c61b16acbe203922a8dd8f254e42c42a32c7e5f"
+  }
+}

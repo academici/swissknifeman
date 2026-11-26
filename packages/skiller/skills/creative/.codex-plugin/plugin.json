@@ -1,0 +1,8 @@
+{
+  "name": "creative",
+  "version": "0.4.1",
+  "description": "Creative studio: video, design, content production",
+  "skills": [
+    "./content-creative"
+  ]
+}

@@ -1,0 +1,13 @@
+exit: 0
+--- stdout ---
+PLAN3 2026.10.05-№1-GOLD — Plan №1 — Gold | pipes [active]
+  P1 Config validation (detailed, 1/2)
+    P1.1 🟢 Done  Validate required keys
+    P1.2 🔴 Blocked  Validate types | and nesting
+  P2 Reporting (detailed, 0/2)
+    P2.1 🟡 In progress  Render report
+    P2.2 ⬜ Not started  Publish report
+  decisions: D1 accepted, D2 open
+  next: audit-phase: planner:plan-audit 2026.10.05-№1-GOLD P2
+--- stderr ---
+

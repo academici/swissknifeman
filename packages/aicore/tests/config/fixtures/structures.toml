@@ -1,0 +1,24 @@
+matrix = [
+  [1, 2],   # first row
+  [3, 4],
+]
+mixed = [1, "two", 3.0, true]
+multi_line = [
+  "alpha",   # note: ] in a comment
+  "beta ]",
+]
+inline = { x = 1, y = { z = "deep" }, "quoted key" = [1, 2] }
+
+[server]
+host.name = "example"
+host.port = 8080
+
+[[servers]]
+name = "alpha"
+ip = "10.0.0.1"
+
+[servers.limits]
+max = 3
+
+[[servers]]
+name = "beta"

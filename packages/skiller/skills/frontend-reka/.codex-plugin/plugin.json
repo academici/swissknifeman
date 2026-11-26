@@ -1,0 +1,8 @@
+{
+  "name": "frontend-reka",
+  "version": "0.4.1",
+  "description": "Reka UI headless primitives + CVA variants",
+  "skills": [
+    "./reka-ui-cva"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "harness",
+  "title": "Provider environment setup: permissions, MCP, hooks, instructions",
+  "kind": "capability",
+  "version": "0.8.1",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: util, provider, artifacts, config, state."}
+  ],
+  "provides": {
+    "cli": ["bin/harness"],
+    "install": ["install.sh"],
+    "config": "configs/config.schema.json",
+    "contracts": [
+      {"id": "urn:swissknifeman:harness:mcp-catalog", "path": "schemas/mcp-catalog/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:profile-resolution", "path": "schemas/profile-resolution/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:codex-lifecycle", "path": "schemas/codex-lifecycle/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:instruction-scopes", "path": "schemas/instruction-scopes/v1", "version": "v1", "stability": "alpha"},
+      {"id": "urn:swissknifeman:harness:hooks-state", "path": "schemas/hooks-state/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "plugins": [{"name": "harness", "manifest": ".claude-plugin/plugin.json"}],
+    "doctor": [
+      {"id": "harness.environment", "category": "environment", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.hooks", "category": "integration", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.hooks-env", "category": "config", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "harness.safe-dirs", "category": "state", "probe": ["bin/harness", "doctor", "--json"], "output": "check-result/v1"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

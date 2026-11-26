@@ -1,0 +1,17 @@
+{
+  "schema": "prompt-manifest/v1",
+  "step": "executor.1",
+  "role": "executor",
+  "route": {"provider": "claude-code", "model": "claude-sonnet-5-5", "effort": "high"},
+  "blocks": [
+    {"kind": "role_text", "origin": "roles/executor.md", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 900},
+    {"kind": "input", "origin": "input.json", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 1200},
+    {"kind": "skill", "origin": "skill:tdd", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 400, "id": "tdd"},
+    {"kind": "context_map", "origin": "scout-cache:runs/cache/scout/P1.1/ab.txt", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 300},
+    {"kind": "result_contract", "origin": "conductor", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tokens": 350}
+  ],
+  "excluded": [{"id": "interview", "reason": "interactive_in_headless"}],
+  "estimated_tokens": 3150,
+  "prompt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "budgets": {"core": {"tokens": 2450, "limit": 12000}, "supporting": {"tokens": 700, "limit": 30000}}
+}

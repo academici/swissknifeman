@@ -1,0 +1,53 @@
+{
+  "schema": "orch-conductor-observer/v1",
+  "run": "cnd-20261022T100000Z-a1b2c3",
+  "started": "2026-10-22T10:00:00Z",
+  "beacons": {"RESULT_HEALED": 1, "RUN_SLOW": 1},
+  "long_run": {"active_s": 5400, "share": {"retries": 1, "review_s": 900.0, "checks_s": 2400.5, "repeats": 1}},
+  "wall_s": 5460.0,
+  "checks_share": 0.44,
+  "ended": "2026-10-22T11:31:00Z",
+  "status": "stopped",
+  "stop": {"code": "GROUP_REVIEW_BLOCKER", "message": "group 1 has Blocker findings"},
+  "last_stop": null,
+  "resumes": 1,
+  "repeats": [{"item": "W1", "stage": "executor.1", "message": "executor: the result is outside its contract; repeating"}],
+  "red_checks": {"V20": 1},
+  "checks_by_command": [
+    {"cmd": "python3 scripts/affected-tests.py --run --base main", "runs": 2, "executed": 1, "invocations": 1, "seconds": 2400.5,
+     "red": 1, "skipped": 0, "reused": 1, "retried": 0, "saved_s": 2380.0, "ids": ["V20"], "contexts": ["local"], "items": ["W1"],
+     "reused_from": ["artifacts/W1/evidence/V20.json"]}
+  ],
+  "check_findings": {
+    "duplicate_modules": [{"item": "W1", "module": "orch", "cmds": ["bash packages/orch/scripts/test.sh", "bash packages/orch/scripts/test.sh -p 'test_gates.py'"]}],
+    "phase_after_red": [{"item": "W1", "step": "checks.1"}],
+    "executor_runs_checks": ["W1"]
+  },
+  "findings_by_severity": {"Blocker": 1, "Major": 2},
+  "group_reviews": {"1": {"refs": ["W1", "W2"], "format": "findings", "counts": {"Blocker": 1, "Major": 1, "Minor": 0}}},
+  "incomplete_group_reviews": [],
+  "triage": {"confirmed": 1, "rejected": 1},
+  "idle": {"total_s": 64.0, "max_s": 64.0, "max_between": "checks.1 → review.1"},
+  "tokens_by_role": {"executor": {"input": 700, "output": 70}, "reviewer": {"input": 300, "output": 30}},
+  "tokens_by_agent": [
+    {"item": "W1", "agent_run_id": "agent-20261022T100000Z-a1b2c3-1", "role": "executor", "step": "executor.1", "status": "ok",
+     "tokens": {"input": 700, "cached": 5, "output": 70}},
+    {"item": "W1", "agent_run_id": "agent-20261022T100000Z-a1b2c3-2", "role": "reviewer", "step": "review.1", "status": "failed",
+     "tokens": {"input": 300, "cached": 0, "output": 30}}
+  ],
+  "prompt_blocks_by_role": {"executor": [{"kind": "input", "origin": "input.json", "tokens": 1200, "steps": 2},
+                                         {"kind": "skill", "origin": "skills", "id": "python-testing", "tokens": 400, "steps": 2}]},
+  "prompt_budgets_by_role": {"executor": {"context": {"max_tokens": 9000, "limit": 8000, "steps": 2, "over": 1}}},
+  "open_questions": [{"item": "W2", "id": "Q1", "revision": 1, "kind": "decision", "text": "Which tag carrier?", "answered": false,
+                      "age_s": 4000, "overdue": true}],
+  "seconds_by_role": {"deterministic": 2400.5, "executor": 1800.0, "reviewer": 900.0},
+  "scout_cache": {"runs": 2, "hits": 1},
+  "items": [
+    {"item": "W1", "outcome": "stopped", "stop": {"code": "GROUP_REVIEW_BLOCKER", "message": "group 1 has Blocker findings"},
+     "check_fixes": 1, "corrections": 0, "retries": 1, "tokens": {"input": 1000, "output": 100},
+     "attempts": [{"n": 1, "retried_at": "2026-10-22T10:30:00Z", "steps": {"executor.1": "done", "checks.1": null}}], "reviews": 2}
+  ],
+  "events": {"orch.agent.failed": 1, "orch.agent.started": 2},
+  "event_problems": [],
+  "proposals": ["Checks V20 went red after the executor: add a run rule that names the concrete new or failing diagnostics to run."]
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P2.2",
+  "title": "Publish report",
+  "status": "todo",
+  "summary": "load_config() checks required keys and types before first use.",
+  "why": "Broken configs crash later with unclear KeyError.",
+  "scope": {
+    "include": [
+      "load_config() and its tests"
+    ],
+    "exclude": [
+      "config file format"
+    ]
+  },
+  "depends_on": [
+    "P2.1"
+  ],
+  "related": [],
+  "decisions": [],
+  "reads": [
+    {
+      "path": "lib/pkg/config.py",
+      "why": "function to change",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/design.json",
+      "section": "validation",
+      "why": "error format",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "lib/pkg/config.py",
+      "change": "modify"
+    },
+    {
+      "path": "tests/test_config.py",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [],
+  "rules": [
+    "Collect all errors, raise once"
+  ],
+  "guidance": "Iterate REQUIRED_KEYS; append `ConfigIssue(key, problem)`; raise `ConfigError(issues)`.",
+  "examples": [
+    {
+      "path": "@plan/artifacts/design/examples.json",
+      "section": "E3"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest tests/test_config.py",
+      "expect": "OK",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "validation in config.py",
+    "3 new tests"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "owner_gate",
+    "gate": "RELEASE-1",
+    "scope": "publish the report"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "units": [],
+  "result": null,
+  "updated_at": "2026-10-05T10:00:00Z"
+}

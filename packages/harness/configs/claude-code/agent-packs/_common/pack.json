@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "pack": "_common",
+  "version": "0.5.1",
+  "description": "Stack-agnostic orchestrator-subagent: delegate-only tech-lead, reads the available project roles and produces a machine-readable plan (Task N -> @<prefix>-<role>) with modes Sequential/Parallel-max2/Gated. Stretches as general prerequisite stack packs (backend-laravel/node-frontend/dart-flutter/python-backend).",
+  "stack": {
+    "shape": "agnostic"
+  },
+  "requires": {
+    "skills": ["context-economy", "session-handoff"],
+    "harness_presets": ["base"]
+  },
+  "interview": [
+    { "id": "PACK_PREFIX", "q": "Project agent name prefix (like a stack pack)?", "default": "{project_dirname}", "kind": "slug" },
+    { "id": "MODEL_ORCHESTRATOR", "q": "Orchestrator model?", "default": "inherit", "enum": ["inherit", "economy", "implementation", "frontier", "opus", "sonnet", "haiku"] }
+  ],
+  "files": [
+    { "src": "agents/orchestrator.md", "target": ".claude/agents/{PACK_PREFIX}-orchestrator.md", "kind": "template", "role": "agent" },
+    { "src": "rules/generated-assets.md", "target": ".claude/rules/generated-assets.md", "kind": "verbatim", "role": "rule" }
+  ],
+  "notes": {
+    "prerequisite": "Installed together with the stackpack as a general orchestrator. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved to play his role.",
+    "verify_workflow": "Agent NOT workflow - node --check does not apply."
+  }
+}

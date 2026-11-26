@@ -1,0 +1,500 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:launch-plan:v1",
+  "title": "launch-plan",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:launch-plan:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "binding": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/binding",
+      "description": "Engine binding."
+    },
+    "run_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Prepared run identifier."
+    },
+    "input_digest": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+      "description": "Execution input digest."
+    },
+    "policy_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+      "description": "Run policy identifier."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "description": "Whether preparation is a dry run; always true in Plan 1."
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Stage identifier."
+          },
+          "role": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Stage role."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "context",
+              "scout",
+              "primary",
+              "bounded",
+              "checks",
+              "review",
+              "registrar",
+              "git",
+              "condense"
+            ],
+            "description": "Pipeline stage kind."
+          },
+          "provider": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+            "description": "Stage provider."
+          },
+          "model": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Selected model."
+          },
+          "effort": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+            "description": "Selected effort."
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "jsonl",
+              "acp",
+              "tui",
+              "prompt",
+              "none"
+            ],
+            "description": "Prepared stage transport."
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Command argument; may be empty (for example a value of `--tools`)."
+            },
+            "description": "Prepared command arguments."
+          },
+          "env": {
+            "type": "object",
+            "description": "Environment variables with string values only; producer excludes secrets."
+          },
+          "prompt_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Rendered prompt path."
+          },
+          "profile_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Rendered profile path."
+          },
+          "capability_ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Capability record path."
+          },
+          "delivery": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "native_plugin_dir",
+                  "isolated_home",
+                  "project_dir",
+                  "profile_skills",
+                  "prompt_inline",
+                  "unsupported",
+                  "unknown"
+                ],
+                "description": "Skill delivery mode."
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+                  "description": "Skill delivery path."
+                },
+                "description": "Skill delivery paths."
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/skillRef",
+                  "description": "Skill delivered to the stage."
+                },
+                "description": "Skills delivered to the stage, with the digest of the delivered content."
+              }
+            },
+            "required": [
+              "mode"
+            ],
+            "additionalProperties": false,
+            "description": "Prepared skill delivery."
+          }
+        },
+        "required": [
+          "stage_id",
+          "role",
+          "kind",
+          "transport"
+        ],
+        "additionalProperties": false,
+        "description": "Prepared stage."
+      },
+      "description": "Prepared stages."
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Refused stage identifier."
+          },
+          "capability": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Unavailable capability."
+          },
+          "reason": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Refusal reason."
+          },
+          "reason_code": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/reasonCode",
+            "description": "Stable code of the refusal reason."
+          },
+          "chain": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "capability": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Capability that is unavailable."
+                },
+                "reason": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Why it is unavailable."
+                }
+              },
+              "required": [
+                "capability",
+                "reason"
+              ],
+              "additionalProperties": false,
+              "description": "One link of the refusal chain."
+            },
+            "description": "Chain of reasons why the capability is unavailable, from the requested capability to the root cause."
+          }
+        },
+        "required": [
+          "stage_id",
+          "capability",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "description": "Capability refusal."
+      },
+      "description": "Capability refusals; may be empty."
+    },
+    "created_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Preparation timestamp."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Open binding-specific extension data."
+    },
+    "submission_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/submissionId",
+      "description": "Submission this launch plan belongs to."
+    },
+    "digest": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+      "description": "SHA-256 of the canonical JSON of this launch plan without the digest field."
+    },
+    "digests": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the execution input."
+        },
+        "policy": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the run policy."
+        },
+        "roles": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the canonical JSON of the role manifests by role id."
+        },
+        "launch_catalog": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the launch catalog."
+        },
+        "model_catalog": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the model catalog."
+        },
+        "capabilities": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the canonical JSON of the capability records by binding and provider."
+        },
+        "config": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the configuration values that influence preparation."
+        }
+      },
+      "required": [
+        "input",
+        "policy",
+        "roles",
+        "launch_catalog",
+        "model_catalog",
+        "capabilities",
+        "config"
+      ],
+      "additionalProperties": false,
+      "description": "Digests of every input of preparation."
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the canonical JSON of values."
+        },
+        "values": {
+          "type": "object",
+          "description": "Open map of the configuration keys that influence preparation to their JSON values."
+        }
+      },
+      "required": [
+        "digest",
+        "values"
+      ],
+      "additionalProperties": false,
+      "description": "Snapshot of the configuration read once by preparation."
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/moduleVersion",
+        "description": "Module that took part in preparation."
+      },
+      "description": "Versions of the modules that took part in preparation."
+    },
+    "input_ref": {
+      "$ref": "urn:swissknifeman:aicore:artifact-ref:v1",
+      "description": "Brief artifact of the execution input, when known."
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_id": {
+            "type": "string",
+            "pattern": "^(\\*|[a-z][a-z0-9-]*)$",
+            "description": "Stage the decision applies to, or * for the whole plan."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "binding",
+              "route",
+              "policy"
+            ],
+            "description": "What was decided."
+          },
+          "chosen": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Chosen candidate."
+          },
+          "considered": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "candidate": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Candidate that was considered."
+                },
+                "accepted": {
+                  "type": "boolean",
+                  "description": "Whether the candidate was acceptable."
+                },
+                "reason_codes": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/reasonCode",
+                    "description": "Reason of the verdict on the candidate."
+                  },
+                  "description": "Reasons of the verdict on the candidate."
+                }
+              },
+              "required": [
+                "candidate",
+                "accepted"
+              ],
+              "additionalProperties": false,
+              "description": "Candidate and the verdict on it."
+            },
+            "description": "Candidates in the order they were considered."
+          },
+          "tie_break": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Rule that chose between equal candidates."
+          }
+        },
+        "required": [
+          "stage_id",
+          "kind",
+          "chosen",
+          "considered"
+        ],
+        "additionalProperties": false,
+        "description": "Decision taken by preparation."
+      },
+      "description": "Decisions taken by preparation, with the candidates that were considered."
+    },
+    "policy_decision": {
+      "type": "object",
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "refuse"
+          ],
+          "description": "Whether the run policy allows the run."
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/reasonCode",
+            "description": "Reason of the decision."
+          },
+          "description": "Reasons of the decision."
+        },
+        "policy_digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of the policy the decision was made on."
+        }
+      },
+      "required": [
+        "decision",
+        "reason_codes",
+        "policy_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Decision of the run policy on this plan."
+    },
+    "proof": {
+      "type": "object",
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "binding": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/binding",
+                "description": "Engine binding."
+              },
+              "provider": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+                "description": "Provider."
+              },
+              "source": {
+                "$ref": "urn:swissknifeman:aicore:capability-support:v1#/$defs/source",
+                "description": "How the capability record was obtained."
+              },
+              "observed_at": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+                "description": "When the record was observed."
+              },
+              "fresh_until": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+                "description": "Until when the record can be trusted."
+              },
+              "stale": {
+                "type": "boolean",
+                "description": "Whether the record was stale when the plan was prepared."
+              }
+            },
+            "required": [
+              "binding",
+              "provider",
+              "source",
+              "stale"
+            ],
+            "additionalProperties": false,
+            "description": "Snapshot of one capability record."
+          },
+          "description": "Snapshot of the capability records the plan was prepared from."
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/reasonCode",
+                "description": "Warning code."
+              },
+              "message": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "Warning text."
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "additionalProperties": false,
+            "description": "Preparation warning."
+          },
+          "description": "Warnings of preparation."
+        }
+      },
+      "required": [
+        "capabilities",
+        "warnings"
+      ],
+      "additionalProperties": false,
+      "description": "Proof of a dry run: the snapshot and the warnings it was based on."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "binding",
+    "run_id",
+    "input_digest",
+    "policy_id",
+    "dry_run",
+    "stages",
+    "refusals",
+    "created_at"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral launch-plan contract."
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:plugin-describe:v1",
+  "title": "plugin-describe",
+  "description": "The output of a describe call: who the plugin is and the digest of what it provides.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:plugin-describe:v1",
+      "description": "Schema identifier of the document."
+    },
+    "protocol": {
+      "const": "1",
+      "description": "Protocol version."
+    },
+    "id": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+      "description": "Plugin id; equals the id in the manifest."
+    },
+    "kind": {
+      "enum": [
+        "command",
+        "subscriber"
+      ],
+      "description": "Plugin kind; equals the kind in the manifest."
+    },
+    "version": {
+      "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/semver",
+      "description": "Plugin version; equals the version in the manifest."
+    },
+    "capabilities_digest": {
+      "$ref": "urn:swissknifeman:aicore:digest:v1",
+      "description": "Digest of the provides object of the manifest, by the rules of digest/v1."
+    },
+    "transport": {
+      "const": "stdio-json",
+      "description": "How the plugin talks to the host."
+    }
+  },
+  "required": [
+    "$schema",
+    "protocol",
+    "id",
+    "kind",
+    "version",
+    "capabilities_digest",
+    "transport"
+  ],
+  "additionalProperties": false
+}

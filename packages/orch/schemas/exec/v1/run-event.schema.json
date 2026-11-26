@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:run-event:v1",
+  "title": "run-event",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:run-event:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "run_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Run identifier."
+    },
+    "stage_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Stage identifier."
+    },
+    "attempt": {
+      "type": "integer",
+      "description": "Stage attempt, at least one."
+    },
+    "seq": {
+      "type": "integer",
+      "description": "Run sequence number, at least zero."
+    },
+    "ts": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Event timestamp."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "started",
+        "model_wait",
+        "output",
+        "tool",
+        "question",
+        "check",
+        "quota_block",
+        "auth_block",
+        "provider_error",
+        "timeout",
+        "cancelled",
+        "unknown_outcome",
+        "completed",
+        "failed"
+      ],
+      "description": "Normalized event kind."
+    },
+    "summary": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Event summary."
+    },
+    "data": {
+      "type": "object",
+      "description": "Open normalized event data."
+    },
+    "raw_ref": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+          "description": "Raw transport event path."
+        },
+        "line": {
+          "type": "integer",
+          "description": "Raw event line number."
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false,
+      "description": "Reference to raw transport data."
+    },
+    "route_observed": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+          "description": "Observed provider."
+        },
+        "model": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Observed model."
+        },
+        "effort": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+          "description": "Observed reasoning effort."
+        }
+      },
+      "required": [
+        "provider"
+      ],
+      "additionalProperties": false,
+      "description": "Observed execution route."
+    },
+    "event_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/eventId",
+      "description": "Key of this event; an identical repeat is ignored, different content under the same key is a conflict."
+    },
+    "causation_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/eventId",
+      "description": "Key of the event that caused this one."
+    },
+    "correlation_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/submissionId",
+      "description": "Submission this event belongs to."
+    },
+    "owner_epoch": {
+      "type": "integer",
+      "description": "Owner epoch of the run when the event was produced, at least one; an event of an older epoch is stale."
+    },
+    "attempt_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/attemptId",
+      "description": "Key of the stage attempt."
+    },
+    "call_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/callId",
+      "description": "Key of the provider call."
+    },
+    "error": {
+      "$ref": "urn:swissknifeman:aicore:error:v1",
+      "description": "Normalized failure record for provider_error, quota_block, auth_block, timeout and failed events."
+    },
+    "raw": {
+      "$ref": "urn:swissknifeman:aicore:artifact-ref:v1",
+      "description": "Raw transport fragment kept as an artifact; raw_ref stays the path-and-line form."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "run_id",
+    "stage_id",
+    "attempt",
+    "seq",
+    "ts",
+    "kind"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral run-event contract."
+}

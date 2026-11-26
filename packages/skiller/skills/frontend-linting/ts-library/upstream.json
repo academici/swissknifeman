@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "onmax/nuxt-skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/SKILL.md",
+      "sha256": "eb47397d20c8ca098fb8d3188fe44be08e726cd323f003b9fb2e1f279628d768",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/api-design.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/api-design.md",
+      "sha256": "c5818923481131861d7413bd8b0459886e85eda57264265c179eafe177ba1ee0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/build-tooling.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/build-tooling.md",
+      "sha256": "aa7b200a095d1b4b4f18a6a05d309d9470a5c8f5c3a06743d6cbc7596fd5e32c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/ci-workflows.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/ci-workflows.md",
+      "sha256": "cdf0b3df56bcff31cc2137f2f4075f77b72546931a85bbbec641a4e3970fe6c2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/eslint-config.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/eslint-config.md",
+      "sha256": "e370b7948b50c24ddfd3103a4e05921fd0dd2471946fd4bd95232335ee70900a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/package-exports.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/package-exports.md",
+      "sha256": "cfa2d91bd56972e4985ae8c550b6001aca0f85390b6d0124652def40bec79da4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/project-setup.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/project-setup.md",
+      "sha256": "2c48c69f958dbc84d435513df0b8ba0d1d507b72d8eb3033c3413f70875ee18b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/release.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/release.md",
+      "sha256": "30a4aa9c9edfcaa73de34ddddb95359239305569aaa3eaa601dcba386c956db4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/testing.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/testing.md",
+      "sha256": "d83a631377a801db6a47440eec4d26ca454ea1355c231ec57537d6cddebaf860",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/type-patterns.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/type-patterns.md",
+      "sha256": "222a510c39f34bef5b8024a99a62aa4492bb887d81330adccd004b0e1b838b5d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/typescript-config.md",
+      "url": "https://raw.githubusercontent.com/onmax/nuxt-skills/main/skills/ts-library/references/typescript-config.md",
+      "sha256": "ce9ef4c2aac48d3caf5632eaab185e28c07374a7ee5a45474c2e39508796272f",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from onmax/nuxt-skills (skills/ts-library/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "ad5b441e2a2943bde1af049ea407af167fc347d4421b0856528f34adc06b7b18"
+  }
+}

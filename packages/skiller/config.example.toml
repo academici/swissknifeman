@@ -1,0 +1,71 @@
+# skiller configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[skiller]
+# Name of the project profile (profiles/<name>.json) that picks the buckets when no buckets or plugins are set; empty means autodetect. String.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# project_type = ""
+
+# Buckets enabled through the marketplace channel (connect) and the legacy vendor. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# buckets = []
+
+# Exact set of marketplace plugins to enable; when set it replaces the bucket selection. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# plugins = []
+
+# Names subtracted from the selection of presets and buckets. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# exclude = []
+
+# Named bucket groups (presets/<name>.json) expanded before the selection. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# presets = []
+
+# Agent of the legacy bucket vendor: one of the delivery agents; empty means the default agent. String.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# agent = ""
+
+# Project folder that receives vendored skill copies; empty means the agent default. String.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# skills_path = ""
+
+# Machine directories with custom skills in the library layout (<bucket>/<folder>/SKILL.md); the project's own .swissknifeman/skills is always read. A custom skill with an existing id needs selection.replaces to override it (EXTENSION_AMBIGUOUS otherwise). Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# custom_dirs = []
+
+[skiller.sync]
+# Agent that receives the managed copies; empty means claude. String.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# agent = ""
+
+# Project folder that receives the managed copies; empty means .claude/skills. String.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# skills_path = ""
+
+# Named groups of buckets and skills (presets/<name>.json) expanded before the selection. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# presets = []
+
+# Specific skills to copy, as <bucket>/<skill> or a plain skill name. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# include = []
+
+# Whole buckets to copy. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# buckets = []
+
+# Skills and buckets subtracted from presets, buckets and include. Array of strings.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# exclude = []
+
+# Whether the skills folder gets a .gitignore that lists only the managed copies. Boolean.
+# Allowed in layers: defaults, project, legacy-swissknife, legacy-skillset, env, invocation, flags.
+# gitignore_managed = false
+
+[skiller.selection]
+# explicit: only included skills and those the role requires; auto: also the skills whose path or dependency triggers match the work. One of: "explicit", "auto".
+# Allowed in layers: defaults, project, env, invocation, flags.
+# policy = "explicit"

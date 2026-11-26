@@ -1,0 +1,1 @@
+{"$schema": "urn:swissknifeman:aicore:invocation-context:v1", "project_root": "/work/product", "invocation_cwd": "/work/product/services/api", "resolution": "launcher", "marker": null, "launcher": {"path": "/work/product/.swissknifeman/launcher.py", "protocol": 1, "verified": true}, "config": "/work/product/.swissknifeman/config.toml", "plans_root": "/work/product/plans"}

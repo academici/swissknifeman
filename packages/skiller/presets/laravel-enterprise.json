@@ -1,0 +1,9 @@
+{
+  "name": "laravel-enterprise",
+  "description": "EnterpriseLaravel: core + modular architecture/enum-FSM/subagents + authorization",
+  "buckets": [
+    "php",
+    "laravel-architecture",
+    "laravel-auth"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:phase:v1",
+  "id": "P2",
+  "title": "Reporting",
+  "design": "detailed",
+  "goal": "Errors are rendered for humans.",
+  "context": "Loader lives in lib/pkg/config.py; tests in tests/test_config.py.",
+  "scope": {
+    "include": [
+      "load_config validation"
+    ],
+    "exclude": [
+      "CLI flags"
+    ]
+  },
+  "pitfalls": [
+    "Do not change behaviour for valid configs"
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "bash scripts/test.sh",
+      "expect": "exit 0",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "validated loader"
+  ],
+  "items": [
+    "P2.1",
+    "P2.2"
+  ],
+  "batches": [
+    {
+      "id": "B2",
+      "items": [
+        "P2.1"
+      ],
+      "mode": "required"
+    },
+    {
+      "id": "B3",
+      "items": [
+        "P2.2"
+      ],
+      "mode": "recommended"
+    }
+  ],
+  "closed": null
+}

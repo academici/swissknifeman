@@ -1,0 +1,11 @@
+# Machine-specific artifacts Claude Code sessions — all ephemeral, none of
+# we don't commit this (N1/P1-review: audit.ndjson/events.ndjson were there before
+# except "committed", but they carry session-UUID/timestamp/home-path
+# developers and grow on each SessionEnd auto-digest hook — constant
+# diff-churn and leakage machine-specific data, not an audit-repo artifact).
+
+runs/
+analyze/
+analyst/lessons/ephemeral/
+analyst/audit.ndjson
+analyst/events.ndjson

@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "subscribe",
+  "id": "runs",
+  "filter": {
+    "runs": [
+      "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    ]
+  },
+  "epoch": null
+}

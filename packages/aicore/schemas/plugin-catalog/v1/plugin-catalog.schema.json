@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:plugin-catalog:v1",
+  "title": "plugin-catalog",
+  "description": "Plugins one module ships and generates itself (a unit.json provides.plugins entry with catalog); aicore.content.marketplace turns the catalogs of all modules into the Claude marketplace and the Codex index of the hub.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "urn:swissknifeman:aicore:plugin-catalog:v1",
+      "description": "Schema identifier of the document."
+    },
+    "marketplace": {
+      "type": "object",
+      "description": "Identity of the hub marketplace, used when configs/umbrella.json does not declare it.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Marketplace name."
+        },
+        "owner": {
+          "type": "object",
+          "description": "Marketplace owner.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Owner name."
+            },
+            "email": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Owner e-mail."
+            }
+          },
+          "required": ["name", "email"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "owner"],
+      "additionalProperties": false
+    },
+    "plugins": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Plugin entries; the marketplace adds the package field (the module id) and sorts all entries by name.",
+      "items": {
+        "type": "object",
+        "description": "One plugin entry.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Plugin name."
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^(\\./|[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*)$",
+            "description": "Plugin folder relative to the module root; ./ means the hub root and goes with skills."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the plugin is for."
+          },
+          "category": {
+            "type": "string",
+            "description": "Marketplace category; empty when the plugin has none."
+          },
+          "tags": {
+            "type": "array",
+            "description": "Search tags.",
+            "items": {
+              "type": "string",
+              "description": "One tag."
+            }
+          },
+          "skills": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Skill folders of an entry with source ./, relative to the module root.",
+            "items": {
+              "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/relpath",
+              "description": "One skill folder."
+            }
+          },
+          "alias_of": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the plugin this one is a compatibility alias of."
+          },
+          "codex": {
+            "type": "object",
+            "description": "Presence puts the plugin into the Codex index; the fields override the Claude entry for Codex.",
+            "properties": {
+              "source": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/relpath",
+                "description": "Codex plugin folder relative to the module root; the entry source when absent."
+              },
+              "description": {
+                "type": "string",
+                "description": "Codex description; the entry description when absent."
+              },
+              "category": {
+                "type": "string",
+                "description": "Codex category; the entry category when absent."
+              },
+              "tags": {
+                "type": "array",
+                "description": "Codex tags; the entry tags when absent.",
+                "items": {
+                  "type": "string",
+                  "description": "One tag."
+                }
+              },
+              "install_policy": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Install policy of the Codex entry."
+              },
+              "auth": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Authentication the Codex entry needs."
+              }
+            },
+            "required": ["install_policy", "auth"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "source", "description", "category", "tags"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "plugins"],
+  "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:nullable:v1",
+  "title": "Nullable",
+  "description": "Fixture: oneOf branches of which one is the null type (a nested union must be opened).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name"],
+  "properties": {
+    "name": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+    "size": {"oneOf": [{"type": "integer"}, {"type": ["number", "null"]}]}
+  }
+}

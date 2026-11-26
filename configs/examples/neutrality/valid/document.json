@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:hub:neutrality:v1",
+  "terms": [
+    {
+      "id": "local-brand",
+      "pattern": "(?i)(?<![a-z0-9_-])sample-brand(?![a-z0-9_])",
+      "reason": "example organisation name"
+    }
+  ],
+  "scope": {
+    "include": ["packages/"],
+    "exclude_globs": ["**/tests/**"]
+  },
+  "allow": [
+    {
+      "json_fields": ["author"],
+      "term": "local-brand",
+      "reason": "package attribution"
+    }
+  ]
+}

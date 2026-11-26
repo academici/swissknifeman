@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:instruction-set:v1",
+  "title": "instruction-set",
+  "description": "Instruction-set document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "Schema identifier.",
+      "const": "urn:swissknifeman:aicore:instruction-set:v1"
+    },
+    "layers": {
+      "description": "Layers that were read, from the general to the specific.",
+      "type": "array",
+      "items": {
+        "description": "One stub layer.",
+        "enum": [
+          "machine",
+          "project"
+        ]
+      }
+    },
+    "digest": {
+      "description": "Tagged digest of the layers and targets.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "targets": {
+      "type": "object",
+      "description": "Resolved text of every target that contributed a part.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*\\.[a-z0-9][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One target.",
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "description": "Joined text of the parts that are not variant-specific.",
+              "type": "string"
+            },
+            "parts": {
+              "description": "Parts that produced the text.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/part"
+              }
+            }
+          },
+          "required": [
+            "text",
+            "parts"
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "layers",
+    "digest",
+    "targets"
+  ],
+  "$defs": {
+    "part": {
+      "type": "object",
+      "description": "One slot of one layer.",
+      "additionalProperties": false,
+      "properties": {
+        "slot": {
+          "description": "Slot path inside the layer.",
+          "type": "string",
+          "minLength": 1
+        },
+        "layer": {
+          "description": "Layer this part was read from.",
+          "enum": [
+            "machine",
+            "project"
+          ]
+        },
+        "path": {
+          "description": "File that was read.",
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "description": "How a project file combines with the machine file.",
+          "enum": [
+            "replace",
+            "append",
+            "disable"
+          ]
+        },
+        "sha256": {
+          "description": "SHA-256 hex of the part body.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "description": "UTF-8 size of the part body.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "description": "Why this part was chosen.",
+          "type": "string",
+          "minLength": 1
+        },
+        "variant": {
+          "description": "Provider variant, when the part is variant-specific.",
+          "type": "string",
+          "minLength": 1
+        },
+        "body": {
+          "description": "Variant body kept on the part.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slot",
+        "layer",
+        "path",
+        "mode",
+        "sha256",
+        "bytes",
+        "reason"
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "skill": "compact-responses",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "What command to run package tests skiller?",
+      "assertions": [
+        {"type": "contains", "value": "scripts/test.sh"},
+        {"type": "not_regex", "value": "(?i)^(great|great question|sure|sure|of course|happy to|with joy)"},
+        {"type": "not_regex", "value": "(?i)(hope this helped|hope this helps|let me know if|let me know if)"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Where lies the source of the truth of presets permissions?",
+      "assertions": [
+        {"type": "contains", "value": "configs/claude-code"},
+        {"type": "not_regex", "value": "(?i)(as you can see|as you can see|in this answer I|in this response i)"}
+      ]
+    }
+  ]
+}

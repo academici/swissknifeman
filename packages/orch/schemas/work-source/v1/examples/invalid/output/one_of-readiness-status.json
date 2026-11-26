@@ -1,0 +1,17 @@
+{
+  "op": "readiness",
+  "outcome": "ok",
+  "phases": [
+    {
+      "id": "P1",
+      "status": "approved",
+      "digest": "sha256:f13b1c3d08b245ec267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7e"
+    }
+  ],
+  "next": {
+    "kind": "waiting",
+    "items": [],
+    "phase": "P1",
+    "message": "readiness missing: audit P1 first"
+  }
+}

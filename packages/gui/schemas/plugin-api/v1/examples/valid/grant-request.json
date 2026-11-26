@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:gui:plugin-api:v1",
+  "kind": "grant_request",
+  "capability": "plan.write",
+  "project_id": "swissknifeman",
+  "expires_at": "2026-12-01T00:00:00Z"
+}

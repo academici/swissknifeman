@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:work-source:input:v1",
+  "title": "work-source input",
+  "description": "Input of the extension point orch:work-source: claim a piece of work, brief it, register its outcome, commit it, release it, add a note to the journal of its collection, save the research result of a piece of work, record an accepted decision of a piece of work, or tell the readiness of the groups of a collection and its next step.",
+  "oneOf": [
+    {"$ref": "#/$defs/claim"},
+    {"$ref": "#/$defs/brief"},
+    {"$ref": "#/$defs/register"},
+    {"$ref": "#/$defs/commit"},
+    {"$ref": "#/$defs/release"},
+    {"$ref": "#/$defs/note"},
+    {"$ref": "#/$defs/research"},
+    {"$ref": "#/$defs/decision"},
+    {"$ref": "#/$defs/readiness"},
+    {"$ref": "#/$defs/inspect"}
+  ],
+  "$defs": {
+    "inspect": {
+      "description": "Read the execution input and source option layers without claims or artifacts.",
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Read-only inspection.",
+          "const": "inspect"
+        },
+        "plan": {
+          "description": "Work source collection, such as a plan id or path.",
+          "$ref": "#/$defs/text"
+        },
+        "plans_root": {
+          "description": "Folder that holds the collection, when not the default.",
+          "$ref": "#/$defs/text"
+        },
+        "ref": {
+          "description": "Named piece to inspect without a claim.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "op",
+        "plan",
+        "ref"
+      ],
+      "additionalProperties": false
+    },
+    "text": {
+      "description": "Non-empty text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "runId": {
+      "description": "Id of the orchestration run; it is also the owner session of the claimed work and part of the attempt id, so it uses the attempt-id characters and leaves room for the reference.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$"
+    },
+    "attemptId": {
+      "description": "Key of one attempt at the work.",
+      "type": "string",
+      "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"
+    },
+    "submissionId": {
+      "description": "Idempotency key of the submission.",
+      "type": "string",
+      "pattern": "^sub-[A-Za-z0-9._-]{1,120}$"
+    },
+    "actor": {
+      "description": "Provider, model and optional reasoning effort of an actor.",
+      "type": "object",
+      "properties": {
+        "provider": {
+          "description": "Provider identifier, such as claude-code or codex.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "model": {
+          "description": "Model identifier.",
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "description": "Reasoning effort.",
+          "type": "string",
+          "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+        }
+      },
+      "required": ["provider", "model"],
+      "additionalProperties": false
+    },
+    "claim": {
+      "description": "Claim one piece of work for a run: the first of items, or the next ready one of the source.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "claim"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "items": {
+          "description": "Candidate references in order; without it the source picks the next ready piece.",
+          "type": "array",
+          "minItems": 1,
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
+        "batch": {"description": "The claim is part of a batch of one run: a piece an earlier claim of the batch started and that has no attempt yet may be taken over. Optional.", "type": "boolean"},
+        "scenario": {"description": "Scenario the invocation names (`--scenario`): it wins over the scenario the source resolves for the piece. Optional.", "type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+        "run_id": {"description": "Run that claims the work.", "$ref": "#/$defs/runId"},
+        "submission_id": {"description": "Submission of the run.", "$ref": "#/$defs/submissionId"},
+        "actor": {"description": "Who runs the work.", "$ref": "#/$defs/actor"},
+        "actor_source": {"description": "Where the actor comes from: options (the executor the run's --options name, which wins over the plan's executor) or default (the default executor; the source may use its own). Optional; without it the source treats the actor as default.", "type": "string", "enum": ["options", "default"]},
+        "actor_fields": {"description": "With actor_source options: the actor fields the run named itself (the others may come from the source's own executor). Optional.", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"description": "Actor field.", "type": "string", "enum": ["provider", "model", "effort"]}},
+        "actor_class": {"description": "With actor_source options: the executor class the run named without a model; the source resolves the model of the class on the provider of the actor it starts. Optional.", "type": "string", "enum": ["economy", "implementation", "frontier"]},
+        "orch_config": {"description": "Invocation configuration file of the orch command that claims; the source passes it back to orch when it asks orch.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "plan", "run_id", "submission_id", "actor"],
+      "additionalProperties": false
+    },
+    "brief": {
+      "description": "Build the content-addressed brief of a claimed piece of work.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "brief"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "unit": {"description": "Part of the piece of work to brief, when only one part is run.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that owns the work.", "$ref": "#/$defs/runId"}
+      },
+      "required": ["op", "plan", "ref", "run_id"],
+      "additionalProperties": false
+    },
+    "register": {
+      "description": "Register the outcome of a piece of work: owner fencing and the evidence gate first, then the record.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "register"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that claimed the work; it must still own it.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt being registered; a repeat is a no-op.", "$ref": "#/$defs/attemptId"},
+        "status": {
+          "description": "Outcome of the work.",
+          "type": "string",
+          "enum": ["done", "done_with_deviations", "blocked"]
+        },
+        "report": {"description": "Stage-report of the worker.", "type": "object"},
+        "evidence": {
+          "description": "Check-evidence file of each acceptance check, by check id.",
+          "type": "object",
+          "patternProperties": {
+            "^V[0-9]+$": {"description": "Path of a check-evidence file.", "$ref": "#/$defs/text"}
+          },
+          "additionalProperties": false
+        },
+        "registrar": {"description": "Who registers the outcome.", "$ref": "#/$defs/actor"},
+        "executed_by": {"description": "Who did the work.", "$ref": "#/$defs/actor"},
+        "review_receipt": {
+          "type": "string",
+          "description": "Path of the review-receipt/v1 file.",
+          "minLength": 1
+        }
+      },
+      "required": ["op", "plan", "ref", "run_id", "attempt_id", "status", "report", "evidence", "registrar", "executed_by"],
+      "additionalProperties": false
+    },
+    "commit": {
+      "description": "Create one commit of a registered piece of work: its changed paths and its artifacts, as the source scopes commits.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "commit"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that registered the work.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt that registered the work.", "$ref": "#/$defs/attemptId"},
+        "paths": {
+          "description": "Repository paths the commit owns beyond the scope of the piece of work, such as its artifact folder.",
+          "type": "array",
+          "items": {"description": "Repository-relative path.", "$ref": "#/$defs/text"}
+        },
+        "actor": {"description": "Who commits.", "$ref": "#/$defs/actor"},
+        "role": {
+          "description": "Role of the commit in a split run (`commit.mode: implementation-and-fixes`): `executor` for the implementation and the final commit, `fix` for a correction round of the review. Absent: the source's own (`executor`).",
+          "enum": ["executor", "fix"]
+        },
+        "stage": {
+          "description": "Stage of a split run: `implementation` and `correction.<n>` commit exactly `paths` (the product paths of the stage; the plan files and the other paths of the piece stay for later), `final` is the commit of the rest. Absent: the single commit of `final-only`.",
+          "type": "string",
+          "pattern": "^(implementation|correction\\.[0-9]+|final)$"
+        },
+        "trailers": {
+          "description": "Trailer lines (`Key: value`) the commit message carries, such as Plan-Run, Plan-Attempt, Plan-Stage, Plan-Review, Plan-Findings.",
+          "type": "array",
+          "items": {"description": "One trailer line.", "type": "string", "pattern": "^[A-Za-z0-9-]+: [^\\r\\n\\u0000]+$"}
+        }
+      },
+      "required": ["op", "plan", "ref", "run_id", "attempt_id", "paths"],
+      "additionalProperties": false
+    },
+    "release": {
+      "description": "Give back a claimed piece of work that was stopped before any work began: the source takes the claim off the run, so that a later run can claim it again. Optional: a source without it keeps the claim.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "release"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that holds the claim.", "$ref": "#/$defs/runId"},
+        "reason": {"description": "Why the claim is given back.", "$ref": "#/$defs/text"},
+        "actor": {"description": "Who releases.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "plan", "ref", "run_id"],
+      "additionalProperties": false
+    },
+    "note": {
+      "description": "Add a note to the journal of a collection of the source, for work that has no piece of its own there (support work of a plan or phase). Optional: a source without it answers that the operation is unsupported and the work goes on.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "note"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "text": {"description": "The note.", "$ref": "#/$defs/text"},
+        "refs": {
+          "description": "References inside the collection the note belongs to, such as a phase or an item.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work or of a group of them.", "$ref": "#/$defs/text"}
+        },
+        "run_id": {"description": "Run that writes the note.", "$ref": "#/$defs/runId"},
+        "actor": {"description": "Who writes the note.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "collection", "text", "refs"],
+      "additionalProperties": false
+    },
+    "research": {
+      "description": "Save the closed research-result of a piece of work where the source keeps its research (a plan: the research folder of the plan, declared as an input of the item). Optional: a source without it answers that the operation is unsupported and the result stays in the artifacts of the run.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "research"},
+        "plan": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work the research serves.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that did the research.", "$ref": "#/$defs/runId"},
+        "number": {"description": "Ordinal of the research of this piece of work, from 1.", "type": "integer"},
+        "result": {"description": "The research-result of the researcher role.", "type": "object"},
+        "actor": {"description": "Who saves the result.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "plan", "ref", "run_id", "number", "result"],
+      "additionalProperties": false
+    },
+    "decision": {
+      "description": "Record the answer to a question of a piece of work (an owner's answer, an applied advice or panel recommendation) as an accepted decision of the collection that applies to the piece. A repeat for the same question_key and piece is a no-op. Optional: a source without it answers that the operation is unsupported and the work goes on.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "decision"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"},
+        "ref": {"description": "Reference of the piece of work the decision applies to.", "$ref": "#/$defs/text"},
+        "run_id": {"description": "Run that recorded the decision.", "$ref": "#/$defs/runId"},
+        "attempt_id": {"description": "Attempt of the piece the question was asked in.", "$ref": "#/$defs/attemptId"},
+        "question": {
+          "description": "The question that was answered.",
+          "type": "object",
+          "properties": {
+            "id": {"description": "Id of the question in the piece.", "$ref": "#/$defs/text"},
+            "revision": {"description": "Revision of the question.", "type": "integer", "minimum": 1},
+            "kind": {"description": "What the question asked for.", "type": "string", "enum": ["clarification", "decision"]},
+            "text": {"description": "The question.", "type": "string"},
+            "options": {
+              "description": "Answers to choose from.",
+              "type": "array",
+              "items": {
+                "description": "One option.",
+                "type": "object",
+                "properties": {
+                  "id": {"description": "Id of the option.", "$ref": "#/$defs/text"},
+                  "label": {"description": "What the option means.", "type": "string"}
+                },
+                "required": ["id"],
+                "additionalProperties": false
+              }
+            },
+            "answer_schema": {"description": "JSON Schema of a free answer.", "type": "object"}
+          },
+          "required": ["id", "revision", "kind", "text"],
+          "additionalProperties": false
+        },
+        "question_key": {"description": "qk- and 16 hex characters of the digest of the meaning of the question: the same question asked again has the same key.", "type": "string", "pattern": "^qk-[0-9a-f]{16}$"},
+        "question_digest": {"description": "SHA-256 hex digest of the canonical meaning of the question.", "type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "resolution": {
+          "description": "The answer.",
+          "type": "object",
+          "properties": {
+            "value": {"description": "The answer: an option id, a text or a JSON value.", "type": ["string", "number", "boolean", "object", "array", "null"]},
+            "by": {"description": "Who answered: a user name, advisor or panel.", "$ref": "#/$defs/text"},
+            "at": {"description": "UTC time of the answer.", "$ref": "#/$defs/text"}
+          },
+          "required": ["value", "by"],
+          "additionalProperties": false
+        },
+        "authority": {"description": "Who decided: the owner, the advisor or the panel of advisors.", "type": "string", "enum": ["owner", "advisor", "panel"]},
+        "rationale": {"description": "Why: the text of the answer or the recommendation of the advice.", "$ref": "#/$defs/text"},
+        "evidence": {
+          "description": "Repository paths that show the answer: the questions file, the advice file.",
+          "type": "array",
+          "items": {"description": "Repository path.", "$ref": "#/$defs/text"}
+        },
+        "actor": {"description": "Who records.", "$ref": "#/$defs/actor"}
+      },
+      "required": ["op", "collection", "ref", "run_id", "question", "question_key", "question_digest", "resolution", "authority", "rationale", "evidence"],
+      "additionalProperties": false
+    },
+    "readiness": {
+      "description": "Tell the readiness of every detailed group of a collection (a phase of a plan) and the next step the source would give work for, without changing anything. Optional: a source without it is refused with READINESS_UNSUPPORTED.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "readiness"},
+        "collection": {"description": "Work source collection, such as a plan id or path.", "$ref": "#/$defs/text"},
+        "plans_root": {"description": "Folder that holds the collection, when not the default.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "collection"],
+      "additionalProperties": false
+    }
+  }
+}

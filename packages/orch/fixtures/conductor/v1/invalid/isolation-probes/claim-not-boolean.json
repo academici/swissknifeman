@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:isolation-probes:v1",
+  "probes": [
+    {
+      "provider": "codex",
+      "version": "codex-cli 0.163.0",
+      "at": "2026-10-25T10:00:00Z",
+      "claims": {
+        "repository_instructions": "no",
+        "user_skills": false
+      }
+    }
+  ]
+}

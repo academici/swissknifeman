@@ -1,0 +1,86 @@
+{
+  "$schema": "urn:swissknifeman:hub:neutrality:v1",
+  "terms": [
+    {
+      "id": "owner-org",
+      "pattern": "(?i)(?<![a-z0-9_-])academici(?![a-z0-9_])",
+      "reason": "owner organisation used as product/ecosystem name"
+    },
+    {
+      "id": "owner-workspace",
+      "pattern": "(?i)(?<![a-z0-9_-])axioma(?![a-z0-9_])",
+      "reason": "owner workspace / overlay name"
+    },
+    {
+      "id": "owner-projects",
+      "pattern": "(?i)(?<![a-z0-9_-])(azguard|corex|vaulter|billium|botkit|flexcrm|flexcms|flexstore|getchat|docvault)(?![a-z0-9_])",
+      "reason": "owner project ids"
+    },
+    {
+      "id": "owner-vault",
+      "pattern": "(?<![a-z0-9_-])Vaults/Brain(?![a-z0-9_])",
+      "reason": "owner Obsidian vault layout"
+    },
+    {
+      "id": "owner-research-route",
+      "pattern": "(?<![a-z0-9_-])perplexity-web(?![a-z0-9_])",
+      "reason": "owner keyless research route as a default"
+    },
+    {
+      "id": "owner-language",
+      "pattern": "(?i)(?<![a-z0-9_-])(russian by default|default russian|in russian\\b|\\(russian\\))(?![a-z0-9_])",
+      "reason": "owner writing language as a default"
+    }
+  ],
+  "scope": {
+    "include": ["packages/", "bridges/", "configs/", "plugins/", "bootstrap/", "scripts/", "install.sh", "README.md", "docs/", ".claude/", ".agents/", ".cursor/", ".grok/"],
+    "exclude_globs": ["packages/axioma/**", "**/tests/**", "**/fixtures/**", "**/examples/**", "CHANGELOG.md", "releases/**", "plans/**", "audits/**", ".swissknifeman/**", "docs/reference.md"]
+  },
+  "allow": [
+    {
+      "path_glob": "packages/*/CHANGELOG.md",
+      "term": "*",
+      "reason": "historical module release records retain the names and behaviour actually shipped"
+    },
+    {
+      "path_glob": "docs/architecture/decisions/**",
+      "term": "*",
+      "reason": "historical architecture decision records retain the alternatives and conventions considered"
+    },
+    {
+      "path_glob": "packages/skiller/docs/agent-framework/decisions-ledger.md",
+      "term": "*",
+      "reason": "historical agent-framework decisions ledger"
+    },
+    {
+      "path_glob": "packages/skiller/docs/guide/bucket-audit-2026-07.md",
+      "term": "*",
+      "reason": "historical bucket audit records the package names and measurements observed in that audit"
+    },
+    {
+      "path_glob": "packages/orch/docs/research/**",
+      "term": "*",
+      "reason": "historical research records describe the sources and routes actually used, not defaults"
+    },
+    {
+      "path_glob": "packages/*/docs/audits/**",
+      "term": "*",
+      "reason": "historical audit records"
+    },
+    {
+      "path_glob": "configs/neutrality.json",
+      "term": "*",
+      "reason": "gate policy must name the owner terms it detects"
+    },
+    {
+      "path_glob": "configs/neutrality-baseline.json",
+      "term": "*",
+      "reason": "measurement record contains paths of existing owner-specific content"
+    },
+    {
+      "json_fields": ["author", "owner", "homepage", "repository", "url", "email"],
+      "term": "owner-org",
+      "reason": "attribution of the published packages"
+    }
+  ]
+}

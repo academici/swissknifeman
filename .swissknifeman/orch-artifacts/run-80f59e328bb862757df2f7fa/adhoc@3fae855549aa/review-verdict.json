@@ -1,0 +1,66 @@
+{
+  "item": "adhoc@3fae855549aa",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "migrate apply --local-only-secrets copies every plan file and then dies at the bridge post-rename fail point (marker still legacy, secret-pattern files already in projects/<id>/). The retry builds a plan whose units are skipped-equal because the workspace digests match, the bridge answers skipped-equal, and _record_local_only ignores any row whose action is not copied or imported-copy. The files stay in the work tree with no local-only.json row and no exclude line. doctor --publish-safety and sync --commit then flag them as PS-SECRET and refuse the commit; a further apply is already migrated or skipped-equal and does not repair the index. Size-based local-only files self-heal on that scan; secret-pattern files do not, because publish-safety still treats the content as a block.",
+          "id": "F1",
+          "location": "packages/workspace/lib/workspace/migrate.py:583",
+          "reproduction": "Not executed. Static trace: SKM_MIGRATOR_FAIL_AT=post-rename on the first apply (bridges/workspace-planner/tests/test_apply.py test_failure_after_the_rename_is_completed_by_a_repeat returns skipped-equal), then workspace migrate apply --local-only-secrets and doctor --publish-safety.",
+          "severity": "Major",
+          "triage_reproduction": {
+            "cmd": "scratch test in $TMPDIR (outside the repo) reusing tests.test_migrate.MigrateCase: secret_checkout(); migrate apply --local-only-secrets with migrator_port.call patched to run the real apply, reset the marker to legacy and raise (simulates a crash after the rename); repeat migrate apply --local-only-secrets; workspace doctor --publish-safety. Run with PYTHONPATH=$TMPDIR/t:.:lib:../aicore/lib:../aicore python3 -m unittest test_f1 in packages/workspace",
+            "exit": 1,
+            "observed": "First apply raised the simulated crash. The repeat exited 0 with 'migrated 6 folder(s) ... 0 local-only'. doctor --publish-safety exited 1 with '[block] PS-SECRET' on legacy-plans/old-thing/notes.txt and plans/<plan>/artifacts/review.diff, and PUBLISH_BLOCKED. So no local-only.json rows and no exclude lines were written for the secret-pattern files."
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "A plans tree contains .env or server.pem and the user already passed --local-only-secrets. plan and apply still exit 1 with MIGRATION_BLOCKED_SECRET, and the message tells them to repeat with --local-only-secrets. That command is the one they just ran; name-based secrets stay blockers, so the hint does not change the outcome.",
+          "id": "F2",
+          "location": "packages/workspace/lib/workspace/migrate.py:480",
+          "reproduction": "Not executed. The message is unconditional in build_plan; test_a_secret_file_name_still_blocks_with_the_flag only checks the code prefix.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "scratch test in $TMPDIR: secret_checkout() plus plans/old-thing/.env; workspace migrate plan --project <root> --local-only-secrets --json. Run with PYTHONPATH=$TMPDIR/t:.:lib:../aicore/lib:../aicore python3 -m unittest test_f2.F2 in packages/workspace",
+            "exit": 1,
+            "observed": "The plan was blocked with MIGRATION_BLOCKED_SECRET, and the message was '1 file(s) look like secrets; remove them from the plans or from the folder before migrating, or repeat with --local-only-secrets to keep the files with a secret pattern on this machine'. The hint appears even though the flag was already passed."
+          }
+        }
+      ],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 1,
+      "session": "01a14d20-155a-7301-bf45-d48f511ebbe8",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261018T033848Z-16b1ca/adhoc-3fae855549aa/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [],
+        "session": "7bd90c74-e463-4548-9a64-71c0687c1132"
+      },
+      "verdict": "ATTENTION"
+    },
+    {
+      "effort": "high",
+      "findings": [],
+      "model": "grok-4.7",
+      "provider": "grok",
+      "round": 2,
+      "session": "01a14d32-13e9-79c0-9d64-e76d51ab7586",
+      "stream": ".swissknifeman/state/orch/conductor/cnd-20261018T033848Z-16b1ca/adhoc-3fae855549aa/streams/review.2.jsonl",
+      "triage": null,
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261018T033848Z-16b1ca",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "grok/grok-4.7/high"
+}

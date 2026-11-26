@@ -1,0 +1,12 @@
+# Portable sample of the project Grok config. `maind sync` writes the real
+# `.grok/config.toml` with machine-absolute MCP launchers; that file is gitignored.
+# Project file may carry [permission] deny and [mcp_servers] only.
+# [ui] permission_mode lives in ~/.grok/config.toml.
+
+[mcp_servers.maind]
+command = "maind"
+args = ["mcp", "--scope", "project:swissknifeman"]
+
+[mcp_servers.perplexity]
+command = "<HOME>/projects/packages/perplexity-web-mcp/start.sh"
+args = ["--pool=default"]

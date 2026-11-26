@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:compat-manifest:v1",
+  "title": "compat-manifest",
+  "description": "Compatibility manifest of a hub release: versions, dependency ranges and contracts of every module and bridge, read from their unit.json by aicore release bundle.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "urn:swissknifeman:aicore:compat-manifest:v1",
+      "description": "Schema identifier of the document."
+    },
+    "umbrella": {
+      "type": "object",
+      "description": "The hub release.",
+      "properties": {
+        "version": {
+          "$ref": "#/$defs/semver",
+          "description": "Version of the hub from the top CHANGELOG entry."
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Release label given to the bundle."
+        }
+      },
+      "required": [
+        "version",
+        "tag"
+      ],
+      "additionalProperties": false
+    },
+    "units": {
+      "type": "array",
+      "description": "Modules, sorted by id.",
+      "items": {
+        "type": "object",
+        "description": "One unit as declared by its unit.json.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Unit id."
+          },
+          "kind": {
+            "enum": [
+              "foundation",
+              "capability",
+              "bridge"
+            ],
+            "description": "Role of the unit."
+          },
+          "version": {
+            "$ref": "#/$defs/semver",
+            "description": "Version of the unit."
+          },
+          "stability": {
+            "$ref": "#/$defs/stability",
+            "description": "Stability stage of the unit."
+          },
+          "destination": {
+            "enum": [
+              "own-repo",
+              "hub"
+            ],
+            "description": "Where the unit lives after the split."
+          },
+          "requires": {
+            "type": "array",
+            "description": "Units this unit depends on.",
+            "items": {
+              "type": "object",
+              "description": "One dependency.",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]*$",
+                  "description": "Id of the required unit."
+                },
+                "range": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Caret version range."
+                }
+              },
+              "required": [
+                "unit",
+                "range"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "contracts": {
+            "type": "array",
+            "description": "Public contracts of the unit.",
+            "items": {
+              "type": "object",
+              "description": "One contract family of a unit.",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^urn:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                  "description": "Common prefix of the schema $id values."
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^v[0-9]+$",
+                  "description": "Contract major version such as v1."
+                },
+                "stability": {
+                  "$ref": "#/$defs/stability",
+                  "description": "Stability stage of the contract."
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Directory of the schemas, relative to the hub root."
+                }
+              },
+              "required": [
+                "id",
+                "version",
+                "stability",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "version",
+          "stability",
+          "destination",
+          "requires",
+          "contracts"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "bridges": {
+      "type": "array",
+      "description": "Bridges, sorted by id.",
+      "items": {
+        "type": "object",
+        "description": "One unit as declared by its unit.json.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Unit id."
+          },
+          "kind": {
+            "enum": [
+              "foundation",
+              "capability",
+              "bridge"
+            ],
+            "description": "Role of the unit."
+          },
+          "version": {
+            "$ref": "#/$defs/semver",
+            "description": "Version of the unit."
+          },
+          "stability": {
+            "$ref": "#/$defs/stability",
+            "description": "Stability stage of the unit."
+          },
+          "destination": {
+            "enum": [
+              "own-repo",
+              "hub"
+            ],
+            "description": "Where the unit lives after the split."
+          },
+          "requires": {
+            "type": "array",
+            "description": "Units this unit depends on.",
+            "items": {
+              "type": "object",
+              "description": "One dependency.",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]*$",
+                  "description": "Id of the required unit."
+                },
+                "range": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Caret version range."
+                }
+              },
+              "required": [
+                "unit",
+                "range"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "contracts": {
+            "type": "array",
+            "description": "Public contracts of the unit.",
+            "items": {
+              "type": "object",
+              "description": "One contract family of a unit.",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^urn:[a-z0-9-]+(:[a-z0-9-]+)*$",
+                  "description": "Common prefix of the schema $id values."
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^v[0-9]+$",
+                  "description": "Contract major version such as v1."
+                },
+                "stability": {
+                  "$ref": "#/$defs/stability",
+                  "description": "Stability stage of the contract."
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Directory of the schemas, relative to the hub root."
+                }
+              },
+              "required": [
+                "id",
+                "version",
+                "stability",
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "version",
+          "stability",
+          "destination",
+          "requires",
+          "contracts"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "umbrella",
+    "units",
+    "bridges"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?$",
+      "description": "SemVer version."
+    },
+    "stability": {
+      "enum": [
+        "development",
+        "alpha",
+        "beta",
+        "rc",
+        "stable",
+        "deprecated"
+      ],
+      "description": "Stability stage."
+    }
+  }
+}

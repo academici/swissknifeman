@@ -1,0 +1,927 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:config:v1",
+  "title": "orch config",
+  "description": "Settings of the orch module: execution engine choice, default run-policy, work source, run-policy folders, events and the conductor.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "engine": {
+      "type": "string",
+      "description": "Execution engine used when neither a flag nor engine_by_role names one.",
+      "default": "native",
+      "enum": [
+        "native",
+        "cao",
+        "claude-only"
+      ]
+    },
+    "engine_by_role": {
+      "type": "object",
+      "description": "Execution engine by role id; a role that is not listed uses the engine key.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "string",
+          "description": "Engine of the role.",
+          "enum": [
+            "native",
+            "cao",
+            "claude-only"
+          ]
+        }
+      }
+    },
+    "default_profile": {
+      "type": "string",
+      "description": "Run-policy used when the scenario of a task names none.",
+      "default": "solo",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Debug mode of conductor runs: a run reports DEBUG_MODE at its start with the observer protocol (packages/orch/dev-skills/orch-debug) and keeps a journal, a metrics table and findings in <run>/debug/. The roles and their prompts do not change. Set it per machine, per project, or with --debug/--no-debug for one run.",
+      "default": false
+    },
+    "work_source": {
+      "type": "string",
+      "description": "Id of the plugin of the extension point orch:work-source that supplies the work.",
+      "default": "planner-orch",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "Capability records of the engines.",
+      "additionalProperties": false,
+      "properties": {
+        "stale": {
+          "type": "string",
+          "description": "What preparation does with a capability record that is past its freshness date: warn and go on, or refuse.",
+          "default": "warn",
+          "enum": [
+            "warn",
+            "refuse"
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "description": "Run-policy packs beyond the ones shipped with orch.",
+      "additionalProperties": false,
+      "properties": {
+        "dirs": {
+          "type": "array",
+          "description": "Extra folders with run-policy packs (one folder per policy id): absolute paths or paths starting with ~. Machine-wide: a project file cannot set it, because it makes orch read files from the listed paths.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One folder."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "description": "Events of orch runs.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether orch emits the orch.run.* events.",
+          "default": true
+        }
+      }
+    },
+    "launch": {
+      "type": "object",
+      "description": "How roles start on each provider CLI (the launch catalog). The catalog ships with orch and holds what is specific to a role on a provider; here a machine or a project changes it without editing the package.",
+      "additionalProperties": false,
+      "properties": {
+        "catalog": {
+          "type": "string",
+          "description": "A launch catalog file used instead of the one shipped with orch (an absolute path or one starting with ~; it must be a complete, valid catalog). Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Empty: the shipped catalog.",
+          "default": "",
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "access": {
+          "type": "string",
+          "description": "How far the roles that write (executor, bounded-implementer, registrar) may reach on a provider CLI that has a sandbox of its own (Codex): open (default) gives it its widest mode, so the role can use Docker and anything else the user can; confined keeps it inside the workspace (Codex workspace-write). Roles that must not write stay read-only in both. Project and environment layers can only tighten this (confined); project resets and environment overrides cannot loosen the trusted access floor. The machine, invocation and flags may reopen access explicitly.",
+          "default": "open",
+          "enum": ["open", "confined"]
+        },
+        "entries": {
+          "type": "object",
+          "description": "Changes to single entries of the catalog, by ROLE_PROVIDER (role id, an underscore, provider id: executor_codex, bounded-implementer_claude-code): only the fields that differ, the rest stays as the catalog has it. The entry must exist in the catalog. model_class, effort and timeout_s may be set per machine or per project; argv, transport and model_set choose how the CLI starts and is read, so only the machine, the invocation file and flags may set them.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*(_[a-z][a-z0-9-]*)?$": {
+              "type": "object",
+              "description": "Fields of one catalog entry that differ.",
+              "additionalProperties": false,
+              "properties": {
+                "model_class": {
+                  "type": "string",
+                  "description": "Model class the role runs on by default.",
+                  "enum": ["economy", "implementation", "frontier"]
+                },
+                "effort": {
+                  "type": "string",
+                  "description": "Effort the role runs with by default.",
+                  "enum": ["low", "medium", "high", "xhigh"]
+                },
+                "timeout_s": {
+                  "type": "integer",
+                  "description": "Ceiling on a text role in seconds (the catalog timeout).",
+                  "minimum": 1
+                },
+                "transport": {
+                  "type": "string",
+                  "description": "How the output of the CLI is read. Machine-wide.",
+                  "enum": ["text", "jsonl", "acp"],
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                },
+                "model_set": {
+                  "type": "string",
+                  "description": "Whether the CLI takes a model ({model} in argv). Machine-wide.",
+                  "enum": ["supported", "unknown"],
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                },
+                "argv": {
+                  "type": "array",
+                  "description": "Command line of the role on this provider, replacing the catalog's ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands and the sandbox the role runs under.",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One argument."
+                  },
+                  "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "description": "How the isolation profiles (configs/isolation-profiles.json) build the home of an isolated role on this machine.",
+      "additionalProperties": false,
+      "properties": {
+        "codex": {
+          "type": "object",
+          "description": "The CODEX_HOME of an isolated Codex role (<run dir>/isolation/codex-home).",
+          "additionalProperties": false,
+          "properties": {
+            "auth": {
+              "type": "string",
+              "description": "How auth.json of the original CODEX_HOME (else ~/.codex) gets into it: link (default) is a symbolic link, so a refreshed token is written to the original; copy is a copy, only for a machine whose codex refuses the link (a copy rotates the refresh token and can log the interactive codex out). Machine-wide: a project file cannot set it.",
+              "default": "link",
+              "enum": ["link", "copy"],
+              "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+            }
+          }
+        }
+      }
+    },
+    "conductor": {
+      "type": "object",
+      "description": "The conductor (orch conduct): the global layer of the run options and how roles start.",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Provider of every role whose stage names none.",
+          "default": "claude-code",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT].",
+          "default": "grok/grok-4.7/high",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/[0-9]+[kKmM]?)?(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "registrar": {
+          "type": "string",
+          "description": "Actor PROVIDER/MODEL that registers outcomes in the work source.",
+          "default": "orch/conductor",
+          "pattern": "^[a-z][a-z0-9-]*/[A-Za-z0-9][A-Za-z0-9._:-]*(/(low|medium|high|xhigh|max|ultra))?$"
+        },
+        "rules": {
+          "type": "array",
+          "description": "Rules for the executor of every run; the options of the pack, the phase and the item append theirs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One rule."
+          }
+        },
+        "session_executor": {
+          "type": "string",
+          "description": "How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` (default) resumes the session of the previous executor, `handoff` gives each piece a fresh session with the handoff of the earlier pieces, `per-item` starts a fresh one for every step.",
+          "default": "shared",
+          "enum": [
+            "handoff",
+            "shared",
+            "per-item"
+          ]
+        },
+        "foreign_untracked": {
+          "type": "string",
+          "description": "Untracked files already in the tree when a run starts new work (a tree shared with another session): refuse stops with WORKTREE_DIRTY; keep lets the run start, fingerprints them and never counts them as the work of a piece while their content stays the same (FOREIGN_KEPT). Tracked changes always stop the run.",
+          "default": "refuse",
+          "enum": [
+            "refuse",
+            "keep"
+          ]
+        },
+        "on_blocked": {
+          "type": "string",
+          "description": "What a blocked piece of work does to the run: stop it, or report it and go on.",
+          "default": "stop",
+          "enum": [
+            "stop",
+            "report"
+          ]
+        },
+        "questions": {
+          "type": "string",
+          "description": "What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled). Approval and credential questions always stay open for the owner in every mode.",
+          "default": "advisor",
+          "enum": [
+            "queue",
+            "deny",
+            "defaults",
+            "advisor"
+          ]
+        },
+        "limits": {
+          "type": "object",
+          "description": "Default limits of a run.",
+          "additionalProperties": false,
+          "properties": {
+            "tokens_max": {
+              "type": "integer",
+              "description": "Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none.",
+              "default": 0,
+              "minimum": 0
+            },
+            "tokens_hard_max": {
+              "type": "integer",
+              "description": "Hard limit on accounted fresh input and output tokens of a piece; TOKEN_BUDGET stops new model calls at the boundary; default 0 means no limit.",
+              "default": 0,
+              "minimum": 0
+            },
+            "run_tokens_hard_max": {
+              "type": "integer",
+              "description": "Hard limit on accounted fresh input and output tokens of the whole run, fixed with its source at run start; default 0 means no limit.",
+              "default": 0,
+              "minimum": 0,
+              "x-skm-layers": ["defaults", "machine", "project", "invocation"]
+            },
+            "unmetered": {
+              "type": "string",
+              "description": "What a model attempt that reports no usage does while a hard token limit (tokens_hard_max or run_tokens_hard_max) is set: stop (the piece stops with TOKEN_BUDGET_UNMETERED) or charge (the attempt costs unmetered_charge_tokens). Without a hard limit it is only a BUDGET_UNMETERED beacon.",
+              "default": "stop",
+              "enum": [
+                "stop",
+                "charge"
+              ]
+            },
+            "unmetered_charge_tokens": {
+              "type": "integer",
+              "description": "Fresh input tokens charged for each model attempt that reported no usage when unmetered is charge and a hard token limit is set; counted in tokens.charged.",
+              "default": 50000,
+              "minimum": 0
+            },
+            "role_timeout_s": {
+              "type": "object",
+              "description": "Wall in seconds on the whole run of a streaming role, by role id. A role this table does not name keeps its shipped wall (context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 1800, advisor 1800, researcher 2700; the executor and the bounded-implementer have none); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT and the retry rule of the step applies.",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9-]*$": {
+                  "type": "integer",
+                  "description": "Seconds.",
+                  "minimum": 0
+                }
+              }
+            },
+            "stage_timeout_s": {
+              "type": "integer",
+              "description": "Ceiling on the whole run of one role in seconds; 0 has none for a streaming role beyond role_timeout_s (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role. When set it takes precedence over role_timeout_s.",
+              "default": 0,
+              "minimum": 0
+            },
+            "stage_idle_timeout_s": {
+              "type": "integer",
+              "description": "A streaming role is stopped when its output has not grown for this many seconds (a hang, not a long run); 0 never stops it; default 5400. STAGE_IDLE beacons report shorter silences and what runs meanwhile.",
+              "default": 5400,
+              "minimum": 0
+            },
+            "check_timeout_s": {
+              "type": "integer",
+              "description": "Ceiling on one acceptance check in seconds; default 7200 (the longest check measured took about 4000); 0 has none: CHECK_SLOW beacons report a long check.",
+              "default": 7200,
+              "minimum": 0
+            },
+            "check_idle_timeout_s": {
+              "type": "integer",
+              "description": "An acceptance check is stopped when its log has not grown for this many seconds (a hung test runner); 0 never stops it; default 3600.",
+              "default": 3600,
+              "minimum": 0
+            }
+          }
+        },
+        "argv": {
+          "type": "object",
+          "description": "Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "array",
+              "description": "Command and arguments.",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "description": "One argument."
+              },
+              "x-skm-layers": [
+                "defaults",
+                "machine",
+                "invocation",
+                "flags"
+              ]
+            }
+          }
+        },
+        "risk": {
+          "type": "object",
+          "description": "The risk score of a piece after its executor round (P7.2): a piece whose run policy has no review gets one when the score reaches `review.dynamic_threshold` of the run options. Weights add up (capped at 100); a weight of 0 turns a feature off.",
+          "additionalProperties": false,
+          "properties": {
+            "weights": {
+              "type": "object",
+              "description": "Weight of each feature.",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "integer",
+                  "description": "A path of `patterns.public_cli` changed (a public command line).",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "schema": {
+                  "type": "integer",
+                  "description": "A path of `patterns.schema` changed.",
+                  "default": 25,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "security": {
+                  "type": "integer",
+                  "description": "A path of `patterns.security` changed.",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "shared": {
+                  "type": "integer",
+                  "description": "A path of `patterns.shared` changed (a module others import).",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "diff_size": {
+                  "type": "integer",
+                  "description": "More lines changed than `diff_lines`.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "red_first": {
+                  "type": "integer",
+                  "description": "An acceptance check was red in the first executor round.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "deviation": {
+                  "type": "integer",
+                  "description": "The executor reported a deviation.",
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "outside_write_set": {
+                  "type": "integer",
+                  "description": "Paths outside the write set changed.",
+                  "default": 15,
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "executor_recommended": {
+                  "type": "integer",
+                  "description": "The executor recommended a review (`review_recommendation.recommended`).",
+                  "default": 30,
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              }
+            },
+            "patterns": {
+              "type": "object",
+              "description": "Repository path patterns of the features (`*` inside a segment, `**` any segments, a trailing `/` owns everything below).",
+              "additionalProperties": false,
+              "properties": {
+                "public_cli": {
+                  "type": "array",
+                  "description": "Patterns of the public_cli feature.",
+                  "default": [
+                    "bin/**",
+                    "**/cli.py",
+                    "packages/*/scripts/*.py"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "schema": {
+                  "type": "array",
+                  "description": "Patterns of the schema feature.",
+                  "default": [
+                    "**/schemas/**",
+                    "**/migrations/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "security": {
+                  "type": "array",
+                  "description": "Patterns of the security feature.",
+                  "default": [
+                    "**/auth/**",
+                    "**/security/**",
+                    "**/permissions*",
+                    "**/*secret*",
+                    "**/sandbox*",
+                    "**/ro-run*",
+                    "**/launch-catalog.json",
+                    "**/roles/*.json",
+                    "**/run-policies/**",
+                    "**/hooks/**",
+                    ".github/workflows/**",
+                    "**/install.sh"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                },
+                "shared": {
+                  "type": "array",
+                  "description": "Patterns of the shared feature.",
+                  "default": [
+                    "packages/aicore/**"
+                  ],
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "One pattern."
+                  }
+                }
+              }
+            },
+            "diff_lines": {
+              "type": "integer",
+              "description": "Changed lines past which the diff_size feature counts.",
+              "default": 400,
+              "minimum": 1
+            },
+            "critical": {
+              "type": "array",
+              "description": "Features that add the review on their own, whatever the score (REVIEW_ADDED names them); [] leaves only the threshold.",
+              "default": ["security"],
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "description": "A feature name.",
+                "enum": ["public_cli", "schema", "security", "shared", "diff_size", "red_first", "deviation", "outside_write_set", "executor_recommended"]
+              }
+            }
+          }
+        },
+        "skills_bridge": {
+          "type": "array",
+          "description": "Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: [\"auto\"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "generate": {
+          "type": "array",
+          "description": "Command that regenerates the generated files of the project (generated_paths) from their sources, run in the checkout of the run before the checks of every round; a first argument with a slash and no leading one is a path of that checkout, so the run uses its own generator. Its changes belong to the piece. A non-zero exit stops the run with GENERATE_FAILED. Empty: nothing is regenerated and generated_paths keep the write protection of the provider. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "generate_check": {
+          "type": "array",
+          "description": "Command that verifies the generated files against their sources after generate (exit 0: fresh); a non-zero exit stops the run with GENERATE_FAILED. Empty: no verification. Resolved like generate. Machine-wide, like generate.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "One argument."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "generated_paths": {
+          "type": "array",
+          "description": "Glob patterns of the files generate writes (for example .claude/skills/**). With generate set, a write-set path under them is not a write-protected path of the executor: the executor changes the source and the conductor regenerates the file; a regenerated file of another module is no OUTSIDE_MODULE stop. Machine-wide, like generate.",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A glob pattern relative to the project root."
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "description": "Research sources (P10.1): where the researcher role and `orch.py research query` look things up.",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "description": "When a piece of work gets a research stage: required (every piece), conditional (a piece whose research need is required) or off (never).",
+          "default": "conditional",
+          "enum": [
+            "required",
+            "conditional",
+            "off"
+          ]
+        },
+        "sources": {
+          "type": "object",
+          "description": "Research sources by id. An argv chooses the process orch starts, so only the machine, the invocation file and flags may set it; a project file may name roots and limits.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "object",
+              "description": "One source.",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "description": "Adapter: command (argv, the query on stdin, JSON on stdout), filesystem (a search over roots) or mcp-stdio (an MCP server over stdio, the query goes to its tool).",
+                  "enum": [
+                    "command",
+                    "filesystem",
+                    "mcp-stdio"
+                  ]
+                },
+                "argv": {
+                  "type": "array",
+                  "description": "Command and arguments of a command or mcp-stdio source (required by both kinds on the merged layers: SOURCE_INVALID otherwise); a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs.",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One argument."
+                  },
+                  "x-skm-layers": [
+                    "defaults",
+                    "machine",
+                    "invocation",
+                    "flags"
+                  ]
+                },
+                "tool": {
+                  "type": "string",
+                  "description": "mcp-stdio: name of the tool that receives the query.",
+                  "default": "search",
+                  "minLength": 1
+                },
+                "roots": {
+                  "type": "array",
+                  "description": "filesystem: folders searched, absolute, starting with ~, or relative to the project (required by this kind on the merged layers: SOURCE_INVALID otherwise).",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "description": "One folder.",
+                    "minLength": 1
+                  }
+                },
+                "capabilities": {
+                  "type": "array",
+                  "description": "What the source can do.",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "description": "One capability.",
+                    "enum": [
+                      "search",
+                      "citations",
+                      "synthesis",
+                      "deep"
+                    ]
+                  }
+                },
+                "timeout_s": {
+                  "type": "integer",
+                  "description": "Ceiling on one query in seconds.",
+                  "default": 600,
+                  "minimum": 1
+                },
+                "concurrency": {
+                  "type": "integer",
+                  "description": "Queries of this source that run at once in one orch process.",
+                  "default": 1,
+                  "minimum": 1
+                },
+                "order": {
+                  "type": "integer",
+                  "description": "Place on the ladder of sources: lower first, ties by id.",
+                  "default": 100
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advisor": {
+      "type": "object",
+      "description": "The advisor role (P10.4): one opinion on a blocking question (questions = advisor), on acceptance checks that stay red after the check_fixes corrections, and on a Major finding the triager rejected.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the conductor asks the advisor at all. Off: every trigger behaves as before. The human_gate still holds security, destructive, public-api and scope-expansion advice for the owner.",
+          "default": true
+        },
+        "max_rounds": {
+          "type": "integer",
+          "description": "Advice rounds per piece of work, all triggers together; past it the problem is handled as without the advisor.",
+          "default": 2,
+          "minimum": 0
+        },
+        "human_gate": {
+          "type": "array",
+          "description": "Advice categories held for the owner. Only the machine or caller may set this base gate; projects add categories through human_gate_extra.",
+          "default": [
+            "security",
+            "destructive",
+            "public-api",
+            "scope-expansion"
+          ],
+          "items": {
+            "type": "string",
+            "description": "One advice category.",
+            "enum": [
+              "security",
+              "destructive",
+              "public-api",
+              "scope-expansion",
+              "other"
+            ]
+          },
+          "x-skm-layers": [
+            "defaults",
+            "machine",
+            "invocation",
+            "flags"
+          ]
+        },
+        "human_gate_extra": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "One advice category.",
+            "enum": [
+              "security",
+              "destructive",
+              "public-api",
+              "scope-expansion",
+              "other"
+            ]
+          },
+          "default": [],
+          "description": "Additional advice categories held for the owner. Values from every layer accumulate; an empty array or _unset cannot remove earlier categories."
+        },
+        "min_confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "default": "medium",
+          "description": "Minimum confidence for automatic advice. The strictest value across all layers wins (high > medium > low); lower values and _unset cannot weaken it."
+        },
+        "panel": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*(/(economy|implementation|frontier)(/(low|medium|high|xhigh))?)?$",
+            "description": "Route of one panel member: PROVIDER[/MODEL_CLASS[/EFFORT]], such as grok/frontier/high."
+          },
+          "default": [],
+          "description": "Routes of an advisor panel (2 or 3; fewer is off, members past the third are ignored), each PROVIDER[/MODEL_CLASS[/EFFORT]]. When a trigger of panel_on fires, each member advises independently, without seeing the others: agreement is applied, a majority gets one round of critique by a member of the minority, a split goes to the owner. At most len(panel)+1 calls per problem, each admitted by the token budget; the result is read by the same gates as one advice (human_gate, min_confidence, code categories). A member that cannot start (codex has no advisor launch entry) is skipped with ADVISOR_PANEL_FAILED; fewer than two answers is the single advisor."
+        },
+        "panel_on": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["low_confidence", "always"],
+            "description": "One trigger."
+          },
+          "default": ["low_confidence"],
+          "description": "When the panel advises: low_confidence (the single advice of a problem has low confidence) or always (every problem goes to the panel first)."
+        }
+      }
+    },
+    "stubs": {
+      "type": "object",
+      "description": "Stubs: additional instructions for the roles (`orch stubs publish|list|show`), from `~/.config/swissknifeman/stubs` (machine) and `<project>/.swissknifeman/stubs` (project). A run resolves them once and keeps the snapshot. Machine-wide: a project cannot turn its own stubs on or widen what it may add.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the role prompts get the stubs at all.",
+          "default": true,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "layers": {
+          "type": "array",
+          "description": "Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model.",
+          "default": ["machine", "project"],
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "description": "One layer.",
+            "enum": ["machine", "project"]
+          },
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        }
+      }
+    },
+    "supervisor": {
+      "type": "object",
+      "description": "The supervisor (`orch conduct supervise|reap`): what it does about a conductor run that hangs or died. Observation is the default; stopping and resuming are the authority of the machine, so a project file cannot set recover, max_recoveries or window_s, and an invocation (a --config file or a flag) can only lower recover and max_recoveries.",
+      "additionalProperties": false,
+      "properties": {
+        "recover": {
+          "type": "string",
+          "description": "What the supervisor does about a run in trouble: notify (only say so), stop-only (also stop a hung conductor and reap the role processes of a dead one) or resume (also resume a dead run, within the breaker). The effective value is the lowest of the machine value and the invocation values (notify < stop-only < resume).",
+          "default": "notify",
+          "enum": ["notify", "stop-only", "resume"],
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "interval_s": {
+          "type": "integer",
+          "description": "Seconds between two passes of `orch conduct supervise` without --once.",
+          "default": 60,
+          "minimum": 1
+        },
+        "hung_after_s": {
+          "type": "integer",
+          "description": "Age of the heartbeat from which a conductor that waits for nothing counts as hung (a wait with a deadline that has not passed is never hung).",
+          "default": 300,
+          "minimum": 1
+        },
+        "grace_s": {
+          "type": "integer",
+          "description": "Seconds a hung conductor gets to free its run lease after SIGINT, and again after SIGTERM, before SIGKILL.",
+          "default": 60,
+          "minimum": 1
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "description": "Resumes the supervisor may start for one run within window_s; past it the supervisor gives the run up until the owner resumes it by hand. An invocation can only lower it.",
+          "default": 2,
+          "minimum": 0,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "window_s": {
+          "type": "integer",
+          "description": "Length of the window of the breaker in seconds.",
+          "default": 3600,
+          "minimum": 1,
+          "x-skm-layers": ["defaults", "machine", "invocation", "flags"]
+        },
+        "notify_send": {
+          "type": "boolean",
+          "description": "Also call `notify-send` for a notification, a stop and a given-up run (errors are ignored).",
+          "default": false
+        }
+      }
+    },
+    "autopilot": {
+      "type": "object",
+      "description": "The autopilot (`orch conduct autopilot`): a deterministic controller that starts conductor runs one lane after another until a stop code. Only the machine allows it at all; a project enables it and can only tighten the rest: require_readiness is on when any layer turns it on, and every limit is the lowest of the machine value and the values of the other layers and the flags of start.",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "description": "Whether this machine lets the autopilot run at all. Only the machine layer sets it; a project file that sets it is refused and the autopilot stops with AUTOPILOT_NOT_ALLOWED.",
+          "default": false,
+          "x-skm-layers": ["defaults", "machine"]
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the autopilot is enabled for this project (set by the project, or by the machine for every project).",
+          "default": false
+        },
+        "require_readiness": {
+          "type": "boolean",
+          "description": "Start a lane only when the work source says the phase of the lane is ready (op readiness). On when the machine or any other layer turns it on: a project can only switch it on.",
+          "default": true
+        },
+        "max_runs": {
+          "type": "integer",
+          "description": "Conductor runs (new lanes and continues) one autopilot session may start; then AUTOPILOT_MAX_RUNS.",
+          "default": 20,
+          "minimum": 1
+        },
+        "max_wall_s": {
+          "type": "integer",
+          "description": "Wall-clock seconds of one autopilot session; the deadline is kept in autopilot.json and a restart does not move it (AUTOPILOT_MAX_WALL).",
+          "default": 43200,
+          "minimum": 1
+        },
+        "max_no_progress_runs": {
+          "type": "integer",
+          "description": "Runs in a row that close no piece before AUTOPILOT_NO_PROGRESS.",
+          "default": 2,
+          "minimum": 1
+        },
+        "max_auto_decisions": {
+          "type": "integer",
+          "description": "Questions answered by the advisor or panel (QUESTION_ADVISED lines) one session may accept before AUTOPILOT_DECISIONS_EXCEEDED.",
+          "default": 10,
+          "minimum": 0
+        },
+        "quota_wait_max_s": {
+          "type": "integer",
+          "description": "Longest wait for a provider quota reset before the stopped run is resumed; a later reset is AUTOPILOT_QUOTA.",
+          "default": 21600,
+          "minimum": 0
+        },
+        "poll_s": {
+          "type": "integer",
+          "description": "Seconds between two looks at the current run, the request file and the deadline.",
+          "default": 30,
+          "minimum": 1
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "description": "Resumes the autopilot may start for one run after a crash, a hang or a one-time failure; then AUTOPILOT_RECOVERY_EXHAUSTED.",
+          "default": 1,
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

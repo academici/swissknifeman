@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "demo",
+  "title": "E2E fixture unit of the GUI browser mode",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [{"unit": "aicore", "range": "^0.1"}],
+  "provides": {"gui": "gui.json", "config": "configs/config.schema.json"}
+}

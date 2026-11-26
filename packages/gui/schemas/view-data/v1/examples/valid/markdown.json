@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "markdown",
+  "text": "# Guide\n\nSee [plans](plans).",
+  "base_route": "gui-planner.guide"
+}

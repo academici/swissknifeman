@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-usage:v1",
+  "input": 700,
+  "cached": 5,
+  "output": 70,
+  "usage_complete": true
+}

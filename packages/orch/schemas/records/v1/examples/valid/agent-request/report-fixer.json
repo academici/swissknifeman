@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-request:v1",
+  "agent_run_id": "agent-20261022T100000Z-a1b2c3-3",
+  "role": "report-fixer",
+  "route": {"provider": "codex"},
+  "step": "executor.1",
+  "attempt": 1,
+  "prompt": ".swissknifeman/state/orch/conductor/cnd-20261022T100000Z-a1b2c3/W1/prompts/executor.1-fix.md",
+  "causation": "executor.1",
+  "started_at": "2026-10-22T10:09:00Z",
+  "parent_agent_run_id": "agent-20261022T100000Z-a1b2c3-2"
+}

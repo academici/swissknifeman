@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:heartbeat:v1",
+  "run_id": "cnd-20261101T101010Z-abc123",
+  "pid": 4242,
+  "start_ticks": 123456,
+  "boot_id": "3f0c9a52-6b1e-4c1d-9a55-0d7a3c1b9e10",
+  "host": "workstation",
+  "seq": 17,
+  "at": "2026-11-01T10:15:02Z",
+  "item": "P2.1",
+  "step": "executor.1",
+  "role": "executor",
+  "last_progress_at": "2026-11-01T10:14:40Z",
+  "last_progress_kind": "tool_use",
+  "stream_bytes": 183400,
+  "last_growth_at": "2026-11-01T10:14:58Z",
+  "tree_cpu_s": 41.7,
+  "last_cpu_at": "2026-11-01T10:15:00Z",
+  "repeat": {"command": "Bash: pytest -x tests/test_a.py", "count": 3},
+  "waiting": null
+}

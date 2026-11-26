@@ -1,0 +1,6 @@
+#!/bin/sh
+# First line: the process group (the run's session leader is this shell); a child sleep shares the group.
+echo "pgid $$"
+sleep 600 &
+i=1
+while [ $i -le 600 ]; do echo "tick $i"; i=$((i + 1)); sleep 0.1; done

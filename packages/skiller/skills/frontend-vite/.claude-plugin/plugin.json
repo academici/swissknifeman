@@ -1,0 +1,5 @@
+{
+  "name": "frontend-vite",
+  "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
+  "skills": "./"
+}

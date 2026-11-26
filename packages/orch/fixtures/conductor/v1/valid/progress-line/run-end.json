@@ -1,0 +1,8 @@
+{
+  "ts": "2026-10-11T21:00:00Z",
+  "run": "cnd-20261011T201500Z-a1b2c3",
+  "event": "run.end",
+  "outcome": "stopped",
+  "reason_code": "ITEM_BLOCKED",
+  "message": "P11.4 is blocked; see its escalation"
+}

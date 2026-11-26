@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "get-zeked/ai-agent-super-skill",
+  "strategy": "fork",
+  "review_pending": false,
+  "last_review": "2026-06-25",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "references/source.md",
+      "url": "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md",
+      "sha256": "cfd45bc6f0e05cd905072fd5b2826e8a76b5915800ac143990cd1e2976406911",
+      "fetched_at": "2026-06-25"
+    }
+  ],
+  "notes": "Fork get-zeked/ai-agent-super-skill: SKILL.md — thin navigator wrapper, full upstream is mirrored in references/source.md (pristine). Do not roll upstream automatically - manual transfer during drift (see docs/guide/upstream-sync.md).",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "bb30f388386f647ddfd3e8e7cf8c69826ac59bbefe6b11403e5a498c09f1d2d7"
+  }
+}

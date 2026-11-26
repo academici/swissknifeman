@@ -1,0 +1,10 @@
+{
+  "name": "laravel-admin",
+  "description": "Admin on Filament: core + Filament + rights/security + opt. packages",
+  "buckets": [
+    "php",
+    "laravel-filament",
+    "laravel-auth",
+    "laravel-extras"
+  ]
+}

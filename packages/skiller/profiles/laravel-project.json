@@ -1,0 +1,16 @@
+{
+  "name": "laravel-project",
+  "description": "Large Laravel application development",
+  "buckets": ["system", "architect", "php", "laravel-testing", "laravel-auth", "laravel-data-layer", "devops", "quality", "operator"],
+  "include_meta": false,
+  "agent_pack": ["backend-laravel", "_common"],
+  "harness_presets": ["base", "laravel"],
+  "mcp": ["context7"],
+  "model_tiers": {
+    "reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "slice-builder": "implementation",
+    "test-writer": "implementation"
+  }
+}

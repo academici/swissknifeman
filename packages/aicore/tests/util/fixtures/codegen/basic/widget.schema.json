@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:widget:v1",
+  "title": "A widget",
+  "description": "Fixture: every mapping of the closed profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "kind"],
+  "properties": {
+    "$schema": {"description": "Tag.", "const": "urn:swissknifeman:fixture:codegen:widget:v1"},
+    "name": {"description": "Name.", "type": "string", "minLength": 1},
+    "kind": {"description": "Kind.", "type": "string", "enum": ["small", "large"]},
+    "weight": {"description": "Weight.", "type": ["number", "null"]},
+    "count": {"description": "Count.", "type": "integer", "minimum": 0},
+    "flag": {"description": "Flag.", "type": "boolean"},
+    "tags": {"description": "Tags.", "type": "array", "items": {"type": "string"}},
+    "by_label": {
+      "description": "Parts by label.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/part"}},
+      "additionalProperties": false
+    },
+    "size": {"$ref": "urn:swissknifeman:fixture:codegen:part:v1#/$defs/size"},
+    "shape": {
+      "description": "Round or square.",
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["radius"],
+         "properties": {"radius": {"type": "number"}}},
+        {"type": "object", "additionalProperties": false, "required": ["side"],
+         "properties": {"side": {"type": "number"}}},
+        {"type": "string"}
+      ]
+    },
+    "extra": {"description": "Free form.", "type": "object"},
+    "alien": {"$ref": "urn:swissknifeman:fixture:other:thing:v1"},
+    "inner": {
+      "description": "A nested closed object.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {"id": {"type": "string"}, "note": {"type": ["string", "null"]}}
+    },
+    "from": {"description": "A keyword as a key.", "type": "string"}
+  },
+  "$defs": {
+    "part": {
+      "description": "A part; it refers to itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string"},
+        "children": {"type": "array", "items": {"$ref": "#/$defs/part"}}
+      }
+    }
+  }
+}

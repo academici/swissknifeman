@@ -1,0 +1,10 @@
+{
+  "skill": "postmortem",
+  "snippets": [
+    {
+      "file": "5-whys-template.md",
+      "description": "5 whys template",
+      "tags": []
+    }
+  ]
+}

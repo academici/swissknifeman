@@ -1,0 +1,978 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "title": "execution-input",
+  "type": "object",
+  "description": "Engine-neutral execution-input contract.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:execution-input:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "input_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Stable input identity with @digest[:12] suffix."
+    },
+    "digest": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+      "description": "Canonical content digest, excluding digest and the derived input_id suffix."
+    },
+    "provenance": {
+      "description": "Origin of this execution input.",
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Plan provenance.",
+          "properties": {
+            "kind": {
+              "const": "plan",
+              "description": "Plan-bound input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Qualified plan short identifier."
+            },
+            "plan_dir": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+              "description": "Repository-relative plan directory."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan item identifier."
+            },
+            "unit": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Optional unit identifier."
+            },
+            "source_digest": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+              "description": "Digest of the full source context."
+            },
+            "generated_by": {
+              "type": "object",
+              "description": "Source generator identity.",
+              "properties": {
+                "tool": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Source projection tool."
+                },
+                "task_version": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Plan store version."
+                }
+              },
+              "required": [
+                "tool",
+                "task_version"
+              ],
+              "additionalProperties": false
+            },
+            "commit": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/gitSha",
+              "description": "Commit that the references of the input are pinned to."
+            }
+          },
+          "required": [
+            "kind",
+            "plan",
+            "plan_dir",
+            "item",
+            "source_digest",
+            "generated_by"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Ad-hoc provenance.",
+          "properties": {
+            "kind": {
+              "const": "adhoc",
+              "description": "Ad-hoc input."
+            },
+            "request": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Original owner request."
+            },
+            "created_by": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Request author."
+            }
+          },
+          "required": [
+            "kind",
+            "request"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Review provenance.",
+          "properties": {
+            "kind": {
+              "const": "review",
+              "description": "Review-only input."
+            },
+            "base": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Base revision."
+            },
+            "head": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Head revision."
+            },
+            "target": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Review target."
+            },
+            "plan": {
+              "description": "Optional reviewed plan identity.",
+              "type": "string",
+              "minLength": 1
+            },
+            "item": {
+              "description": "Optional reviewed plan identity.",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "base",
+            "head",
+            "target"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Support work for a plan, outside its items.",
+          "properties": {
+            "kind": {
+              "const": "plan_support",
+              "description": "Support work for a plan, outside its items input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "phase": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Phase the work supports."
+            }
+          },
+          "required": [
+            "kind",
+            "plan"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Support work for one phase of a plan.",
+          "properties": {
+            "kind": {
+              "const": "phase_support",
+              "description": "Support work for one phase of a plan input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "phase": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Phase the work supports."
+            }
+          },
+          "required": [
+            "kind",
+            "plan",
+            "phase"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Work that follows a review.",
+          "properties": {
+            "kind": {
+              "const": "review_followup",
+              "description": "Work that follows a review input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item that was reviewed."
+            },
+            "finding": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Finding the work answers."
+            },
+            "items": {
+              "description": "Every piece of the reviewed group; the commit of the follow-up names them (Plan-Items).",
+              "type": "array",
+              "items": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "A piece of the reviewed group."
+              }
+            },
+            "findings": {
+              "description": "Conductor keys of the findings the work answers; the commit of the follow-up names them (Plan-Findings).",
+              "type": "array",
+              "items": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "Conductor key of a finding."
+              }
+            },
+            "fix_briefs": {
+              "description": "Ordered backlog of bounded group-review correction assignments after the initial goal.",
+              "type": "array",
+              "items": {
+                "description": "A schema-validated fix-brief bound to this input by its canonical digest.",
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "description": "Fix-brief artifact path, relative to the project or absolute.",
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "digest": {
+                    "description": "Canonical SHA-256 of the referenced fix-brief.",
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": ["path", "digest"],
+                "additionalProperties": false
+              }
+            },
+            "session_ref": {
+              "description": "Where the reviewed group comes from (run, last piece, every piece) and, when the last piece kept a resumable session, that session: the follow-up run resumes it when the provider and the identity still match, and otherwise starts fresh with the handoff of every piece of the group.",
+              "type": "object",
+              "properties": {
+                "run": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Conductor run that made the reviewed pieces."
+                },
+                "item": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Last piece of the group, whose session this is."
+                },
+                "session": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider session id; absent when the group kept none to resume."
+                },
+                "provider": {
+                  "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                  "description": "Provider that built the session."
+                },
+                "fingerprint_digest": {
+                  "description": "Canonical digest of the fingerprint of the session without piece, attempt and base revision (the identity a follow-up shares with it).",
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "items": {
+                  "description": "Every piece of the reviewed group, for the handoff of a follow-up that starts fresh.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text"
+                  }
+                }
+              },
+              "required": ["run", "item", "items"],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Work that fixes a deviation of an item.",
+          "properties": {
+            "kind": {
+              "const": "deviation_fix",
+              "description": "Work that fixes a deviation of an item input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item whose deviation is fixed."
+            },
+            "event": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Journal event of the deviation."
+            }
+          },
+          "required": [
+            "kind",
+            "plan",
+            "item"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Research outside the items of a plan.",
+          "properties": {
+            "kind": {
+              "const": "research",
+              "description": "Research outside the items of a plan input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "question": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Question the research answers."
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Advice asked of a stronger model.",
+          "properties": {
+            "kind": {
+              "const": "advisor",
+              "description": "Advice asked of a stronger model input."
+            },
+            "plan": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Plan id or short identifier."
+            },
+            "item": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Item the advice is about."
+            },
+            "question": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Question asked."
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "goal": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Expected outcome."
+    },
+    "why": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Purpose of the work."
+    },
+    "review_mode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "self",
+        "requested"
+      ],
+      "description": "Review the plan asks for this work: none (no review, no risk-score review either), self or requested."
+    },
+    "review_route": {
+      "type": "object",
+      "description": "Reviewer the plan prefers for this work; a reviewer the run sets explicitly wins, a partial route completes the default reviewer.",
+      "properties": {
+        "class": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+          "description": "Reviewer model class."
+        },
+        "effort": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+          "description": "Reviewer reasoning effort."
+        },
+        "provider": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+          "description": "Reviewer provider."
+        },
+        "model": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Reviewer model id."
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "review_rounds_max": {
+      "type": "integer",
+      "description": "Most review rounds the plan allows for this work; lowers the review_rounds limit, never raises it.",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "scope": {
+      "type": "object",
+      "description": "Execution scope.",
+      "properties": {
+        "include": {
+          "type": "array",
+          "description": "Included scope.",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Included work."
+          },
+          "minItems": 1
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Excluded scope.",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Excluded work."
+          }
+        },
+        "write_set": {
+          "type": "array",
+          "description": "Writable paths or globs.",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Writable path or glob."
+          }
+        },
+        "read_only": {
+          "type": "boolean",
+          "description": "Whether this input permits no product writes."
+        }
+      },
+      "required": [
+        "include",
+        "exclude"
+      ],
+      "additionalProperties": false
+    },
+    "guidance": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Complete implementation guidance."
+    },
+    "sections": {
+      "type": "array",
+      "description": "Complete task sections.",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/section",
+        "description": "Named section."
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Execution constraints.",
+      "items": {
+        "type": "object",
+        "description": "Sourced constraint.",
+        "properties": {
+          "text": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Constraint text."
+          },
+          "source": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Source of the constraint."
+          }
+        },
+        "required": [
+          "text",
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Referenced decisions.",
+      "items": {
+        "type": "object",
+        "description": "Referenced decision.",
+        "properties": {
+          "ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Decision reference."
+          },
+          "loaded": {
+            "type": "boolean",
+            "description": "Whether decision content was loaded."
+          },
+          "title": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Decision title."
+          },
+          "status": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Decision status."
+          },
+          "decision": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Selected decision."
+          },
+          "rationale": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Decision rationale."
+          },
+          "question_key": {
+            "type": "string",
+            "pattern": "^qk-[0-9a-f]{16}$",
+            "description": "Key of the question this decision answered when an orchestration run recorded it: the conductor answers the same question of the same piece again by it."
+          },
+          "question_digest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 of the canonical meaning of that question; a decision is reused only when it matches the question asked now."
+          },
+          "source": {
+            "type": "object",
+            "description": "Decision source.",
+            "properties": {
+              "path": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+                "description": "Source path."
+              },
+              "sha256": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+                "description": "Source content digest."
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "reason": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Reason the decision could not be loaded."
+          }
+        },
+        "required": [
+          "ref",
+          "loaded"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "description": "Acceptance requirements.",
+      "properties": {
+        "checks": {
+          "type": "array",
+          "description": "Checks required for acceptance.",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/check",
+            "description": "Acceptance check."
+          },
+          "minItems": 1
+        },
+        "deliverables": {
+          "type": "array",
+          "description": "Expected deliverables.",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Expected deliverable."
+          }
+        }
+      },
+      "required": [
+        "checks"
+      ],
+      "additionalProperties": false
+    },
+    "reads": {
+      "type": "array",
+      "description": "Source reads.",
+      "items": {
+        "type": "object",
+        "description": "Referenced source read.",
+        "properties": {
+          "path": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Required source path."
+          },
+          "section": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Selected source section."
+          },
+          "delivery": {
+            "const": "on-demand",
+            "description": "Repository JSON remains a mandatory read; content is retrieved when needed instead of being inlined."
+          },
+          "why": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Reason for reading."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this read is mandatory."
+          },
+          "exists": {
+            "type": "boolean",
+            "description": "Whether the source exists."
+          },
+          "sha256": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+            "description": "Source byte digest."
+          },
+          "content": {
+            "description": "Complete inline source content; any JSON value."
+          },
+          "included": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Pack key that already holds this source; content is then omitted."
+          },
+          "error": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Source read error."
+          }
+        },
+        "required": [
+          "path",
+          "why",
+          "required",
+          "exists"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "context_refs": {
+      "type": "array",
+      "description": "Full context references.",
+      "items": {
+        "type": "object",
+        "description": "Reference to full source context.",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "pack",
+              "document",
+              "upstream"
+            ],
+            "description": "Context reference category."
+          },
+          "ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Qualified context reference."
+          },
+          "path": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+            "description": "Context source path."
+          },
+          "sha256": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+            "description": "Context byte digest."
+          },
+          "content": {
+            "description": "Inline source context; any JSON value. Supplement delivery uses an explicit worker projection; reference-only mode may retain the coordinator pack."
+          },
+          "delivery": {
+            "type": "string",
+            "enum": ["supplement"],
+            "description": "Opt-in task delivery of all inline context fields, reusing exact text already visible in task sections. Omitted preserves reference-only rendering. Requires content."
+          }
+        },
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "upstream": {
+      "type": "array",
+      "description": "Upstream results.",
+      "items": {
+        "type": "object",
+        "description": "Dependency result.",
+        "properties": {
+          "ref": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Dependency reference."
+          },
+          "title": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Dependency title."
+          },
+          "status": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Dependency status."
+          },
+          "summary": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Dependency summary."
+          },
+          "notes": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Dependency result notes."
+          },
+          "deliverables": {
+            "type": "array",
+            "description": "Dependency deliverables.",
+            "items": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+              "description": "Dependency deliverable."
+            }
+          }
+        },
+        "required": [
+          "ref",
+          "title",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "lessons": {
+      "type": "array",
+      "description": "Prior friction lessons.",
+      "items": {
+        "type": "object",
+        "description": "Lesson from prior execution.",
+        "properties": {
+          "type": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Friction category."
+          },
+          "summary": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Friction summary."
+          },
+          "ts": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+            "description": "Event timestamp."
+          },
+          "item": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Owning item."
+          },
+          "impact": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Impact on execution."
+          },
+          "next": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Recommended next action."
+          }
+        },
+        "required": [
+          "type",
+          "summary",
+          "ts"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "hints": {
+      "type": "array",
+      "description": "Scout hints.",
+      "items": {
+        "type": "object",
+        "description": "Non-authoritative scout hint.",
+        "properties": {
+          "text": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+            "description": "Scout hint."
+          },
+          "source": {
+            "const": "scout",
+            "description": "Hint source."
+          }
+        },
+        "required": [
+          "text",
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "research": {
+      "type": "object",
+      "description": "Research need of the work, as the plan designer decided it.",
+      "properties": {
+        "need": {
+          "type": "string",
+          "description": "none: no research; optional: research may help; required: research precedes the work.",
+          "enum": [
+            "none",
+            "optional",
+            "required"
+          ]
+        },
+        "notes": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "What to find out."
+        }
+      },
+      "required": [
+        "need"
+      ],
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "description": "Execution route requirement.",
+      "properties": {
+        "minimum": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/route",
+          "description": "Minimum allowed execution route."
+        }
+      },
+      "required": [
+        "minimum"
+      ],
+      "additionalProperties": false
+    },
+    "result_contract": {
+      "type": "object",
+      "description": "Required result shape and authority.",
+      "properties": {
+        "report": {
+          "type": "array",
+          "description": "Required report components.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "changed_paths",
+              "checks_run",
+              "evidence",
+              "open_issues"
+            ],
+            "description": "Report component."
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "write_authority": {
+          "type": "string",
+          "enum": [
+            "code_scope",
+            "none"
+          ],
+          "description": "Product write authority."
+        },
+        "commit_owner": {
+          "const": "coordinator",
+          "description": "Commit owner."
+        },
+        "plan_mutation": {
+          "const": "forbidden",
+          "description": "Workers may not mutate plan lifecycle."
+        }
+      },
+      "required": [
+        "report",
+        "write_authority",
+        "commit_owner",
+        "plan_mutation"
+      ],
+      "additionalProperties": false
+    },
+    "escalation": {
+      "type": "array",
+      "description": "Conditions requiring escalation.",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+        "description": "Escalation condition."
+      }
+    },
+    "condensed": {
+      "type": "object",
+      "properties": {
+        "produced_by": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/route",
+          "description": "Route of the stage that condensed the optional part."
+        },
+        "required_digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "SHA-256 of the canonical JSON of the required part: goal, scope, acceptance, constraints, decisions, route, result_contract and escalation (absent keys are left out)."
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "research",
+                  "rationale",
+                  "rejected",
+                  "other"
+                ],
+                "description": "What the condensed part was."
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+                    "description": "Path of the original."
+                  },
+                  "sha256": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+                    "description": "Digest of the original bytes."
+                  },
+                  "section": {
+                    "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                    "description": "Section of the original."
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "additionalProperties": false,
+                "description": "Original of the condensed part."
+              },
+              "summary": {
+                "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+                "description": "Condensed text."
+              }
+            },
+            "required": [
+              "kind",
+              "source",
+              "summary"
+            ],
+            "additionalProperties": false,
+            "description": "Condensed part with a reference to its original."
+          },
+          "description": "Condensed parts of the optional context."
+        }
+      },
+      "required": [
+        "produced_by",
+        "required_digest",
+        "parts"
+      ],
+      "additionalProperties": false,
+      "description": "Optional context condensed by a stage, with references to the originals."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "input_id",
+    "digest",
+    "provenance",
+    "goal",
+    "scope",
+    "acceptance",
+    "route",
+    "result_contract"
+  ],
+  "additionalProperties": false
+}

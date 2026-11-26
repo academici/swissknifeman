@@ -1,0 +1,34 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "maind",
+  "title": "Project memory and code graph hub",
+  "kind": "capability",
+  "version": "0.6.8",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Foundation: util, provider, artifacts, config, state."}
+  ],
+  "provides": {
+    "cli": ["bin/maind"],
+    "install": ["install.sh"],
+    "config": "configs/config.schema.json",
+    "contracts": [
+      {"id": "urn:swissknifeman:maind:projects-list", "path": "schemas/projects-list/v1", "version": "v1", "stability": "alpha", "direction": "output"},
+      {"id": "urn:swissknifeman:maind:mcp-tools", "path": "schemas/mcp-tools/v1", "version": "v1", "stability": "alpha"}
+    ],
+    "plugins": [{"name": "maind", "manifest": ".claude-plugin/plugin.json"}],
+    "doctor": [
+      {"id": "maind.environment", "category": "environment", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.config", "category": "config", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.registry", "category": "state", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.memory", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.mcp", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"},
+      {"id": "maind.health", "category": "integration", "probe": ["bin/maind", "doctor", "--json"], "output": "check-result/v1"}
+    ]
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"],
+    "validate": ["bash", "scripts/validate.sh"]
+  }
+}

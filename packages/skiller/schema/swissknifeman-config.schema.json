@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:skiller:swissknifeman-config:v1",
+  "title": "swissknifeman vendor-mode config (.swissknifeman/config.json)",
+  "description": "Legacy (deprecated; use [skiller.sync] in .swissknifeman/config.toml). Source of Truth vendor-mode. Rules (presets ∪ buckets ∪ include) − exclude unfold into a flat set; `skiller sync` copies skills from the library to skills_path and writes skills-lock.json (managed) + .swissknifeman-manifest.json. Keys are kept in sync with SKILLSET_KEYS (lib/skiller/skillset.py) — gate tests/test_schema.py and skiller doctor.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[_$]": {}
+  },
+  "properties": {
+    "version": {
+      "type": "integer",
+      "description": "Config schema version (is now 1)."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["vendor"],
+      "description": "Distribution mode. Currently only supported vendor (physical transfer + lock)."
+    },
+    "agent": {
+      "type": "string",
+      "description": "Informative (claude|cursor|generic). Specifies the path skills_path, not agent."
+    },
+    "skills_path": {
+      "type": "string",
+      "description": "Where to copy skills. Default.claude/skills (Claude finds automatically)."
+    },
+    "presets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Named skill clusters (presets/<name>.json), are expanded in buckets/include before the sampling formula."
+    },
+    "include": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Specific skills from any area: 'bucket/rel' or simply 'name'."
+    },
+    "buckets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Whole buckets (are combined with include)."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Subtract from (presets ∪ buckets ∪ include): skill name or 'bucket/rel'."
+    },
+    "gitignore_managed": {
+      "type": "boolean",
+      "description": "true → sync issue <skills_path>/.gitignore with list managed-skills (keep out git, reproducible `skiller sync`); local/custom skills remain in the repository. Root.gitignore is not touched. ⚠ managed-skills stop committing - suitable when all developers have access to the registry swissknifeman."
+    }
+  }
+}

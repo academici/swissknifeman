@@ -1,0 +1,13 @@
+---
+description: Static Cursor observer policy carrier (no sessionStart.additional_context).
+alwaysApply: true
+---
+<!-- semantic:cursor.context.observer.static-policy -->
+## Cursor observer policy (static)
+
+This managed rule is the observer carrier for Cursor sessions.
+It is static and always-on; do not depend on `sessionStart.additional_context`.
+
+- This repository is in observe mode: block any write, install, migration or release operation.
+- Treat write/install/migration/release requests as out of scope for observe mode.
+- If mutation is required, request an explicit profile switch before continuing.

@@ -1,0 +1,15 @@
+{
+  "plan": "P",
+  "admitted": false,
+  "items": [
+    {
+      "ref": "P1.1",
+      "admitted": false,
+      "unavailable": {
+        "executor": "PROVIDER_UNAVAILABLE: missing"
+      },
+      "optional_unavailable": {}
+    }
+  ],
+  "note": "Static admission only."
+}

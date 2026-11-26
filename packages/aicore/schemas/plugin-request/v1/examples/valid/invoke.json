@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:aicore:plugin-request:v1",
+  "protocol": "1",
+  "op": "invoke",
+  "request_id": "0123456789abcdef0123456789abcdef",
+  "deadline_ms": 60000,
+  "point": "planner:format",
+  "input": {
+    "text": "a"
+  },
+  "context": {
+    "project_root": "/work/project",
+    "attempt": 1,
+    "trusted": false
+  }
+}

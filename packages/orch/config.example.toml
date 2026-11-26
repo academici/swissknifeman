@@ -1,0 +1,326 @@
+# orch configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[orch]
+# Execution engine used when neither a flag nor engine_by_role names one. One of: "native", "cao", "claude-only".
+# engine = "native"
+
+# Run-policy used when the scenario of a task names none. String.
+# default_profile = "solo"
+
+# Debug mode of conductor runs: a run reports DEBUG_MODE at its start with the observer protocol (packages/orch/dev-skills/orch-debug) and keeps a journal, a metrics table and findings in <run>/debug/. The roles and their prompts do not change. Set it per machine, per project, or with --debug/--no-debug for one run. Boolean.
+# debug = false
+
+# Id of the plugin of the extension point orch:work-source that supplies the work. String.
+# work_source = "planner-orch"
+
+[orch.engine_by_role]
+# Execution engine by role id; a role that is not listed uses the engine key.
+# Engine of the role. One of: "native", "cao", "claude-only".
+# example = "native"
+
+[orch.capabilities]
+# What preparation does with a capability record that is past its freshness date: warn and go on, or refuse. One of: "warn", "refuse".
+# stale = "warn"
+
+[orch.profiles]
+# Extra folders with run-policy packs (one folder per policy id): absolute paths or paths starting with ~. Machine-wide: a project file cannot set it, because it makes orch read files from the listed paths. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# dirs = []
+
+[orch.events]
+# Whether orch emits the orch.run.* events. Boolean.
+# enabled = true
+
+[orch.launch]
+# A launch catalog file used instead of the one shipped with orch (an absolute path or one starting with ~; it must be a complete, valid catalog). Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Empty: the shipped catalog. String.
+# Allowed in layers: defaults, machine, invocation, flags.
+# catalog = ""
+
+# How far the roles that write (executor, bounded-implementer, registrar) may reach on a provider CLI that has a sandbox of its own (Codex): open (default) gives it its widest mode, so the role can use Docker and anything else the user can; confined keeps it inside the workspace (Codex workspace-write). Roles that must not write stay read-only in both. Project and environment layers can only tighten this (confined); project resets and environment overrides cannot loosen the trusted access floor. The machine, invocation and flags may reopen access explicitly. One of: "open", "confined".
+# access = "open"
+
+[orch.launch.entries]
+# Changes to single entries of the catalog, by ROLE_PROVIDER (role id, an underscore, provider id: executor_codex, bounded-implementer_claude-code): only the fields that differ, the rest stays as the catalog has it. The entry must exist in the catalog. model_class, effort and timeout_s may be set per machine or per project; argv, transport and model_set choose how the CLI starts and is read, so only the machine, the invocation file and flags may set them.
+# [orch.launch.entries.example]
+
+# Model class the role runs on by default. One of: "economy", "implementation", "frontier".
+# model_class = <string>
+
+# Effort the role runs with by default. One of: "low", "medium", "high", "xhigh".
+# effort = <string>
+
+# Ceiling on a text role in seconds (the catalog timeout). Integer >= 1.
+# timeout_s = <integer>
+
+# How the output of the CLI is read. Machine-wide. One of: "text", "jsonl", "acp".
+# Allowed in layers: defaults, machine, invocation, flags.
+# transport = <string>
+
+# Whether the CLI takes a model ({model} in argv). Machine-wide. One of: "supported", "unknown".
+# Allowed in layers: defaults, machine, invocation, flags.
+# model_set = <string>
+
+# Command line of the role on this provider, replacing the catalog's ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands and the sandbox the role runs under. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# argv = <array>
+
+[orch.isolation]
+
+[orch.isolation.codex]
+# How auth.json of the original CODEX_HOME (else ~/.codex) gets into it: link (default) is a symbolic link, so a refreshed token is written to the original; copy is a copy, only for a machine whose codex refuses the link (a copy rotates the refresh token and can log the interactive codex out). Machine-wide: a project file cannot set it. One of: "link", "copy".
+# Allowed in layers: defaults, machine, invocation, flags.
+# auth = "link"
+
+[orch.conductor]
+# Provider of every role whose stage names none. String.
+# provider = "claude-code"
+
+# Reviewer selector PROVIDER/MODEL[/CONTEXT][/EFFORT]. String.
+# reviewer = "grok/grok-4.7/high"
+
+# Actor PROVIDER/MODEL that registers outcomes in the work source. String.
+# registrar = "orch/conductor"
+
+# Rules for the executor of every run; the options of the pack, the phase and the item append theirs. Array of strings.
+# rules = []
+
+# How the executor sessions are shared inside one run of several pieces (the first run-options layer, `session.executor`): `shared` (default) resumes the session of the previous executor, `handoff` gives each piece a fresh session with the handoff of the earlier pieces, `per-item` starts a fresh one for every step. One of: "handoff", "shared", "per-item".
+# session_executor = "shared"
+
+# Untracked files already in the tree when a run starts new work (a tree shared with another session): refuse stops with WORKTREE_DIRTY; keep lets the run start, fingerprints them and never counts them as the work of a piece while their content stays the same (FOREIGN_KEPT). Tracked changes always stop the run. One of: "refuse", "keep".
+# foreign_untracked = "refuse"
+
+# What a blocked piece of work does to the run: stop it, or report it and go on. One of: "stop", "report".
+# on_blocked = "stop"
+
+# What a blocking question of the executor does: queue (the piece is blocked QUESTION and waits for orch conduct answer), deny (blocked QUESTION_DENIED, no answer expected), defaults (a question with a default is answered by it once, by policy; without one it is queued) or advisor (the advisor role gives advice; advice that needs no owner answers the question by advisor, any other is queued with the advice; needs orch.advisor.enabled). Approval and credential questions always stay open for the owner in every mode. One of: "queue", "deny", "defaults", "advisor".
+# questions = "advisor"
+
+# Command of the skills bridge, run as a process with `--select ...` when the run options give a role `skills: ["auto"]`; empty means no bridge, and `auto` then stops the piece with SKILLS_BRIDGE_UNAVAILABLE. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# skills_bridge = []
+
+# Command that regenerates the generated files of the project (generated_paths) from their sources, run in the checkout of the run before the checks of every round; a first argument with a slash and no leading one is a path of that checkout, so the run uses its own generator. Its changes belong to the piece. A non-zero exit stops the run with GENERATE_FAILED. Empty: nothing is regenerated and generated_paths keep the write protection of the provider. Machine-wide: a project file cannot set it, because it chooses the command the conductor runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generate = []
+
+# Command that verifies the generated files against their sources after generate (exit 0: fresh); a non-zero exit stops the run with GENERATE_FAILED. Empty: no verification. Resolved like generate. Machine-wide, like generate. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generate_check = []
+
+# Glob patterns of the files generate writes (for example .claude/skills/**). With generate set, a write-set path under them is not a write-protected path of the executor: the executor changes the source and the conductor regenerates the file; a regenerated file of another module is no OUTSIDE_MODULE stop. Machine-wide, like generate. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# generated_paths = []
+
+[orch.conductor.limits]
+# Fresh tokens of a piece of work past which a BUDGET_OVER beacon is printed (nothing is stopped); 0 means none. Integer >= 0.
+# tokens_max = 0
+
+# Hard limit on accounted fresh input and output tokens of a piece; TOKEN_BUDGET stops new model calls at the boundary; default 0 means no limit. Integer >= 0.
+# tokens_hard_max = 0
+
+# Hard limit on accounted fresh input and output tokens of the whole run, fixed with its source at run start; default 0 means no limit. Integer >= 0.
+# Allowed in layers: defaults, machine, project, invocation.
+# run_tokens_hard_max = 0
+
+# What a model attempt that reports no usage does while a hard token limit (tokens_hard_max or run_tokens_hard_max) is set: stop (the piece stops with TOKEN_BUDGET_UNMETERED) or charge (the attempt costs unmetered_charge_tokens). Without a hard limit it is only a BUDGET_UNMETERED beacon. One of: "stop", "charge".
+# unmetered = "stop"
+
+# Fresh input tokens charged for each model attempt that reported no usage when unmetered is charge and a hard token limit is set; counted in tokens.charged. Integer >= 0.
+# unmetered_charge_tokens = 50000
+
+# Ceiling on the whole run of one role in seconds; 0 has none for a streaming role beyond role_timeout_s (STAGE_SLOW beacons report a long run) and keeps the launch catalog timeout for a text role. When set it takes precedence over role_timeout_s. Integer >= 0.
+# stage_timeout_s = 0
+
+# A streaming role is stopped when its output has not grown for this many seconds (a hang, not a long run); 0 never stops it; default 5400. STAGE_IDLE beacons report shorter silences and what runs meanwhile. Integer >= 0.
+# stage_idle_timeout_s = 5400
+
+# Ceiling on one acceptance check in seconds; default 7200 (the longest check measured took about 4000); 0 has none: CHECK_SLOW beacons report a long check. Integer >= 0.
+# check_timeout_s = 7200
+
+# An acceptance check is stopped when its log has not grown for this many seconds (a hung test runner); 0 never stops it; default 3600. Integer >= 0.
+# check_idle_timeout_s = 3600
+
+[orch.conductor.limits.role_timeout_s]
+# Wall in seconds on the whole run of a streaming role, by role id. A role this table does not name keeps its shipped wall (context-scout 900, triager 1800, report-fixer 600, registrar 600, reviewer 1800, advisor 1800, researcher 2700; the executor and the bounded-implementer have none); 0 removes a wall. stage_timeout_s, when set, takes precedence. An exceeded wall is TIMEOUT and the retry rule of the step applies.
+# Seconds. Integer >= 0.
+# example = <integer>
+
+[orch.conductor.argv]
+# Command line of a role instead of the launch catalog entry, by role id ({model}, {effort}, {cwd} and {orch} are filled in). Machine-wide: a project file cannot set it, because it chooses the commands the conductor runs.
+# Command and arguments. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# example = []
+
+[orch.conductor.risk]
+# Changed lines past which the diff_size feature counts. Integer >= 1.
+# diff_lines = 400
+
+# Features that add the review on their own, whatever the score (REVIEW_ADDED names them); [] leaves only the threshold. Array of strings.
+# critical = ["security"]
+
+[orch.conductor.risk.weights]
+# A path of `patterns.public_cli` changed (a public command line). Integer >= 0 and <= 100.
+# public_cli = 25
+
+# A path of `patterns.schema` changed. Integer >= 0 and <= 100.
+# schema = 25
+
+# A path of `patterns.security` changed. Integer >= 0 and <= 100.
+# security = 30
+
+# A path of `patterns.shared` changed (a module others import). Integer >= 0 and <= 100.
+# shared = 15
+
+# More lines changed than `diff_lines`. Integer >= 0 and <= 100.
+# diff_size = 10
+
+# An acceptance check was red in the first executor round. Integer >= 0 and <= 100.
+# red_first = 10
+
+# The executor reported a deviation. Integer >= 0 and <= 100.
+# deviation = 10
+
+# Paths outside the write set changed. Integer >= 0 and <= 100.
+# outside_write_set = 15
+
+# The executor recommended a review (`review_recommendation.recommended`). Integer >= 0 and <= 100.
+# executor_recommended = 30
+
+[orch.conductor.risk.patterns]
+# Patterns of the public_cli feature. Array of strings.
+# public_cli = ["bin/**", "**/cli.py", "packages/*/scripts/*.py"]
+
+# Patterns of the schema feature. Array of strings.
+# schema = ["**/schemas/**", "**/migrations/**"]
+
+# Patterns of the security feature. Array of strings.
+# security = ["**/auth/**", "**/security/**", "**/permissions*", "**/*secret*", "**/sandbox*", "**/ro-run*", "**/launch-catalog.json", "**/roles/*.json", "**/run-policies/**", "**/hooks/**", ".github/workflows/**", "**/install.sh"]
+
+# Patterns of the shared feature. Array of strings.
+# shared = ["packages/aicore/**"]
+
+[orch.research]
+# When a piece of work gets a research stage: required (every piece), conditional (a piece whose research need is required) or off (never). One of: "required", "conditional", "off".
+# policy = "conditional"
+
+[orch.research.sources]
+# Research sources by id. An argv chooses the process orch starts, so only the machine, the invocation file and flags may set it; a project file may name roots and limits.
+# [orch.research.sources.example]
+
+# Adapter: command (argv, the query on stdin, JSON on stdout), filesystem (a search over roots) or mcp-stdio (an MCP server over stdio, the query goes to its tool). One of: "command", "filesystem", "mcp-stdio".
+# kind = <string>
+
+# Command and arguments of a command or mcp-stdio source (required by both kinds on the merged layers: SOURCE_INVALID otherwise); a leading ~ is expanded. Machine-wide: a project file cannot set it, because it chooses the commands orch runs. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# argv = <array>
+
+# mcp-stdio: name of the tool that receives the query. String.
+# tool = "search"
+
+# filesystem: folders searched, absolute, starting with ~, or relative to the project (required by this kind on the merged layers: SOURCE_INVALID otherwise). Array of strings.
+# roots = <array>
+
+# What the source can do. Array of strings.
+# capabilities = <array>
+
+# Ceiling on one query in seconds. Integer >= 1.
+# timeout_s = 600
+
+# Queries of this source that run at once in one orch process. Integer >= 1.
+# concurrency = 1
+
+# Place on the ladder of sources: lower first, ties by id. Integer.
+# order = 100
+
+[orch.advisor]
+# Whether the conductor asks the advisor at all. Off: every trigger behaves as before. The human_gate still holds security, destructive, public-api and scope-expansion advice for the owner. Boolean.
+# enabled = true
+
+# Advice rounds per piece of work, all triggers together; past it the problem is handled as without the advisor. Integer >= 0.
+# max_rounds = 2
+
+# Advice categories held for the owner. Only the machine or caller may set this base gate; projects add categories through human_gate_extra. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# human_gate = ["security", "destructive", "public-api", "scope-expansion"]
+
+# Additional advice categories held for the owner. Values from every layer accumulate; an empty array or _unset cannot remove earlier categories. Array of strings.
+# human_gate_extra = []
+
+# Minimum confidence for automatic advice. The strictest value across all layers wins (high > medium > low); lower values and _unset cannot weaken it. One of: "high", "medium", "low".
+# min_confidence = "medium"
+
+# Routes of an advisor panel (2 or 3; fewer is off, members past the third are ignored), each PROVIDER[/MODEL_CLASS[/EFFORT]]. When a trigger of panel_on fires, each member advises independently, without seeing the others: agreement is applied, a majority gets one round of critique by a member of the minority, a split goes to the owner. At most len(panel)+1 calls per problem, each admitted by the token budget; the result is read by the same gates as one advice (human_gate, min_confidence, code categories). A member that cannot start (codex has no advisor launch entry) is skipped with ADVISOR_PANEL_FAILED; fewer than two answers is the single advisor. Array of strings.
+# panel = []
+
+# When the panel advises: low_confidence (the single advice of a problem has low confidence) or always (every problem goes to the panel first). Array of strings.
+# panel_on = ["low_confidence"]
+
+[orch.stubs]
+# Whether the role prompts get the stubs at all. Boolean.
+# Allowed in layers: defaults, machine, invocation, flags.
+# enabled = true
+
+# Layers read: a machine that runs repositories it does not trust leaves `project` out, so their stubs never reach a model. Array of strings.
+# Allowed in layers: defaults, machine, invocation, flags.
+# layers = ["machine", "project"]
+
+[orch.supervisor]
+# What the supervisor does about a run in trouble: notify (only say so), stop-only (also stop a hung conductor and reap the role processes of a dead one) or resume (also resume a dead run, within the breaker). The effective value is the lowest of the machine value and the invocation values (notify < stop-only < resume). One of: "notify", "stop-only", "resume".
+# Allowed in layers: defaults, machine, invocation, flags.
+# recover = "notify"
+
+# Seconds between two passes of `orch conduct supervise` without --once. Integer >= 1.
+# interval_s = 60
+
+# Age of the heartbeat from which a conductor that waits for nothing counts as hung (a wait with a deadline that has not passed is never hung). Integer >= 1.
+# hung_after_s = 300
+
+# Seconds a hung conductor gets to free its run lease after SIGINT, and again after SIGTERM, before SIGKILL. Integer >= 1.
+# grace_s = 60
+
+# Resumes the supervisor may start for one run within window_s; past it the supervisor gives the run up until the owner resumes it by hand. An invocation can only lower it. Integer >= 0.
+# Allowed in layers: defaults, machine, invocation, flags.
+# max_recoveries = 2
+
+# Length of the window of the breaker in seconds. Integer >= 1.
+# Allowed in layers: defaults, machine, invocation, flags.
+# window_s = 3600
+
+# Also call `notify-send` for a notification, a stop and a given-up run (errors are ignored). Boolean.
+# notify_send = false
+
+[orch.autopilot]
+# Whether this machine lets the autopilot run at all. Only the machine layer sets it; a project file that sets it is refused and the autopilot stops with AUTOPILOT_NOT_ALLOWED. Boolean.
+# Allowed in layers: defaults, machine.
+# allowed = false
+
+# Whether the autopilot is enabled for this project (set by the project, or by the machine for every project). Boolean.
+# enabled = false
+
+# Start a lane only when the work source says the phase of the lane is ready (op readiness). On when the machine or any other layer turns it on: a project can only switch it on. Boolean.
+# require_readiness = true
+
+# Conductor runs (new lanes and continues) one autopilot session may start; then AUTOPILOT_MAX_RUNS. Integer >= 1.
+# max_runs = 20
+
+# Wall-clock seconds of one autopilot session; the deadline is kept in autopilot.json and a restart does not move it (AUTOPILOT_MAX_WALL). Integer >= 1.
+# max_wall_s = 43200
+
+# Runs in a row that close no piece before AUTOPILOT_NO_PROGRESS. Integer >= 1.
+# max_no_progress_runs = 2
+
+# Questions answered by the advisor or panel (QUESTION_ADVISED lines) one session may accept before AUTOPILOT_DECISIONS_EXCEEDED. Integer >= 0.
+# max_auto_decisions = 10
+
+# Longest wait for a provider quota reset before the stopped run is resumed; a later reset is AUTOPILOT_QUOTA. Integer >= 0.
+# quota_wait_max_s = 21600
+
+# Seconds between two looks at the current run, the request file and the deadline. Integer >= 1.
+# poll_s = 30
+
+# Resumes the autopilot may start for one run after a crash, a hang or a one-time failure; then AUTOPILOT_RECOVERY_EXHAUSTED. Integer >= 0.
+# max_recoveries = 1

@@ -1,0 +1,111 @@
+{
+  "changed_paths": [
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/README.md",
+    "packages/aicore/config.example.toml",
+    "packages/aicore/lib/aicore/config/cli.py",
+    "packages/aicore/lib/aicore/config/example.py",
+    "packages/aicore/lib/aicore/state/__init__.py",
+    "packages/aicore/lib/aicore/state/locations.py",
+    "packages/aicore/lib/aicore/state/migrate.py",
+    "packages/aicore/lib/aicore/stubs.py",
+    "packages/aicore/schemas/workspace/v1/resolution-vectors.json",
+    "packages/aicore/tests/config/test_example.py",
+    "packages/aicore/tests/config/test_maps.py",
+    "packages/aicore/tests/state/test_locations.py",
+    "packages/aicore/tests/state/test_migrate.py",
+    "packages/aicore/tests/test_workspace.py",
+    "packages/analyst/README.md",
+    "packages/analyst/config.example.toml",
+    "packages/analyst/tests/test_cli.py",
+    "packages/analyst/tests/test_orch_report.py",
+    "packages/analyst/tests/test_proposals.py",
+    "packages/analyst/tests/test_provider_readers.py",
+    "packages/analyst/tests/test_scan.py",
+    "packages/analyst/tests/test_state_location.py",
+    "packages/brain/config.example.toml",
+    "packages/gui/config.example.toml",
+    "packages/harness/config.example.toml",
+    "packages/harness/configs/claude-code/hooks/auto-approve/lib/safedirs.py",
+    "packages/harness/configs/claude-code/hooks/memory/lib/common.sh",
+    "packages/harness/docs/index.md",
+    "packages/harness/tests/test_memory_registry_ladder.py",
+    "packages/harness/tests/test_safedirs.py",
+    "packages/harness/tests/test_safedirs_cli.py",
+    "packages/harness/tests/test_safedirs_parity.py",
+    "packages/maind/config.example.toml",
+    "packages/maind/docs/guide/config.md",
+    "packages/maind/install.sh",
+    "packages/maind/tests/test_install.py",
+    "packages/maind/tests/test_onboard.py",
+    "packages/maind/tests/test_unit.py",
+    "packages/orch/config.example.toml",
+    "packages/orch/lib/orch/cli.py",
+    "packages/orch/tests/test_conductor_contracts.py",
+    "packages/planner/config.example.toml",
+    "packages/planner/docs/configuration.md",
+    "packages/planner/lib/planner/plan/workspace.py",
+    "packages/skiller/config.example.toml",
+    "packages/skiller/install.sh",
+    "packages/workspace/README.md",
+    "packages/workspace/config.example.toml",
+    "packages/workspace/tests/test_workspaces.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "an accidental commit would include unrelated lock/skills files",
+      "kind": "note",
+      "next": "exclude these paths from the piece's commit",
+      "text": "Working-tree changes to docs/package-lock.json, packages/maind/package-lock.json, packages/skiller/package-lock.json, packages/skiller/skills.json, packages/gui/frontend/package-lock.json, packages/gui/requirements.lock and packages/gui/desktop/src-tauri/Cargo.lock appear in git status. I did not touch them and they are not part of this piece; some are masked by the sandbox as character devices. The coordinator should leave them out of the commit."
+    },
+    {
+      "class": "docs",
+      "evidence": [
+        "packages/orch/docs/flows.md:276",
+        "packages/orch/docs/conductor.md:543",
+        "packages/orch/dev-skills/orch-debug/SKILL.md:32",
+        "packages/orch/configs/config.schema.json:558"
+      ],
+      "impact": "a few doc lines show the pre-machine-home path; behaviour is unaffected because the old folder is still read",
+      "kind": "deviation",
+      "outcome": "follow_up",
+      "severity": "low",
+      "text": "Docs that still name the old ~/.config/swissknifeman default were left alone: packages/orch/docs/flows.md, packages/orch/docs/conductor.md, packages/orch/dev-skills/orch-debug/SKILL.md, the stubs description in packages/orch/configs/config.schema.json (a schema, so not edited here), and gui schema examples and goldens."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/analyst/README.md:68",
+        "packages/planner/docs/configuration.md:12"
+      ],
+      "impact": "the commit takes these two doc files",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "I wrote to packages/analyst/README.md and packages/planner/docs/configuration.md: both inside packages/** but not named in the earlier changed-path list."
+    },
+    {
+      "impact": "V1 may still be red for those two reasons, not because of this piece",
+      "kind": "note",
+      "next": "owner cleanup of the two ideas/ files and an authorized harness instructions repair",
+      "text": "V1 was not run by me (the coordinator runs it). The earlier lessons say V1 failed at public-hygiene.py (two ideas/ files) and at golden.py check (INSTRUCTION_MANAGED_DRIFT on packages/planner/CLAUDE.md), both identical on a clean HEAD and outside this piece."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "packages/aicore/lib/aicore/state/locations.py default and legacy ladder",
+      "packages/aicore/lib/aicore/state/migrate.py conflict handling",
+      "shell ladder parity in harness common.sh, safedirs.py and the two install.sh files"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "shared_module_changed",
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Checked the earlier attempt against the input: machine_locations defaults to ~/.local/share/swissknifeman/{config,state,cache,workspaces}, SKM_HOME still moves it, the old XDG folders are read while the new folder of that kind does not exist, `aicore config migrate-home` moves them (new aicore.state.migrate), and the harness memory hook, safedirs.py, maind and skiller install.sh follow the same ladder. Tests, docs and the aicore changelog were already in the working tree. This round I fixed stale default paths in two docs (analyst README, planner configuration doc). The tests of everything touched pass."
+}

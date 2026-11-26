@@ -1,0 +1,16 @@
+exit: 0
+--- stdout ---
+Available presets (configs/claude-code/):
+  agent-teams
+  base
+  docker
+  global
+  laravel
+  node
+  observer
+  php-package
+  product-boundary
+  python
+  yolo
+--- stderr ---
+

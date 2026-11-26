@@ -1,0 +1,9 @@
+{
+  "name": "blender",
+  "version": "0.4.2",
+  "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
+  "skills": [
+    "./mcp-blender",
+    "./version-gotchas"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "contract_version": "exec/v1",
+  "input_id": "adhoc@19cf096ae704",
+  "digest": "19cf096ae704855fa9d8c7962d0ec8fdc22c788577bb38095181cc89e4f1896d",
+  "provenance": {
+    "kind": "review",
+    "base": "main",
+    "head": "feature/x",
+    "target": "diff main..feature/x"
+  },
+  "goal": "Independent read-only review of diff main..feature/x",
+  "scope": {
+    "include": [
+      "diff main..feature/x"
+    ],
+    "exclude": [],
+    "read_only": true
+  },
+  "acceptance": {
+    "checks": [
+      {
+        "id": "V1",
+        "procedure": "Every finding has severity, file:line, failure scenario",
+        "expect": "observed",
+        "kind": "acceptance"
+      }
+    ]
+  },
+  "route": {
+    "minimum": {
+      "class": "implementation",
+      "effort": "high"
+    }
+  },
+  "result_contract": {
+    "report": [
+      "summary",
+      "open_issues"
+    ],
+    "write_authority": "code_scope",
+    "commit_owner": "coordinator",
+    "plan_mutation": "forbidden"
+  }
+}

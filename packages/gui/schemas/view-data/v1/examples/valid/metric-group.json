@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "metric-group",
+  "metrics": [
+    {
+      "id": "done",
+      "label": "Items done",
+      "value": 4,
+      "status": "ok"
+    },
+    {
+      "id": "blocked",
+      "label": "Blocked",
+      "value": 1,
+      "unit": "items",
+      "status": "warn",
+      "link": {
+        "route": "gui-planner.plans"
+      }
+    }
+  ]
+}

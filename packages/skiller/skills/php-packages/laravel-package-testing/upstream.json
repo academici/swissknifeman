@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "WendellAdriel/laravel-expressive",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md",
+      "sha256": "579ce5a19bac81d0353ddef542084dc4c5eb1191e3efa4a1a27e2d7ae434f794",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "Imported from WendellAdriel/laravel-expressive .agents/skills/package-testing; bucket frontmatter added (name package-testing -> laravel-package-testing). Do not auto-replace. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "a332fe240a5322fc46cfbafe4efa03a746a357b9bb99158b96bd82b90052a5bc"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "provider-errors/v1",
+  "rules": [
+    {
+      "provider": "a",
+      "class": "authentication",
+      "code": "P1",
+      "match": {
+        "text_contains_any": [
+          "a"
+        ]
+      }
+    }
+  ],
+  "not-a-field": 1
+}

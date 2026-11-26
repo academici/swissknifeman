@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md",
+      "sha256": "7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/hitl-loop.template.sh",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh",
+      "sha256": "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "From mattpocock/skills engineering/diagnosing-bugs. Body saved (English, faithful-first); added RU description-router, link scripts/ -> snippets/, /improve-codebase-architecture -> architect/codebase-design, embedded-HITL item (POS/libfptr10), section «Related skills». strategy=notify — upstream is reported, the local copy is not erased. 2026-09-14: Local adaptation (not a faithful upstream mirror). Reauthored a bounded diagnostic method; permit static proof and available verification without a live reproducer, scope hypotheses and instrumentation by evidence, preserve retry/isolation limits. HITL script is unchanged. Original upstream hashes remain historical fetched-source provenance.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "4cea464274844c7be12f4934311976422088e94c343c7e1b0a62cb56433028b9"
+  },
+  "local_adaptation": {
+    "at": "2026-09-14",
+    "reason": "skills audit",
+    "strategy_note": "notify preserves reviewed local adaptations; upstream changes remain reported, not auto-applied."
+  }
+}

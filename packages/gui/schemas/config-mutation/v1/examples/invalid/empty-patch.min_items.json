@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-mutation:v1",
+  "kind": "preview_request",
+  "module": "planner",
+  "layer": "project",
+  "expected_revision": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "patch": []
+}

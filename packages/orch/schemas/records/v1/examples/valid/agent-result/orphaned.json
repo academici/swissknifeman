@@ -1,0 +1,4 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "error": {"code": "ORPHANED", "message": "the conductor died; the role was stopped on resume"}
+}

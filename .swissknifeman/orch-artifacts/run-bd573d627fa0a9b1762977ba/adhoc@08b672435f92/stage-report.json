@@ -1,0 +1,36 @@
+{
+  "changed_paths": [
+    "packages/gui/frontend/src/views/SchemaFormView.test.tsx",
+    "packages/gui/frontend/src/views/SchemaFormView.tsx"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "the regression and updated tests are unverified; V1 may be red for a real test failure I cannot see",
+      "kind": "blocker",
+      "next": "run npx vitest run src/views/SchemaFormView.test.tsx outside the sandbox restriction (or allow reading node_modules .min.js) and send me the failure output",
+      "text": "vitest fails to start: the sandbox denies reading node_modules/**/*.min.js (EACCES on @asamuzakjp/css-color/node_modules/lru-cache/dist/esm/node/index.min.js); reproduced twice. The tests cannot be run here, so the red V1 cannot be diagnosed from my side."
+    },
+    {
+      "class": "other",
+      "impact": "edits typed while a save runs are lost on success",
+      "kind": "difficulty",
+      "outcome": "follow_up",
+      "text": "deviation: Minor not done: Form is keyed by data.revision, so the refetch after a save remounts it and drops local edits; keeping unsent edits needs a restructure."
+    },
+    {
+      "impact": "if the backend replaces roots, nested patches would drop sibling keys",
+      "kind": "assumption",
+      "next": "confirm in bridges/gui-planner item-set handler",
+      "text": "Assumes the item-set backend applies the patch as RFC 7386 (null deletes); not checked."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "CHECKS_RED: acceptance checks V1 stay red after 1 correction(s): past the target of 1 for check_fixes the last correction made no progress"
+    }
+  ],
+  "summary": "No new change this round. The candidate is as before: buildPatch builds a minimal RFC 7386 merge patch (null for removed values/keys; Reapply carries only edited keys), tests updated and regression tests added. vitest cannot start in this sandbox (EACCES on node_modules/**/*.min.js), so the tests are unrun and I cannot confirm V1 is green. The Minor (keep unsent edits after a save) is not done.",
+  "status": "blocked"
+}

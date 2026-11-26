@@ -1,0 +1,11 @@
+{
+  "skill": "plan-protocol",
+  "should_trigger": [
+    "execute item P3.5 of the master plan",
+    "start a new executable plan for the resident-diet initiative in plans/"
+  ],
+  "should_not": [
+    "quickly fix a typo in one file",
+    "write a one-off script with no multi-session plan"
+  ]
+}

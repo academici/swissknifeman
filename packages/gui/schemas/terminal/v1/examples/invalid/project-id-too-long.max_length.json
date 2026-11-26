@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:gui:terminal:v1",
+  "kind": "session_request",
+  "project_id": "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+  "cols": 80,
+  "rows": 24
+}

@@ -1,0 +1,4 @@
+{
+  "id": "demo",
+  "provides": {"config": "configs/config.schema.json"}
+}

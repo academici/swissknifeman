@@ -1,0 +1,19 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "gui-sample",
+  "title": "Sample bridge contributing GUI views",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [
+    {"unit": "aicore", "range": "^0.1", "description": "Extension protocol."}
+  ],
+  "provides": {
+    "cli": ["bin/gui-sample"],
+    "gui": "gui.json"
+  },
+  "dev": {
+    "test": ["bash", "scripts/test.sh"]
+  }
+}

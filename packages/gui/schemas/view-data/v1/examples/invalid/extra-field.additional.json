@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "markdown",
+  "text": "x",
+  "html": "<b>x</b>"
+}

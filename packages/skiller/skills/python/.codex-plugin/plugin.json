@@ -1,0 +1,9 @@
+{
+  "name": "python",
+  "version": "0.4.1",
+  "description": "Python: ML project structure, virtualenv and dependency management",
+  "skills": [
+    "./ml-project-structure",
+    "./venv-dependencies"
+  ]
+}

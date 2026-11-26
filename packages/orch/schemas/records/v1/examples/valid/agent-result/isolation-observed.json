@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": 0,
+  "decisions": [],
+  "duration_s": 93.4,
+  "stream": ".swissknifeman/state/orch/conductor/cnd-20261025T100000Z-a1b2c3/W1/streams/review.1.jsonl",
+  "lingered": false,
+  "isolation": {
+    "observed": {
+      "tools": ["grep", "read_file", "run_terminal_command"],
+      "mcp_servers": ["kb-server"],
+      "skills": [],
+      "plugins": [],
+      "slash_commands": []
+    }
+  }
+}

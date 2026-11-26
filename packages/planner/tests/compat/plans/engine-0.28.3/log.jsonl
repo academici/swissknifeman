@@ -1,0 +1,7 @@
+{"v":1,"ts":"2026-10-05T09:00:00Z","type":"plan_created","actor":{"provider":"claude-code","model":"claude-opus-5-5","effort":"high"},"summary":"plan PLAN3 created"}
+{"v":1,"ts":"2026-10-05T10:05:00Z","type":"start","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"start P1.1 (batch B1)","item":"P1.1","phase":"P1"}
+{"v":1,"ts":"2026-10-05T10:40:00Z","type":"finish","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"P1.1 done","item":"P1.1","phase":"P1"}
+{"v":1,"ts":"2026-10-05T11:20:00Z","type":"blocker","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"format undecided","item":"P1.2"}
+{"v":1,"ts":"2026-10-05T12:00:00Z","type":"phase_closed","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"P1 closed (blocked)","phase":"P1"}
+{"v":1,"ts":"2026-10-06T08:00:00Z","type":"start","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"start P2.1","item":"P2.1","phase":"P2"}
+{"v":1,"ts":"2026-10-06T08:30:00Z","type":"difficulty","actor":{"provider":"codex","model":"gpt-6-sol","effort":"high"},"summary":"template cache is slow | needs care","item":"P2.1","next":"cache the parsed template"}

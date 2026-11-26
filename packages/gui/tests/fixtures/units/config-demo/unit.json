@@ -1,0 +1,5 @@
+{
+  "id": "config-demo",
+  "title": "Configuration fixture of the GUI config editor",
+  "provides": {"config": "configs/config.schema.json"}
+}

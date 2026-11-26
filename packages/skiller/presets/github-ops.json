@@ -1,0 +1,13 @@
+{
+  "name": "github-ops",
+  "description": "GitHub-operations in one set: stream Issue→PR→Merge→Release, gh-driven review, triage issue, release engineering, OSS-governance, CI/CD-gate and role maintainer",
+  "include": [
+    "roles/open-source-maintainer",
+    "oss-dev/github-flow",
+    "oss-dev/gh-review",
+    "oss-dev/issue-triage",
+    "oss-dev/release-engineering",
+    "oss-dev/oss-governance",
+    "devops/ci-cd"
+  ]
+}

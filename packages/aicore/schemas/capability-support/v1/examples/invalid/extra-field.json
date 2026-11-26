@@ -1,0 +1,8 @@
+{
+  "capability": "agent.subagents",
+  "provider": "claude-code",
+  "dimension": "feature",
+  "level": "native",
+  "source": "declared",
+  "note": "x"
+}

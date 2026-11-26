@@ -1,0 +1,36 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "description": "GUI observability through the orch CLI: runs and live owners, orphaned recovery, items, used routes and availability now, prompt metadata without text, budgets, provider gates, observer reports, questions and sandbox; argv run, resume, release and confirmed gates-clear commands.",
+  "entrypoint": [
+    "adapter.py"
+  ],
+  "example_input": {
+    "context": {},
+    "id": "gui-orch.runs",
+    "params": {}
+  },
+  "id": "gui-orch",
+  "kind": "command",
+  "permissions": {
+    "env": [
+      "SKM_UMBRELLA"
+    ],
+    "filesystem": [
+      "project"
+    ],
+    "network": false,
+    "shell": true
+  },
+  "protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "provides": {
+    "points": [
+      "gui:query",
+      "gui:command"
+    ]
+  },
+  "timeout_seconds": 60,
+  "version": "0.1.0"
+}

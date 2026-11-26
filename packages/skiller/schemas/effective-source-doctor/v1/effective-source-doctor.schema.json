@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:skiller:effective-source-doctor:v1",
+  "title": "effective-source-doctor",
+  "description": "Effective-source doctor document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Format identifier.",
+      "const": "effective-source-doctor/v1"
+    },
+    "overall": {
+      "description": "ok when every diagnostic is ok or n/a; degraded otherwise.",
+      "enum": [
+        "ok",
+        "degraded"
+      ]
+    },
+    "diagnostics": {
+      "description": "One row per question the doctor answers.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "One diagnostic.",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Diagnostic id.",
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "description": "Contract or phase that owns the question.",
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "description": "Where the evidence was read.",
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "description": "ok, degraded, unknown (not measured), or n/a (not a measurement).",
+            "enum": [
+              "ok",
+              "degraded",
+              "unknown",
+              "n/a"
+            ]
+          },
+          "evidence": {
+            "type": "object",
+            "description": "Facts the diagnostic cites. Keys are identifiers; values stay as produced.",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "patternProperties": {
+              "^[a-z][a-z0-9_]*$": {
+                "description": "One cited fact."
+              }
+            }
+          },
+          "quality": {
+            "type": "object",
+            "description": "How complete the evidence is.",
+            "additionalProperties": false,
+            "properties": {
+              "completeness": {
+                "description": "1 when the evidence is whole, 0 when the instrument did not run.",
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "note": {
+                "description": "What the completeness means.",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "completeness",
+              "note"
+            ]
+          },
+          "next_command": {
+            "description": "Command a person can run next, or null when there is none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "source",
+          "status",
+          "evidence",
+          "quality",
+          "next_command"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "overall",
+    "diagnostics"
+  ]
+}

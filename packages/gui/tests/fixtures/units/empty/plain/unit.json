@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "plain",
+  "title": "Fixture unit plain",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [
+    {
+      "unit": "aicore",
+      "range": "^0.1"
+    }
+  ],
+  "provides": {}
+}

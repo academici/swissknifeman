@@ -1,0 +1,14 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "also": [
+    "SLIM"
+  ],
+  "exclusive_group": "php-architecture",
+  "triggers": {
+    "paths": [
+      "*.php"
+    ]
+  }
+}

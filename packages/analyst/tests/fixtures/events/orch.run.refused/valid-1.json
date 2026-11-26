@@ -1,0 +1,16 @@
+{
+  "specversion": "1.0",
+  "id": "b1000000000000000000000000000005",
+  "source": "urn:swissknifeman:module:orch",
+  "type": "orch.run.refused",
+  "time": "2026-10-09T09:15:30.250Z",
+  "subject": "sub-2",
+  "datacontenttype": "application/json",
+  "data": {
+    "submission_id": "sub-2",
+    "step": "claim",
+    "reason_codes": [
+      "ROUTE_UNDERSHOOT"
+    ]
+  }
+}

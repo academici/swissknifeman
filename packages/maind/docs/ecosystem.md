@@ -1,0 +1,175 @@
+# maind in the ecosystem
+
+maind is the memory, project graph and onboarding module of Swiss Knife Man. The canonical product
+philosophy is [docs/philosophy.md](../../../docs/philosophy.md). Orchestration of plan items belongs to
+`orch`, not to maind. Each module stays self-sufficient and works alone; neighbours meet through optional
+paths in config and through bridges. Remove the path and the packages are autonomous again.
+
+## Roles
+
+| Package | Layer | What it does |
+|:--|:--|:--|
+| **maind** | memory and graph | shared memory, the project graph, and onboarding |
+| **brain** | knowledge | vault sync: the Obsidian vault and project documents |
+| **orch** | orchestration | the deterministic conductor that runs plan items |
+
+maind gives a project *shared memory and the project graph*, brain gives *knowledge*, and orch *runs the work*.
+They complement each other and each is valuable on its own.
+
+```mermaid
+graph TB
+  subgraph skm["swissknifeman — capabilities layer"]
+    SK["skills (registry)"]
+    HK["hooks: auto-approve, memory"]
+  end
+  subgraph br["brain — knowledge layer/docks"]
+    VA["Obsidian vault"]
+    DW["docs-watcher daemon"]
+  end
+  subgraph md["maind — memory, graph, onboarding"]
+    MEM["agent-memory daemon"]
+    GR["connection graph"]
+    CC["provision · onboard · sync"]
+  end
+  proj["project"]
+  skm -. "skills + hooks" .-> proj
+  md -. "memory + graph" .-> proj
+  br -. "docs-sync" .-> proj
+  md -. "onboarding" .-> skm
+  md -. "onboarding" .-> br
+```
+
+## Principle: connected, but work separately
+
+Integration - **opt-in via the path in the config**, with mild degradation:
+
+- **maind** without the memory daemon - the graph and project registry still work.
+- **brain** without maind — takes projects from his discovery by control-files.
+- **swissknifeman** is always autonomous - it has its own register of connected projects.
+
+```mermaid
+flowchart LR
+  subgraph alone["everyone for themselves"]
+    A1["maind: your registry.json"]
+    A2["brain: yours discovery"]
+    A3["swissknifeman: your registry"]
+  end
+  subgraph together["are linked through paths in the config (opt-in)"]
+    T["registry.json ↔ brain maind_config_path ↔ project skills-lock"]
+  end
+  alone -. "add path" .-> together
+  together -. "remove path" .-> alone
+```
+
+## Single hub + namespace's
+
+Memory and graph - **alone for the entire ecosystem**, on the hub maind. Isolation - logical and
+namespace'am: count - federation (graph per project + index), memory - buckets
+(`project:<id>`/`ns:<name>`/`global`). Common within a group, isolated between groups. This and
+yes «common brain» without separate daemons per project.
+
+```mermaid
+graph TD
+  subgraph hub["maind hub"]
+    D["agent-memory daemon · 4111/4112"]
+    NS["memory buckets: project:&lt;id&gt; · ns:&lt;name&gt; · global"]
+    G["data/graphs/*: graph per project + _index.db (federation)"]
+  end
+  flexcrm -->|MCP, bucket project:flexcrm + ns:axioma| hub
+  brain -->|MCP, bucket project:brain| hub
+  others["… other projects"] -->|MCP| hub
+```
+
+More about topology and internal layers - [Architecture](./architecture).
+
+## Onboarding a new project
+
+The ultimate goal is one team. Creating a project → swissknifeman adds the necessary skills and hooks
+(automatically + you can select specific) → maind connects the project to the general brain (memory + graph).
+Every step **standalone-safe**: there is no neighbor - the step is skipped with a warning, onboarding moves on.
+
+```mermaid
+sequenceDiagram
+  actor Dev
+  participant maind
+  participant skm as swissknifeman
+  participant proj as project
+  participant brain
+  Dev->>maind: maind onboard PROJECT
+  maind->>maind: register in registry.json
+  maind->>skm: integrate (skills + hooks)
+  skm->>proj: .claude/skills + hooks + skills-lock.json
+  maind->>proj: deploy — agent-memory MCP (scope project:id) [+ code graph/Serena]
+  maind->>maind: derive graph (composer/doc/override/skills → project store + index)
+  opt --with-brain
+    maind->>brain: repository for docs-sync
+  end
+  maind-->>Dev: report (steps · deployed · graph)
+```
+
+## Partner modules and degradation
+
+maind imports only itself and `aicore`. Other modules are reached through their public commands with JSON output, found by
+`aicore.util.partners`: `SKM_<NAME>_BIN`, then `SKM_<NAME>_ROOT/bin/<name>`, then `<name>` on `PATH` (the old
+`MAIND_HARNESS_BIN`, `MAIND_SKM_BIN`, `MAIND_BRAIN_BIN`, `MAIND_ANALYST_BIN` and `MAIND_BIN` are read with one deprecation
+warning). A missing partner is `PARTNER_UNAVAILABLE: <partner> not found (set SKM_<P>_ROOT or put <partner> on PATH)` on
+stderr and the step is skipped.
+
+| Partner | What maind asks | Without the partner |
+|:--|:--|:--|
+| `harness` | `mcp catalog`, `profiles resolve`, `hooks codex-lifecycle fragment\|validate`, `instructions scopes\|plan\|check\|apply`, `hooks show`, `hooks --memory` (all `--json`) | provider steps of deploy, sync and workspace are skipped; hub servers still deploy |
+| `analyst` | `runs show\|codegraph --json` (contracts `run-lookup/v1`, `run-codegraph/v1`) | `maind analyze` marks the source `run-report` unavailable (confidence low) |
+| `skiller` | `profiles --json` and the capability commands of `maind run` | the step is skipped |
+| `brain` | `vault --json` (vault location), used when `integrations.brain.path` and the `brain` project `vault_path` are not set | no vault path (a warning) |
+
+The pure MCP projection (`McpServer`, `plan_mcp_projection`, `render_mcp_projection`) is `aicore.provider.mcp`; harness
+only supplies the catalog. Run the module tests with partners wired using `bash scripts/test-integration.sh` from the hub.
+
+## Config and data flow
+
+maind — **reader everyone** key files and **writer** only `registry.json` (`<state>/maind/registry.json`), MCP-configs
+project and **own** `.claude/settings.local.json` (hub trust in ecosystem projects,
+see [Workspace](./guide/workspace)). Project skills described `skills-lock.json` (composes
+swissknifeman + Laravel Boost, swissknifeman wins). brain holds his `<vault>/.projects.json`
+for docs-watcher.
+
+```mermaid
+flowchart LR
+  MJ["registry.json — project registry (writes maind)"]
+  PJ["&lt;vault&gt;/.projects.json — docs-watcher (brain)"]
+  SL["skills-lock.json — skill map (skiller lock)"]
+  BJ["boost.json — Laravel Boost"]
+  MC[".mcp.json / .cursor/mcp.json — servers (writes maind deploy)"]
+  BJ -->|compose| SL
+  SL -->|skills_sync| MJ
+  MJ -->|import / export| PJ
+  MJ -->|deploy| MC
+```
+
+## maind as a command post - 4 layers
+
+```mermaid
+flowchart TD
+  P["1. Provision — maind deploy<br/>unroll memory+graph for projects"]
+  M["2. Monitor — maind projects status --json<br/>what is configured · that is running · modes"]
+  O["3. Orchestrate — maind run &lt;proj&gt; &lt;cap&gt;<br/>pull commands brain / swissknifeman"]
+  G["4. GUI — panel above status --json"]
+  P --> M --> O --> G
+```
+
+If layer 2 (`status`) hold **JSON-first**, then GUI (layer 4) — subtle add-on to the same
+contract, and not separate correspondence. Each layer is a separate command maind; see [CLI](./guide/cli).
+
+## Source of Truth
+
+| What | Where does he live? | Who writes |
+|:--|:--|:--|
+| Project Registry | `registry.json` in the maind state directory (legacy: `config.json` at the root of the monorepo) | maind (`projects.write_registry` — sole writer) |
+| Node settings | `[maind]` table of the layered config (`config.example.toml`) | a person (`swissknifeman config set`) |
+| Trust Claude to projects | `<maind>/.claude/settings.local.json` | maind (`workspace sync` from the registry) |
+| Shared memory | agent-memory demon (buckets `project:<id>`/`ns:<name>`/`global`) | projects are written to their `project:<id>`, cross-ref — in `ns:<group>` |
+| Connection graph | `data/graphs/<id>.db` + `_index.db` (federation) | maind `derive` from composer/Brain/override/skills |
+| Project skill map | `<project>/skills-lock.json` | `skiller lock` |
+| Project documentation | vault ↔ repo | `brain sync` (docs-watcher) |
+
+The canonical product philosophy is [docs/philosophy.md](../../../docs/philosophy.md). This page places maind in that ecosystem; it is not a second philosophy.

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(php -l *)",
+      "Bash(php -r *)",
+      "Bash(php -v)",
+      "Bash(composer install *)",
+      "Bash(composer update *)",
+      "Bash(composer require *)",
+      "Bash(composer remove *)",
+      "Bash(composer dump-autoload *)",
+      "Bash(composer run *)",
+      "Bash(composer test *)",
+      "Bash(composer validate *)",
+      "Bash(composer show *)",
+      "Bash(vendor/bin/pest *)",
+      "Bash(vendor/bin/phpunit *)",
+      "Bash(vendor/bin/pint *)",
+      "Bash(vendor/bin/phpstan *)",
+      "Bash(vendor/bin/rector *)",
+      "Bash(vendor/bin/infection *)",
+      "Bash(./vendor/bin/pest *)",
+      "Bash(./vendor/bin/phpunit *)",
+      "Bash(./vendor/bin/pint *)",
+      "Bash(./vendor/bin/phpstan *)",
+      "Bash(./vendor/bin/rector *)"
+    ]
+  }
+}

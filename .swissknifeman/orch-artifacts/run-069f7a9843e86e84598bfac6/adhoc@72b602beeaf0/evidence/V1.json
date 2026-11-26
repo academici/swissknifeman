@@ -1,0 +1,21 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "cnd-20261018T000701Z-296833:adhoc@72b602beeaf0:checks.2:V1",
+  "check_id": "V1",
+  "subject": "adhoc",
+  "candidate": {
+    "head": "35670f5e31d2d15f9f41684b3ac7a797904c9b2d",
+    "dirty_digest": "2226e214d5d4c1dfd530c77936d7d3f3e6060d84d22cb0a770012372f7a1c476"
+  },
+  "started_at": "2026-10-18T00:12:35Z",
+  "procedure": {
+    "cmd": "bash bridges/gui-workspace/scripts/test.sh",
+    "cwd": "."
+  },
+  "exit": 0,
+  "producer": {
+    "kind": "engine"
+  },
+  "finished_at": "2026-10-18T00:12:45Z"
+}

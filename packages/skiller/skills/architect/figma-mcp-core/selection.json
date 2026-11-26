@@ -1,0 +1,11 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "tool",
+  "decision": "REFERENCE",
+  "also": [
+    "TOOL_PROFILE"
+  ],
+  "requires_tools": [
+    "figma-mcp"
+  ]
+}

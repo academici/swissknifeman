@@ -1,0 +1,10 @@
+#!/bin/sh
+# Prints a tick a second for 30 seconds; SIGTERM stops it at once (the sleep runs in the background and is waited for).
+trap 'echo "stopping"; exit 0' TERM
+i=1
+while [ "$i" -le 30 ]; do
+  echo "tick $i"
+  i=$((i + 1))
+  sleep 1 &
+  wait $!
+done

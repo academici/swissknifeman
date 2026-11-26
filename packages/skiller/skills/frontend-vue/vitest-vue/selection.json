@@ -1,0 +1,9 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "reference",
+  "decision": "MERGE",
+  "also": [
+    "REFERENCE"
+  ],
+  "exclusive_group": "vitest"
+}

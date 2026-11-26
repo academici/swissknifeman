@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "registrar",
+  "title": "Registrar",
+  "description": "Classify every `open_issues` entry (pending, deviation, blocker, difficulty, assumption, note,",
+  "instructions": [
+    {
+      "path": "roles/registrar.md",
+      "purpose": "canonical role text",
+      "sha256": "9dcd06f79642710ea0ae4e5816dd454484cca43ec5fb60938a72ba661d69e0b5"
+    }
+  ],
+  "tools": {
+    "filesystem": "read",
+    "shell": "full",
+    "network": "none",
+    "plan_api": "write"
+  },
+  "write_authority": "plan",
+  "result_shape": "registration-receipt",
+  "model_class_min": "economy",
+  "forbidden_inputs": []
+}

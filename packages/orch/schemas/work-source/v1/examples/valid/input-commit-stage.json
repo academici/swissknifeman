@@ -1,0 +1,17 @@
+{
+  "op": "commit",
+  "plan": "PLAN1",
+  "ref": "P1.1",
+  "run_id": "run-a",
+  "attempt_id": "att-run-a-P1.1",
+  "paths": ["src/a.py"],
+  "role": "fix",
+  "stage": "correction.2",
+  "trailers": [
+    "Plan-Run: cnd-20261024T100000Z-a1b2c3",
+    "Plan-Attempt: att-run-a-P1.1",
+    "Plan-Stage: correction.2",
+    "Plan-Review: cnd-20261024T100000Z-a1b2c3/P1.1/review.1",
+    "Plan-Findings: fk-0123456789abcdef"
+  ]
+}

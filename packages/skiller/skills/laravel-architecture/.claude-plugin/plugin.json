@@ -1,0 +1,5 @@
+{
+  "name": "laravel-architecture",
+  "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
+  "skills": "./"
+}

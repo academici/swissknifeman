@@ -1,0 +1,27 @@
+{
+  "name": "general",
+  "version": "0.16.3",
+  "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
+  "skills": [
+    "./anti-drift",
+    "./compact-responses",
+    "./complex-task-orchestrator",
+    "./context-economy",
+    "./cross-layer-change-checklist",
+    "./git-commit-rules",
+    "./git-safety",
+    "./grill-with-docs",
+    "./implement",
+    "./mcp-advisor",
+    "./naming-conventions",
+    "./packages-stack",
+    "./project-map",
+    "./session-handoff",
+    "./shell",
+    "./skills-ssot",
+    "./spec-interview",
+    "./task-brief-template",
+    "./verify-claims",
+    "./writing-style"
+  ]
+}

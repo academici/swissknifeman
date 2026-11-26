@@ -1,0 +1,14 @@
+[
+  {
+    "expected": ["observe", "observe"],
+    "actual": ["observe"],
+    "expected_duplicates": ["observe"],
+    "actual_duplicates": []
+  },
+  {
+    "expected": ["observe"],
+    "actual": ["observe", "observe"],
+    "expected_duplicates": [],
+    "actual_duplicates": ["observe"]
+  }
+]

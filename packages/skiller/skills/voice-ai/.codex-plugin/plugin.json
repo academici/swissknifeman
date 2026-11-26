@@ -1,0 +1,8 @@
+{
+  "name": "voice-ai",
+  "version": "0.4.0",
+  "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+  "skills": [
+    "./voice-ai"
+  ]
+}

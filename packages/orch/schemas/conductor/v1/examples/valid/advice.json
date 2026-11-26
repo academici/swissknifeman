@@ -1,0 +1,15 @@
+{
+  "problem_ref": "a",
+  "options": [
+    {
+      "id": "a",
+      "text": "a",
+      "pros": [],
+      "cons": []
+    }
+  ],
+  "recommendation": "a",
+  "confidence": "low",
+  "sources": [],
+  "needs_owner": true
+}

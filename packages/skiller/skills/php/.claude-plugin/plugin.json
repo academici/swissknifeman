@@ -1,0 +1,5 @@
+{
+  "name": "php",
+  "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
+  "skills": "./"
+}

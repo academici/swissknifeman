@@ -1,0 +1,86 @@
+"""Migrate into maind from Brain projects or agent-memory configuration.
+
+from-brain builds the registry (registry.json), the node settings in the machine config and
+materializes the graph. from-agentmemory
+copies iii-config.yaml with service_name maind without modifying its source.
+"""
+import re
+from pathlib import Path
+
+from aicore.util.term import confirm, die
+from aicore.util.cli import parse_args
+from ..config import load_brain_projects, merge_defaults, write_settings
+from ..projects import write_registry
+
+
+def cmd_migrate(env, argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print("maind migrate <from-brain <.projects.json> | "
+              "from-agentmemory <dir>> [--force]")
+        return
+    sub, rest = argv[0], argv[1:]
+    if sub == "from-brain":
+        _from_brain(env, rest)
+    elif sub in ("from-agentmemory", "from-skm"):
+        _from_agentmemory(env, rest)
+    else:
+        die(f"unknown subcommand migrate: {sub} (from-brain|from-agentmemory)")
+
+
+def _from_brain(env, argv):
+    opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
+    if not pos:
+        die("specify the path to brain .projects.json: maind migrate from-brain <path>")
+    existing = env.registry_file if env.registry_file.is_file() else (
+        env.config_read_path if env.config_read_path.is_file() else None)
+    if existing is not None and not opts["force"]:
+        die(f"{existing} already exists - overwrite with --force")
+    projects = load_brain_projects(pos[0])
+    settings = {
+        "node.id": "hub", "node.name": "Academici Hub", "node.role": "primary",
+        "integrations.brain.enabled": True, "integrations.brain.projects_sync": True,
+        "integrations.brain.sync_direction": "import",
+        "integrations.brain.path": str(Path(pos[0]).expanduser()),
+    }
+    config = merge_defaults({
+        "node": {"id": "hub", "name": "Academici Hub", "role": "primary"},
+        "projects": projects,
+        "integrations": {"brain": {"enabled": True, "projects_sync": True,
+                                   "sync_direction": "import",
+                                   "path": str(Path(pos[0]).expanduser())}},
+    })
+    written = write_registry(env, config, new_file=True)
+    write_settings(env, settings)
+    # Materialize graph stores and index from sources of truth.
+    from ..derive import derive_all
+    stats = derive_all(env, config)
+    nodes = sum(s["nodes"] for s in stats)
+    print(f"imported from brain: {len(projects)} projects → "
+          f"{written.name} + graph ({nodes} nodes in {len(stats)} store)")
+
+
+def _from_agentmemory(env, argv):
+    opts, pos = parse_args(argv, {"--force": "bool"}, max_pos=1)
+    if not pos:
+        die("specify the path to .agentmemory (or iii-config.yaml): "
+            "maind migrate from-agentmemory <path>")
+    src = Path(pos[0]).expanduser()
+    if src.is_dir():
+        src = src / "iii-config.yaml"
+    if not src.is_file():
+        die(f"not found iii-config.yaml: {src}")
+    dst = env.memory_config
+    if dst.exists() and not opts["force"]:
+        if not confirm(f"{dst} already exists. Re-record?"):
+            die("canceled (use --force to overwrite)")
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    text = _set_service_name(src.read_text(encoding="utf-8"), "maind")
+    dst.write_text(text, encoding="utf-8")
+    print(f"moved iii-config: {src} → {dst} (service_name: maind). "
+          f"The source has not been changed.")
+
+
+def _set_service_name(yaml_text, name):
+    if "service_name:" in yaml_text:
+        return re.sub(r"service_name:\s*\S+", f"service_name: {name}", yaml_text)
+    return yaml_text

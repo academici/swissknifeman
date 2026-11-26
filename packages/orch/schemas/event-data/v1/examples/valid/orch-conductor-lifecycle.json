@@ -1,0 +1,10 @@
+{
+  "conductor_run_id": "cnd-20261024T100000Z-abcdef",
+  "phase": "ended",
+  "outcome": "waiting",
+  "reason_code": "WAITING_DECISION",
+  "launcher": "detached",
+  "items": [
+    "P8.3"
+  ]
+}

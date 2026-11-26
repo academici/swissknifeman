@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:harness:profile-resolution:v1",
+  "provider_id": "codex",
+  "profile": null,
+  "target_scope": "project",
+  "operation_id": null,
+  "target_identity": null,
+  "green": false,
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "HARNESS_FULL_ACCESS_EXPLICIT_REQUIRED",
+      "provider_id": "codex",
+      "profile_id": "trusted-full-access",
+      "surface_id": "",
+      "target_scope": "",
+      "path": "/profile",
+      "required": true,
+      "observed": "",
+      "message": "exact operation and target are required",
+      "next_action": "refuse"
+    }
+  ]
+}

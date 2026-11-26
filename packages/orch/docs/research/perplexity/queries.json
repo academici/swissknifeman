@@ -1,0 +1,87 @@
+[
+  {
+    "id": "Q01",
+    "title": "CAO: проверка возможностей и зрелости",
+    "query": "As of October 2026 audit awslabs/cli-agent-orchestrator (CAO) from its official GitHub source/docs. Which features actually exist on current main versus a published release: Python cao_workflow run_step/step/get_inputs, workflow durable resume/recovery, Claude Code/Codex/Grok Build native authenticated CLI support, model and reasoning-effort overrides, terminal live visibility, role permissions, skill injection? Identify important implementation limitations, security defaults, and unresolved issues. Distinguish documentation, code evidence and untested claims. Cite exact primary-source URLs. Do not assume AWS branding guarantees maturity. Answer in Russian, bounded to 1200 words."
+  },
+  {
+    "id": "Q02",
+    "title": "Архитектурное сравнение без привязки к нашему пакету",
+    "query": "I maintain a local Python monorepo containing a JSON plan manager, reusable agent skills, an environment/hook installer, and an early deterministic coding-agent runtime. I have authenticated subscription CLIs Claude Code, Codex, Grok Build. Need optional plan-bound workflows: deterministic context gathering -> optional strong-model design -> implementation -> command verification -> optional independent review -> deterministic bookkeeping, with live terminal visibility and replaceable execution engines. Compare extending my own runtime versus using AWS Labs CLI Agent Orchestrator as execution backend. Analyze hidden ownership duplication, adapter work, actual migration costs, reversibility and assumptions. Do not assume my code lacks JSON schemas or deterministic scheduling. Give a conditional recommendation and falsifiable pilot gates, primary-source URLs; no made-up time estimates or guarantees. Russian, max 1200 words."
+  },
+  {
+    "id": "Q03",
+    "title": "Альтернативные движки и инструменты из исходного диалога",
+    "query": "Compare these exact projects for orchestrating existing authenticated Claude Code/Codex/Grok Build CLI processes with live console visibility and resumable programmable stages: awslabs/cli-agent-orchestrator, autonomous-ai/openharness, Pydantic AI harness, vercel/ai, PrimeIntellect-ai/prime-agent, NousResearch Hermes agent, obra/superpowers, affaan-m/ECC, langgenius/dify, harness.io platform CLI. Classify terminal orchestrator versus agent runtime versus API SDK versus skills versus delivery platform. Find 2 serious additional CLI orchestrator candidates, only if primary-source implementation supports the requirement. State preview/experimental features and what is NOT verified; exact primary-source URLs. Russian, max 1200 words."
+  },
+  {
+    "id": "Q04",
+    "title": "Экономика контекста и поэтапного разделения моделей",
+    "query": "For coding-agent workflows is a mandatory cheap context-preparation agent -> expensive architect -> cheap implementation agent -> expensive reviewer -> cheap bookkeeping agent actually economical? Context gathering can mostly use deterministic Python plus rg/git/LSP; user wants a large exhaustive context bundle. Analyze information loss, duplicate model input, prompt caching, latency, subscription quota versus dollar cost, when splitting frontend design from implementation degrades results, and when merging stages wins. Propose measurable experiment and formulas with fictional labeled numbers, no invented pricing. Cite primary sources (Anthropic/OpenAI context/caching docs and relevant research). Russian, max 1200 words."
+  },
+  {
+    "id": "Q05",
+    "title": "Универсальность инструкций, skills и внешних harness",
+    "query": "Design a portable integration boundary for a tool package containing canonical plan JSON, canonical Markdown commands/skills and generated Claude Code/Codex/Grok provider projections. Need plug into CAO now or Claude-only reviewer harness later, also work without a plan. How separate plan lifecycle, workflow policy, execution engine, provider mappings and skill delivery; what should capability-negotiated adapters expose; which AGENTS.md/CLAUDE.md/skills/tool policies are truly portable versus semantic differences? Avoid hand-maintained per-provider copies, duplicate skill owners and competing nested supervisors. Check official primary sources CAO profiles/skills/tools docs, Claude Code skills/subagents and Codex agents/skills. Russian, max 1200 words."
+  },
+  {
+    "id": "Q06",
+    "title": "Возобновление и побочные эффекты в CAO workflows",
+    "query": "Inspect official awslabs/cli-agent-orchestrator workflow-scripts-authoring-guide.md and Python cao_workflow shim source. Resume re-executes script top-to-bottom: are raw Python subprocess git commit, tests, plan state updates and worktree creation replay-safe? What does CAO journal actually memoize? Clarify run_step vs step recovery policy, checkpoint boundaries, reuse_terminal_id replay hazard, cancellation versus terminating child agents, timeouts and human recoverability. Propose minimal idempotent integration pattern without claiming exactly-once execution or complete CAO transactional guarantees. Exact code/doc links, Russian, max 1000 words."
+  },
+  {
+    "id": "Q07",
+    "title": "Точная маршрутизация моделей и подписочные CLI",
+    "query": "Verify official CAO provider docs/source for claude_code, codex and grok_build: exact model/reasoning effort profile fields, default permission flags, native auth/paid subscription reuse versus API billing, version-specific parsing and no-op options. Can CAO guarantee an economy/frontier model and requested effort for each stage and detect mismatch? How do provider permissions differ? Do not conflate a Claude/Codex subscription with API credits or promise Grok account availability; distinguish product docs from actual current account entitlement. Cite primary sources, Russian, max 1000 words."
+  },
+  {
+    "id": "Q08",
+    "title": "Критика выбора CAO и проверки до миграции",
+    "query": "Act as an adversarial architect reviewing a recommendation to replace a custom local coding-agent scheduler with AWS Labs CAO workflow-first. Requirements: native subscribed CLIs Claude Code/Codex/Grok, deterministic JSON plan lifecycle, optional review, inspectable terminals, crash resume, portability to a different harness. Find the strongest reasons NOT to choose CAO from primary-source code/issues; distinguish real limitations from speculative risk. Define a small comparative pilot, failure injection cases, measurements and rejection gates. Also identify problems a bespoke runner cannot avoid. No generic popularity scoring, no assumption AWS support SLA, no guaranteed reliability. Russian, max 1000 words."
+  },
+  {
+    "id": "Q04b",
+    "title": "Повтор пустого Q04: контекст и экономика",
+    "query": "Coding-agent cost question: compare a strong model doing a whole coding task with cheap context scout -> strong design -> cheap implementation -> strong review. Deterministic Python/rg/git can collect most context. Is blindly forwarding a huge context bundle economical? Explain prompt-cache boundaries across providers, repeated input and expected repair cost, subscription quota versus token dollars; give a bounded measurement protocol. Primary-source links (Anthropic effective context engineering/prompt caching, OpenAI prompt caching). Russian, at most 700 words."
+  },
+  {
+    "id": "Q09",
+    "title": "Структурированные CLI-интерфейсы против TUI-парсинга",
+    "query": "For a local subscription-based coding-agent orchestrator compare AWS CAO tmux/TUI state parsing against native structured interfaces: Codex TypeScript SDK/app-server/exec --json and Claude Code --print stream-json/Agent SDK. Can one keep live operational visibility without scraping interactive terminal text? Distinguish using native CLI credentials from third-party direct OAuth token reuse and API billing, and identify Grok Build structured interface status only if official docs prove it. Primary sources only, explain recovery tradeoffs. Russian, max 700 words."
+  },
+  {
+    "id": "Q10",
+    "title": "Повторная критика с учётом новых структурированных harness-интерфейсов",
+    "query": "Re-evaluate a local coding orchestration architecture using CURRENT primary docs: https://ai-sdk.dev/docs/ai-sdk-harnesses/overview and harness-adapters now list experimental HarnessAgent adapters Claude Code, Codex, Grok Build; https://docs.x.ai/build/cli/headless-scripting documents streaming-json and ACP grok agent stdio. Compare AWS Labs CAO Python workflows vs a Python native-CLI JSON-stream runner vs Vercel AI SDK HarnessAgent. Clarify local runtime vs sandbox/cloud, native CLI credential handling, subscription billing not guaranteed by adapter, experimental package status and resume boundaries. Do not repeat API-only dismissal of Vercel or claim Grok lacks a machine interface. Identify what source CODE/released packages actually implement, not docs alone. Conditional recommendation, primary-source URLs, Russian maximum 800 words."
+  },
+  {
+    "id": "Q11",
+    "title": "CAO status detection: TUI vs structured; open reliability issues",
+    "query": "AWS Labs cli-agent-orchestrator (CAO, github.com/awslabs/cli-agent-orchestrator), state as of October 2026 (v2.5.x / main). How does CAO detect agent status (idle/processing/completed) for Claude Code, Codex CLI and Grok CLI providers: tmux screen/TUI parsing, or structured headless streams (stream-json, exec --json, ACP)? Is there any non-TUI / headless provider mode? List concrete open GitHub issues about wrong status detection, truncated or dropped worker replies, startup hangs, orphan terminals, cancel. Assess reliability for a sequential multi-stage pipeline (cheap context agent -> strong implementer -> checks -> reviewer) driven by subscription-authenticated CLIs. Cite primary sources (code, issues, release notes). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q12",
+    "title": "Headless JSON interfaces of Claude/Codex/Grok CLIs and subscription auth",
+    "query": "October 2026: machine-readable headless interfaces of coding CLIs for building a local orchestrator. 1) Claude Code `claude -p --output-format stream-json` (and --input-format stream-json): event types, final result event, session_id, does it work with Pro/Max subscription OAuth login (not API key), effect of --bare. 2) OpenAI Codex CLI `codex exec --json` and Codex SDK: event schema (thread.started, turn.completed, usage), stability guarantees, ChatGPT-plan login support, resume. 3) xAI Grok Build CLI headless `-p --output-format streaming-json` and `grok agent stdio` (ACP): event shape, completion signal, SuperGrok subscription auth. Known hangs or breaking changes of these JSON modes. Primary-source URLs (official docs, changelogs, GitHub issues). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q13",
+    "title": "ACP as universal transport (extractor returned table only)",
+    "query": "Agent Client Protocol (ACP, agentclientprotocol.com) as a universal transport for driving coding agents programmatically in October 2026: which agents support ACP natively or via adapters — Claude Code (claude-code-acp / Agent SDK adapter), OpenAI Codex (codex-acp), xAI Grok Build (grok agent stdio)? Do these ACP paths keep the CLI's native subscription login, skills/plugins, permissions, and model/effort selection? Maturity, versioning, Python client libraries. Compare ACP vs per-CLI JSON streams vs tmux/TUI orchestration (CAO) vs Vercel AI SDK HarnessAgent (experimental) for an engine-agnostic orchestrator with a stable port/adapter contract. Recommend which transport to standardize the adapter port on. Primary-source URLs. Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q13b",
+    "title": "Retry of Q13: transport choice for the adapter port",
+    "query": "Без таблиц, только абзацы и списки. Октябрь 2026. Я строю локальный engine-agnostic оркестратор coding-агентов (Claude Code, Codex CLI, Grok Build) с портом/адаптерами на Python stdlib. Какой транспорт стандартизировать в порте адаптера: (a) Agent Client Protocol (ACP, agentclientprotocol.com: claude-agent-acp, codex-acp, нативный grok agent stdio), (b) отдельные JSONL-потоки каждого CLI (claude -p stream-json, codex exec --json, grok streaming-json), (c) tmux/TUI как AWS CAO, (d) Vercel AI SDK HarnessAgent? Оцени зрелость и версионирование ACP, наличие Python-клиента, сохраняется ли нативный подписочный логин и skills/plugins у Claude через claude-agent-acp (Agent SDK) против claude -p. Дай конкретную рекомендацию: что основной транспорт, что запасной, и как спроектировать порт, чтобы смена транспорта не ломала контракты. Первичные URL. Русский, до 600 слов."
+  },
+  {
+    "id": "Q14",
+    "title": "CAO: формат agent profile для dry-render",
+    "query": "October 2026: awslabs/cli-agent-orchestrator (CAO) agent profile format, current main and latest release. 1) Exact file format of an agent profile (Markdown with YAML frontmatter?): every frontmatter field (name, description, provider, model, skills, allowedTools / tool restrictions, mcpServers, claudeConfig.effort, codexConfig.model_reasoning_effort, codexProfile, prompt/system body) and which are required. 2) Provider ids for Claude Code, Codex, Grok (claude_code, codex, grok_cli?). 3) How a profile is installed or referenced (cao install, agent store path, --agents), and whether a profile can be generated programmatically and validated offline without starting tmux or the CAO server. 4) Breaking changes to the profile format between v2.3 and v2.5.x. Cite exact primary-source URLs (docs/agent-profile.md, providers/*.py, release notes). Answer in Russian, max 700 words."
+  },
+  {
+    "id": "Q15",
+    "title": "Per-run доставка skills/плагинов и флаги model/effort трёх CLI",
+    "query": "October 2026: per-run (not global) delivery of skills, plugins and instructions to coding-agent CLIs launched headless by a local orchestrator, without modifying the user's global config, while keeping subscription login. 1) Claude Code: --plugin-dir, --settings, --append-system-prompt, --agents, --add-dir, --disallowedTools/--allowedTools, --setting-sources, skills discovery from .claude/skills, does -p mode load plugins/skills/CLAUDE.md; effect of --bare. 2) OpenAI Codex CLI: CODEX_HOME isolation and whether ChatGPT login survives it, --profile, -c overrides, skills.config / allow_implicit_invocation, AGENTS.md hierarchy, codex exec flags for model and reasoning effort. 3) xAI Grok Build CLI: skills/plugins discovery sources (.grok, .claude, .agents), flags to select model and reasoning effort in `grok -p` and `grok agent stdio`, any flag to restrict skills per run. Give exact flag names and primary-source URLs (official docs, changelogs). Answer in Russian, max 800 words."
+  }
+]

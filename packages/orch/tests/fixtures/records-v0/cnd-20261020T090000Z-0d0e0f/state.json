@@ -1,0 +1,269 @@
+{
+  "agents": 3,
+  "claims": {
+    "item-W1": {
+      "orch_run": "run-5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+      "ref": "W1",
+      "submission": "sub-cnd-20261020T090000Z-0d0e0f-item-W1",
+      "title": "Work W1"
+    }
+  },
+  "executor_session": "executor-session-1",
+  "executor_session_item": "W1",
+  "executor_session_route": "claude-code/sonnet/high",
+  "executor_session_task_digest": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+  "items": {
+    "W1": {
+      "adopted": [],
+      "autofix_at": [],
+      "check_fixes_at": [],
+      "check_fixes_used": 0,
+      "corrections_at": [],
+      "corrections_used": 0,
+      "executor_started": true,
+      "expected": null,
+      "orch_run": "run-5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+      "outcome": "done",
+      "plan_notes": [],
+      "released": [
+        {
+          "ok": true,
+          "reason": "stopped before any work began: PROVIDER_UNAVAILABLE"
+        }
+      ],
+      "retries_used": 0,
+      "review_marks": {
+        "1": {
+          "out/W1.txt": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+        }
+      },
+      "source_paths": [],
+      "stage_usage": {
+        "executor.1": {
+          "cached": 0,
+          "input": 100,
+          "output": 10
+        },
+        "review.1": {
+          "cached": 0,
+          "input": 100,
+          "output": 10
+        },
+        "scout": {
+          "cached": 0,
+          "input": 0,
+          "output": 0
+        }
+      },
+      "steps": {
+        "brief": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "artifacts_dir": "plans/T/artifacts/W1",
+            "base": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+            "input_id": "PLAN9.W1@5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+            "input_path": "/home/owner/project/.swissknifeman/state/orch/conductor/cnd-20261020T090000Z-0d0e0f/W1/input.json"
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "done"
+        },
+        "checks.1": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": [
+            {
+              "cmd": "test -f out/W1.txt",
+              "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+              "exit": 0,
+              "green": true,
+              "id": "V1",
+              "kind": "acceptance",
+              "log": "/home/owner/project/.swissknifeman/state/orch/conductor/cnd-20261020T090000Z-0d0e0f/W1/checks/1/V1.log",
+              "seconds": 0.0,
+              "tail": ""
+            }
+          ],
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "green"
+        },
+        "commit": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "outcome": "committed",
+            "sha": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "committed 5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e"
+        },
+        "executor.1": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "agent": "agent-cnd-20261020T090000Z-0d0e0f-2",
+            "attempts": 1,
+            "changed": [
+              "out/W1.txt"
+            ],
+            "exit": 0,
+            "model": "fake-model",
+            "report": {
+              "changed_paths": [
+                "out/W1.txt"
+              ],
+              "checks_run": [
+                {
+                  "cmd": "test -f out/W1.txt",
+                  "exit": 0,
+                  "id": "V1"
+                }
+              ],
+              "evidence": [],
+              "open_issues": [],
+              "status": "done",
+              "summary": "made W1"
+            },
+            "session": "executor-session-1",
+            "stream": ".swissknifeman/state/orch/conductor/cnd-20261020T090000Z-0d0e0f/W1/streams/executor.1.jsonl",
+            "usage": {
+              "cached": 0,
+              "input": 100,
+              "output": 10
+            }
+          },
+          "role": "executor",
+          "route": "claude-code/sonnet/high",
+          "status": "done",
+          "tokens": {
+            "cached": 0,
+            "input": 100,
+            "output": 10
+          },
+          "verdict": "done"
+        },
+        "prepare": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "refusals": [
+              {
+                "reason_code": "INDEPENDENT_PROVIDER",
+                "stage_id": "review"
+              }
+            ],
+            "stages": [
+              {
+                "effort": "high",
+                "model": "haiku",
+                "provider": "claude-code",
+                "role": "context-scout",
+                "stage_id": "condense"
+              },
+              {
+                "effort": "high",
+                "model": "sonnet",
+                "provider": "claude-code",
+                "role": "executor",
+                "stage_id": "primary"
+              }
+            ]
+          },
+          "role": "deterministic",
+          "route": null,
+          "status": "done",
+          "verdict": "done"
+        },
+        "register": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "gate": "pass",
+            "outcome": "recorded"
+          },
+          "role": "registrar",
+          "route": "orch/conductor",
+          "status": "done",
+          "verdict": "recorded gate pass"
+        },
+        "review.1": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "agent": "agent-cnd-20261020T090000Z-0d0e0f-3",
+            "attempts": 1,
+            "exit": 0,
+            "findings": {
+              "findings": [],
+              "verdict": "GREEN"
+            },
+            "model": "fake-model",
+            "session": "reviewer-session-1",
+            "stream": ".swissknifeman/state/orch/conductor/cnd-20261020T090000Z-0d0e0f/W1/streams/review.1.jsonl",
+            "usage": {
+              "cached": 0,
+              "input": 100,
+              "output": 10
+            }
+          },
+          "role": "reviewer",
+          "route": "grok/grok-4.7/high",
+          "status": "done",
+          "tokens": {
+            "cached": 0,
+            "input": 100,
+            "output": 10
+          },
+          "verdict": "GREEN 0 finding(s)"
+        },
+        "scout": {
+          "ended": "2026-10-20T08:00:00Z",
+          "result": {
+            "agent": "agent-cnd-20261020T090000Z-0d0e0f-1",
+            "attempts": 1,
+            "cache": ".swissknifeman/state/orch/conductor/cache/scout/W1/5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e.txt",
+            "exit": 0,
+            "hit": false,
+            "model": null,
+            "session": null,
+            "stream": ".swissknifeman/state/orch/conductor/cnd-20261020T090000Z-0d0e0f/W1/streams/scout.txt",
+            "text": "a context map line — why it matters\nUnknowns:\n- none",
+            "usage": {
+              "cached": 0,
+              "input": 0,
+              "output": 0
+            }
+          },
+          "role": "context-scout",
+          "route": "claude-code/haiku/low",
+          "status": "done",
+          "verdict": "mapped"
+        }
+      },
+      "stop": {
+        "code": "PROVIDER_UNAVAILABLE",
+        "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume"
+      },
+      "tokens": {
+        "cached": 0,
+        "input": 200,
+        "output": 20
+      }
+    }
+  },
+  "last_stop": {
+    "code": "PROVIDER_UNAVAILABLE",
+    "message": "cannot start reviewer (/home/owner/project/no-such-grok): install or log in the CLI, then resume",
+    "resume": 1
+  },
+  "on_blocked": "stop",
+  "questions": {
+    "W1": {}
+  },
+  "resumes": 1,
+  "status": "finished",
+  "tokens": {
+    "cached": 0,
+    "input": 200,
+    "output": 20
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "skill": "anti-drift",
+  "should_trigger": [
+    "I'm stuck, the third iteration in a row doesn't help - what to do",
+    "where to start a big task so as not to drown",
+    "is it worth refactoring the entire module at the same time while I fix the bug?"
+  ],
+  "should_not": [
+    "what version Laravel is currently relevant",
+    "generate SQL-migration for table users"
+  ]
+}

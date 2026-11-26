@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:digest:v1",
+  "title": "digest",
+  "type": "string",
+  "description": "Tagged SHA-256 digest of a canonical JSON value: 'sha256:' followed by the lowercase hex of the SHA-256 of the canonical bytes. Canonical bytes: object keys are strings sorted by code point; separators are ',' and ':' with no whitespace; strings are UTF-8 with only the JSON-mandatory escapes (quote, backslash and control characters below U+0020; non-ASCII text is written as is); only null, booleans, integers, strings, arrays and objects are allowed, and floats are rejected because their text form is ambiguous between languages. The vectors in vectors.json are the language-neutral test cases.",
+  "pattern": "^sha256:[0-9a-f]{64}$",
+  "$defs": {
+    "hex": {
+      "type": "string",
+      "description": "Bare lowercase hex form without the 'sha256:' tag. Legacy (exec/v1 digests); the tagged form is canonical and new contracts use it.",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

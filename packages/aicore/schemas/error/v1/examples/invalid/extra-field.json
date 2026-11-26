@@ -1,0 +1,7 @@
+{
+  "class": "quota",
+  "code": "PROVIDER_QUOTA",
+  "retryable": false,
+  "safe_message": "provider quota exhausted",
+  "raw_text": "session limit reached"
+}

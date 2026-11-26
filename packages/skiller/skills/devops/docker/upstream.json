@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "sickn33/antigravity-awesome-skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "snippets/docker-expert.md",
+      "url": "https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills/docker-expert/SKILL.md",
+      "sha256": "cd2817407c2faebdd0a88196e5ddfabf53860649b71b3f7e0398196efaf86776",
+      "fetched_at": "2026-06-12"
+    }
+  ],
+  "notes": "snippets/docker-expert.md is a copy of the docker-expert skill from sickn33/antigravity-awesome-skills (came via the sova project's skills-lock.json). strategy=notify: review upstream changes manually.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "598ecd5043ebf72c1d9fe6513bf99e6c77af2e4e66b9cb9b9180ddbdc83e005a"
+  }
+}

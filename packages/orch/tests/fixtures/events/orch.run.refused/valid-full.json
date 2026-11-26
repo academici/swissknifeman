@@ -1,0 +1,22 @@
+{
+  "data": {
+    "binding": "native",
+    "policy_id": "solo",
+    "reason_codes": [
+      "GATE_RED",
+      "CAPABILITY_STALE"
+    ],
+    "ref": "P10.9",
+    "run_id": "run-1",
+    "step": "register",
+    "submission_id": "sub-0001"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:orch:event-data:orch-run-refused:v1",
+  "id": "0123456789abcdef0123456789abcdef",
+  "source": "urn:swissknifeman:module:orch",
+  "specversion": "1.0",
+  "subject": "sub-0001",
+  "time": "2026-10-11T04:30:00.000Z",
+  "type": "orch.run.refused"
+}

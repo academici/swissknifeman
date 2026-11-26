@@ -1,0 +1,624 @@
+"""Tests mcp.py: JSON-RPC routing, tool calls, framing, conformance (real spawn)."""
+import io
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+import aicore
+from maind import mcp
+from maind import memory as memory_mod
+from maind.config import merge_defaults
+from maind.federation import rebuild_index, store_path
+from maind.graph import Graph
+from tests.fixtures import FakeMemoryServer, make_repo
+
+
+def cfg(**over):
+    base = merge_defaults({})
+    base.update(over)
+    return base
+
+
+def fed_edge(env, config, src_pid, edge_dst, etype="depends_on"):
+    """Write edge src_pid → edge_dst in the project site src_pid (federation) + index.
+    The graph is read by the federation (per-project stories), and not a single legacy graph.db."""
+    proj = {"id": src_pid}
+    g = Graph(env, config, path=store_path(env, config, proj))
+    g._loaded = True
+    g.add_node(f"project:{src_pid}", "project", project=src_pid)
+    g.add_edge(f"project:{src_pid}", edge_dst, etype)
+    g.save()
+    rebuild_index(env, config)
+
+
+def call(env, config, name, arguments=None, req_id=1):
+    return mcp.dispatch(env, config, {
+        "jsonrpc": "2.0", "id": req_id, "method": "tools/call",
+        "params": {"name": name, "arguments": arguments or {}}})
+
+
+class TestToolsContract(unittest.TestCase):
+    def test_tools_json_matches_mcp_tools_schema(self):
+        from aicore.util.schema import load_contract, validate
+        schemas = Path(__file__).resolve().parents[1] / "schemas"
+        foundation = Path(aicore.__file__).resolve().parents[2] / "schemas"
+        registry, kind = load_contract(schemas / "mcp-tools" / "v1",
+                                       urn_prefix="urn:swissknifeman:maind:", foundation=foundation)
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools", "--json"])
+        doc = json.loads(out.getvalue())
+        self.assertEqual(validate(doc, kind, registry), [])
+        self.assertTrue(validate({"tools": []}, kind, registry))
+
+
+class TestDispatch(unittest.TestCase):
+    def test_initialize(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = mcp.dispatch(env, cfg(), {"jsonrpc": "2.0", "id": 1,
+                                          "method": "initialize"})
+            self.assertEqual(r["result"]["serverInfo"]["name"], "maind")
+            self.assertIn("protocolVersion", r["result"])
+
+    def test_tools_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = mcp.dispatch(env, cfg(), {"jsonrpc": "2.0", "id": 2,
+                                          "method": "tools/list"})
+            names = {t["name"] for t in r["result"]["tools"]}
+            self.assertEqual(len(names), 11)
+            self.assertTrue({"maind_graph_path", "maind_projects_status",
+                             "maind_memory_forget", "maind_graph_project",
+                             "maind_memory_links"} <= names)
+
+    def test_tool_descriptions_within_2kb_cap(self):
+        # client-side cap on description tool (research/04-P3-listing-budget-and-trim-math.md)
+        for tool in mcp.TOOLS:
+            self.assertLessEqual(len(tool["description"].encode("utf-8")), 2048,
+                                 f"{tool['name']}: description exceeds 2048 bytes")
+
+    def _init_version(self, params):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            req = {"jsonrpc": "2.0", "id": 1, "method": "initialize"}
+            if params is not None:
+                req["params"] = params
+            return mcp.dispatch(env, cfg(), req)["result"]["protocolVersion"]
+
+    def test_supported_version_is_returned(self):
+        self.assertEqual(mcp.PROTOCOL_VERSION, mcp.SUPPORTED_PROTOCOL_VERSIONS[0])
+        for version in mcp.SUPPORTED_PROTOCOL_VERSIONS:
+            self.assertEqual(self._init_version({"protocolVersion": version}), version)
+
+    def test_unsupported_version_gets_server_version(self):
+        for version in ("1999-01-01", "2025-03-26"):
+            self.assertEqual(self._init_version({"protocolVersion": version}),
+                             mcp.PROTOCOL_VERSION)
+
+    def test_missing_version_gets_server_version(self):
+        self.assertEqual(self._init_version(None), mcp.PROTOCOL_VERSION)
+        self.assertEqual(self._init_version({}), mcp.PROTOCOL_VERSION)
+
+    def test_tools_digest_stable_and_sensitive(self):
+        digest = mcp.tools_digest()
+        self.assertRegex(digest, r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual(digest, mcp.tools_digest())
+        changed = [dict(t) for t in mcp.TOOLS]
+        changed[0]["description"] += " changed"
+        self.assertNotEqual(digest, mcp.tools_digest(changed))
+
+    def test_mcp_tools_command(self):
+        import contextlib
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools", "--json"])
+        data = json.loads(out.getvalue())
+        self.assertEqual(data["tools_digest"], mcp.tools_digest())
+        self.assertEqual([t["name"] for t in data["tools"]], [t["name"] for t in mcp.TOOLS])
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            mcp.cmd_mcp(None, ["tools"])
+        self.assertIn(mcp.tools_digest(), out.getvalue())
+        self.assertIn(mcp.TOOLS[0]["name"], out.getvalue())
+
+    def test_initialized_no_response(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            self.assertIsNone(mcp.dispatch(env, cfg(), {
+                "jsonrpc": "2.0", "method": "notifications/initialized"}))
+
+    def test_unknown_method(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = mcp.dispatch(env, cfg(), {"jsonrpc": "2.0", "id": 9, "method": "bogus"})
+            self.assertEqual(r["error"]["code"], -32601)
+
+    def test_unknown_tool(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = call(env, cfg(), "nope")
+            self.assertEqual(r["error"]["code"], -32601)
+
+
+class TestToolCalls(unittest.TestCase):
+    def test_projects_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = call(env, cfg(projects=[{"id": "x", "name": "X"}]),
+                     "maind_projects_list")
+            data = json.loads(r["result"]["content"][0]["text"])
+            self.assertEqual(data[0]["id"], "x")
+
+    def test_graph_query(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=[{"id": "a"}, {"id": "b"}])
+            fed_edge(env, config, "a", "project:b")
+            r = call(env, config, "maind_graph_query", {"from": "project:a"})
+            data = json.loads(r["result"]["content"][0]["text"])
+            self.assertEqual(data["count"], 1)
+
+    def test_memory_recall_against_fake(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:x", "context", "hello world")
+                r = call(env, cfg(memory={"url": url}), "maind_memory_recall",
+                         {"scope": "project:x", "query": "hello"})
+                data = json.loads(r["result"]["content"][0]["text"])
+                self.assertEqual(data[0]["text"], "hello world")
+
+    def test_recall_union_private_survives_large_shared_namespace(self):
+        # Large without mouth guard ns:<group>
+        # supplanted the small private scope project from the issue (measured 84-96% response from shared
+        # on 6 projects). project:<id>-expansion now polls private without cap
+        # (RECALL_LIMIT), shared — with RECALL_SHARED_LIMIT.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "context", "priv workflow one")
+                memory_mod.store(url, "project:a", "context", "priv workflow two")
+                for i in range(memory_mod.RECALL_SHARED_LIMIT + 10):
+                    memory_mod.store(url, "ns:x", "context", f"shared workflow item {i}")
+                config = cfg(projects=[{"id": "a", "namespaces": ["x"]}], memory={"url": url})
+                r = call(env, config, "maind_memory_recall",
+                         {"scope": "project:a", "query": "workflow"})
+                data = json.loads(r["result"]["content"][0]["text"])
+                by_scope = {}
+                for row in data:
+                    by_scope.setdefault(row["scope"], 0)
+                    by_scope[row["scope"]] += 1
+                self.assertEqual(by_scope.get("project:a"), 2)  # private - no cap, all
+                self.assertLessEqual(by_scope.get("ns:x", 0), memory_mod.RECALL_SHARED_LIMIT)
+
+    def test_memory_down_is_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = call(env, cfg(memory={"url": "http://127.0.0.1:1"}),
+                     "maind_memory_recall", {"scope": "x", "query": "y"})
+            self.assertTrue(r["result"]["isError"])
+
+    def test_memory_down_message_is_role_aware_for_client(self):
+        # role=client NOT getting prompted to raise local daemon (would create
+        # second writer, ADR-0001/D27) — the only insertion point in _run_tool.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            c = cfg(memory={"url": "http://127.0.0.1:1", "role": "client"})
+            r = call(env, c, "maind_memory_recall", {"scope": "x", "query": "y"})
+            text = r["result"]["content"][0]["text"]
+            self.assertNotIn("maind start", text)
+
+    def test_memory_store_sends_authorization_header_when_secret_configured(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                os.environ["AGENTMEMORY_SECRET"] = "good-token"
+                try:
+                    r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                             {"scope": "project:x", "key": "context", "value": "hi"})
+                finally:
+                    del os.environ["AGENTMEMORY_SECRET"]
+                self.assertFalse(r["result"].get("isError"))
+
+    def test_memory_store_401_without_secret_surfaces_as_error_not_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer(secret="good-token") as url:
+                r = call(env, cfg(memory={"url": url}), "maind_memory_store",
+                         {"scope": "project:x", "key": "context", "value": "hi"})
+                self.assertTrue(r["result"]["isError"])   # the server is alive, the server does not crash MCP
+                self.assertIn("401", r["result"]["content"][0]["text"])
+
+    def test_graph_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=[{"id": "a"}, {"id": "b"}])
+            fed_edge(env, config, "a", "project:b")
+            r = call(env, config, "maind_graph_path",
+                     {"from": "project:a", "to": "project:b"})
+            data = json.loads(r["result"]["content"][0]["text"])
+            self.assertEqual(data["path"], ["project:a", "project:b"])
+
+    def test_projects_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = call(env, cfg(projects=[{"id": "x", "name": "X"}]), "maind_projects_status")
+            data = json.loads(r["result"]["content"][0]["text"])
+            self.assertIn("hub", data)
+            self.assertIn("projects", data)
+
+    def test_memory_forget_deletes_by_id(self):
+        # forget sends {memoryId} (not {namespace,id}) → deletes fact; I used to be HTTP 400.
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                c = cfg(memory={"url": url})
+                stored = json.loads(call(env, c, "maind_memory_store",
+                    {"scope": "project:x", "key": "context", "value": "hello world"}
+                    )["result"]["content"][0]["text"])
+                mid = stored["memory"]["id"]
+                got = json.loads(call(env, c, "maind_memory_recall",
+                    {"scope": "project:x", "query": "hello"})["result"]["content"][0]["text"])
+                self.assertEqual(len(got), 1)
+                r = call(env, c, "maind_memory_forget", {"scope": "project:x", "key": mid})
+                self.assertFalse(r["result"].get("isError"))
+                self.assertEqual(json.loads(r["result"]["content"][0]["text"])["deleted"], 1)
+                gone = json.loads(call(env, c, "maind_memory_recall",
+                    {"scope": "project:x", "query": "hello"})["result"]["content"][0]["text"])
+                self.assertEqual(len(gone), 0)
+
+    def test_missing_required_is_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            r = call(env, cfg(), "maind_graph_query", {})  # not required from
+            self.assertTrue(r["result"]["isError"])
+            self.assertIn("is missing", r["result"]["content"][0]["text"])
+
+    def test_auto_scope_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                # store without scope → goes to default_scope
+                mcp.dispatch(env, cfg(memory={"url": url}),
+                             {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                              "params": {"name": "maind_memory_store",
+                                         "arguments": {"value": "scoped fact"}}},
+                             default_scope="project:flexcrm")
+                r = call(env, cfg(memory={"url": url}), "maind_memory_recall",
+                         {"scope": "project:flexcrm", "query": "scoped"})
+                data = json.loads(r["result"]["content"][0]["text"])
+                self.assertEqual(data[0]["text"], "scoped fact")
+
+    def test_default_scope_from_cwd(self):
+        # without explicit --scope/MAIND_SCOPE default = project:<id> by cwd, otherwise global
+        # (argless-the server writes to the bucket of its project, and not to the general one global).
+        from maind import projects as projects_mod
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            proj_dir = os.path.realpath(os.path.join(tmp, "proj"))
+            outside = os.path.realpath(os.path.join(tmp, "outside"))
+            os.makedirs(proj_dir)
+            os.makedirs(outside)
+            config = cfg(projects=[{"id": "foo", "local_path": proj_dir}])
+            self.assertEqual(projects_mod.match_cwd(env, config, cwd=proj_dir)["id"], "foo")
+            self.assertIsNone(projects_mod.match_cwd(env, config, cwd=outside))
+            cwd0 = os.getcwd()
+            try:
+                os.chdir(proj_dir)
+                self.assertEqual(mcp._default_scope_from_cwd(env, config), "project:foo")
+                os.chdir(outside)
+                self.assertEqual(mcp._default_scope_from_cwd(env, config), "global")
+            finally:
+                os.chdir(cwd0)
+
+    def test_tool_error_does_not_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)  # graph disabled → die() → SystemExit → isError
+            r = call(env, cfg(graph={"adapter": "disabled"}), "maind_graph_query",
+                     {"from": "x"})
+            self.assertTrue(r["result"]["isError"])
+
+
+def scoped_call(env, config, name, arguments, default_scope, req_id=1):
+    """tools/call with explicit default_scope (like a server attached to the project)."""
+    return mcp.dispatch(env, config, {
+        "jsonrpc": "2.0", "id": req_id, "method": "tools/call",
+        "params": {"name": name, "arguments": arguments or {}}}, default_scope=default_scope)
+
+
+class TestScopeIsolation(unittest.TestCase):
+    """Server Enforce namespace-isolation: server pinned to project:a, should not
+    read/write/delete memory and graph of another project (regression for 2 gaps blocker)."""
+
+    NS = property(lambda self: [{"id": "a", "namespaces": ["x"]},
+                                {"id": "b", "namespaces": ["y"]}])  # a and b DO NOT divide namespace
+
+    def test_recall_foreign_scope_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "context", "project secret b")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:b", "query": "secret"}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertIn("insulation namespace", r["result"]["content"][0]["text"])
+
+    def test_store_foreign_scope_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_store",
+                                {"scope": "project:b", "value": "injection"}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 0)  # in someone else's scope not recorded
+
+    def test_forget_foreign_memory_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                stored = memory_mod.store(url, "project:b", "context", "delete me")
+                mid = stored["memory"]["id"]
+                config = cfg(projects=self.NS, memory={"url": url})
+                # scope=project:a is allowed, but memoryId belongs to project:b → possession denial
+                r = scoped_call(env, config, "maind_memory_forget",
+                                {"scope": "project:a", "key": mid}, "project:a")
+                self.assertTrue(r["result"].get("isError"))
+                self.assertEqual(len(memory_mod.export(url, "project:b")), 1)  # fact b intact
+
+    def test_graph_project_foreign_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=self.NS)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
+            self.assertTrue(r["result"].get("isError"))
+            self.assertIn("insulation namespace", r["result"]["content"][0]["text"])
+
+    def test_graph_query_foreign_node_denied(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            config = cfg(projects=self.NS)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_query", {"from": "project:b"}, "project:a")
+            self.assertTrue(r["result"].get("isError"))
+
+    def test_own_scope_still_works(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "context", "own memory")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:a", "query": "own"}, "project:a")
+                self.assertFalse(r["result"].get("isError"))
+                self.assertEqual(json.loads(r["result"]["content"][0]["text"])[0]["text"],
+                                 "own memory")
+
+    def test_explicit_recall_scope_never_surfaces_related_namespace_records(self):
+        """Explicit MCP scope is exact even though the backend payload offers all shapes."""
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:a", "context", "private matching fact")
+                memory_mod.store(url, "ns:axioma", "context", "shared matching fact")
+                config = cfg(projects=[{"id": "a", "namespaces": ["axioma"]}],
+                             memory={"url": url})
+                response = scoped_call(env, config, "maind_memory_recall",
+                                       {"scope": "project:a", "query": "matching"},
+                                       "project:a")
+                records = json.loads(response["result"]["content"][0]["text"])
+                self.assertEqual(len(records), 1)
+                self.assertEqual(records[0]["text"], "private matching fact")
+                self.assertEqual({record["scope"] for record in records}, {"project:a"})
+
+    def test_shared_namespace_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            shared = [{"id": "a", "namespaces": ["x"]}, {"id": "b", "namespaces": ["x"]}]
+            config = cfg(projects=shared)
+            fed_edge(env, config, "b", "project:c")
+            r = scoped_call(env, config, "maind_graph_project", {"project": "b"}, "project:a")
+            self.assertFalse(r["result"].get("isError"))  # divide namespace x → access allowed
+
+    def test_cross_scope_env_flag_disables_enforcement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "context", "admin access")
+                config = cfg(projects=self.NS, memory={"url": url})
+                os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
+                try:
+                    r = scoped_call(env, config, "maind_memory_recall",
+                                    {"scope": "project:b", "query": "admin"}, "project:a")
+                finally:
+                    del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
+                self.assertFalse(r["result"].get("isError"))  # explicit admin mode removes isolation
+
+    def test_pinned_server_does_not_write_global_and_cross_scope_is_audited(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                config = cfg(projects=self.NS, memory={"url": url})
+                refused = scoped_call(env, config, "maind_memory_store",
+                                      {"scope": "global", "value": "injected"}, "project:a")
+                self.assertTrue(refused["result"].get("isError"))
+                self.assertEqual(memory_mod.recall(url, "global", "injected"), [])
+                own = scoped_call(env, config, "maind_memory_store", {"value": "own fact"}, "project:a")
+                self.assertFalse(own["result"].get("isError"))
+                log = env.data_dir / "mcp-cross-scope.jsonl"
+                self.assertFalse(log.exists())
+                os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"] = "1"
+                try:
+                    admin = scoped_call(env, config, "maind_memory_store",
+                                        {"scope": "global", "value": "owner fact"}, "project:a")
+                finally:
+                    del os.environ["MAIND_MCP_ALLOW_CROSS_SCOPE"]
+                self.assertFalse(admin["result"].get("isError"))
+                self.assertIn('"scope": "global"', log.read_text(encoding="utf-8"))
+
+    def test_hub_global_default_unrestricted(self):
+        # default_scope=global (hub server without --scope) → enforce is disabled, back-compat
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            with FakeMemoryServer() as url:
+                memory_mod.store(url, "project:b", "context", "hub sees everything")
+                config = cfg(projects=self.NS, memory={"url": url})
+                r = scoped_call(env, config, "maind_memory_recall",
+                                {"scope": "project:b", "query": "hub"}, "global")
+                self.assertFalse(r["result"].get("isError"))
+
+
+class TestContentTrimming(unittest.TestCase):
+    """`_content` — single trimming funnel: below the threshold - byte-by-byte as before;
+    above - removal `indent=2`, and if this was not enough - receipt with `truncated`/
+    `returned_count`/`total_count` on the largest top-level list. `isError` not
+    intersects with `truncated`-by (different classes - tool error vs partial)."""
+
+    def test_small_payload_unchanged_bytes(self):
+        payload = {"a": 1, "b": [1, 2, 3]}
+        out = mcp._content(payload)
+        self.assertEqual(out["content"][0]["text"],
+                          json.dumps(payload, ensure_ascii=False, indent=2))
+
+    def test_over_threshold_drops_indent_first(self):
+        # medium-width list: exceeds threshold with indent=2, but fits compactly -
+        # trimming must stop at the lever (1), do not cut data.
+        payload = {"items": [{"id": i, "note": "x" * 40} for i in range(400)]}
+        indented_tokens = mcp._estimate_tokens(
+            json.dumps(payload, ensure_ascii=False, indent=2))
+        compact_tokens = mcp._estimate_tokens(json.dumps(payload, ensure_ascii=False))
+        self.assertGreater(indented_tokens, mcp.TRIM_TARGET_TOKENS)   # fixture check
+        self.assertLessEqual(compact_tokens, mcp.TRIM_TARGET_TOKENS)  # fixture check
+        out = mcp._content(payload)
+        text = out["content"][0]["text"]
+        data = json.loads(text)
+        self.assertEqual(len(data["items"]), 400)           # nothing lost
+        self.assertNotIn("truncated", data)
+        self.assertNotIn("\n  ", text)                       # indent=2 removed (compact JSON)
+
+    def test_far_over_threshold_truncates_with_receipt(self):
+        payload = [{"id": i, "note": "x" * 200} for i in range(2000)]
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertTrue(data["truncated"])
+        self.assertEqual(data["total_count"], 2000)
+        self.assertLess(data["returned_count"], 2000)
+        self.assertEqual(len(data["items"]), data["returned_count"])
+        self.assertIn("hint", data)
+        self.assertLessEqual(mcp._estimate_tokens(out["content"][0]["text"]),
+                             mcp.TRIM_TARGET_TOKENS)
+
+    def test_truncation_preserves_dict_shape_and_sibling_keys(self):
+        payload = {"hub": {"ok": True}, "projects": [{"id": i} for i in range(3000)]}
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertEqual(data["hub"], {"ok": True})          # neighboring key is not touched
+        self.assertTrue(data["projects_truncated"]["truncated"])
+        self.assertEqual(data["projects_truncated"]["total_count"], 3000)
+        self.assertEqual(len(data["projects"]), data["projects_truncated"]["returned_count"])
+
+    def test_is_error_path_never_truncated(self):
+        # erroneous payload is short in practice, but the funnel must NOT be touched isError-path
+        # trimming logic (isError busy with class «tool error», not «partial»).
+        payload = {"error": "x" * 5000}
+        out = mcp._content(payload, is_error=True)
+        self.assertTrue(out["isError"])
+        self.assertNotIn("truncated", out["content"][0]["text"])
+        self.assertEqual(out["content"][0]["text"],
+                         json.dumps(payload, ensure_ascii=False, indent=2))
+
+    def test_no_truncatable_list_leaves_payload_as_is(self):
+        # there are no top-level lists - trimming silently does not work (tail case
+        # escalation by Implementation Rules, was not observed on a live node P3.2).
+        payload = {"note": "x" * 50000}
+        out = mcp._content(payload)
+        data = json.loads(out["content"][0]["text"])
+        self.assertEqual(data, payload)
+        self.assertNotIn("truncated", data)
+
+
+class TestFraming(unittest.TestCase):
+    def test_roundtrip(self):
+        buf = io.BytesIO()
+        mcp.write_message(buf, {"jsonrpc": "2.0", "id": 1, "result": {"ok": True}})
+        buf.seek(0)
+        msg = mcp.read_message(buf)
+        self.assertTrue(msg["result"]["ok"])
+
+    def test_wire_is_newline_delimited(self):
+        # real MCP-client (Cursor/Claude) sends NDJSON, NOT Content-Length
+        raw = b'{"jsonrpc":"2.0","id":7,"method":"tools/list"}\n'
+        self.assertEqual(mcp.read_message(io.BytesIO(raw))["method"], "tools/list")
+        buf = io.BytesIO()
+        mcp.write_message(buf, {"id": 1, "result": {}})
+        out = buf.getvalue()
+        self.assertTrue(out.endswith(b"\n"))
+        self.assertEqual(out.count(b"\n"), 1)          # one message = one line
+        self.assertNotIn(b"Content-Length", out)        # none LSP-headers
+
+    def test_serve_processes_then_eof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            _, env = make_repo(tmp)
+            inp, outp = io.BytesIO(), io.BytesIO()
+            mcp.write_message(inp, {"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+            inp.seek(0)
+            mcp.serve(env, cfg(), stdin=inp, stdout=outp)
+            outp.seek(0)
+            resp = mcp.read_message(outp)
+            self.assertEqual(len(resp["result"]["tools"]), 11)
+
+
+class TestConformance(unittest.TestCase):
+    """Real spawn server + full NDJSON-handshake - catches framing/handshake-bugs,
+    which tests do not see in memory (there both sides use one framing)."""
+
+    def test_real_spawn_handshake(self):
+        repo = Path(__file__).resolve().parents[1]
+        # The child needs maind and aicore on PYTHONPATH (the launcher normally adds them).
+        pp = [str(repo / "lib"), str(Path(aicore.__file__).resolve().parents[1])]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "node"
+            (root / "config" / "memory").mkdir(parents=True)
+            (root / "config.json").write_text(
+                json.dumps({"_version": "1", "projects": [{"id": "x", "name": "X"}]}),
+                encoding="utf-8")
+            proc = subprocess.Popen(
+                [sys.executable, "-m", "maind", str(root), "mcp"],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                env={**os.environ, "PYTHONPATH": os.pathsep.join(pp)})
+            msgs = [
+                {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                 "params": {"protocolVersion": "2024-11-05"}},
+                {"jsonrpc": "2.0", "method": "notifications/initialized"},
+                {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+                {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+                 "params": {"name": "maind_projects_list", "arguments": {}}},
+                {"jsonrpc": "2.0", "id": 4, "method": "ping"},
+            ]
+            payload = "".join(json.dumps(m) + "\n" for m in msgs).encode("utf-8")
+            out, _ = proc.communicate(payload, timeout=20)
+            self.assertEqual(proc.returncode, 0)
+            text = out.decode("utf-8")
+            self.assertNotIn("Content-Length", text)            # NDJSON, not LSP
+            by_id = {}
+            for line in text.splitlines():
+                if line.strip():
+                    m = json.loads(line)                         # each line is valid JSON
+                    if "id" in m:
+                        by_id[m["id"]] = m
+            self.assertEqual(by_id[1]["result"]["serverInfo"]["name"], "maind")
+            self.assertEqual(by_id[1]["result"]["protocolVersion"], "2024-11-05")
+            self.assertEqual(len(by_id[2]["result"]["tools"]), 11)
+            projects = json.loads(by_id[3]["result"]["content"][0]["text"])
+            # `maind projects list` answers {"items": [...]} (a list in the older contract).
+            self.assertIsInstance(projects["items"] if isinstance(projects, dict) else projects, list)
+            self.assertIn(4, by_id)                              # ping replied
+
+
+if __name__ == "__main__":
+    unittest.main()

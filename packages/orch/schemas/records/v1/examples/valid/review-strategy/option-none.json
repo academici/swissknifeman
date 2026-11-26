@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:review-strategy:v1",
+  "mode": "none",
+  "groups": [],
+  "reviewer": {"effort": "medium"},
+  "reason": "review.strategy: none",
+  "source": "option",
+  "decided_at": "2026-10-22T10:00:00Z"
+}

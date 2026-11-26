@@ -1,0 +1,10 @@
+{
+  "name": "frontend",
+  "version": "0.4.1",
+  "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
+  "skills": [
+    "./document-writer",
+    "./filepond-upload",
+    "./web-design-guidelines"
+  ]
+}

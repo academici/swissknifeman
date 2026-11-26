@@ -1,0 +1,124 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "analyst",
+  "title": "Session and usage analysis",
+  "kind": "capability",
+  "version": "0.5.0",
+  "stability": "beta",
+  "destination": "hub",
+  "requires": [
+    {
+      "unit": "aicore",
+      "range": "^0.1",
+      "description": "Foundation: util, provider, config, state, events."
+    }
+  ],
+  "provides": {
+    "cli": [
+      "bin/analyst"
+    ],
+    "install": [
+      "install.sh"
+    ],
+    "config": "configs/config.schema.json",
+    "plugins": [
+      {
+        "name": "analyst",
+        "manifest": ".claude-plugin/plugin.json"
+      }
+    ],
+    "contracts": [
+      {
+        "id": "urn:swissknifeman:analyst:run-lookup",
+        "path": "schemas/run-lookup/v1",
+        "version": "v1",
+        "stability": "alpha",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:analyst:run-codegraph",
+        "path": "schemas/run-codegraph/v1",
+        "version": "v1",
+        "stability": "alpha",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:analyst:reliability-metrics-digest",
+        "path": "schemas/reliability-metrics-digest/v1",
+        "version": "v1",
+        "stability": "development",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:analyst:unified-agent-trace",
+        "path": "schemas/unified-agent-trace/v1",
+        "version": "v1",
+        "stability": "development",
+        "direction": "output"
+      }
+    ],
+    "doctor": [
+      {
+        "id": "analyst.environment",
+        "category": "environment",
+        "probe": [
+          "bin/analyst",
+          "doctor",
+          "--json"
+        ],
+        "output": "check-result/v1"
+      },
+      {
+        "id": "analyst.partners",
+        "category": "integration",
+        "probe": [
+          "bin/analyst",
+          "doctor",
+          "--json"
+        ],
+        "output": "check-result/v1"
+      },
+      {
+        "id": "analyst.events",
+        "category": "state",
+        "probe": [
+          "bin/analyst",
+          "doctor",
+          "--json"
+        ],
+        "output": "check-result/v1"
+      }
+    ]
+  },
+  "subscribes": [
+    {
+      "id": "run-events",
+      "on": [
+        "planner.item.finished",
+        "planner.phase.closed",
+        "planner.plan.closed",
+        "orch.run.finished",
+        "orch.run.refused"
+      ],
+      "run": [
+        "bin/analyst",
+        "events",
+        "ingest",
+        "--event",
+        "-"
+      ],
+      "timeout_seconds": 30,
+      "description": "Record ecosystem run outcomes for analyst metrics."
+    }
+  ],
+  "dev": {
+    "test": [
+      "bash",
+      "scripts/test.sh"
+    ],
+    "validate": [
+      "bash",
+      "scripts/validate.sh"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "capability": "model.frontier",
+  "provider": "codex",
+  "dimension": "resource",
+  "level": "native",
+  "source": "probed",
+  "observed_at": "2026-10-08T09:00:00Z",
+  "fresh_until": "2026-10-08T10:00:00Z",
+  "remediation": "wait for the quota window to reset",
+  "evidence": "probe-1"
+}

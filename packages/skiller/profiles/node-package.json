@@ -1,0 +1,8 @@
+{
+  "name": "node-package",
+  "description": "Node/TypeScript library, CLI or backend package (not a UI app)",
+  "buckets": ["system", "oss-dev", "quality", "devops"],
+  "include_meta": false,
+  "harness_presets": ["base", "node"],
+  "mcp": ["context7"]
+}

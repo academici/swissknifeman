@@ -1,0 +1,182 @@
+---
+name: orch-debug
+bucket: repository-bootstrap
+version: 0.6.0
+description: "Debug-mode protocol for an agent that drives the orch conductor run by run (team-lead observer): estimate, watch the beacons, measure, fix the mechanism, log, hand the logs to a final reviewer. Activate when the user names this skill or a run prints the DEBUG_MODE beacon ([orch] debug = true, --debug); otherwise the agent is a plain supervisor."
+when_to_use: "On an explicit request to run orch in debug mode ('use orch-debug', '/orch-debug', 'conduct with --debug') or when a conductor run prints DEBUG_MODE; never by inference from a plan alone."
+risk: write
+persona: oss-dev
+tags: [orch, conductor, debug, observer, root-bootstrap]
+requires: []
+produces_for: []
+outputs: [chat, "<run>/debug/journal.md", "docs/orch-*-run-findings.md", "docs/orch-*-observer-journal.md"]
+snippets: []
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
+# orch debug mode (team-lead observer)
+
+Internal skill. It changes the role of the agent that starts and watches `conduct.py` runs: without this skill the
+agent is a plain supervisor (start a run, report its progress, stop on an error code, change nothing in the package).
+With it the agent is a team lead: it watches the work of the role agents, measures it, fixes the mechanism in the
+package, and leaves a record that a later reviewer can audit. Never activate it on your own.
+
+## Switching it on
+
+Debug mode is one setting, `[orch] debug` (boolean, default `false`), read like every `[orch]` key, the most
+specific layer winning:
+
+| Level | Where | Example |
+|---|---|---|
+| machine | `~/.config/swissknifeman/config.toml` | `[orch]` `debug = true` — every run of this machine |
+| project | `<project>/.swissknifeman/config.toml` | `[orch]` `debug = false` — this project, over the machine |
+| run | `conduct.py run ... --debug` / `--no-debug` (also `resume`) | this run only, over both |
+
+`SKM_ORCH_DEBUG=true` and a `--config FILE` sit between the project and the flag. With it on, the run prints
+`DEBUG_MODE` right after `run.start` (and after every resume): the layer that switched it on, this file, the observer
+report that holds the per-item metrics and the path `<runs>/<run>/debug/journal.md` for your notes. The beacon writes no
+file: create `journal.md` yourself when you have something to record (a resume never touches it). That beacon is the
+cue to follow this protocol. The roles, their prompts and every decision of the conductor are the same with the mode
+on or off: it changes only what the observer does and where it writes. The run folder is outside the tracked tree, so
+writing the journal there does not break "the main tree is the conductor's"; copy the finished journal and findings
+into the plan or `docs/` after the run.
+
+## Invariants
+
+- **Useful work is never discarded or cut.** The conductor stops nothing for being long: it prints beacons
+  (`STAGE_SLOW`, `STAGE_IDLE`, `CHECK_SLOW`, `BUDGET_OVER`, `LIMIT_OVER`) that say what runs now. On a beacon, look at
+  what it names: a test run or a build in progress is healthy, wait; a silent model call with no child process for a
+  long time, or a loop of the same command, is not. Never kill a working role and never reset a working result to get
+  a "clean" run. A blocked piece with good work continues with `resume --retry` after the plan is fixed, a dirty tree
+  with an earlier attempt with `run --adopt`, a piece finished by hand with `settle`.
+- **Exit 4 is not a failure.** `conduct run|resume|continue` exits 4 (`run.end` outcome `waiting`, stop
+  `WAITING_DECISION`, `status --json` status `waiting` with a `waiting: [{item, question_ids, since}]` list) when a
+  piece waits for the answer to a question; exit 1 stays "stopped or refused". A script that treats every non-zero
+  exit as a stop must branch on 4 first: the action is `orch conduct answer --run R --item I --question Q --option ID`
+  (the owner answers `approval` and `credential` questions, and what the human gate holds), then
+  `orch conduct continue --run R` (or `answer … --continue`); `QUESTIONS_OPEN` (exit 1) means a blocking question has
+  no answer yet, `--partial` continues only the answered pieces. An escalation with `ENVIRONMENT_BLOCKED`,
+  `PRE_EXISTING_RED`, `SCOPE_EXPANSION` or `AUTHORITY_REQUIRED` is a block (exit 1, `ITEM_BLOCKED`), never a question:
+  read its hint (`orch.py doctor`, the sandbox settings, `--allow-path`) instead of asking the advisor.
+- **One run = one roadmap batch.** Start the pieces of a roadmap row together (`run --items A B C D`, never one run per item): by default (`--batch`, `session.executor: handoff`) all pieces go in progress together, each piece gets a fresh executor session that its correction rounds resume, and its prompt names the whole batch and carries the handoff of the done pieces (commit, summary, open issues, changed paths); `shared` keeps ONE session across the pieces at the price of re-reading the whole transcript of the earlier pieces on every turn; checks, review, register and commit stay per piece. One common review per batch after the last piece: `packages/orch/scripts/batch-review.py RUN` (grok, `--effort medium` when the diff is small); fix Major+ in a separate commit. `--no-batch` is for a deliberate separate-session start; `--ready` (not `--batch`) selects the next ready pieces. When a piece closes: measure, log, fix the mechanism in a separate worktree and merge between pieces; the run itself goes on.
+- **The main tree is the conductor's.** While a run is active change no file in it, not even a journal. Develop fixes in a
+  separate git worktree, merge between items. Commit only with explicit paths (`git commit -- <paths>`); never sweep the
+  index. Run `python3 scripts/public-hygiene.py` before committing documents (no concrete plan ids in committed docs).
+- **Fix at the root, as a configurable option.** A package change gets a schema entry, docs, a test that fails without the
+  fix, and `python3 scripts/affected-tests.py --tier full --run` green (it runs the touched units and the bridges that
+  require them). No hardcoded patch.
+- **Only the owner changes machine state** (installing or logging in a provider CLI, credentials, pushes). Ask for it plainly.
+- **Each role gets only the instructions of its own prompt** (`instructions.isolate_roles`, default every role; the
+  module rules arrive as a short Repository rules block). Check in the prompts of the first item that the block is there.
+
+## Operator rules (D24)
+
+The plan moves fast with good-enough quality; the safety nets (acceptance, at most two reviews) leave marks in the
+journal instead of slowing the work, and the process is tuned from the journals after each plan.
+
+1. The latest owner stop comes first; earlier grants and continuation prompts are history.
+2. Do not edit the plan while its run is live: every edit rebuilds the input (`INPUT_REBUILT`), sends the full prompt
+   again and misses the scout cache. Collect plan changes and apply them between runs.
+3. Before interrupting a stage, read its current command, exit and timestamps (`conduct.py status`, the stream, the
+   check log): a stage that already ended or a test run in progress is not stuck.
+4. A hand `settle` names its reason in the journal; never settle a running piece to make a status look right.
+5. One conductor run per machine unless the owner allows more: parallel runs slow each other's checks.
+6. Forecast from the journal of earlier items (the remaining stages and their measured medians), as a range.
+7. Report to the owner in four parts: code changed, checks green, evidence (paths), criterion still open.
+8. A piece with `review_debt` or `RESULT_INCOMPLETE` is a finding for the look after the plan, not a reason for a
+   third review or a hand-run of the checks.
+
+## Operator model and session
+
+The conductor owns the loop; the observer starts a group, waits for its end, reads a stop and decides. Most of its time
+is waiting, so keep the waiting cheap and the context small.
+
+- **Closed loop of two roles.** The *observer* (a Haiku-class model, high effort) runs one phase per session: it
+  starts the groups through the project launcher, waits on events and acts only on an unambiguous row of its stop
+  table (code -> branch -> action). Branch A it does itself (resume, retry, wait); branch B (anything not in the table,
+  a repeat, contradictory signals, an executor question, a red check) it hands to a *review subagent* (Opus) and then
+  does exactly the one action that subagent returns; branch C goes to the owner, and only for what the owner alone
+  can do (a provider login, a change of the machine, a push, a grant, placing a file the provider refuses to write).
+  The observer calls no other subagent or model, changes no code, plan or configuration and runs no git in the
+  conductor tree. The review subagent owns hotfixes between runs and plan amendments with a decision.
+- **Between phases:** the owner starts a review session (Opus) for the closed phase: the analysis of its runs, the
+  rating of the observer (protocol errors, missed stops, needless escalations), the promotion and the economy audit of
+  the next phase (the criteria of PLAN9 P8.4). The rating decides the observer model of the next phase: benchmarks put
+  Haiku well below Sonnet on terminal-agent tasks, so it must not improvise recovery, and Sonnet (effort medium) is the
+  step up. Long Codex operator sessions compact again and again and lose the protocol; a Grok operator is not measured.
+- **Event-driven waiting:** start the run in the background and arm one completion monitor filtered to `run.end`,
+  `item.end` and the beacons (see *Watch*); no polling, no tail of raw streams in the observer context. The reason of a
+  blocked piece is in `orch conduct status` (its escalation code and an `escalation:` line).
+- **State in a file:** the handoff is one file in the plan folder, rewritten after each group and each report (what
+  runs, the escalations and their answers, what waits for a merge); it is not shared memory. A fresh session starts
+  from it.
+- **The prompts are temporary:** the observer and review prompts of a plan grew case by case, each row a problem met in
+  practice. `orch conduct autopilot` (PLAN9 P8.5) takes them as source material: the deterministic rows become code,
+  the model keeps the report and the review.
+
+## Per item loop
+
+1. **Preflight.** Decide per item whether review is needed and with which settings (`review.*`, model, effort, rounds), pass them with `--options FILE` and write the choice with its reason into the journal; never take the default by habit. Tree clean (or `--adopt` on purpose), item `todo`, `conduct.py run --dry-run --scenario S --options F`
+   shows every route with `available: true` and the isolation flags. The run itself refuses to start a piece when a
+   required role cannot start. Monitors: `tail -n0 -F err | grep --line-buffered -E '"event": "(stage.end|info|item.end|run.end)"'`
+   (no `cut` in the pipe: it buffers and the events never arrive); one monitor per run, stop the old one first. Keep the options file, the journal and the logs outside `/tmp` (a disk cleanup wipes it, and `resume` re-reads the options path of the run).
+2. **Estimate before the run.** `python3 packages/orch/scripts/estimate.py --input <the item's input.json> --effort E`
+   (or `--cmd` per acceptance command): the history medians of the roles and the measured seconds of the same
+   commands. Write it down; after the run compare each step; a deviation over 30% needs a recorded cause.
+3. **Watch.** Do not poll. Hangs are the supervisor's: `orch conduct status --json` carries `health` (from the
+   heartbeat and the lease) and `orch conduct supervise --once --json` classifies the run, recovers what its policy allows
+   and records the action in `<run>/supervisor.jsonl`; `orch conduct autopilot status` shows the queue and its stop code.
+   Wake up only on a deterministic signal: `run.end` or `item.end` of the run, exit 4 (`waiting`), a health of `hung`,
+   `suspected_stall` or `given_up` (breaker open), or an `AUTOPILOT_*` stop; report the end of every item in the chat
+   at once. Then read `orch conduct status` (the latest beacon of the running step) and answer each beacon by its
+   content, not by its clock.
+4. **Before the commit.** The conductor reads the changed paths from git and reports paths outside the write set as a
+   deviation (shown to the reviewer, committed with the piece); review that list and widen the plan for the next items
+   like this one.
+5. **Profile.** `packages/orch/scripts/step-profile.py <stream>` for each role step (model wait vs commands, own test runs,
+   polling waits, reads through Bash; grok streams are timed by their `.times` file) and
+   `packages/orch/scripts/run-usage.py <run>` for time and tokens per role (both read the `.gz` of a stream that
+   `orch conduct prune --compress-older-than` packed); the *Item metrics* table of `observer.md` holds the numbers of
+   every piece.
+6. **Analyze and fix** what slowed or broke the item; test, document, commit, merge to the branch.
+7. **Log** (below), then start the next item. Compare the observer metrics of the item with the estimate and name the
+   cause of each deviation over 30%.
+
+## Metrics per item
+
+The conductor writes them, with or without debug: `metrics` of `observer.json` and the *Item metrics* table of
+`observer.md` (`orch conduct observe --run R` writes them again), per piece: wall time, active time by role group
+(executor, checks, review, triage, scout, advice, registrar), checks share, executor/review/checks rounds, steps
+repeated after a resume, heals/repairs/unrepairable, beacons by code, fresh/cached/output tokens, deviations, confirmed
+and rejected findings by severity and the health transitions of `supervisor.jsonl`. Do not fill them in by hand; add
+only what the report cannot know: the estimate, the step profile, the rejected Majors (each is a plan note). A metric
+that grows from item to item is a finding.
+
+## What to log (for a final reviewer and for correcting instructions)
+
+- Defects: numbered entries with symptom, cause, fix (commit), what to rethink.
+- Per item: disputed decisions (rejected findings, deviations, work outside the write set, corrections not re-reviewed), with
+  where to look.
+- Instructions that caused or failed to prevent a failure and what to change in them.
+- Time and tokens per role and step; the estimate-versus-actual table; the observer's own mistakes.
+- A chronological journal of actions and decisions of the observer, written when they are made.
+- At the end of the run: a prompt for the reviewer model that links these files and lists the open questions.
+
+## Where things are
+
+- While the run goes: your notes in `<runs>/<run>/debug/journal.md` (named by the `DEBUG_MODE` beacon, created by you)
+  and the metrics in the observer report `.swissknifeman/orch/reports/<run>/observer.md`. After it, the committed
+  copies: findings and tables `docs/orch-*-run-findings.md`, observer journal `docs/orch-*-observer-journal.md`.
+- Options (`review.*`, `checks.*`, `scope.*`, `instructions.*`, `limits.*`) and beacons: `packages/orch/docs/conductor.md`.
+- Tools: `packages/orch/scripts/estimate.py`, `run-usage.py`, `step-profile.py`; `scripts/affected-tests.py`.
+- Editing this skill: follow the `skill-authoring` workflow (registry, `golden.py check`, affected tests).
+
+## Provenance (root-bootstrap, P1.2)
+
+Class-A private/source-only root-bootstrap identity (D31/D38):
+canonical source is this `SKILL.md`; thin projections —
+`.claude/skills/orch-debug/SKILL.md` and `.agents/skills/orch-debug/SKILL.md`
+(generated by `skiller registry`, never hand-edited). Bucket `repository-bootstrap` is
+private/source-only: never published as an ordinary unit/core/marketplace entry, never
+vendored/connected into a consumer project.

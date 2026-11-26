@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:aicore:workspace-local-only:v1",
+  "files": [
+    {
+      "path": "plans/p1/artifacts/V1/big.log",
+      "bytes": 6291456,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "device_id": "dev_01JC0Z8Q3M5T7V9XABCDEFGHJN",
+      "reason": "secret"
+    }
+  ]
+}

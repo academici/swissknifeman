@@ -1,0 +1,125 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "skiller",
+  "title": "Skill registry, delivery and quality gates",
+  "kind": "capability",
+  "version": "0.21.0",
+  "stability": "beta",
+  "destination": "own-repo",
+  "requires": [
+    {
+      "unit": "aicore",
+      "range": "^0.1",
+      "description": "Foundation: util, provider, artifacts, config, state, content, delivery, release."
+    }
+  ],
+  "provides": {
+    "cli": [
+      "bin/skiller"
+    ],
+    "install": [
+      "install.sh"
+    ],
+    "config": "configs/config.schema.json",
+    "plugins": [
+      {
+        "name": "skiller",
+        "catalog": ".claude-plugin/catalog.json"
+      }
+    ],
+    "contracts": [
+      {
+        "id": "urn:swissknifeman:skiller:profiles-list",
+        "path": "schemas/profiles-list/v1",
+        "version": "v1",
+        "stability": "alpha",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:projects-list",
+        "path": "schemas/projects-list/v1",
+        "version": "v1",
+        "stability": "alpha",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:evals",
+        "path": "schemas/evals/v1",
+        "version": "v1",
+        "stability": "beta"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:host",
+        "path": "schemas/host/v1",
+        "version": "v1",
+        "stability": "beta"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:swissknife",
+        "path": "schemas/swissknife/v1",
+        "version": "v1",
+        "stability": "beta"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:swissknifeman-config",
+        "path": "schemas/swissknifeman-config/v1",
+        "version": "v1",
+        "stability": "beta"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:upstream",
+        "path": "schemas/upstream/v1",
+        "version": "v1",
+        "stability": "beta"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:resolve",
+        "path": "schemas/resolve/v1",
+        "version": "v1",
+        "stability": "development",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:effective-source-doctor",
+        "path": "schemas/effective-source-doctor/v1",
+        "version": "v1",
+        "stability": "development",
+        "direction": "output"
+      },
+      {
+        "id": "urn:swissknifeman:skiller:exclusive-groups",
+        "path": "schemas/exclusive-groups/v1",
+        "version": "v1",
+        "stability": "development"
+      }
+    ],
+    "doctor": [
+      {
+        "id": "skiller.environment",
+        "category": "environment",
+        "probe": [
+          "bin/skiller",
+          "doctor"
+        ],
+        "output": "text"
+      }
+    ]
+  },
+  "dev": {
+    "test": [
+      "bash",
+      "scripts/test.sh"
+    ],
+    "validate": [
+      "bash",
+      "scripts/validate.sh"
+    ],
+    "standalone_setup": [
+      [
+        "bash",
+        "bin/skiller",
+        "registry"
+      ]
+    ]
+  }
+}

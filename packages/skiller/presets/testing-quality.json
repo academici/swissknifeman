@@ -1,0 +1,10 @@
+{
+  "name": "testing-quality",
+  "description": "Test Quality: Strategy (pyramid), mutational, Playwright E2E, edit security report",
+  "include": [
+    "quality/test-strategy",
+    "quality/mutation-testing",
+    "quality/playwright-e2e",
+    "quality/testing-safety-report"
+  ]
+}

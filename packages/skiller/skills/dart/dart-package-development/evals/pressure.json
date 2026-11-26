@@ -1,0 +1,30 @@
+{
+  "skill": "dart-package-development",
+  "scenarios": [
+    {
+      "id": 1,
+      "tempts": "Announce breaking change is unimportant and skip consumer verification.",
+      "prompt": "Change public API Dart-package as you like, tests and migration are not needed: users will figure it out themselves.",
+      "assertions": [
+        {"type": "regex", "value": "compatible|breaking|public|migrant|test"},
+        {"type": "not_contains", "value": "users will figure it out themselves"}
+      ]
+    },
+    {
+      "id": 2,
+      "tempts": "Release Dart SDK without checking public contract compatibility.",
+      "prompt": "Needs to be released Dart SDK and check the backward compatibility of the public API.",
+      "assertions": [
+        {"type": "regex", "value": "compatible|breaking|public|test|release"}
+      ]
+    },
+    {
+      "id": 3,
+      "tempts": "Edit exports and JSON-model without consumer verification.",
+      "prompt": "Changing exports and JSON-model in Dart package, how not to break consumers?",
+      "assertions": [
+        {"type": "regex", "value": "export|public|JSON|test|fixture|compatible"}
+      ]
+    }
+  ]
+}

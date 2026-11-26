@@ -1,0 +1,68 @@
+{
+  "changed_paths": [
+    "packages/gui/desktop/scripts/check-release-config.py",
+    "packages/gui/desktop/scripts/smoke.sh",
+    "packages/gui/desktop/src-tauri/app/build.rs",
+    "packages/gui/desktop/src-tauri/app/src/sidecar.rs",
+    "packages/gui/desktop/src-tauri/capabilities/default.json",
+    "packages/gui/desktop/src-tauri/tauri.conf.json",
+    "packages/gui/docs/desktop-release.md",
+    "packages/gui/docs/desktop.md",
+    "packages/gui/frontend/src/transport/TauriTransport.test.ts",
+    "packages/gui/frontend/src/transport/TauriTransport.ts",
+    "packages/gui/tests/test_desktop_config.py",
+    "packages/gui/tests/test_desktop_release.py"
+  ],
+  "checks_run": [
+    {
+      "cmd": "npm --prefix packages/gui/frontend run check",
+      "exit": 2,
+      "id": "V1"
+    },
+    {
+      "cmd": "python3 scripts/affected-tests.py --run",
+      "exit": 1,
+      "id": "V1"
+    },
+    {
+      "cmd": "python3 -m unittest packages.gui.tests.test_desktop_config packages.gui.tests.test_desktop_release",
+      "exit": 0,
+      "id": "V1"
+    }
+  ],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "packages/gui/desktop/scripts/check-release-config.py:27",
+        "packages/gui/desktop/src-tauri/capabilities/default.json"
+      ],
+      "impact": "Commit must include both files; window capability set shrinks.",
+      "kind": "difficulty",
+      "outcome": "accepted",
+      "text": "deviation: Edited check-release-config.py and capabilities/default.json outside write_set (externalBin removal requires the checker change; shell:allow-spawn scoped to the removed sidecar was dropped)."
+    },
+    {
+      "class": "environment",
+      "impact": "V1 cannot be confirmed green here.",
+      "kind": "difficulty",
+      "next": "Coordinator runs both commands outside the sandbox / with a regular package-lock.json.",
+      "outcome": "follow_up",
+      "text": "Acceptance commands cannot complete in this sandbox: node_modules reads are denied (ESLint/vitest EACCES) and packages/gui/frontend/package-lock.json is a character device (git diff exit 128 in affected-tests.py). The new TauriTransport test has not run."
+    },
+    {
+      "impact": "First cargo tauri build on the owner machine must confirm.",
+      "kind": "pending",
+      "next": "Owner build.",
+      "text": "Rust changes (build.rs set_current_dir, no_proxy, resource-dir spawn, health task) are uncompiled and unverified."
+    },
+    {
+      "kind": "escalation",
+      "next": "the owner decides how to go on",
+      "text": "CHECKS_RED: acceptance checks V1 stay red after 1 correction(s): past the target of 1 for check_fixes the last correction made no progress"
+    }
+  ],
+  "summary": "No new code changes this round. Re-ran the acceptance commands: npm run check fails with EACCES on node_modules (ESLint, vitest) and affected-tests.py crashes because packages/gui/frontend/package-lock.json is a character device in the sandbox, which git cannot hash. Both are environment blockers, not code failures. Python tests for the touched files pass (35 OK) and tsc passes. Rust changes remain uncompiled and unverified. Previous-round edits stand: build.rs chdir, resources-based sidecar spawn without externalBin, no_proxy, async health task, TauriTransport subscribe-before-snapshot, smoke.sh semver, tests and docs.",
+  "status": "blocked"
+}

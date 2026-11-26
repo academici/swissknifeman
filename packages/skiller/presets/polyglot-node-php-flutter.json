@@ -1,0 +1,17 @@
+{
+  "name": "polyglot-node-php-flutter",
+  "description": "Polyglot stack Node + PHP + Flutter/mobile: general engineering + PHP-backend + frontend (Vue) + bridge front↔back + mobile. Baketov node/flutter is not in the registry - take the existing ones (frontend for Node-front, mobile for Flutter).",
+  "buckets": [
+    "architect",
+    "ai",
+    "oss-dev",
+    "general",
+    "php",
+    "php-packages",
+    "frontend",
+    "frontend-vue",
+    "frontend-backend",
+    "mobile",
+    "devops"
+  ]
+}

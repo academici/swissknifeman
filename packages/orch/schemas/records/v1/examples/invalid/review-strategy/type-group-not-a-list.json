@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:review-strategy:v1",
+  "mode": "groups",
+  "groups": ["W1 + W2"],
+  "reviewer": {"effort": "medium"},
+  "reason": "x",
+  "source": "model"
+}

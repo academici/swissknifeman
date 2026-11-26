@@ -1,0 +1,8 @@
+---
+description: Cursor launch and autonomy in this repository — Run Mode, model routing, the permissions deny floor, and why approval mode is not file-configurable. Read before starting or re-configuring an autonomous session.
+alwaysApply: false
+---
+<!-- semantic:root.cursor.launch-and-autonomy -->
+<!-- instruction:root.cursor.launch-and-autonomy -->
+## root.cursor.launch-and-autonomy
+Name the intended workspace, the routed model and the Run Mode before acting. Autonomy in a trusted session comes from launch flags (`--force --sandbox disabled --trust --approve-mcps`), never from a committed file: the approval mode is not project-configurable. The `deny` floor in `.cursor/cli.json` still applies under `--force`, so a denied secret path is a real refusal, not a transient error to retry.

@@ -1,0 +1,118 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Validate required keys",
+  "status": "finished",
+  "summary": "load_config() checks required keys and types before first use.",
+  "why": "Broken configs crash later with unclear KeyError.",
+  "scope": {
+    "include": [
+      "load_config() and its tests"
+    ],
+    "exclude": [
+      "config file format"
+    ]
+  },
+  "depends_on": [],
+  "related": [
+    {
+      "ref": "P1.2",
+      "relation": "informs",
+      "note": "P1.2 reuses the error collector"
+    }
+  ],
+  "decisions": [
+    "D1"
+  ],
+  "reads": [
+    {
+      "path": "lib/pkg/config.py",
+      "why": "function to change",
+      "required": true
+    },
+    {
+      "path": "@plan/knowledge/design.json",
+      "section": "validation",
+      "why": "error format",
+      "required": true
+    }
+  ],
+  "task_files": [
+    {
+      "path": "lib/pkg/config.py",
+      "change": "modify"
+    },
+    {
+      "path": "tests/test_config.py",
+      "change": "modify"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "@plan/artifacts/P1/error-catalog.json",
+      "role": "output"
+    }
+  ],
+  "rules": [
+    "Collect all errors, raise once"
+  ],
+  "guidance": "Iterate REQUIRED_KEYS; append `ConfigIssue(key, problem)`; raise `ConfigError(issues)`.",
+  "examples": [
+    {
+      "path": "@plan/artifacts/design/examples.json",
+      "section": "E3"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "python3 -m unittest tests/test_config.py",
+      "expect": "OK",
+      "kind": "acceptance"
+    }
+  ],
+  "deliverables": [
+    "validation in config.py",
+    "3 new tests"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "medium"
+  },
+  "review": {
+    "mode": "none"
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "units": [],
+  "result": {
+    "started_at": "2026-10-05T10:05:00Z",
+    "finished_at": "2026-10-05T10:40:00Z",
+    "executor": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "effort": "high"
+    },
+    "notes": "3 tests added; aggregated error message.",
+    "deviations": [],
+    "pending": [],
+    "escalation": null,
+    "checks": [
+      {
+        "id": "V1",
+        "exit": 0,
+        "at": "2026-10-05T10:38:00Z",
+        "summary": "Ran 14 tests OK"
+      }
+    ],
+    "commits": [
+      "a1b2c3d"
+    ]
+  },
+  "updated_at": "2026-10-05T10:40:00Z"
+}

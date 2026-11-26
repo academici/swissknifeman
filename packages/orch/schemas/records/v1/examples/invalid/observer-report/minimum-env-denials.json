@@ -1,0 +1,18 @@
+{
+  "schema": "orch-conductor-observer/v1",
+  "run": "cnd-example",
+  "beacons": {},
+  "red_checks": {},
+  "items": [],
+  "proposals": [],
+  "refusals_by_source": {
+    "by_kind": {
+      "network": 2
+    },
+    "by_role": {
+      "executor": {
+        "network": -1
+      }
+    }
+  }
+}

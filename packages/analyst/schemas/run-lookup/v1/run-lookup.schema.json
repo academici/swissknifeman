@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:analyst:run-lookup:v1",
+  "title": "run-lookup",
+  "description": "Output of `analyst runs show --json`: the provenance-checked run report of a project, its codegraph usage summary and its neutral analytics events.",
+  "type": "object",
+  "properties": {
+    "$schema": {"description": "Contract identifier.", "const": "urn:swissknifeman:analyst:run-lookup:v1"},
+    "project": {"description": "Absolute project directory that was inspected.", "type": "string", "minLength": 1},
+    "lookup": {
+      "description": "Outcome of the report lookup.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "found: a trusted report is returned; rejected: a report exists but belongs to another project, session or provider; missing: there is no report.",
+          "type": "string",
+          "enum": ["found", "rejected", "missing"]
+        },
+        "path": {"description": "Report file that was selected, or null when none was.", "type": ["string", "null"]},
+        "reason": {"description": "Machine-readable rejection code, or null.", "type": ["string", "null"]}
+      },
+      "required": ["status", "path", "reason"],
+      "additionalProperties": false
+    },
+    "report": {"description": "The run report object, or null.", "type": ["object", "null"]},
+    "codegraph": {"description": "Codegraph usage summary of the report (calls, ops, by_op), or null without a report.", "type": ["object", "null"]},
+    "events": {
+      "description": "Validated neutral analytics events of the project, optionally of one session.",
+      "type": "array",
+      "items": {"type": "object"}
+    }
+  },
+  "required": ["$schema", "project", "lookup", "report", "codegraph", "events"],
+  "additionalProperties": false
+}

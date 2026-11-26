@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "executor",
+  "title": "Executor",
+  "description": "Minimal executor fixture.",
+  "instructions": [
+    {
+      "path": "packages/orch/roles/executor.md",
+      "purpose": "Execution instructions."
+    }
+  ],
+  "tools": {
+    "filesystem": "write",
+    "shell": "full",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "code_scope",
+  "result_shape": "stage-report",
+  "model_class_min": "implementation",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ]
+}

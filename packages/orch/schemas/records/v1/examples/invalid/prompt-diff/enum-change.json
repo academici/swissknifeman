@@ -1,0 +1,8 @@
+{
+  "schema": "prompt-diff/v1",
+  "base": {"step": "executor.1", "prompt_sha256": null},
+  "target": {"step": "executor.2", "prompt_sha256": null},
+  "blocks": [{"kind": "role", "origin": null, "change": "moved", "tokens": {"from": 1, "to": 1, "delta": 0}, "sha256": {"from": null, "to": null}}],
+  "tokens": {"from": 1, "to": 1, "delta": 0},
+  "counts": {"added": 0, "removed": 0, "changed": 0, "same": 0}
+}

@@ -1,0 +1,79 @@
+# desc-burndown.txt — ratchet frontmatter `description` (P3.2)
+#
+# Format: one entry per line - `<bucket>/<name>` (matches frontmatter bucket:name).
+# Lines starting with `#`, and empty comments are ignored.
+#
+# Rules (see validate.sh, section description-gates):
+#   - description > DESC_ERROR_MAX (450 char) — ALWAYS hard error, burn-down doesn't help.
+#   - description > DESC_WARN_MAX (300 char) and <= 450:
+#       * skill IS in this list → warn (legal, inherited debt);
+#       * skill is NOT in the list → error (new debt prohibited - Ratchet).
+#   - Record «rotten» (skill removed/renamed OR it description already <= 300 char) →
+#     validate.sh prints warn «rotten recording, remove it» — remove line when truncating.
+#
+# One-way: the list JUST gets smaller. Adding new rows outside bootstrap this item —
+# conscious decision of an individual item'and with justification in it Completion Notes, not a silent edit.
+#
+# Bootstrap (2026-07-12, P3.2): all remainder >300 character after P3.1 (64 skill,
+# see Completion Notes P3.1).
+
+architect/dev-engineering-super-skill
+architect/domain-modeling
+voice-ai/voice-ai
+frontend-nuxt/nuxt-modules
+laravel-livewire/livewire-blade-attributes
+php/production-readiness-checklist
+frontend-vue/vue-router-best-practices
+laravel-data-layer/laravel-data
+pm/pm-super-skill
+blender/mcp-blender
+laravel-architecture/eloquent-accessors
+architect/codebase-design
+oss-dev/issue-triage
+frontend-tailwind/dark-mode
+frontend/filepond-upload
+blender-modeling/config-conventions
+frontend-linting/eslint-flat-config
+ai/token-efficient
+php-packages/laravel-package-expressive
+laravel-architecture/config-driven-abstraction
+blender-modeling/parametric-config
+general/verify-claims
+frontend-backend/laravel-echo-client
+axioma/axioma-glossary
+laravel-extras/spatie-settings
+general/mcp-advisor
+sales/sales-super-skill
+creative/content-creative-super-skill
+quality/playwright-e2e
+mobile/figma-to-flutter
+php/transactional-outbox-relay
+php/namespace-refactor-safety
+frontend-reka/reka-ui-cva
+architect/ecosystem-reuse-gate
+quality/mutation-testing
+axioma/axioma-stack
+architect/figma-mcp-core
+quality/diagnosing-bugs
+frontend-vue/pinia-stores
+blender-modeling/build-loop
+php/cursor-pagination-design
+research/query-craft
+finance/finance-super-skill
+devops/db-test-preflight
+laravel-architecture/enum-state-machine
+frontend-naive-ui/naive-ui-theming
+frontend-tailwind/tailwind-conventions
+architect/package-contribution-protocol
+quality/tdd-discipline
+security/agent-security-super-skill
+laravel-testing/health-checks
+frontend-figma/figma-to-vue
+oss-dev/resolving-merge-conflicts
+laravel-architecture/enum-attributes
+frontend-backend/backend-type-sync
+general/writing-style
+general/grill-with-docs
+frontend-vue/vue-best-practices
+operator/operations-cx-super-skill
+blender-modeling/scene-conventions

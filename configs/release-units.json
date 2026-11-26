@@ -1,0 +1,73 @@
+{
+  "schema_version": "release-unit-policy/v1",
+  "_doc": "Independent version ownership for release attestation. Snapshot bytes never define the expected version. Optional keys within release-unit-policy/v1: plugins.<name>.path (package root of a version_owner=package plugin), plugins.<name>.grok_native (Grok installs the plugin package and serves its commands/), package_units (runtime package units id -> path), legacy_policy (the policy for historical refs without this file).",
+  "plugins": {
+    "planner": {
+      "version_owner": "umbrella",
+      "grok_native": true,
+      "required_providers": [
+        "claude-code",
+        "codex",
+        "grok"
+      ]
+    },
+    "maind": {
+      "version_owner": "package",
+      "package": "maind",
+      "path": "packages/maind",
+      "required_providers": [
+        "claude-code"
+      ]
+    },
+    "analyst": {
+      "version_owner": "package",
+      "package": "analyst",
+      "path": "packages/analyst",
+      "required_providers": [
+        "claude-code"
+      ]
+    },
+    "skm": {
+      "_doc": "The umbrella front door, shipped by the hub root (plugins/skm); the version is kept here and in its plugin manifests.",
+      "version_owner": "explicit",
+      "expected_version": "0.5.0",
+      "required_providers": [
+        "claude-code",
+        "codex"
+      ]
+    },
+    "harness": {
+      "version_owner": "package",
+      "package": "harness",
+      "path": "packages/harness",
+      "required_providers": [
+        "claude-code"
+      ]
+    },
+    "brain": {
+      "version_owner": "package",
+      "package": "brain",
+      "path": "packages/brain",
+      "required_providers": [
+        "claude-code"
+      ]
+    }
+  },
+  "default_plugin_version_owner": "skiller-publication-map",
+  "package_units": {
+    "skiller": "packages/skiller",
+    "harness": "packages/harness",
+    "maind": "packages/maind",
+    "analyst": "packages/analyst",
+    "brain": "packages/brain"
+  },
+  "legacy_policy": {
+    "schema_version": "release-unit-policy/v1",
+    "plugins": {
+      "maind": {"version_owner": "package", "package": "maind", "path": "packages/maind", "required_providers": ["claude-code"]},
+      "analyst": {"version_owner": "package", "package": "analyst", "path": "packages/analyst", "required_providers": ["claude-code"]},
+      "harness": {"version_owner": "package", "package": "harness", "path": "packages/harness", "required_providers": ["claude-code"]}
+    },
+    "default_plugin_version_owner": "skiller-publication-map"
+  }
+}

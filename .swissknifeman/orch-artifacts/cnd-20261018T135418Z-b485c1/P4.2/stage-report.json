@@ -1,0 +1,72 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "MIGRATION-HOST-B.md",
+    "docs/architecture/decisions/0085-portable-workspace.md",
+    "docs/workspace.md",
+    "packages/workspace/CHANGELOG.md"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "MIGRATION-HOST-B.md",
+        "docs/workspace.md",
+        "docs/architecture/decisions/0085-portable-workspace.md",
+        "CHANGELOG.md"
+      ],
+      "impact": "the commit takes these four files besides packages/workspace/CHANGELOG.md",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "MIGRATION-HOST-B.md, docs/workspace.md, docs/architecture/decisions/0085-portable-workspace.md and the root CHANGELOG.md are outside scope.write_set (packages/**), although scope.include names MIGRATION-HOST-B.md and docs/**; the root CHANGELOG.md is not named in include at all."
+    },
+    {
+      "impact": "a reviewer should compare the new text with D1-D4",
+      "kind": "assumption",
+      "next": "check MIGRATION-HOST-B.md steps 2b and 8b and the ADR amendment against D1-D4",
+      "text": "The context pack @plan/context/P4.2.json (decisions D1-D4) is not available in the worktree and I did not read plan files. I derived the final layout from the P3.1-P3.5 code, docs and changelogs; the text may miss a point that only D1-D4 states."
+    },
+    {
+      "impact": "small wording errors possible; the first real run on machine B is the proof",
+      "kind": "note",
+      "severity": "low",
+      "text": "Commands in the runbook were not run on a real machine. Taken from the CLI sources and changelogs: config migrate-home --dry-run --json, config paths, aicore shell-env show|install (called via ~/skm-hub-b/packages/aicore/bin/aicore), project migrate --dry-run --json, workspace project link|unlink --project, project doctor check ids (project.local, project.checkout-layer, project.env-*). I did not verify output wording such as 'legacy empty' in the config paths comment."
+    },
+    {
+      "impact": "runbook behaviour on that error",
+      "kind": "note",
+      "severity": "low",
+      "text": "I used the project migrate error code PROJECT_LOCAL_UNAVAILABLE and told the agent to stop and report rather than run 'workspace project attach' itself, because the message names attach as the remedy but a rebind is an owner decision on B."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "CHANGELOG.md",
+        "MIGRATION-HOST-B.md",
+        "docs/architecture/decisions/0085-portable-workspace.md",
+        "docs/workspace.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: CHANGELOG.md, MIGRATION-HOST-B.md, docs/architecture/decisions/0085-portable-workspace.md, docs/workspace.md"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "MIGRATION-HOST-B.md steps 2b and 8b: order of config migrate-home before 'config set --machine' and before the workspace clone",
+      "ADR 0085 amendment against decisions D1-D4 of PLAN7"
+    ],
+    "reason_codes": [
+      "low_confidence",
+      "scope_expanded"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Runbook and docs for the final layout (PLAN7). MIGRATION-HOST-B.md: backup of old XDG folders and checkout .swissknifeman/, new step 2b (config migrate-home, owner-run aicore shell-env install for SKM_HOME/SKM_WORKSPACES/SKM_WORKSPACE), new step 8b (project migrate into projects/<code>/local/, optional workspace project link|unlink), extended final checks, report items and Do-not list. docs/workspace.md: six areas of data (project-local local/, never in git), machine-home layout with config/state/cache, tasks/, decisions/, local/, order for machine B. ADR 0085: amendment 'machine home and project layer'. Changelogs: root and packages/workspace. Documentation only; no tests or code touched, nothing was run."
+}

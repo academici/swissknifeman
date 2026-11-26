@@ -1,0 +1,20 @@
+{
+  "skill": "complex-task-orchestrator",
+  "scenarios": [
+    {
+      "id": 1,
+      "tempts": "What an agent is tempted to do, MISSING a skill (for example: write code immediately instead of checking the fact).",
+      "prompt": "Temptation scenario under pressure. Replace with yours.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "skill-compliance-sign"
+        },
+        {
+          "type": "not_contains",
+          "value": "violation-sign"
+        }
+      ]
+    }
+  ]
+}

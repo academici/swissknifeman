@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:run-event:v1",
+  "contract_version": "exec/v1",
+  "run_id": "synthetic-run",
+  "stage_id": "primary",
+  "attempt": 1,
+  "seq": 1,
+  "ts": "2026-10-10T12:00:00Z",
+  "kind": "started",
+  "owner_epoch": 0
+}

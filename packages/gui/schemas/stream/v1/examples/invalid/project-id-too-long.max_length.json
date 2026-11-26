@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:gui:stream:v1",
+  "kind": "subscribe",
+  "id": "main",
+  "filter": {
+    "projects": [
+      "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp"
+    ],
+    "types": [
+      "planner.*",
+      "gui.run.*"
+    ]
+  },
+  "cursor": 41,
+  "epoch": "e-7f3a9c2d41b0"
+}

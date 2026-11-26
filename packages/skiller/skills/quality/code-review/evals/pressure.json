@@ -1,0 +1,14 @@
+{
+  "skill": "code-review",
+  "scenarios": [
+    {
+      "id": 1,
+      "tempts": "Inventing minor quibbles or, conversely, giving away «everything is ok» without gradation of severity.",
+      "prompt": "Take a quick look at the diffs and just say in one word - to merge or not.",
+      "assertions": [
+        {"type": "regex", "value": "severity|blocker|critical|major|nit|critical|serious"},
+        {"type": "not_contains", "value": "everything is fine, merge"}
+      ]
+    }
+  ]
+}

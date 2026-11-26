@@ -1,0 +1,5 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-mutation:v1",
+  "kind": "apply",
+  "module": "planner"
+}

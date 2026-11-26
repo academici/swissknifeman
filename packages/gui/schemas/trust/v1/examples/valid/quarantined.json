@@ -1,0 +1,47 @@
+{
+  "$schema": "urn:swissknifeman:gui:trust:v1",
+  "id": "board-view",
+  "source": "extension",
+  "state": "quarantined",
+  "runtime_enabled": false,
+  "ui_enabled": true,
+  "manifest_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "compatibility": {
+    "protocol_ok": true,
+    "missing_contracts": []
+  },
+  "failures": {
+    "count": 3,
+    "window_s": 600,
+    "last_code": "HANDLER_TIMEOUT"
+  },
+  "permissions": [
+    {
+      "effect": "plan.write",
+      "declared": true,
+      "enforcement": "advisory"
+    },
+    {
+      "effect": "process.spawn",
+      "declared": true,
+      "enforcement": "enforced"
+    },
+    {
+      "effect": "network",
+      "declared": false,
+      "enforcement": "declared"
+    }
+  ],
+  "grants": [
+    {
+      "id": "grant-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "plugin": "board-view",
+      "capability": "plan.write",
+      "project_id": null,
+      "manifest_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "granted_at": "2026-10-16T14:00:00Z",
+      "expires_at": "2026-11-16T14:00:00Z",
+      "granted_by": "local"
+    }
+  ]
+}

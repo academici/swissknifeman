@@ -1,0 +1,760 @@
+{
+  "schema": "urn:swissknifeman:aicore:plugin-catalog:v1",
+  "marketplace": {
+    "name": "swissknifeman",
+    "owner": {
+      "name": "Dmitry Vostrikov",
+      "email": "dv.vostrikov@gmail.com"
+    }
+  },
+  "plugins": [
+    {
+      "name": "ai",
+      "source": "skills/ai",
+      "description": "AI agent building: design, tools, evaluation",
+      "category": "engineering",
+      "tags": [
+        "ai",
+        "agents"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "architect",
+      "source": "skills/architect",
+      "description": "Architecture, API and data design, security, observability, tech stack selection",
+      "category": "engineering",
+      "tags": [
+        "architecture",
+        "api",
+        "security",
+        "data"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "axioma",
+      "source": "skills/axioma",
+      "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+      "category": "engineering",
+      "tags": [
+        "axioma",
+        "ecosystem",
+        "doctrine"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "azguard",
+      "source": "skills/azguard",
+      "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "rbac"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "blender",
+      "source": "skills/blender",
+      "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
+      "category": "engineering",
+      "tags": [
+        "blender",
+        "3d",
+        "bpy",
+        "mcp"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "blender-modeling",
+      "source": "skills/blender-modeling",
+      "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
+      "category": "engineering",
+      "tags": [
+        "blender",
+        "cad",
+        "parametric",
+        "fdm",
+        "sla",
+        "bpy"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "botkit",
+      "source": "skills/botkit",
+      "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "bot"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "core",
+      "source": "./",
+      "skills": [
+        "skills/general/context-economy",
+        "skills/general/anti-drift",
+        "skills/general/session-handoff",
+        "skills/general/verify-claims"
+      ],
+      "description": "Curated always-on core: token-economy skills (context-economy, anti-drift, verify-claims, …) — lean replacement for the general+oss-dev buckets in every project",
+      "category": "meta",
+      "tags": [
+        "core",
+        "token-economy",
+        "always-on"
+      ],
+      "codex": {
+        "source": "adapters/codex/core",
+        "description": "Curated always-on core skills",
+        "category": "meta",
+        "tags": [
+          "core",
+          "token-economy"
+        ],
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "creative",
+      "source": "skills/creative",
+      "description": "Creative studio: video, design, content production",
+      "category": "business",
+      "tags": [
+        "creative",
+        "content"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "dart",
+      "source": "skills/dart",
+      "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+      "category": "engineering",
+      "tags": [
+        "dart",
+        "pub",
+        "package",
+        "sdk"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "devops",
+      "source": "skills/devops",
+      "description": "Docker environments, CI/CD pipelines, GitOps",
+      "category": "infrastructure",
+      "tags": [
+        "docker",
+        "ci-cd",
+        "gitops"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "finance",
+      "source": "skills/finance",
+      "description": "Finance and accounting: bookkeeping, reporting, FP&A",
+      "category": "business",
+      "tags": [
+        "finance",
+        "accounting"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "founder",
+      "source": "skills/founder",
+      "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
+      "category": "business",
+      "tags": [
+        "startup",
+        "ideas",
+        "pitch"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend",
+      "source": "skills/frontend",
+      "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
+      "category": "engineering",
+      "tags": [
+        "frontend",
+        "core"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-animations",
+      "source": "skills/frontend-animations",
+      "description": "Animations with Motion Vue (motion-v)",
+      "category": "engineering",
+      "tags": [
+        "animations",
+        "motion",
+        "vue"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-backend",
+      "source": "skills/frontend-backend",
+      "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
+      "category": "engineering",
+      "tags": [
+        "inertia",
+        "echo",
+        "type-sync"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-figma",
+      "source": "skills/frontend-figma",
+      "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
+      "category": "engineering",
+      "tags": [
+        "figma",
+        "vue",
+        "design"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-linting",
+      "source": "skills/frontend-linting",
+      "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
+      "category": "engineering",
+      "tags": [
+        "eslint",
+        "typescript",
+        "tooling"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-naive-ui",
+      "source": "skills/frontend-naive-ui",
+      "description": "Naive UI component library theming (GlobalThemeOverrides)",
+      "category": "engineering",
+      "tags": [
+        "naive-ui",
+        "vue",
+        "theming"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-nuxt",
+      "source": "skills/frontend-nuxt",
+      "description": "Nuxt 4+: server routes, modules, SEO meta-module",
+      "category": "engineering",
+      "tags": [
+        "nuxt",
+        "vue",
+        "ssr"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-reka",
+      "source": "skills/frontend-reka",
+      "description": "Reka UI headless primitives + CVA variants",
+      "category": "engineering",
+      "tags": [
+        "reka-ui",
+        "vue",
+        "cva"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-tailwind",
+      "source": "skills/frontend-tailwind",
+      "description": "Tailwind CSS v4 conventions and dark-mode theming",
+      "category": "engineering",
+      "tags": [
+        "tailwind",
+        "css",
+        "dark-mode"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-vite",
+      "source": "skills/frontend-vite",
+      "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
+      "category": "engineering",
+      "tags": [
+        "vite",
+        "build",
+        "vitepress"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-vue",
+      "source": "skills/frontend-vue",
+      "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
+      "category": "engineering",
+      "tags": [
+        "vue",
+        "pinia",
+        "vitest"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "frontend-wayfinder",
+      "source": "skills/frontend-wayfinder",
+      "description": "Laravel Wayfinder: type-safe routes/controller actions in the frontend",
+      "category": "engineering",
+      "tags": [
+        "wayfinder",
+        "laravel",
+        "routes"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "general",
+      "source": "skills/general",
+      "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "conventions",
+        "git"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "generate-skill",
+      "source": "generate-skill",
+      "description": "Meta-skill for creating new skills from SKILL_TEMPLATE",
+      "category": "meta",
+      "tags": [
+        "meta",
+        "authoring"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-architecture",
+      "source": "skills/laravel-architecture",
+      "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "architecture",
+        "ddd"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-auth",
+      "source": "skills/laravel-auth",
+      "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "auth",
+        "security"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-data-layer",
+      "source": "skills/laravel-data-layer",
+      "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "data",
+        "broadcasting"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-extras",
+      "source": "skills/laravel-extras",
+      "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "spatie",
+        "packages"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-filament",
+      "source": "skills/laravel-filament",
+      "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "filament",
+        "admin"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-livewire",
+      "source": "skills/laravel-livewire",
+      "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "livewire",
+        "blade"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "laravel-testing",
+      "source": "skills/laravel-testing",
+      "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
+      "category": "engineering",
+      "tags": [
+        "laravel",
+        "testing",
+        "pest"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "legal",
+      "source": "skills/legal",
+      "description": "Legal operations: contracts, compliance, risk",
+      "category": "business",
+      "tags": [
+        "legal",
+        "compliance"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "marketing",
+      "source": "skills/marketing",
+      "description": "Marketing: strategy, campaigns, content, growth",
+      "category": "business",
+      "tags": [
+        "marketing",
+        "growth"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "mobile",
+      "source": "skills/mobile",
+      "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
+      "category": "engineering",
+      "tags": [
+        "flutter",
+        "mobile",
+        "dart",
+        "figma"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "operator",
+      "source": "skills/operator",
+      "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
+      "category": "operations",
+      "tags": [
+        "incidents",
+        "runbooks",
+        "sre"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "oss-dev",
+      "source": "skills/oss-dev",
+      "description": "Open-source development: releases, governance, DX, dependency audits + language references",
+      "category": "engineering",
+      "tags": [
+        "open-source",
+        "releases",
+        "dx"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "php",
+      "source": "skills/php",
+      "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "core"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "php-packages",
+      "source": "skills/php-packages",
+      "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
+      "category": "engineering",
+      "tags": [
+        "php",
+        "laravel",
+        "packages"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "pm",
+      "source": "skills/pm",
+      "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
+      "category": "product",
+      "tags": [
+        "brd",
+        "prd",
+        "roadmap"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "python",
+      "source": "skills/python",
+      "description": "Python: ML project structure, virtualenv and dependency management",
+      "category": "engineering",
+      "tags": [
+        "python",
+        "ml",
+        "venv"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "quality",
+      "source": "skills/quality",
+      "description": "Code review, refactoring plans, tech debt audits, test strategy",
+      "category": "engineering",
+      "tags": [
+        "code-review",
+        "refactoring",
+        "tech-debt"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "research",
+      "source": "skills/research",
+      "description": "Research and knowledge management",
+      "category": "business",
+      "tags": [
+        "research",
+        "knowledge"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "roles",
+      "source": "skills/roles",
+      "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
+      "category": "personas",
+      "tags": [
+        "tech-lead",
+        "cto",
+        "maintainer"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "sales",
+      "source": "skills/sales",
+      "description": "Sales: pipeline, outreach, CRM, negotiation",
+      "category": "business",
+      "tags": [
+        "sales"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "security",
+      "source": "skills/security",
+      "description": "AI agent security: prompt injection defense, hardening",
+      "category": "engineering",
+      "tags": [
+        "security"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "voice-ai",
+      "source": "skills/voice-ai",
+      "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+      "category": "engineering",
+      "tags": [
+        "voice",
+        "realtime",
+        "webrtc",
+        "stt",
+        "tts",
+        "vad",
+        "barge-in",
+        "latency"
+      ],
+      "codex": {
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    }
+  ]
+}

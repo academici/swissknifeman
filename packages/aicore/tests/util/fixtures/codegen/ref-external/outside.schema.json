@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:outside:v1",
+  "description": "Fixture: siblings of a $ref that points outside the directory cannot be composed.",
+  "$defs": {
+    "tight": {"$ref": "urn:swissknifeman:fixture:other:thing:v1", "additionalProperties": false,
+              "required": ["x"]}
+  }
+}

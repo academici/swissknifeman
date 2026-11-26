@@ -1,0 +1,40 @@
+{
+  "$schema": "urn:swissknifeman:gui:trust:v1",
+  "id": "gui-planner",
+  "source": "unit",
+  "state": "incompatible",
+  "runtime_enabled": false,
+  "ui_enabled": false,
+  "manifest_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "compatibility": {
+    "protocol_ok": false,
+    "missing_contracts": [
+      {
+        "id": "urn:swissknifeman:gui:view-data",
+        "version": "v2"
+      }
+    ]
+  },
+  "failures": {
+    "count": 0,
+    "window_s": 600
+  },
+  "permissions": [
+    {
+      "effect": "plan.write",
+      "declared": true,
+      "enforcement": "advisory"
+    },
+    {
+      "effect": "process.spawn",
+      "declared": true,
+      "enforcement": "enforced"
+    },
+    {
+      "effect": "network",
+      "declared": false,
+      "enforcement": "declared"
+    }
+  ],
+  "grants": []
+}

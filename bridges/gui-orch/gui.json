@@ -1,0 +1,561 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "commands": [
+    {
+      "id": "gui-orch.gates-clear",
+      "title": "Clear provider gate",
+      "description": "Remove the capacity gate of one provider; subsequent conductor calls may use it again.",
+      "scope": "project",
+      "effects": ["process.spawn", "config.write"],
+      "risk": "medium",
+      "confirmation": "always",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": ["run.py", "gates-clear"],
+        "cwd": "project",
+        "env": ["SKM_UMBRELLA", "AICORE_ROOT"]
+      },
+      "input": [
+        {
+          "name": "provider",
+          "title": "Provider",
+          "type": "enum",
+          "enum": ["claude-code", "codex", "grok"],
+          "flag": "--provider",
+          "required": true
+        }
+      ]
+    },
+    {
+      "concurrency_key": "gui-orch:run:{project_id}",
+      "confirmation": "always",
+      "description": "Conduct the next ready pieces of a plan (orch conduct run --plan P --ready --max-items N). Starts agents that change the project and the plan. Starts detached from the GUI; the run continues after the GUI closes.",
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      },
+      "effects": [
+        "process.spawn",
+        "plan.write",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "run-ready"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.run-ready",
+      "input": [
+        {
+          "flag": "--plan",
+          "name": "plan",
+          "required": true,
+          "title": "Plan",
+          "type": "plan-ref"
+        },
+        {
+          "flag": "--max-items",
+          "maximum": 20,
+          "minimum": 1,
+          "name": "max_items",
+          "required": true,
+          "title": "Most pieces of work",
+          "type": "integer"
+        }
+      ],
+      "risk": "high",
+      "scope": "project",
+      "supports": [
+        "stream",
+        "dry-run"
+      ],
+      "timeout_s": 120,
+      "title": "Run ready pieces"
+    },
+    {
+      "concurrency_key": "gui-orch:run:{project_id}",
+      "confirmation": "risk-based",
+      "description": "Continue a stopped run; closed steps are not repeated. With a retry item it also takes that blocked piece back. Starts detached from the GUI; the run continues after the GUI closes.",
+      "effects": [
+        "process.spawn",
+        "plan.write",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "resume"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.resume",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        },
+        {
+          "flag": "--retry",
+          "name": "retry",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": false,
+          "title": "Blocked item to take back",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "supports": [
+        "stream"
+      ],
+      "timeout_s": 120,
+      "title": "Resume run"
+    },
+    {
+      "confirmation": "always",
+      "description": "Answer a question of the executor of a waiting piece (orch conduct answer): one of its options, or a free text; the run is not touched.",
+      "effects": [
+        "process.spawn",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "answer"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.answer",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        },
+        {
+          "flag": "--item",
+          "name": "item",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": true,
+          "title": "Item",
+          "type": "string"
+        },
+        {
+          "flag": "--question",
+          "name": "question",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": true,
+          "title": "Question",
+          "type": "string"
+        },
+        {
+          "flag": "--option",
+          "name": "option",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": false,
+          "title": "Option",
+          "type": "string"
+        },
+        {
+          "flag": "--text",
+          "name": "text",
+          "pattern": "^[^\\u0000-\\u001f]{1,2000}$",
+          "required": false,
+          "title": "Free answer",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "timeout_s": 60,
+      "title": "Answer question"
+    },
+    {
+      "concurrency_key": "gui-orch:run:{project_id}",
+      "confirmation": "risk-based",
+      "description": "Go on with the pieces of a run that wait for an answer (orch conduct continue); a piece whose question is not answered is refused.",
+      "effects": [
+        "process.spawn",
+        "plan.write",
+        "project.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "continue"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.continue",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "supports": [
+        "stream",
+        "cancel"
+      ],
+      "timeout_s": 86400,
+      "title": "Continue waiting pieces"
+    },
+    {
+      "concurrency_key": "gui-orch:run:{project_id}",
+      "confirmation": "always",
+      "description": "Give a claimed piece of a run back to the work source when nobody worked on it.",
+      "effects": [
+        "process.spawn",
+        "plan.write"
+      ],
+      "exec": {
+        "argv": [
+          "run.py",
+          "release"
+        ],
+        "cwd": "project",
+        "env": [
+          "SKM_UMBRELLA"
+        ],
+        "kind": "argv"
+      },
+      "id": "gui-orch.release",
+      "input": [
+        {
+          "flag": "--run",
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        },
+        {
+          "flag": "--item",
+          "name": "item",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "required": true,
+          "title": "Item",
+          "type": "string"
+        }
+      ],
+      "risk": "medium",
+      "scope": "project",
+      "timeout_s": 120,
+      "title": "Release item"
+    }
+  ],
+  "gui_protocol": {
+    "max": "1",
+    "min": "1"
+  },
+  "handler": {
+    "extension": "extension.json"
+  },
+  "owner": "gui-orch",
+  "queries": [
+    {
+      "id": "gui-orch.routes",
+      "title": "Item routes",
+      "description": "Recorded routing labels (used) and current availability, without launch commands or environment.",
+      "scope": "project",
+      "returns": "status-table",
+      "cache_s": 5,
+      "timeout_s": 60,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": true, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+      ]
+    },
+    {
+      "id": "gui-orch.prompt",
+      "title": "Prompt manifest",
+      "description": "Block metadata and budget totals only; prompt text is never displayed.",
+      "scope": "project",
+      "returns": "resource-detail",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": true, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        {"name": "step", "title": "Step", "type": "string", "required": true, "pattern": "^[a-z][a-z0-9-]*(\\.[0-9]+(-q[0-9]+)?)?$"}
+      ]
+    },
+    {
+      "id": "gui-orch.budget",
+      "title": "Run budget",
+      "description": "Accounted fresh tokens against effective item and run limits; incomplete usage warns.",
+      "scope": "project",
+      "returns": "metric-group",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"}
+      ]
+    },
+    {
+      "id": "gui-orch.timeline",
+      "title": "Run timeline",
+      "description": "Step transitions of the pieces of a run with their durations; an interrupted and resumed step is two entries.",
+      "scope": "project",
+      "returns": "timeline",
+      "cache_s": 5,
+      "timeout_s": 30,
+      "params": [
+        {"name": "run_id", "title": "Run", "type": "string", "required": true, "pattern": "^cnd-[0-9A-Za-z-]+$"},
+        {"name": "item", "title": "Item", "type": "string", "required": false, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"}
+      ]
+    },
+    {
+      "id": "gui-orch.gates",
+      "title": "Provider gates",
+      "description": "Active machine capacity gates, with a separately confirmed clear command.",
+      "scope": "project",
+      "returns": "status-table",
+      "cache_s": 5,
+      "timeout_s": 30
+    },
+    {
+      "cache_s": 5,
+      "description": "The conductor runs of the project, newest first.",
+      "id": "gui-orch.runs",
+      "returns": "resource-list",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Runs"
+    },
+    {
+      "cache_s": 5,
+      "description": "The newest conductor run of the project.",
+      "id": "gui-orch.latest",
+      "returns": "resource-list",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Latest run"
+    },
+    {
+      "cache_s": 5,
+      "description": "Status, reason, current stage, tokens and stop of one run.",
+      "id": "gui-orch.run",
+      "params": [
+        {
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        }
+      ],
+      "returns": "resource-detail",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Run"
+    },
+    {
+      "cache_s": 5,
+      "description": "The pieces of work of one run with their outcome and last stage.",
+      "id": "gui-orch.items",
+      "params": [
+        {
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        }
+      ],
+      "returns": "status-table",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Run items"
+    },
+    {
+      "cache_s": 0,
+      "description": "The observer report of one run (written by the CLI).",
+      "id": "gui-orch.report",
+      "params": [
+        {
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": true,
+          "title": "Run",
+          "type": "string"
+        }
+      ],
+      "returns": "markdown",
+      "scope": "project",
+      "timeout_s": 60,
+      "title": "Observer report"
+    },
+    {
+      "cache_s": 5,
+      "description": "Open questions of the executors of a run (default: the latest run).",
+      "id": "gui-orch.questions",
+      "params": [
+        {
+          "name": "run_id",
+          "pattern": "^cnd-[0-9A-Za-z-]+$",
+          "required": false,
+          "title": "Run",
+          "type": "string"
+        }
+      ],
+      "returns": "resource-list",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Questions"
+    },
+    {
+      "cache_s": 30,
+      "description": "Whether the provider sandbox of orch roles can start, with evidence.",
+      "id": "gui-orch.sandbox",
+      "returns": "status-table",
+      "scope": "project",
+      "timeout_s": 30,
+      "title": "Sandbox"
+    }
+  ],
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "routes": [
+    {
+      "id": "gui-orch.routes", "title": "Item routes", "scope": "project",
+      "path": "runs/:run_id/items/:item/routes", "query": "gui-orch.routes", "view": "status-table"
+    },
+    {
+      "id": "gui-orch.prompt", "title": "Prompt manifest", "scope": "project",
+      "path": "runs/:run_id/items/:item/prompt/:step", "query": "gui-orch.prompt", "view": "resource-detail"
+    },
+    {
+      "id": "gui-orch.budget", "title": "Run budget", "scope": "project",
+      "path": "runs/:run_id/budget", "query": "gui-orch.budget", "view": "metric-group"
+    },
+    {
+      "id": "gui-orch.timeline", "title": "Run timeline", "scope": "project",
+      "path": "runs/:run_id/timeline", "query": "gui-orch.timeline", "view": "timeline"
+    },
+    {
+      "id": "gui-orch.gates", "title": "Provider gates", "scope": "project",
+      "path": "providers/gates", "query": "gui-orch.gates", "view": "status-table",
+      "actions": ["gui-orch.gates-clear"], "nav": {"order": 33, "section": "project"}
+    },
+    {
+      "id": "gui-orch.runs",
+      "nav": {
+        "order": 30,
+        "section": "project"
+      },
+      "path": "runs",
+      "query": "gui-orch.runs",
+      "scope": "project",
+      "title": "Orchestrator runs",
+      "view": "resource-list"
+    },
+    {
+      "actions": [
+        "gui-orch.resume",
+        "gui-orch.continue",
+        "gui-orch.release"
+      ],
+      "id": "gui-orch.run",
+      "path": "runs/:run_id",
+      "query": "gui-orch.run",
+      "scope": "project",
+      "title": "Run",
+      "view": "resource-detail"
+    },
+    {
+      "id": "gui-orch.items",
+      "path": "runs/:run_id/items",
+      "query": "gui-orch.items",
+      "scope": "project",
+      "title": "Run items",
+      "view": "status-table"
+    },
+    {
+      "id": "gui-orch.report",
+      "path": "runs/:run_id/report",
+      "query": "gui-orch.report",
+      "scope": "project",
+      "title": "Observer report",
+      "view": "markdown"
+    },
+    {
+      "actions": [
+        "gui-orch.answer"
+      ],
+      "id": "gui-orch.questions",
+      "nav": {
+        "order": 31,
+        "section": "project"
+      },
+      "path": "questions",
+      "query": "gui-orch.questions",
+      "scope": "project",
+      "title": "Orchestrator questions",
+      "view": "resource-list"
+    },
+    {
+      "actions": [
+        "gui-orch.run-ready"
+      ],
+      "id": "gui-orch.sandbox",
+      "nav": {
+        "order": 32,
+        "section": "project"
+      },
+      "path": "sandbox",
+      "query": "gui-orch.sandbox",
+      "scope": "project",
+      "title": "Orchestrator sandbox",
+      "view": "status-table"
+    }
+  ],
+  "version": "0.1.0",
+  "widgets": [
+    {
+      "id": "gui-orch.latest",
+      "query": "gui-orch.latest",
+      "scope": "project",
+      "size": "medium",
+      "title": "Latest orchestrator run",
+      "view": "resource-list"
+    }
+  ]
+}

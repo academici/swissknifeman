@@ -1,0 +1,14 @@
+{
+  "skill": "model-verification",
+  "should_trigger": [
+    "verify every printable Blender part before STL export",
+    "audit the whole parametric model and all mating interfaces",
+    "capture fresh per-part evidence and decide release readiness",
+    "create a model-local ordered verification instruction"
+  ],
+  "should_not": [
+    "change one fillet radius on a single Blender part",
+    "explain how to use a Screw modifier",
+    "render one presentation image without a release claim"
+  ]
+}

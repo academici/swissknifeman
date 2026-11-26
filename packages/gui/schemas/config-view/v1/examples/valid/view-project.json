@@ -1,0 +1,237 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-view:v1",
+  "kind": "config_view",
+  "module": "config-demo",
+  "project_id": "proj-1a2b3c4d",
+  "schema_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:swissknifeman:config-demo:config:v1",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "verbose": {
+        "type": "boolean",
+        "default": false,
+        "description": "Print details."
+      }
+    }
+  },
+  "layers": [
+    {
+      "name": "defaults",
+      "file": null,
+      "present": true,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "machine",
+      "file": "/home/user/.config/swissknifeman/config.toml",
+      "present": false,
+      "writable": true,
+      "revision": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "raw": "",
+      "raw_truncated": false
+    },
+    {
+      "name": "project",
+      "file": "/home/user/proj/.swissknifeman/config.toml",
+      "present": true,
+      "writable": true,
+      "revision": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "raw": "schema_version = 1\n[config-demo.limits]\nmax = 6\n",
+      "raw_truncated": false
+    },
+    {
+      "name": "env",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "invocation",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "flags",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    }
+  ],
+  "entries": [
+    {
+      "key": "limits.max",
+      "type": "integer",
+      "secret": false,
+      "description": "Largest count.",
+      "allowed_layers": null,
+      "default": 4,
+      "effective": {
+        "value": 6,
+        "layer": "project",
+        "file": "/home/user/proj/.swissknifeman/config.toml",
+        "line": 3,
+        "source": null
+      },
+      "overridden": [
+        {
+          "value": 4,
+          "layer": "defaults",
+          "file": null,
+          "line": null,
+          "source": null
+        }
+      ],
+      "layer_values": {
+        "machine": null,
+        "project": 6
+      }
+    },
+    {
+      "key": "mode",
+      "type": "string",
+      "secret": false,
+      "description": "Run mode.",
+      "allowed_layers": null,
+      "default": "safe",
+      "effective": {
+        "value": "fast",
+        "layer": "env",
+        "file": null,
+        "line": null,
+        "source": "CONFIG_DEMO_MODE"
+      },
+      "overridden": [
+        {
+          "value": "safe",
+          "layer": "defaults",
+          "file": null,
+          "line": null,
+          "source": null
+        }
+      ],
+      "layer_values": {
+        "machine": null,
+        "project": null
+      }
+    },
+    {
+      "key": "sources",
+      "type": "array",
+      "secret": false,
+      "description": null,
+      "allowed_layers": null,
+      "effective": {
+        "value": [
+          "local"
+        ],
+        "layer": "defaults",
+        "file": null,
+        "line": null,
+        "source": null
+      },
+      "overridden": [],
+      "layer_values": {
+        "machine": null,
+        "project": null
+      }
+    },
+    {
+      "key": "token",
+      "type": "string",
+      "secret": true,
+      "description": "Reference to the API token.",
+      "allowed_layers": null,
+      "effective": {
+        "value": "env://DEMO_TOKEN",
+        "layer": "machine",
+        "file": "/home/user/.config/swissknifeman/config.toml",
+        "line": 2,
+        "source": null
+      },
+      "overridden": [],
+      "layer_values": {
+        "machine": "env://DEMO_TOKEN",
+        "project": null
+      }
+    },
+    {
+      "key": "cache_dir",
+      "type": "string",
+      "secret": false,
+      "description": "Machine-local cache directory.",
+      "allowed_layers": [
+        "defaults",
+        "machine"
+      ],
+      "default": "",
+      "effective": {
+        "value": "",
+        "layer": "defaults",
+        "file": null,
+        "line": null,
+        "source": null
+      },
+      "overridden": [],
+      "layer_values": {
+        "machine": null,
+        "project": null
+      }
+    },
+    {
+      "key": "profiles.fast.level",
+      "type": "integer",
+      "secret": false,
+      "description": "Level of the profile.",
+      "allowed_layers": null,
+      "default": 1,
+      "effective": {
+        "value": 3,
+        "layer": "project",
+        "file": "/home/user/proj/.swissknifeman/config.toml",
+        "line": 6,
+        "source": null
+      },
+      "overridden": [
+        {
+          "value": 1,
+          "layer": "defaults",
+          "file": null,
+          "line": null,
+          "source": null
+        }
+      ],
+      "layer_values": {
+        "machine": null,
+        "project": 3
+      }
+    }
+  ],
+  "maps": [
+    {
+      "key": "profiles",
+      "entry_pattern": "^[a-z][a-z0-9-]*$",
+      "entries": [
+        "fast"
+      ]
+    }
+  ],
+  "warnings": [
+    "unknown environment variable CONFIG_DEMO_X"
+  ]
+}

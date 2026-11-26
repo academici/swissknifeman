@@ -1,0 +1,16 @@
+{
+  "name": "@academici/harness",
+  "version": "0.8.1",
+  "private": true,
+  "license": "MIT",
+  "description": "Setting up the environment Claude Code: presets permissions, modes auto-approve/bypass, MCP-servers, hooks",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.3"
+  }
+}

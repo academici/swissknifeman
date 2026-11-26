@@ -1,0 +1,11 @@
+{
+  "skill": "skills-ssot",
+  "should_trigger": [
+    "skills differ between .claude/skills and .cursor/skills, fix the single source of truth",
+    "set up .ai/skills as the SSOT for all agent tools in this project"
+  ],
+  "should_not": [
+    "write a new SKILL.md for a domain-specific skill",
+    "debug why validate.sh fails on frontmatter"
+  ]
+}

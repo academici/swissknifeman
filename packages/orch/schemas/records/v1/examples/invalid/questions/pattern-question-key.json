@@ -1,0 +1,42 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:questions:v1",
+  "item": "W1",
+  "questions": [
+    {
+      "applied_at": "2026-10-22T12:00:00Z",
+      "asked_at": "2026-10-22T12:00:00Z",
+      "auto_answered": true,
+      "binding": {
+        "input_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "input_part_digest": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+        "item": "W1",
+        "run": "cnd-20261022T120000Z-a1b2c3",
+        "step": "executor.1"
+      },
+      "blocking": true,
+      "id": "Q1",
+      "kind": "decision",
+      "options": [
+        {
+          "id": "keep",
+          "label": "keep"
+        },
+        {
+          "id": "rename",
+          "label": "rename"
+        }
+      ],
+      "question_digest": "f13b1c3d08b245ec267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7e",
+      "question_key": "qk-short",
+      "resolution": {
+        "at": "2026-10-22T12:10:00Z",
+        "by": "decision:D12",
+        "value": "rename"
+      },
+      "revision": 1,
+      "status": "applied",
+      "text": "Keep the old flag name?"
+    }
+  ],
+  "run": "cnd-20261022T120000Z-a1b2c3"
+}

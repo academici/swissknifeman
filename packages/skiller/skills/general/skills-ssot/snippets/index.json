@@ -1,0 +1,25 @@
+{
+  "skill": "skills-ssot",
+  "snippets": [
+    {
+      "file": "gitignore-ai.txt",
+      "description": "Block for .gitignore: generated agent files - /CLAUDE.md, /AGENTS.md, /GEMINI.md, /.claude/settings.json, /.claude/skills/, /.cursor/skills/",
+      "tags": ["gitignore", "ssot"]
+    },
+    {
+      "file": "symlink-sync.sh",
+      "description": "Idempotent bash-symlink generator .claude/skills and .cursor/skills from source.ai/skills: removes broken symlinks, does not touch real directories (vendor-copies). For projects without Laravel Boost",
+      "tags": ["bash", "symlink", "ssot"]
+    },
+    {
+      "file": "boost-json.example",
+      "description": "Example boost.json — generation config Laravel Boost (JSON without comments, so the explanation is here): agents — for which agents to generate (claude_code, cursor); guidelines/mcp — enable rule generation and MCP; packages — third-party packages with guideline-sets; skills — which directories from .ai/skills connect. Generator: php artisan boost:update",
+      "tags": ["boost", "laravel", "config"]
+    },
+    {
+      "file": "skills-lock.example.json",
+      "description": "Example skills-lock.json — fixing external vendor-skills in .agents/skills: source (owner/repo), sourceType, computedHash; integrity check - npx skills check",
+      "tags": ["vendor", "lock", "ssot"]
+    }
+  ]
+}

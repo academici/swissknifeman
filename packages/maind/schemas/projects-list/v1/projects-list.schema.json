@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:maind:projects-list:v1",
+  "title": "projects-list",
+  "description": "Output of `maind projects list --json`: the project registry records as stored, optionally filtered by namespace. A record keeps every key of the registry (the set is open); the keys below are the ones consumers rely on.",
+  "type": "array",
+  "items": {
+    "description": "One registry project record.",
+    "type": "object",
+    "properties": {
+      "id": {"description": "Project identifier.", "type": "string", "minLength": 1},
+      "name": {"description": "Display name.", "type": "string"},
+      "local_path": {"description": "Project directory on this machine (may start with ~); null when the record comes from the brain fallback without a repository.", "type": ["string", "null"]},
+      "vault_path": {"description": "Vault folder of the project, when it has one; null when unknown.", "type": ["string", "null"]},
+      "type": {"description": "Project type.", "type": "string"},
+      "namespaces": {"description": "Memory namespaces the project belongs to; empty or missing means the default namespace.", "type": "array", "items": {"type": "string"}},
+      "enabled": {"description": "False excludes the project from cross-project work; missing means enabled.", "type": "boolean"},
+      "status": {"description": "Lifecycle status.", "type": "string"},
+      "dependencies": {"description": "Identifiers of the projects this one depends on.", "type": "array", "items": {"type": "string"}}
+    },
+    "required": ["id"]
+  }
+}

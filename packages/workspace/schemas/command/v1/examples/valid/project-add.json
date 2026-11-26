@@ -1,0 +1,14 @@
+{
+  "workspace": "a",
+  "project_id": "a",
+  "name": "a",
+  "created": true,
+  "marker_written": true,
+  "plans_store": "legacy",
+  "binding": {
+    "paths": [
+      "/tmp/project-0"
+    ],
+    "primary": "/tmp/project"
+  }
+}

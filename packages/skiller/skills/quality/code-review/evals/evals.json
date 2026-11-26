@@ -1,0 +1,13 @@
+{
+  "skill": "code-review",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Do a review PR: added HTTP-endpoint without input data validation and without tests. Give comments.",
+      "assertions": [
+        {"type": "regex", "value": "severity|blocker|critical|major|nit|p0|p1|p2|critical"},
+        {"type": "regex", "value": "validation|valid|test|test|safe|security"}
+      ]
+    }
+  ]
+}

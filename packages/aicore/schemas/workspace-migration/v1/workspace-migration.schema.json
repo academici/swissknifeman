@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:workspace-migration:v1",
+  "title": "workspace-migration",
+  "type": "object",
+  "description": "Report of one migration of a project's plans into the workspace (projects/<project_id>/migrations/<op_id>.json). Portable: it holds no absolute path.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:workspace-migration:v1",
+      "description": "Schema identifier."
+    },
+    "op_id": {
+      "type": "string",
+      "pattern": "^mig_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Migration id: mig_ and 26 Crockford base32 characters."
+    },
+    "project_id": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Project code."
+    },
+    "device_id": {
+      "type": "string",
+      "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Device that ran the migration."
+    },
+    "started_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Start time, UTC."
+    },
+    "finished_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "End time, UTC."
+    },
+    "rolled_back_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Time the migration was rolled back, UTC; absent while it stands."
+    },
+    "mode": {
+      "enum": [
+        "initial",
+        "import"
+      ],
+      "description": "`initial` moves the plans of the first machine; `import` merges the plans of another machine."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where the plans came from.",
+      "properties": {
+        "checkout_name": {
+          "type": "string",
+          "pattern": "^(?![/~]|[A-Za-z]:[\\\\/])[^/\\\\]+$",
+          "description": "Base name of the source checkout; never a path."
+        },
+        "head": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40,64}$",
+          "description": "Git commit of the checkout, or null."
+        }
+      },
+      "required": [
+        "checkout_name",
+        "head"
+      ]
+    },
+    "plans": {
+      "type": "array",
+      "description": "What happened to each plan folder.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "One plan folder.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^(?![/~]|[A-Za-z]:[\\\\/])[^/\\\\]+$",
+            "description": "Folder name of the plan."
+          },
+          "class": {
+            "enum": [
+              "v4",
+              "legacy"
+            ],
+            "description": "Layout class of the folder."
+          },
+          "action": {
+            "enum": [
+              "copied",
+              "skipped-equal",
+              "imported-copy",
+              "kept-workspace"
+            ],
+            "description": "What the migration did with it."
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of files."
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total size in bytes."
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "SHA-256 over the sorted (path, sha256) pairs of the files."
+          },
+          "stored_as": {
+            "type": "string",
+            "pattern": "^(?![/~]|[A-Za-z]:[\\\\/])[^/\\\\]+$",
+            "description": "Folder name of the copy in the workspace when it differs from `name` (a suffixed copy imported next to a different folder, also when it was found equal)."
+          }
+        },
+        "required": [
+          "name",
+          "class",
+          "action",
+          "files",
+          "bytes",
+          "digest"
+        ]
+      }
+    },
+    "local_only": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of files kept out of git."
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Warning codes.",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*$",
+        "description": "One warning code."
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "op_id",
+    "project_id",
+    "device_id",
+    "started_at",
+    "finished_at",
+    "mode",
+    "source",
+    "plans",
+    "local_only",
+    "warnings"
+  ],
+  "additionalProperties": false
+}

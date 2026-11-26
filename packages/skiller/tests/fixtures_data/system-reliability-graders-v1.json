@@ -1,0 +1,19 @@
+{
+  "schema_version": "reliability-bank/v1",
+  "grader_version": "test-1.0.0",
+  "note": "Small synthetic grader set for skiller's own system-bank adapter tests (lib/skiller/quality/eval.py). Distinct from, and never a copy of, the frozen P0.3 bank at plans/2026.07.24-DEMO-PLAN/artifacts/reliability-bank-v1/graders.json.",
+  "policy": {
+    "llm_judge_allowed": false,
+    "judge_override_of_deterministic": "forbidden"
+  },
+  "graders": [
+    {"id": "G-EVENT-PRESENT", "type": "transcript", "operator": "event_present", "description": "At least one matching event occurs."},
+    {"id": "G-EVENT-ABSENT", "type": "transcript", "operator": "event_absent", "description": "No matching event occurs."},
+    {"id": "G-EVENT-ORDER", "type": "transcript", "operator": "event_order", "description": "Every `after` event is preceded by a `before` event."},
+    {"id": "G-EVENT-COUNT-MAX", "type": "transcript", "operator": "event_count_max", "description": "Matching event count does not exceed the max."},
+    {"id": "G-EVENT-COUNT-MIN", "type": "transcript", "operator": "event_count_min", "description": "Matching event count reaches the min."},
+    {"id": "G-OUTCOME-FIELD", "type": "outcome", "operator": "outcome_field_equals", "description": "A dotted outcome field equals the declared value."},
+    {"id": "G-OUTCOME-CONTAINS", "type": "outcome", "operator": "outcome_list_contains", "description": "A list outcome field contains the declared item."},
+    {"id": "G-OUTCOME-EXCLUDES", "type": "outcome", "operator": "outcome_list_excludes", "description": "A list outcome field does not contain the declared item."}
+  ]
+}

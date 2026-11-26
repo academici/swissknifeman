@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:bridge:v1",
+  "name": "a",
+  "partner": "a",
+  "direction": "out",
+  "contract": "a",
+  "summary": "a",
+  "entrypoints": {},
+  "not-a-field": 1
+}

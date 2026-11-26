@@ -1,0 +1,4 @@
+{
+  "command": "npx",
+  "args": ["@playwright/mcp@0.0.78", "--headless", "--output-dir", ".playwright-mcp"]
+}

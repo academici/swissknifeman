@@ -1,0 +1,4 @@
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":0,"ts":"2026-10-05T17:00:00Z","kind":"started","owner_epoch":1}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":1,"ts":"2026-10-05T17:00:01Z","kind":"model_wait","owner_epoch":1,"data":{"since":"2026-10-05T17:00:01Z"}}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":2,"ts":"2026-10-05T17:00:02Z","kind":"output","owner_epoch":2,"data":{"text":"Continued after restart."}}
+{"$schema":"urn:swissknifeman:orch:exec:run-event:v1","contract_version":"exec/v1","run_id":"synthetic-run","stage_id":"primary","attempt":1,"seq":3,"ts":"2026-10-05T17:00:03Z","kind":"output","owner_epoch":1,"data":{"text":"Late event of the old owner."}}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/misc/git-guardrails-claude-code/SKILL.md",
+      "sha256": "03c4de7613c712aea336d64c467ea3ed14be2cbd52345925fe949c75c01c29f7",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "Derived from mattpocock/skills misc/git-guardrails-claude-code. We have hooks = package harness, therefore SKILL.md rewritten as RU-wrapper: the script itself block-dangerous-git.sh lies in the git-guardrails hook shipped by Harness, and this skill (lifecycle:init) explains and includes. strategy=notify.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "aaf010e7ec41bca35c9b402dff8975283b6dd6d918ff444ee8c1fdb74e9c9415"
+  }
+}

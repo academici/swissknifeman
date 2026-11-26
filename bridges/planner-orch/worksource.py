@@ -1,0 +1,1072 @@
+#!/usr/bin/env python3
+"""The planner as a work source of orch: the plugin of the extension point ``orch:work-source`` (protocol 1).
+
+orch starts this file through ``aicore.ext.plugins`` with one request on stdin (``op: describe`` or ``op: invoke``)
+and reads one ``plugin-response/v1`` document from stdout. ``invoke`` carries a ``work-source/v1`` input:
+
+- ``claim`` takes the first of ``items`` (or the next ready item of the plan; an item this run holds or already
+  closed comes first), resolves its scenario and run options (``orchestration`` of the item, its phase and the plan,
+  and the orchestration overlay documents that apply to them), checks the scenario against the run-policy packs of
+  orch (``orch.py policy show``) and starts it with ``plan.py start --session <run_id>``; ``ITEM_OWNED`` is a refusal,
+  never a take-over;
+- ``brief`` builds the execution-input in process (``brief.build``, read-only), checks it against exec/v1
+  (``orch.py validate execution-input``; a brief outside it is ``BRIEF_INVALID`` and is not stored), stores it as a content-addressed
+  blob of the plan's repository and declares it with ``plan.py add-artifact`` (a repeat changes nothing); the answer
+  names the item's artifact folder of the plan;
+- ``register`` runs ``register.py`` with owner fencing (``--owner-session <run_id>``) and the evidence gate;
+- ``commit`` runs ``plan.py commit <plan> <ref> --role executor --path …`` (nothing to commit is a no-op);
+- ``release`` gives back an item this run holds in progress when the run stopped before any work began: the planner has
+  no verb that returns an in-progress item to ``todo``, so it is finished as ``blocked`` under owner fencing
+  (``--owner-session <run_id>``) and reopened, which clears the executor session (a run that does not hold the item is a no-op);
+- ``note`` adds a note to the plan's journal (``plan.py log <plan> <phase|item> --type note``) for work that has no item of
+  its own (support work run from a file input); it names a phase or an item in ``refs``, and a note without one is refused;
+- ``research`` saves the research-result of a research stage as ``inputs/research/<item>-<n>.json`` in the folder of the plan and
+  declares it with ``plan.py add-artifact … --role input`` (a repeat of the same result changes nothing); the file is a
+  record of the research, not plan state;
+- ``decision`` records an answered question of an item (an owner's answer, an applied advice or panel recommendation)
+  as an accepted decision ``D#`` that applies to the item (``plan.py add-decision``) with an ``origin`` that names the
+  question (``question_key``, ``question_digest``); a repeat for the same ``question_key`` and item changes nothing, so a
+  later run of the item finds the decision in its brief and does not ask the question again;
+- ``readiness`` (read-only) answers the readiness of every detailed phase (``plan.py readiness status <plan> --json``:
+  id, status, digest) and the next lane (``plan.py next <plan> --parallel 1 --json``, read as ``claim`` reads it:
+  ``run-items`` with its items, or another kind with a message); a refusal of the planner is ``refused`` with its code.
+
+An orchestration overlay is a knowledge document with an id starting with ``orchestration-`` and a section
+``orchestration`` that holds one JSON object ``{"scenario"?: name, "options"?: run-options}``; it applies to the item,
+phase or plan named by its ``applies_to`` (``global`` for the plan). It carries what a plan engine without the
+``orchestration.scenario``/``orchestration.options`` fields cannot store; a field of the same level wins over it.
+
+Refusals are answers (``status: ok`` with a ``reason_code``); only a broken request or a missing partner is a
+protocol error. The plan is written only through ``plan.py``. stdlib and aicore only.
+"""
+from __future__ import annotations
+
+import copy
+import json
+from hashlib import sha256
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import sys
+import tempfile
+
+import partners
+
+POINT = "orch:work-source"
+RESPONSE = "urn:swissknifeman:aicore:plugin-response:v1"
+DESCRIBE = "urn:swissknifeman:aicore:plugin-describe:v1"
+OPS = ("claim", "brief", "register", "commit", "release", "note", "research", "decision", "readiness", "inspect")
+OVERLAY_PREFIX = "orchestration-"
+OVERLAY_SECTION = "orchestration"
+_FENCE = re.compile(r"^\s*`{3,}[A-Za-z0-9_-]*\s*\n(.*?)\n\s*`{3,}\s*$", re.S)
+_CODE = re.compile(r"^([A-Z][A-Z0-9_]{1,63}): ?(.*)$")
+_PLANNER_ATTEMPT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$", re.ASCII)  # planner defs.attemptId
+
+
+class Blocked(Exception):
+    """A refusal of the source or of a partner: ``code`` goes into ``reason_code`` of the answer."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+def actor_text(actor: dict) -> str:
+    return "/".join(part for part in (actor["provider"], actor["model"], actor.get("effort")) if part)
+
+
+def refusal_of(text: str, fallback: str) -> Blocked:
+    """The ``CODE: message`` line of a refusal (the last one of the text), the ``error`` of a JSON envelope of the planner
+    (``{"ok": false, "error": {"code", "message"}}``), else ``fallback``."""
+    try:
+        envelope = json.loads(text or "")
+    except ValueError:
+        envelope = None
+    error = envelope.get("error") if isinstance(envelope, dict) else None
+    if isinstance(error, dict) and isinstance(error.get("code"), str) and isinstance(error.get("message"), str):
+        return Blocked(error["code"], error["message"])
+    for line in reversed((text or "").strip().splitlines()):
+        found = _CODE.match(line.strip())
+        if found:
+            return Blocked(found.group(1), found.group(2).strip() or found.group(1))
+    return Blocked(fallback, (text or "").strip() or fallback)
+
+
+# ------------------------------------------------------------------------------------------------ partners
+
+
+def plan_py(argv: list, plans_root=None) -> subprocess.CompletedProcess:
+    tail = ["--plans-root", str(plans_root)] if plans_root else []
+    return partners.run_bounded([*partners.require_plan_argv(), *argv, *tail], timeout=300, capture_output=True,
+                                text=True, encoding="utf-8", check=False)
+
+
+def plan_json(argv: list, plans_root=None, *, code: str = "PLAN_UNREADABLE"):
+    """JSON stdout of a ``plan.py`` verb; a refusal raises :class:`Blocked` with the planner's code."""
+    done = plan_py(argv, plans_root)
+    if done.returncode:
+        raise refusal_of(done.stderr or done.stdout, code)
+    try:
+        return json.loads(done.stdout)
+    except ValueError:
+        raise Blocked(code, f"plan.py {argv[0]} printed no JSON") from None
+
+
+def item_doc(plan: str, ref: str, plans_root=None) -> dict:
+    return plan_json(["--output", "json", "get", plan, ref], plans_root)["data"]["doc"]
+
+
+def policy_exists(scenario: str, config: str | None = None) -> Blocked | None:
+    """``orch.py [--config FILE] policy show <scenario>``: None when the pack exists, else ``SCENARIO_UNKNOWN``.
+    ``config`` is the invocation configuration of the orch command that asked (its ``profiles.dirs`` count)."""
+    root = partners.require_orch()
+    head = ["--config", config] if config else []
+    done = partners.run_bounded([sys.executable, str(root / "scripts" / "orch.py"), *head, "policy", "show", scenario],
+                                timeout=60, capture_output=True, text=True, encoding="utf-8", check=False)
+    if done.returncode == 0:
+        return None
+    reason = refusal_of(done.stderr, "POLICY_UNKNOWN")
+    return Blocked("SCENARIO_UNKNOWN", f"scenario {scenario!r} has no run-policy pack in orch ({reason.code}: "
+                                       f"{reason.message})")
+
+
+# ------------------------------------------------------------------------------------------------ claim
+
+
+def _held_by(plan: str, run_id: str, plans_root) -> str | None:
+    """The item this run holds or already closed: executor session ``run_id`` while in progress, or the recorded
+    attempt ``att-<run_id>-<item>`` after its registration (the session is gone from a finished item)."""
+    store = partners.planner_engine("plan.store")
+    loaded = store.load_plan(store.resolve_plan_dir(plan, Path(plans_root) if plans_root else None))
+    for item_id, doc in loaded.items.items():
+        result = doc.get("result") if isinstance(doc.get("result"), dict) else {}
+        executor = result.get("executor") if isinstance(result.get("executor"), dict) else {}
+        if (doc.get("status") == "in_progress" and executor.get("session") == run_id) \
+                or result.get("attempt_id") == f"att-{run_id}-{item_id}":
+            return item_id
+    return None
+
+
+def next_lane(plan: str, plans_root) -> dict:
+    """The first lane of ``plan.py next <plan> --parallel 1 --json`` as ``{kind, items, phase, message}``: ``run-items``
+    with its items when one is ready, else the kind of the semantic next step with why nothing runs (a ``run-items`` step
+    without a free lane, such as an item already in progress, is ``waiting``). The one reading of ``next`` for ``claim``
+    and ``readiness``."""
+    ready = plan_json(["next", plan, "--parallel", "1", "--json"], plans_root)
+    for lane in ready.get("lanes", []):
+        if lane.get("kind") == "run-items" and lane.get("items"):
+            return {"kind": "run-items", "items": list(lane["items"]), "phase": lane.get("phase"), "message": None}
+    upcoming = ready.get("next") or {}
+    kind = upcoming.get("kind") if upcoming.get("kind") not in (None, "", "run-items") else "waiting"
+    return {"kind": kind, "items": [], "phase": upcoming.get("phase"),
+            "message": upcoming.get("reason") or upcoming.get("exact") or "no item is ready"}
+
+
+def _candidate(plan: str, run_id: str, plans_root) -> tuple:
+    """``(ref, None)`` of the item to claim, or ``(None, message)`` when nothing is ready; ``_LANE`` keeps the whole lane."""
+    held = _held_by(plan, run_id, plans_root)  # a repeated claim of the same run answers for its own item
+    if held:
+        return held, None
+    lane = next_lane(plan, plans_root)
+    if lane["kind"] == "run-items":
+        _LANE[:] = lane["items"]
+        return lane["items"][0], None
+    return None, lane["message"]
+
+
+def _overlay(document: dict) -> dict | None:
+    """``{"scenario"?, "options"?}`` of an orchestration overlay document, None for any other document."""
+    if not str(document.get("id", "")).startswith(OVERLAY_PREFIX):
+        return None
+    section = next((item for item in document.get("sections") or []
+                    if isinstance(item, dict) and item.get("id") == OVERLAY_SECTION), None)
+    if section is None:
+        return None
+    text = section.get("text") or ""
+    fenced = _FENCE.match(text)
+    try:
+        found = json.loads(fenced.group(1) if fenced else text)
+    except ValueError as error:
+        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: section {OVERLAY_SECTION} is not JSON: {error}") from None
+    if not isinstance(found, dict) or set(found) - {"scenario", "options"}:
+        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: section {OVERLAY_SECTION} must be an object "
+                                         "with only scenario and options")
+    if "scenario" in found and not (isinstance(found["scenario"], str) and re.fullmatch(r"[a-z][a-z0-9-]*",
+                                                                                         found["scenario"])):
+        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: scenario must be a run-policy name")
+    if "options" in found and not isinstance(found["options"], dict):
+        raise Blocked("OVERLAY_INVALID", f"document {document['id']}: options must be an object")
+    return found
+
+
+def orchestration_of(context: dict, ref: str) -> tuple:
+    """``(scenario, scenario_source, layers)`` of an item from its context pack.
+
+    Levels from the most specific: the item, its phase, the plan. At each level the ``orchestration`` field of the
+    document wins over the overlays that apply to it. The scenario is the first one found from the item up, else
+    the one the planner resolved from its configuration. ``layers`` are the run options, general first.
+    """
+    item_id = ref.split("/", 1)[0]
+    phase_id = item_id.split(".", 1)[0]
+    levels = (("item", item_id, context.get("item") or {}), ("phase", phase_id, context.get("phase") or {}),
+              ("plan", None, context.get("plan") or {}))
+    overlays = {"item": [], "phase": [], "plan": []}
+    for document in context.get("documents") or []:
+        found = _overlay(document) if isinstance(document, dict) else None
+        if found is None:
+            continue
+        applies = document.get("applies_to") or []
+        level = "plan" if document.get("global") else "item" if item_id in applies or ref in applies \
+            else "phase" if phase_id in applies else None
+        if level:
+            overlays[level].append((document["id"], found))
+    scenario = source = None
+    for level, _name, doc in levels:
+        field = (doc.get("orchestration") or {}).get("scenario") if isinstance(doc.get("orchestration"), dict) else None
+        if field:
+            scenario, source = field, level
+            break
+        named = [(doc_id, found["scenario"]) for doc_id, found in overlays[level] if "scenario" in found]
+        if named:
+            scenario, source = named[-1][1], f"document:{named[-1][0]}"
+            break
+    if scenario is None:
+        resolved = context.get("orchestration") or {}
+        scenario, source = resolved.get("scenario"), resolved.get("scenario_source")
+    layers = []
+    for level, name, doc in reversed(levels):
+        label = f"{level}:{name}" if name else level
+        layers += [{"source": f"document:{doc_id}", "options": found["options"]}
+                   for doc_id, found in overlays[level] if "options" in found]
+        orchestration = doc.get("orchestration") if isinstance(doc.get("orchestration"), dict) else {}
+        if isinstance(orchestration.get("options"), dict):
+            layers.append({"source": label, "options": orchestration["options"]})
+    return scenario, source, layers
+
+
+def executor_actor(layers: list) -> dict | None:
+    """The executor the options of the piece name (the last ``executor`` stage: the most specific layer), else None."""
+    for layer in reversed(layers or []):
+        for stage in (layer.get("options") or {}).get("stages") or []:
+            if stage.get("role") == "executor" and stage.get("provider") and stage.get("model"):
+                return {key: stage[key] for key in ("provider", "model", "effort") if stage.get(key)}
+    return None
+
+
+def claim_actor(fields: dict, planned: dict | None, ref: str) -> tuple:
+    """``(actor, override)``: who the item is started for. A run whose ``--options`` name the executor
+    (``actor_source: options``) wins over the plan's ``orchestration`` executor, field by field (``actor_fields``: what
+    the run named; ``actor_class``: a class named without a model, resolved on the merged provider), as it does at
+    execution; ``override`` then names every value of the plan it replaced (a warning,
+    never a refusal: the class check of the route stays with the planner). Otherwise the plan's executor, else the
+    claimed default."""
+    run = fields["actor"]
+    if fields.get("actor_source") != "options":
+        return planned or run, None
+    if not planned:
+        return run, None
+    named = [key for key in (fields.get("actor_fields") or ()) if run.get(key)]
+    actor = dict(planned)
+    actor.update({key: run[key] for key in named})
+    if fields.get("actor_class") and "model" not in named:  # a class without a model: its model on the merged provider
+        actor["model"] = class_model(actor["provider"], fields["actor_class"]) or actor["model"]
+        named.append("model")
+    replaced = [key for key in named if planned.get(key) and planned[key] != actor[key]]
+    if not replaced:
+        return actor, None
+    return actor, {"reason_code": "ACTOR_OVERRIDE", "ref": ref, "plan": dict(planned), "run": dict(actor),
+                   "message": f"{ref}: the run executor {actor_text(actor)} replaces {actor_text(planned)} of the plan "
+                              f"({', '.join(replaced)})"}
+
+
+def class_model(provider: str, model_class: str) -> str | None:
+    """The first model the planner's routing names for ``model_class`` of ``provider`` (``class_selectors`` of
+    ``command-routing.json``), None when it names none."""
+    lifecycle = partners.planner_engine("plan.lifecycle")
+    try:
+        mapping = lifecycle.load_routing_metadata(lifecycle.ROUTING_PATH)["mappings"].get(provider) or {}
+    except ValueError:
+        return None
+    found = (mapping.get("class_selectors") or {}).get(model_class) or []
+    return found[0] if found and isinstance(found[0], str) else None
+
+
+def op_inspect(fields: dict) -> dict:
+    """Resolve the same source layers as claim, without starting work or storing a brief."""
+    import brief
+    ref, plans_root = fields["ref"], fields.get("plans_root")
+    item, _, unit = ref.partition("/")
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(fields["plan"], Path(plans_root) if plans_root else None))
+        doc = brief.build(plan, item, unit_id=unit or None,
+                          context_delivery=os.environ.get("PLANNER_ORCH_CONTEXT_DELIVERY", "reference"))
+        context = brief.context.collect(plan, item, with_scout=False)
+        scenario, source, layers = orchestration_of(context, ref)
+        if not scenario:
+            raise Blocked("SCENARIO_UNKNOWN", f"{ref} resolves no scenario")
+        return {"op": "inspect", "outcome": "ok", "ref": ref, "scenario": scenario,
+                "scenario_source": source, "options": layers, "input": doc}
+    except (brief.PlanError, Blocked) as error:
+        return {"op": "inspect", "outcome": "refused", "ref": ref,
+                "reason_code": error.code, "message": str(error)}
+
+
+def op_claim(fields: dict) -> dict:
+    plan, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
+    items = fields.get("items") or []
+    _LANE.clear()
+    ref, message = (items[0], None) if items else _candidate(plan, run_id, plans_root)
+    if ref is None:
+        return {"op": "claim", "status": "none", "message": message}
+    answer = {"op": "claim", "ref": ref}
+    attempt_id = f"att-{run_id}-{ref}"
+    try:
+        if not _PLANNER_ATTEMPT.fullmatch(attempt_id):  # checked before start: a claim the planner cannot close
+            raise Blocked("ATTEMPT_ID_INVALID", f"attempt id {attempt_id!r} does not fit the planner "
+                                                f"({_PLANNER_ATTEMPT.pattern}); use a shorter run id")
+        doc = item_doc(plan, ref, plans_root)
+        answer["title"] = doc["title"]
+        if len(_LANE) > 1 and _LANE[0] == ref:
+            answer["lane"] = list(_LANE)
+        if isinstance(doc.get("depends_on"), list) and doc["depends_on"]:
+            answer["depends_on"] = [dep for dep in doc["depends_on"] if isinstance(dep, str)]
+        if isinstance(doc.get("route"), dict):
+            answer["route"] = {key: doc["route"][key] for key in ("class", "effort") if key in doc["route"]}
+            if isinstance(doc["route"].get("correction"), dict):  # the minimum of a bounded correction (P7.3)
+                answer["route"]["correction"] = {key: doc["route"]["correction"][key]
+                                                 for key in ("class", "effort", "provider", "model")
+                                                 if key in doc["route"]["correction"]}
+        context = plan_json(["context", plan, ref, "--stdout"], plans_root)
+        answer["scenario"], answer["scenario_source"], layers = orchestration_of(context, ref)
+        if fields.get("scenario"):  # the invocation (`--scenario`) wins over the plan's own scenario
+            answer["scenario"], answer["scenario_source"] = fields["scenario"], "invocation:--scenario"
+        if layers:
+            answer["options"] = layers
+        refused = policy_exists(answer["scenario"], fields.get("orch_config")) if answer["scenario"] else \
+            Blocked("SCENARIO_UNKNOWN", f"{ref} resolves no scenario")
+        if refused:
+            raise refused
+        # An item this very attempt already closed stays claimed by the run: its claim is answered again, unchanged.
+        if (doc.get("result") or {}).get("attempt_id") != attempt_id:
+            # A batch starts its pieces one after another, each under its own run: a dependency that is in progress
+            # (an earlier piece of the batch) counts as met. The executor is the one the piece's options name (the
+            # route is checked against it), else the claimed default.
+            actor, override = claim_actor(fields, executor_actor(layers), ref)
+            if override:
+                answer["actor_override"] = override
+            plan_json(["start", plan, ref, "--actor", actor_text(actor), "--session", run_id,
+                       "--no-scout", "--strict-route", "--json", *(["--in-progress-deps"] if fields.get("batch") else [])],
+                      plans_root, code="START_REFUSED")
+    except Blocked as blocked:
+        if blocked.code.startswith("READINESS_"):
+            answer.update(status="blocked", reason_code="CLAIM_BLOCKED",
+                          message=f"{blocked.code}: {blocked.message}")
+        else:
+            answer.update(status="blocked", reason_code=blocked.code, message=blocked.message)
+        return {key: value for key, value in answer.items() if value is not None}
+    answer.update(status="claimed", attempt_id=attempt_id, session=run_id)
+    return {key: value for key, value in answer.items() if value is not None}
+
+
+# ------------------------------------------------------------------------------------------------ brief
+
+
+def artifact_id(ref: str, digest: str) -> str:
+    return "brief-" + ref.replace(".", "-").replace("/", "-") + "-" + digest[:12]
+
+
+_VOLATILE_READ_FIELDS = ("content", "sha256")
+
+
+def _read_paths(reads) -> list:
+    """The reads of a brief without their snapshot: which files, sections and why, not what they hold now."""
+    if not isinstance(reads, list):
+        return reads
+    return [{key: value for key, value in read.items() if key not in _VOLATILE_READ_FIELDS}
+            if isinstance(read, dict) else read for read in reads]
+
+
+def _worker_view(doc: dict) -> dict:
+    """What the worker reads: the brief without its digests. ``provenance.source_digest`` hashes the whole context
+    pack, which changes when the brief itself is declared as an input of the item, so it does not decide a repeat.
+    Workspace briefs embed that pack: ignore its self-brief declarations and their bookkeeping timestamp too,
+    while preserving research and authored artifacts as worker inputs. The reads keep which files and why, not their
+    content and sha256: those follow the executor's own edits of the files it reads."""
+    view = {key: copy.deepcopy(value) for key, value in doc.items() if key != "digest"}
+    view["input_id"] = str(view.get("input_id", "")).rsplit("@", 1)[0]
+    view["provenance"] = {key: value for key, value in (doc.get("provenance") or {}).items() if key != "source_digest"}
+    if "reads" in view:
+        view["reads"] = _read_paths(view["reads"])
+    for entry in view.get("context_refs", []):
+        if entry.get("kind") != "pack" or not isinstance(entry.get("content"), dict):
+            continue
+        if "reads" in entry["content"]:
+            entry["content"]["reads"] = _read_paths(entry["content"]["reads"])
+        item = entry["content"].get("item")
+        if not isinstance(item, dict):
+            continue
+        item.pop("updated_at", None)
+        if isinstance(item.get("artifacts"), list):
+            item["artifacts"] = [a for a in item["artifacts"] if not (
+                isinstance(a, dict) and a.get("role") == "input" and isinstance(a.get("path"), str)
+                and re.fullmatch(r"@plan/inputs/[0-9a-f]{64}", a["path"]))]
+            if not item["artifacts"]:
+                item.pop("artifacts")
+    return view
+
+
+def _declared_path(plan, path: Path, project, *, runtime_input: bool = False) -> str:
+    """The path an artifact is declared by: repository-relative, or ``@plan/`` when a workspace plan keeps the file
+    outside the checkout (the plan folder, or the project's state folder of the workspace). A file outside both is
+    copied into the plan folder, so the declaration never points outside what the plan can resolve.
+    Generated inputs always use ``@plan/inputs/`` in either layout, the readiness digest's runtime exclusion."""
+    resolved = path.resolve()
+    root = plan.root.resolve()
+    if runtime_input:
+        inputs = root / "inputs"
+        target = resolved if resolved.is_relative_to(inputs) else inputs / resolved.name
+        if not target.resolve().is_relative_to(inputs) or inputs.is_symlink():
+            raise Blocked("ARTIFACT_REFUSED", "runtime inputs must stay inside the plan's inputs folder")
+        if target != resolved:
+            body = resolved.read_bytes()
+            if not target.is_file() or target.read_bytes() != body:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(body)
+        return "@plan/" + target.relative_to(root).as_posix()
+    if resolved.is_relative_to(Path(project).resolve()):
+        return resolved.relative_to(Path(project).resolve()).as_posix()
+    if resolved.is_relative_to(root):
+        return "@plan/" + resolved.relative_to(root).as_posix()
+    target = root / "inputs" / resolved.name
+    if not target.is_file():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(resolved.read_bytes())
+    return "@plan/inputs/" + resolved.name
+
+
+def _previous_brief(plan, item_id: str, unit: str | None, project: Path, blobs):
+    """The newest brief of the item (or of its unit) already declared as an input of the item, or None."""
+    item = plan.items.get(item_id) or {}
+    store = blobs.blob_path("sha256:" + "0" * 64, project=project).parent.resolve()
+    for entry in reversed(item.get("artifacts") or []):
+        if not isinstance(entry, dict) or entry.get("role") != "input" or not isinstance(entry.get("path"), str):
+            continue
+        try:
+            if entry["path"].startswith("@plan/inputs/"):
+                path = (plan.root / entry["path"].removeprefix("@plan/")).resolve()
+                if not path.is_relative_to(plan.root.resolve() / "inputs"):
+                    continue
+                body = path.read_bytes()
+                if sha256(body).hexdigest() != path.name:
+                    continue
+            else:  # legacy declarations in the repository's blob store remain readable
+                path = (Path(project) / entry["path"]).resolve()
+                if path.parent != store:
+                    continue
+                body = blobs.read_bytes("sha256:" + path.name, project=project)
+            doc = json.loads(body)
+        except (OSError, ValueError):
+            continue
+        provenance = doc.get("provenance") if isinstance(doc, dict) else None
+        if isinstance(provenance, dict) and doc.get("$schema") == "urn:swissknifeman:orch:exec:execution-input:v1" \
+                and provenance.get("item") == item_id and provenance.get("unit") == unit:
+            return doc
+    return None
+
+
+def check_brief(doc: dict) -> None:
+    """``orch.py validate execution-input`` of the brief (schema and semantics of exec/v1): a brief the file source would
+    refuse is ``BRIEF_INVALID`` (the first three problems) and is never stored."""
+    with tempfile.TemporaryDirectory(prefix="planner-orch-brief-") as tmp:
+        path = Path(tmp) / "execution-input.json"
+        path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        code, out = partners.orch_validate("execution-input", path)
+    if code == 0:
+        return
+    try:
+        lines = [f"{row.get('path') or '/'} {row['code']}: {row['message']}" for row in json.loads(out)
+                 if row.get("level", "error") == "error"]
+    except (ValueError, TypeError, KeyError, AttributeError):
+        lines = []
+    raise Blocked("BRIEF_INVALID", "the brief is outside exec/v1 execution-input: "
+                  + ("; ".join(lines[:3]) or f"orch validate exited {code} without a verdict"))
+
+
+def output_write_dirs(plan, item_id: str) -> list[str]:
+    """Directories of this item's declared workspace outputs, never a plan or workspace root."""
+    root = Path(plan.root).absolute()
+    if root.resolve() != root:
+        raise Blocked("ARTIFACT_REFUSED", "plan directory contains a symlink")
+    result = []
+    for entry in plan.items[item_id].get("artifacts") or []:
+        path = entry.get("path") if isinstance(entry, dict) and entry.get("role") == "output" else None
+        if not isinstance(path, str) or not path.startswith("@plan/artifacts/"):
+            continue
+        rel = path.removeprefix("@plan/")
+        parts = rel.split("/")
+        if any(part in ("", ".", "..") for part in parts[:-1]) or "\\" in rel or parts[-1] in (".", ".."):
+            raise Blocked("ARTIFACT_REFUSED", f"invalid output path {path!r}")
+        target = root / rel
+        directory = target if path.endswith("/") else target.parent
+        fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            for part in root.parts[1:]:
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                os.close(fd)
+                fd = child
+            for part in directory.relative_to(root).parts:
+                try:
+                    os.mkdir(part, dir_fd=fd)
+                except FileExistsError:
+                    pass
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                os.close(fd)
+                fd = child
+            if not path.endswith("/"):
+                try:
+                    info = os.stat(target.name, dir_fd=fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    pass
+                else:
+                    if stat.S_ISLNK(info.st_mode):
+                        raise OSError("output is a symlink")
+                    if stat.S_ISDIR(info.st_mode):
+                        child = os.open(target.name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                        try:
+                            opened = os.fstat(child)
+                            if (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+                                raise OSError("output directory changed during validation")
+                        finally:
+                            os.close(child)
+                        directory = target
+        except OSError as error:
+            raise Blocked("ARTIFACT_REFUSED", f"unsafe output path {path!r}: {error}") from None
+        finally:
+            os.close(fd)
+        if str(directory) not in result:
+            result.append(str(directory))
+    return result
+
+
+def op_brief(fields: dict) -> dict:
+    import brief  # the planner engine is located and imported only when a brief is built
+    from aicore.state import blobs
+    from aicore.util.digest import canonical_json_bytes, sha256_tagged
+
+    plan_ref, plans_root, ref = fields["plan"], fields.get("plans_root"), fields["ref"]
+    if fields.get("unit"):
+        ref = f"{ref.split('/', 1)[0]}/{fields['unit']}"
+    item, _, unit = ref.partition("/")
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
+        doc = brief.build(plan, item, unit_id=unit or None,
+                          context_delivery=os.environ.get("PLANNER_ORCH_CONTEXT_DELIVERY", "reference"))
+    except brief.PlanError as error:
+        raise Blocked(error.code, error.message) from None
+    project = plan.repo_root
+    previous = _previous_brief(plan, item, unit or None, project, blobs)
+    if previous is not None and _worker_view(previous) == _worker_view(doc):
+        doc = previous  # unchanged inputs: the stored brief and its digest stay the brief of this item
+    check_brief(doc)  # the document that is stored, before the blob and the declaration
+    reused =blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
+    stored = blobs.put_json(doc, sensitivity="normal", name=f"brief-{ref}", project=project)
+    path = blobs.blob_path(stored, project=project)
+    relative = _declared_path(plan, path, project, runtime_input=True)
+    # The brief is an input of the item; a planner artifact id names an output, so the input is declared by path
+    # (content-addressed, unique per digest) and the id is returned to orch only.
+    plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"], plans_root,
+              code="ARTIFACT_REFUSED")
+    answer = {"op": "brief", "input_ref": stored, "input_id": doc["input_id"], "digest": doc["digest"],
+              "reused": reused, "artifact_id": artifact_id(ref, doc["digest"])}
+    if plan.root.resolve().is_relative_to(Path(project).resolve()):
+        # a plan in a workspace has no repository-relative folder: orch keeps the records in its fallback folder
+        answer["artifacts_dir"] = plan.root.resolve().relative_to(Path(project).resolve()).as_posix() + "/artifacts/" + ref
+    else:
+        answer["output_write_dirs"] = [] if doc.get("scope", {}).get("read_only") else output_write_dirs(plan, item)
+    return answer
+
+
+# ------------------------------------------------------------------------------------------------ register
+
+
+def _plan_text(argv: list, plans_root=None, *, code: str = "PLAN_UNREADABLE") -> str:
+    """Stdout of a ``plan.py`` verb that prints text; a refusal raises :class:`Blocked`."""
+    done = plan_py(argv, plans_root)
+    if done.returncode:
+        raise refusal_of(done.stderr or done.stdout, code)
+    return done.stdout
+
+
+def _supersede_blocked_attempt(fields: dict, again: bool = False) -> None:
+    """A piece the run retries after it was blocked is registered under the same attempt id (``att-<run>-<item>``): the
+    planner answers ``ATTEMPT_CONFLICT`` to a done outcome for an attempt it holds as blocked. The retry of the run is a new
+    try of the same attempt, so the blocked record is reopened first (the plan keeps the history in its log).
+
+    A blocked outcome is superseded only ``again``: after the planner refused it with ``ATTEMPT_CONFLICT`` (the retried
+    piece blocked once more, with another escalation), never before, so a repeat of the same block after a lost answer
+    stays the no-op of ``finish``."""
+    if fields["status"] == "blocked" and not again:
+        return
+    doc = item_doc(fields["plan"], fields["ref"], fields.get("plans_root"))
+    result = doc.get("result") or {}
+    if doc.get("status") == "blocked" and result.get("attempt_id") == fields["attempt_id"]:
+        _plan_text(["reopen", fields["plan"], fields["ref"], "--reason",
+                   f"retry of attempt {fields['attempt_id']} by its run after the block was resolved"],
+                  fields.get("plans_root"), code="REOPEN_REFUSED")
+        # the reopened piece is held by its run again (the owner fence of the registration), as the claim made it
+        plan_json(["start", fields["plan"], fields["ref"], "--actor", actor_text(fields["executed_by"]), "--session",
+                   fields["run_id"], "--no-scout", "--strict-route", "--in-progress-deps", "--json"], fields.get("plans_root"),
+                  code="START_REFUSED")
+
+
+_PATH_PART = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")  # one folder name: no slash, no leading dot
+_CHECK_ID = re.compile(r"^V[0-9]+$")
+
+
+def _kept_evidence(fields: dict) -> dict:
+    """``{V#: @plan/path}``: the evidence of an item of a plan that lives in a workspace, copied into
+    ``<plan>/artifacts/<item>/<run>/evidence/`` and retained in lifecycle-owned check results, so it lasts with the plan
+    (the conductor keeps its own copy only as local records). ``{}`` for a plan inside the repository (its artifact
+    folder is committed with the item) and whenever registration would refuse what is kept: a run that does not own the
+    item, a result that is not ``done``, or a proof that is not green leave the plan untouched, and the local paths reach
+    the guards of ``register.py``. A repeat of the attempt that already closed the item writes nothing and answers the
+    proof it kept. A folder on the way that is a symlink is refused (``EVIDENCE_PATH_INVALID``) before anything is
+    written."""
+    evidence = fields.get("evidence") or {}
+    if not evidence or fields.get("status") != "done":
+        return {}
+    import brief  # the planner engine is located and imported only when evidence is kept
+    plan_ref, plans_root, run_id = fields["plan"], fields.get("plans_root"), fields["run_id"]
+    item = fields["ref"].split("/", 1)[0]
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
+    except brief.PlanError as error:
+        raise Blocked(error.code, error.message) from None
+    project = Path(plan.repo_root).resolve()
+    if plan.root.resolve().is_relative_to(project):
+        return {}
+    if not (_PATH_PART.fullmatch(item) and _PATH_PART.fullmatch(run_id)) or ".." in (item, run_id):
+        raise Blocked("EVIDENCE_PATH_INVALID", f"{item}/{run_id} does not name a folder of the plan")
+    doc = plan.items.get(item) or {}
+    result = doc.get("result") or {}
+    folder = plan.root / "artifacts" / item / run_id / "evidence"
+    if doc.get("status") not in ("todo", "in_progress") and result.get("attempt_id") == fields.get("attempt_id"):
+        return {check_id: _declared_path(plan, folder / f"{check_id}.json", project) for check_id in sorted(evidence)
+                if _CHECK_ID.fullmatch(check_id) and (folder / f"{check_id}.json").is_file()}
+    if doc.get("status") != "in_progress" or (result.get("executor") or {}).get("session") != run_id:
+        return {}  # another session owns the item: register.py refuses the run, and the plan stays as it was
+    proofs = {}
+    for check_id, path in sorted(evidence.items()):
+        source = Path(path) if Path(path).is_absolute() else project / path
+        if not _CHECK_ID.fullmatch(check_id) or not source.is_file():
+            return {}  # the evidence gate names what is missing
+        body = source.read_bytes()
+        try:
+            green = json.loads(body).get("exit") == 0
+        except (ValueError, AttributeError):
+            green = False
+        if not green:
+            return {}  # a red or unreadable proof is refused by the gate: nothing of it is kept
+        proofs[check_id] = body
+    current = plan.root
+    for part in ("artifacts", item, run_id, "evidence"):
+        current = current / part
+        if current.is_symlink():
+            raise Blocked("EVIDENCE_PATH_INVALID", f"{current} is a symlink; evidence is kept only inside the plan")
+    folder.mkdir(parents=True, exist_ok=True)
+    if not folder.resolve().is_relative_to(plan.root.resolve()):
+        raise Blocked("EVIDENCE_PATH_INVALID", f"{folder} leads outside the plan")
+    kept = {}
+    for check_id, body in proofs.items():
+        target = folder / f"{check_id}.json"
+        if not (target.is_file() and not target.is_symlink() and target.read_bytes() == body):
+            try:
+                handle = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o644)
+            except OSError as error:
+                raise Blocked("EVIDENCE_PATH_INVALID", f"{target}: {error.strerror}") from None
+            with os.fdopen(handle, "wb") as out:
+                out.write(body)
+        relative = _declared_path(plan, target, project)
+        kept[check_id] = relative
+    return kept
+
+
+def op_register(fields: dict) -> dict:
+    answer = _register(fields)
+    if (fields["status"] == "blocked" and answer.get("outcome") == "refused"
+            and "ATTEMPT_CONFLICT" in (answer.get("reason_code"), str(answer.get("message", "")).split(":", 1)[0])):
+        # the run retried the piece and it blocked again: the new block replaces the one this attempt registered
+        answer = _register(fields, again=True)
+    return answer
+
+
+def _register(fields: dict, again: bool = False) -> dict:
+    run_id = fields["run_id"]
+    try:
+        _supersede_blocked_attempt(fields, again=again)
+        kept = _kept_evidence(fields)
+    except Blocked as blocked:
+        return {"op": "register", "gate": {"verdict": "none", "checks": {}}, "outcome": "refused",
+                "reason_code": blocked.code, "message": blocked.message}
+    fields = dict(fields, evidence={**(fields.get("evidence") or {}), **kept})
+    with tempfile.TemporaryDirectory(prefix="planner-orch-register-") as tmp:
+        report = Path(tmp) / "report.json"
+        report.write_text(json.dumps(fields["report"], ensure_ascii=False), encoding="utf-8")
+        argv = [sys.executable, str(partners.BRIDGE / "register.py"), fields["plan"], fields["ref"],
+                "--report", str(report), "--status", fields["status"], "--actor", actor_text(fields["registrar"]),
+                "--executed-by", actor_text(fields["executed_by"]), "--attempt-id", fields["attempt_id"],
+                "--owner-session", run_id, "--gate", "evidence", "--strict-route"]
+        for check_id, path in sorted(fields.get("evidence", {}).items()):
+            argv += ["--evidence", f"{check_id}={path}"]
+        if fields.get("review_receipt"):
+            argv += ["--review-receipt", fields["review_receipt"]]
+        if fields.get("plans_root"):
+            argv += ["--plans-root", str(fields["plans_root"])]
+        done = partners.run_bounded(argv, timeout=900, capture_output=True, text=True, encoding="utf-8", check=False)
+    if done.returncode not in (0, 1):
+        raise refusal_of(done.stderr, "REGISTER_FAILED")
+    try:
+        receipt = json.loads(done.stdout) if done.stdout.strip() else None
+    except ValueError:
+        receipt = None
+    gate = (receipt or {}).get("gate") or {"verdict": "none", "checks": {}}
+    answer = {"op": "register", "gate": gate}
+    if receipt is not None:
+        answer["receipt"] = receipt
+    if kept:
+        answer["evidence"] = kept
+    if done.returncode == 0:
+        calls = (receipt or {}).get("calls", [])
+        answer["outcome"] = "recorded" if any(call.get("result") == "recorded" for call in calls) else "no-op"
+        return answer
+    refused = [call for call in (receipt or {}).get("calls", []) if call.get("result") == "refused"]
+    if gate.get("verdict") == "stale":  # fenced by the guard, or by finish under the plan lock
+        blocked = refusal_of(done.stderr, "REGISTER_STALE_OWNER")
+    else:
+        blocked = refusal_of(refused[-1].get("error", "") if refused else done.stderr, "REGISTER_REFUSED")
+    answer.update(outcome="refused", reason_code=blocked.code, message=blocked.message)
+    return answer
+
+
+# ------------------------------------------------------------------------------------------------ commit
+
+
+_LANE: list = []  # the lane of the last ``_candidate`` (a batch the planner names); one call per process
+_FOREIGN = re.compile(r"OUTSIDE_SCOPE: foreign dirty paths: (.*?); use --leave-outside")
+
+
+_PLAN_FILE = re.compile(r"(^|/)plans/.+/(phases/[^/]+/[^/]+(\.json|/.*)|log\.jsonl|plan\.json)$")
+_OUTSIDE_PRODUCT = re.compile(r"PATH_OUTSIDE_SCOPE: paths outside the product paths of the item: (.*?); --paths-only")
+
+
+def _outside_product(text: str) -> list:
+    """The paths a ``--paths-only`` refusal (``PATH_OUTSIDE_SCOPE``) names as not covered by the task files of the item."""
+    found = _OUTSIDE_PRODUCT.search(text or "")
+    return re.findall(r"'([^']+)'", found.group(1)) if found else []
+
+
+def _foreign_paths(text: str) -> list:
+    """The foreign dirty paths an ``OUTSIDE_SCOPE`` refusal names (empty for any other answer)."""
+    found = _FOREIGN.search(text or "")
+    return re.findall(r"'([^']+)'", found.group(1)) if found else []
+
+
+def _only_plan_dirt(text: str) -> bool:
+    """``OUTSIDE_SCOPE`` whose foreign dirty paths are all plan files (``.../phases/P/Pn.m.json``, ``log.jsonl``)."""
+    paths = _foreign_paths(text)
+    return bool(paths) and all(_PLAN_FILE.search(path) for path in paths)
+
+
+def op_commit(fields: dict) -> dict:
+    answer = _commit(fields)
+    if fields.get("attempt_id"):
+        answer["attempt"] = fields["attempt_id"]
+    return answer
+
+
+def _commit(fields: dict) -> dict:
+    """One scoped commit of the registered item through ``plan.py commit``; nothing left to commit is a no-op.
+
+    A split run names a ``stage``: ``implementation`` and ``correction.<n>`` commit exactly the product paths of the stage
+    (``--paths-only``: no other task file, no plan file, no workspace commit; a path the task files do not cover stays for
+    the final commit), ``final`` (and no stage) is the commit of the plan files and the rest. ``role`` (``executor``,
+    ``fix``) and ``trailers`` go to the commit as given."""
+    stage = fields.get("stage")
+    paths = list(fields.get("paths") or [])
+    staged = stage not in (None, "final")
+    deferred = []  # product paths the task files of the item do not cover: the final commit takes them
+    while True:
+        argv = ["commit", fields["plan"], fields["ref"], "--role", fields.get("role") or "executor"]
+        for path in paths:
+            argv += ["--path", path]
+        for trailer in fields.get("trailers") or []:
+            argv += ["--trailer", trailer]
+        if staged:
+            argv.append("--paths-only")
+        if fields.get("actor"):
+            argv += ["--actor", actor_text(fields["actor"])]
+        done = plan_py([*argv, "--json"], fields.get("plans_root"))
+        outside = _outside_product(done.stderr or done.stdout) if staged and done.returncode else []
+        if not outside or not set(outside) <= set(paths):
+            break
+        deferred += outside
+        paths = [path for path in paths if path not in outside]
+        if not paths:
+            return {"op": "commit", "outcome": "no-op", "message": "the task files cover none of the paths of the stage: "
+                    + ", ".join(deferred)[:900]}
+    left = []
+    foreign = _foreign_paths(done.stderr or done.stdout) if done.returncode else []
+    if foreign and (fields.get("paths") or _only_plan_dirt(done.stderr or done.stdout)):
+        # Pieces of one batch are in progress together: the bookkeeping of the others (their item files, started in the
+        # same call) is dirty and belongs to their own commits, so it stays out of this one instead of refusing it. With
+        # the paths of the piece named by the caller (the conductor reads them from git per executor round), any other
+        # dirty path is not this piece's work either (another session, the owner): it is left untouched and named.
+        left = [path for path in foreign if not _PLAN_FILE.search(path)]
+        done = plan_py([*argv, "--leave-outside", "--json"], fields.get("plans_root"))
+    if done.returncode:
+        blocked = refusal_of(done.stderr or done.stdout, "COMMIT_REFUSED")
+        if blocked.code == "NOTHING_TO_COMMIT":
+            return {"op": "commit", "outcome": "no-op", "message": blocked.message}
+        return {"op": "commit", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    try:
+        result = json.loads(done.stdout)
+    except ValueError:
+        return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_RESULT_INVALID",
+                "message": "plan.py commit printed no JSON"}
+    split = result.get("workspace_commit") or {}
+    if not result.get("sha"):
+        detail = f" (workspace commit {split['status']}: {split.get('error', 'no detail')})" if split.get("error") else ""
+        return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_RESULT_INVALID",
+                "message": "plan.py commit created no commit" + detail}
+    answer = {"op": "commit", "outcome": "committed", "sha": result["sha"]}
+    if split.get("status") not in (None, "skipped-legacy"):
+        # a plan in the portable workspace: the product commit and the local commit of the plan files are two commits
+        answer.update(repo=result.get("repo", "source"), workspace_sha=result.get("workspace_sha"),
+                      workspace_commit=split)
+    notes = []
+    if deferred:
+        notes.append("not covered by the task files, left for the final commit: " + ", ".join(deferred))
+    if left:
+        notes.append("left outside, not the work of this piece: " + ", ".join(left))
+    if split.get("error"):  # the product commit stands; the plan files wait for the next commit or `workspace sync`
+        notes.append(f"workspace commit {split['status']}: {split['error']}")
+    if notes:
+        answer["message"] = "; ".join(notes)[:1000]
+    return answer
+
+
+def op_release(fields: dict) -> dict:
+    """Return an item this run holds in progress to ``todo``: ``finish --status blocked --owner-session`` then ``reopen``."""
+    plan, ref, run_id, plans_root = fields["plan"], fields["ref"], fields["run_id"], fields.get("plans_root")
+    try:
+        doc = item_doc(plan, ref, plans_root)
+    except Blocked as blocked:
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    executor = ((doc.get("result") or {}).get("executor") or {})
+    if doc.get("status") != "in_progress" or executor.get("session") != run_id:
+        return {"op": "release", "outcome": "no-op", "message": f"{ref} is not in progress under run {run_id}"}
+    reason = fields.get("reason") or "released by the run"
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    finished = plan_py(["finish", plan, ref, "--status", "blocked", "--owner-session", run_id, "--notes", reason,
+                        "--escalation", f"claim released: {reason}", *actor], plans_root)
+    if finished.returncode:
+        blocked = refusal_of(finished.stderr or finished.stdout, "RELEASE_REFUSED")
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    reopened = plan_py(["reopen", plan, ref, "--reason", f"claim released by run {run_id}: {reason}", *actor], plans_root)
+    if reopened.returncode:
+        blocked = refusal_of(reopened.stderr or reopened.stdout, "RELEASE_REFUSED")
+        return {"op": "release", "outcome": "refused", "reason_code": blocked.code,
+                "message": f"{ref} was finished as blocked but not reopened: {blocked.message}"}
+    return {"op": "release", "outcome": "released"}
+
+
+_RESEARCH_ITEM = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def op_research(fields: dict) -> dict:
+    """The research-result in ``inputs/research/<item>-<n>.json``, declared as a runtime input of the item."""
+    import brief  # the planner engine is located and imported only when a result is saved
+    plan_ref, plans_root, number = fields["plan"], fields.get("plans_root"), fields["number"]
+    item = fields["ref"].split("/", 1)[0]
+    if number < 1 or not _RESEARCH_ITEM.match(item):
+        return {"op": "research", "outcome": "refused", "reason_code": "RESEARCH_REF_INVALID",
+                "message": f"research {number} of {fields['ref']!r} does not name a file of the plan"}
+    try:
+        plan = brief.store.load_plan(brief.store.resolve_plan_dir(plan_ref, Path(plans_root) if plans_root else None))
+    except brief.PlanError as error:
+        return {"op": "research", "outcome": "refused", "reason_code": error.code, "message": error.message}
+    if item not in plan.items:
+        return {"op": "research", "outcome": "refused", "reason_code": "ITEM_UNKNOWN",
+                "message": f"plan {plan_ref} has no item {item}"}
+    target = plan.root / "inputs" / "research" / f"{item}-{number}.json"
+    relative = _declared_path(plan, target, plan.repo_root, runtime_input=True)
+    body = json.dumps(fields["result"], ensure_ascii=False, indent=2) + "\n"
+    same = target.is_file() and target.read_text(encoding="utf-8") == body
+    if not same:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body, encoding="utf-8")
+    try:
+        plan_json(["--output", "json", "add-artifact", plan_ref, item, "--path", relative, "--role", "input"],
+                  plans_root, code="ARTIFACT_REFUSED")
+    except Blocked as blocked:
+        if not same:  # a result the plan did not accept leaves no file behind
+            target.unlink(missing_ok=True)
+        return {"op": "research", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    return {"op": "research", "outcome": "no-op" if same else "recorded", "path": relative}
+
+
+def op_note(fields: dict) -> dict:
+    """A note of support work in the journal of the plan: ``plan.py log <plan> <ref> --type note``."""
+    refs = fields["refs"]
+    if not refs:
+        return {"op": "note", "outcome": "refused", "reason_code": "NOTE_NO_TARGET",
+                "message": "the planner journals a note on a phase or an item: give one in refs"}
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    done = plan_py(["log", fields["collection"], refs[0], "--type", "note", "--summary", fields["text"], *actor],
+                   fields.get("plans_root"))
+    if done.returncode:
+        blocked = refusal_of(done.stderr or done.stdout, "NOTE_REFUSED")
+        return {"op": "note", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    return {"op": "note", "outcome": "recorded"}
+
+
+_ORIGIN_KIND = {"owner": "question", "advisor": "advice", "panel": "panel"}
+_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def decision_text(question: dict, value) -> str:
+    """The text of the decision an answer becomes: ``<id>: <label>`` for an option (orch reads the id back from it), a
+    string as it is, any other JSON value as JSON."""
+    option = next((row for row in question.get("options") or [] if row["id"] == value), None)
+    if option is not None:
+        return f"{option['id']}: {option['label']}" if option.get("label") else option["id"]
+    return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
+
+
+def op_decision(fields: dict) -> dict:
+    """An answered question as an accepted decision of the plan: ``plan.py add-decision`` with ``applies_to`` the item and
+    ``origin`` the question. The decisions that apply to the item are read first: one whose ``origin.question_key`` is
+    this question's (whatever its status: a decision the owner superseded stays superseded) makes the call a no-op."""
+    plan_ref, plans_root, ref, key = fields["collection"], fields.get("plans_root"), fields["ref"], fields["question_key"]
+    question, resolution, authority = fields["question"], fields["resolution"], fields["authority"]
+    try:
+        for row in plan_json(["--output", "json", "list", plan_ref, "decision", "--applies-to", ref], plans_root)["data"]:
+            origin = item_doc(plan_ref, row["ref"], plans_root).get("origin") or {}
+            if origin.get("question_key") == key and origin.get("item") == ref:
+                return {"op": "decision", "outcome": "no-op", "decision_id": row["ref"]}
+    except Blocked as blocked:
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    text = decision_text(question, resolution["value"])
+    shown = " ".join(question["text"].split()) or question["id"]
+    evidence = [{"kind": "repo", "ref": path} for path in fields["evidence"]]
+    if authority == "owner":
+        evidence.append({"kind": "owner", "ref": resolution["by"], "note": "answered with orch conduct answer"})
+    data = {"status": "accepted", "question": " ".join(question["text"].split()) or question["id"],
+            "options": [{"id": _LETTERS[index], "text": f"{row['id']}: {row['label']}" if row.get("label") else row["id"]}
+                        for index, row in enumerate((question.get("options") or [])[:len(_LETTERS)])],
+            "decision": text, "rationale": fields["rationale"], "applies_to": [ref],
+            "answered_by": "owner" if authority == "owner" else "agent", "evidence": evidence,
+            "origin": {"kind": _ORIGIN_KIND[authority], "run": fields["run_id"], "item": ref, "question_id": question["id"],
+                       "question_key": key, "question_digest": fields["question_digest"],
+                       "revision": question["revision"]}}
+    if not data["options"]:
+        del data["options"]
+    actor = ["--actor", actor_text(fields["actor"])] if fields.get("actor") else []
+    done = plan_py(["add-decision", plan_ref, "--title", f"{ref} {question['id']}: {shown}"[:120], "--json",
+                    json.dumps(data, ensure_ascii=False), *actor], plans_root)
+    if done.returncode:
+        blocked = refusal_of(done.stderr or done.stdout, "DECISION_REFUSED")
+        return {"op": "decision", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    found = re.search(r"\bD[0-9]+\b", done.stdout or "")
+    return {"op": "decision", "outcome": "recorded", **({"decision_id": found.group(0)} if found else {})}
+
+
+def op_readiness(fields: dict) -> dict:
+    """The readiness of every detailed phase (``plan.py readiness status <plan> --json``: id, status, digest) and the next
+    lane (:func:`next_lane`, the reading of ``claim``). Read-only; a refusal of the planner is ``refused`` with its code."""
+    plan_ref, plans_root = fields["collection"], fields.get("plans_root")
+    try:
+        found = plan_json(["readiness", "status", plan_ref, "--json"], plans_root, code="READINESS_UNREADABLE")
+        phases = [{"id": row["id"], "status": row["status"], "digest": row["digest"]} for row in found["phases"]]
+        lane = next_lane(plan_ref, plans_root)
+    except Blocked as blocked:
+        return {"op": "readiness", "outcome": "refused", "reason_code": blocked.code, "message": blocked.message}
+    except (KeyError, TypeError) as error:
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_UNREADABLE",
+                "message": f"plan.py readiness status printed an unexpected document: {error!r}"}
+    return {"op": "readiness", "outcome": "ok", "phases": phases, "next": lane}
+
+
+# ------------------------------------------------------------------------------------------------ protocol
+
+
+def reply(request_id: str, status: str = "ok", **fields) -> None:
+    document = {"$schema": RESPONSE, "protocol": "1", "request_id": request_id, "status": status}
+    document.update(fields)
+    sys.stdout.write(json.dumps(document, ensure_ascii=False))
+
+
+def describe(request_id: str) -> None:
+    from aicore.util.digest import digest_json
+    manifest = json.loads((partners.BRIDGE / "extension.json").read_text(encoding="utf-8"))
+    reply(request_id, output={"$schema": DESCRIBE, "protocol": "1", "id": manifest["id"], "kind": manifest["kind"],
+                              "version": manifest["version"], "capabilities_digest": digest_json(manifest["provides"]),
+                              "transport": "stdio-json"})
+
+
+def invoke(request_id: str, request: dict) -> None:
+    fields = request.get("input")
+    if request.get("point") == "planner:check":
+        import preflight
+        reply(request_id, output=preflight.run(fields))
+        return
+    if request.get("point") != POINT or not isinstance(fields, dict) or fields.get("op") not in OPS:
+        reply(request_id, "error", error={"code": "INPUT_INVALID",
+                                          "message": f"expected point {POINT} with op {' | '.join(OPS)}"})
+        return
+    handler = {"claim": op_claim, "brief": op_brief, "register": op_register, "commit": op_commit,
+               "release": op_release, "note": op_note, "research": op_research,
+               "decision": op_decision, "readiness": op_readiness, "inspect": op_inspect}[fields["op"]]
+    try:
+        output = handler(fields)
+    except Blocked as blocked:
+        if fields["op"] == "brief":  # a brief has no refusal shape: the source cannot brief this item
+            reply(request_id, "error", error={"code": blocked.code, "message": blocked.message})
+            return
+        raise
+    reply(request_id, output=output)
+
+
+def main() -> int:
+    try:
+        request = json.load(sys.stdin)
+    except ValueError:
+        reply("0" * 32, "error", error={"code": "REQUEST_INVALID", "message": "the request is not JSON"})
+        return 0
+    request_id = request.get("request_id") if isinstance(request, dict) else None
+    request_id = request_id if isinstance(request_id, str) and request_id else "0" * 32
+    if request.get("protocol") != "1":
+        reply(request_id, "error", error={"code": "PROTOCOL_UNSUPPORTED", "message": "this plugin speaks protocol 1"})
+        return 0
+    try:
+        partners.use_aicore()
+        if request.get("op") == "describe":
+            describe(request_id)
+        elif request.get("op") == "invoke":
+            invoke(request_id, request)
+        else:
+            reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "op is describe or invoke"})
+    except SystemExit as stop:  # a partner was not found: partners printed CODE: message on stderr
+        code = {2: "AICORE_NOT_FOUND", 3: "BRIDGE_PARTNER_UNAVAILABLE"}.get(stop.code, "PLUGIN_FAILED")
+        reply(request_id, "error", error={"code": code, "message": f"{code}: see the plugin's stderr"})
+    except Blocked as blocked:
+        reply(request_id, "error", error={"code": blocked.code, "message": blocked.message})
+    return 0
+
+
+if __name__ == "__main__":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    sys.exit(main())

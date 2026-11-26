@@ -1,0 +1,35 @@
+{
+  "op": "decision",
+  "collection": "PLAN1",
+  "ref": "P1.1",
+  "run_id": "run-a",
+  "attempt_id": "att-run-a-P1.1",
+  "question": {
+    "id": "Q1",
+    "revision": 1,
+    "kind": "decision",
+    "text": "Keep the old flag name?",
+    "options": [
+      {
+        "id": "keep",
+        "label": "keep"
+      },
+      {
+        "id": "rename",
+        "label": "rename"
+      }
+    ]
+  },
+  "question_key": "qk-f13b1c3d08b245ec",
+  "question_digest": "f13b1c3d08b245ec267529b7e18c9f0061131a7c7fa62b3aafc618d695dfdf7e",
+  "resolution": {
+    "value": "rename",
+    "by": "owner",
+    "at": "2026-10-24T00:00:00Z"
+  },
+  "authority": "owner",
+  "rationale": "Answered by owner: rename: rename",
+  "evidence": [
+    "plans/PLAN1/artifacts/P1.1/questions.json"
+  ]
+}

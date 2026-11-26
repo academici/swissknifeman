@@ -1,0 +1,10 @@
+{
+  "$comment": "Opt-in non-planner capability hints. Planner requires explicit native invocation; SessionStart adds no policy.",
+  "version": 3,
+  "policy": "",
+  "policy_auto_suffix": "",
+  "hint_template": "[intent-router] bias (non-authoritative): top={name} score={score}{runners}",
+  "commands": [],
+  "agents": [],
+  "skills": []
+}

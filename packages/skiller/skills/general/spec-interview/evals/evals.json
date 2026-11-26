@@ -1,0 +1,19 @@
+{
+  "skill": "spec-interview",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Real user request in ecosystem language (specifics: paths, names). Replace with yours.",
+      "assertions": [
+        {
+          "type": "contains",
+          "value": "expected-substring"
+        },
+        {
+          "type": "not_contains",
+          "value": "forbidden-substring"
+        }
+      ]
+    }
+  ]
+}

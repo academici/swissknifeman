@@ -1,0 +1,8 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:agent-result:v1",
+  "exit": 0,
+  "decisions": [{"action": "wait", "reason_codes": ["PROVIDER_RATE_LIMIT"], "wait_s": 30}],
+  "duration_s": 412.7,
+  "stream": ".swissknifeman/state/orch/conductor/cnd-20261022T100000Z-a1b2c3/W1/streams/executor.1.jsonl",
+  "lingered": false
+}

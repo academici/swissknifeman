@@ -1,0 +1,6 @@
+{
+  "schema_version": "effective-source-doctor/v1",
+  "overall": "ok",
+  "diagnostics": [],
+  "not-a-field": 1
+}

@@ -1,0 +1,608 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:state:v1",
+  "title": "state.json of a conductor run",
+  "description": "What happened in a conductor run (<run>/state.json), written by RunStore under its lock. The root, the state of a piece and the envelope of a step are closed; values the conductor keeps as opaque records (claims, results of steps, review strategy) stay open objects. A field a later item adds is added here as an optional property of its $defs entry.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:state:v1"},
+    "status": {"description": "running while the conductor drives the run; the outcome of the run (finished, stopped, waiting for an answer, ...) after it.", "type": "string", "minLength": 1},
+    "items": {
+      "description": "State of each piece by its reference.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/item-state"}},
+      "additionalProperties": false
+    },
+    "claims": {
+      "description": "The answer of the work source to each claim, by claim key (item-<ref> or next-<n>).",
+      "type": "object",
+      "patternProperties": {"^.+$": {"description": "Answer of a claim (ref, orch_run, submission, title, ...).", "type": "object"}},
+      "additionalProperties": false
+    },
+    "tokens": {"$ref": "#/$defs/usage"},
+    "agents": {"description": "Number of agent runs started in the run.", "type": "integer", "minimum": 0},
+    "on_blocked": {"description": "Effective on_blocked of the run (stop or continue).", "type": "string"},
+    "questions": {
+      "description": "Questions of each piece by reference, then by question id.",
+      "type": "object",
+      "patternProperties": {
+        "^.+$": {
+          "type": "object",
+          "description": "Questions of one piece.",
+          "patternProperties": {"^.+$": {"$ref": "urn:swissknifeman:orch:records:questions:v1#/$defs/entry"}},
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "executor_sessions": {
+      "description": "Executor session of each piece by reference (the key * for session.executor shared): the provider session, the identity it was built under and its use. Replaces the deprecated executor_session* keys.",
+      "type": "object",
+      "patternProperties": {"^.+$": {"$ref": "#/$defs/executor-session"}},
+      "additionalProperties": false
+    },
+    "executor_session": {"description": "Deprecated: session of the shared executor; moved into executor_sessions when the run is resumed (SESSION_STATE_MIGRATED).", "type": ["string", "null"]},
+    "executor_session_item": {"description": "Deprecated: piece that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_route": {"description": "Deprecated: route label that built the shared executor session; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_route_said": {"description": "Route label already announced by SESSION_ROUTE_CHANGED.", "type": ["string", "null"]},
+    "executor_session_task_digest": {"description": "Deprecated: digest of the full task prompt the shared session holds; see executor_sessions.", "type": ["string", "null"]},
+    "executor_session_answers": {"description": "Deprecated: answer keys the shared session has already seen; see executor_sessions.", "type": "array", "items": {"type": "string"}},
+    "review_strategy": {"description": "Review strategy decided for the batch (mode, groups, source, ...).", "type": ["object", "null"]},
+    "group_reviews": {
+      "description": "Group reviews by number.",
+      "type": "object",
+      "patternProperties": {"^[0-9]+$": {"description": "One group review (refs, format, error, attempts, ...).", "type": "object"}},
+      "additionalProperties": false
+    },
+    "run_warned": {"description": "Number of RUN_SLOW beacons emitted.", "type": "integer", "minimum": 0},
+    "active_s": {"description": "Active seconds of the run, summed over its segments.", "type": "number", "minimum": 0},
+    "ended": {"description": "UTC end of the last segment of the run.", "type": "string"},
+    "stop": {"$ref": "#/$defs/stop"},
+    "last_stop": {"description": "The stop answered by the last resume.", "type": "object", "properties": {"code": {"description": "Reason code.", "type": "string"}, "message": {"description": "What happened.", "type": "string"}, "resume": {"description": "Number of the resume that answered it.", "type": "integer"}}},
+    "resumes": {"description": "Number of resumes.", "type": "integer", "minimum": 0},
+    "limit_raises": {"description": "Limit raises given by resume --raise-limit, in order.", "type": "array", "items": {"description": "One raise (key, from, to, item, at, ...).", "type": "object"}},
+    "foreign": {"description": "Fingerprint of the changed paths outside the run taken at its start.", "type": "object"},
+    "batch": {"description": "Batch counters of the run (review_rounds, corrections, findings).", "type": "object", "patternProperties": {"^.+$": {"type": "integer"}}, "additionalProperties": false},
+    "usage_unmetered": {"description": "Pieces with a role run whose usage is unknown.", "type": "array", "items": {"type": "string"}},
+    "policy_stage_skipped": {"description": "POLICY_STAGE_SKIPPED was announced once for the run (P3.10).", "type": "boolean"},
+    "isolation_noted": {"description": "What the isolation of the run said once (P6.1): provider:reason of every ISOLATION_PARTIAL, and provider:ISOLATION_DRIFT of a provider whose init event showed a drift (its isolation is lowered for the run).", "type": "array", "uniqueItems": true, "items": {"description": "provider:reason.", "type": "string", "pattern": "^[a-z-][a-z0-9-]*:.+$"}}
+  },
+  "$defs": {
+    "executor-session": {
+      "description": "The executor session of a piece (or of the run): what the provider returned, the identity it was built under (p7-design) and its use. A slot without session and with error (or neither) records why the next attempt starts fresh.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session": {"description": "Provider session id to resume; absent after a failed attempt or one that returned none.", "type": "string", "minLength": 1},
+        "provider": {"description": "Provider that built the session.", "type": "string"},
+        "route": {"description": "Route label (provider/model/effort) that last used the session.", "type": "string"},
+        "fingerprint": {"$ref": "#/$defs/session-fingerprint"},
+        "fingerprint_digest": {"description": "Canonical digest of the fingerprint; empty for a slot migrated from an older state.", "type": "string"},
+        "created_at": {"description": "UTC time the slot was created.", "type": "string"},
+        "last_used_at": {"description": "UTC time of the last attempt that used it (session.max_idle_s counts from here).", "type": "string"},
+        "rounds": {"description": "Attempts that ended with this session.", "type": "integer", "minimum": 0},
+        "last_item": {"description": "Piece whose attempt used the session last.", "type": "string"},
+        "task_digest": {"description": "Digest of the full task prompt the session holds; the delta prompt is sent only when it matches.", "type": "string"},
+        "answers": {"description": "Answer keys the session has already seen.", "type": "array", "items": {"type": "string"}},
+        "error": {"description": "Error code of the attempt that lost the session (provider_error).", "type": "string"},
+        "migrated": {"description": "The slot was moved from the deprecated executor_session keys and has no fingerprint yet.", "type": "boolean"}
+      }
+    },
+    "session-fingerprint": {
+      "description": "Identity of an executor session: another value of any field but the model and effort starts a fresh session. Empty authority_digest and isolation_home until the authority envelope and the isolation profiles exist.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"type": "string"},
+        "project": {"description": "Real path of the project.", "type": "string"},
+        "worktree": {"description": "Real path of the git top level of the project.", "type": "string"},
+        "role": {"type": "string"},
+        "item": {"description": "Piece (absent for a shared session).", "type": "string"},
+        "attempt_id": {"description": "Attempt of the claim (absent for a shared session).", "type": "string"},
+        "instructions_digest": {"description": "Digest of the instructions snapshot of the run.", "type": "string"},
+        "authority_digest": {"type": "string"},
+        "isolation_home": {"type": "string"},
+        "base": {"description": "Revision of the first brief of the piece (absent for a shared session).", "type": "string"}
+      }
+    },
+    "usage": {
+      "description": "Token usage bucket.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {"description": "Fresh input tokens.", "type": "integer"},
+        "cached": {"description": "Cached input tokens.", "type": "integer"},
+        "output": {"description": "Output tokens.", "type": "integer"},
+        "charged": {"description": "Input tokens charged for attempts without usage (limits.unmetered charge), included in input.", "type": "integer"}
+      }
+    },
+    "stop": {
+      "description": "Why the run or the piece stopped (null: none).",
+      "type": ["object", "null"],
+      "required": ["code"],
+      "properties": {
+        "code": {"description": "Reason code.", "type": "string"},
+        "message": {"description": "What happened.", "type": "string"}
+      }
+    },
+    "string-list": {"description": "A list of strings.", "type": "array", "items": {"type": "string"}},
+    "round-list": {"description": "Round numbers.", "type": "array", "items": {"type": "integer"}},
+    "item-state": {
+      "description": "State of one piece.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deferred_findings": {
+          "description": "Confirmed findings awaiting delivery in a later correction. Evidence lives in the recorded review and triage steps.",
+          "type": "array",
+          "items": {
+            "description": "Source of one deferred finding.",
+            "type": "object",
+            "properties": {
+              "key": {
+                "description": "Stable finding key.",
+                "type": "string",
+                "pattern": "^fk-[a-f0-9]{16}$"
+              },
+              "round": {
+                "description": "Review round containing full evidence.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "id": {
+                "description": "Original review finding id.",
+                "type": "string",
+                "pattern": "^F[0-9]+$"
+              }
+            },
+            "required": [
+              "key",
+              "round",
+              "id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "steps": {
+          "description": "Steps of the current attempt by step key.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^brief$": {"$ref": "#/$defs/step-brief"},
+            "^prepare$": {"$ref": "#/$defs/step-prepare"},
+            "^scout$": {"$ref": "#/$defs/step-scout"},
+            "^research\\.[0-9]+$": {"$ref": "#/$defs/step-research"},
+            "^research-save\\.[0-9]+$": {"$ref": "#/$defs/step-research-save"},
+            "^executor\\.[0-9]+(-q[0-9]+)?$": {"$ref": "#/$defs/step-executor"},
+            "^checks\\.[0-9]+$": {"$ref": "#/$defs/step-checks"},
+            "^review\\.[0-9]+$": {"$ref": "#/$defs/step-review"},
+            "^triage\\.[0-9]+(-a)?$": {"$ref": "#/$defs/step-triage"},
+            "^advice\\.[0-9]+$": {"$ref": "#/$defs/step-advice"},
+            "^close$": {"$ref": "#/$defs/step-close"},
+            "^register$": {"$ref": "#/$defs/step-register"},
+            "^commit$": {"$ref": "#/$defs/step-commit"},
+            "^(checkpoint|fix-commit\\.[0-9]+)$": {"$ref": "#/$defs/step-commit"},
+            "^.+$": {"$ref": "#/$defs/step-any"}
+          }
+        },
+        "attempts": {
+          "description": "Earlier attempts kept aside by retry.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "description": "One earlier attempt.",
+            "additionalProperties": false,
+            "properties": {
+              "n": {"description": "Number of the attempt.", "type": "integer", "minimum": 1},
+              "retried_at": {"description": "UTC time of the retry.", "type": "string"},
+              "steps": {"description": "Summary of each dropped step.", "type": "object", "patternProperties": {"^.+$": {"description": "verdict, role, route, ended, report_status, files.", "type": "object"}}, "additionalProperties": false}
+            }
+          }
+        },
+        "orch_run": {"description": "Run id of the piece in the work source.", "type": "string"},
+        "outcome": {"description": "Outcome of the piece (done, done_with_deviations, blocked, stopped, abandoned, ...).", "type": ["string", "null"]},
+        "stop": {"$ref": "#/$defs/stop"},
+        "partial": {"description": "The blocked piece left changes in the tree.", "type": "boolean"},
+        "retried": {"description": "UTC time of the last retry.", "type": "string"},
+        "fresh_contexts": {
+          "description": "Explicit interrupted-executor continuations; physical history and ceilings never reset.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["since", "stage", "ceiling", "route", "tree_mark", "baseline", "admissions", "before", "snapshot", "options_sha256"],
+            "properties": {
+              "since": {"type": "string"},
+              "stage": {"type": "string", "pattern": "^executor\\.[0-9]+(-q[0-9]+)?$"},
+              "ceiling": {"type": "integer", "minimum": 1},
+              "route": {
+                "type": "object", "additionalProperties": false,
+                "required": ["provider", "model"],
+                "properties": {"provider": {"type": "string"}, "model": {"type": "string"}, "effort": {"type": "string"}}
+              },
+              "tree_mark": {"type": "string"},
+              "baseline": {"type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+              "admissions": {"type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+              "before": {"type": "string"},
+              "snapshot": {"type": "string"},
+              "options_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            }
+          }
+        },
+        "waiting": {
+          "description": "The piece is blocked on questions that wait for an answer: their ids and since when (UTC). Removed by a retry.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question_ids", "since"],
+          "properties": {
+            "question_ids": {"description": "Ids of the blocking questions that wait.", "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+            "since": {"description": "UTC time the piece began to wait.", "type": "string", "minLength": 1}
+          }
+        },
+        "commits": {
+          "description": "The commits of the piece in a split run (`commit.mode: implementation-and-fixes`): the checkpoint of the implementation and one fix commit per correction round, in order. The review of the piece reads from the parent of the first one; the group review reads them all. Absent in `final-only`.",
+          "type": "array",
+          "items": {
+            "description": "One stage commit.",
+            "type": "object",
+            "properties": {
+              "stage": {"description": "Stage: implementation or correction.<n>.", "type": "string", "pattern": "^(implementation|correction\\.[0-9]+)$"},
+              "sha": {"description": "Commit made by the stage.", "type": "string", "pattern": "^[0-9a-f]{7,64}$"},
+              "parent": {"description": "Parent of that commit: where the piece stood before the stage.", "type": "string", "pattern": "^[0-9a-f]{7,64}$"}
+            },
+            "required": ["stage", "sha", "parent"],
+            "additionalProperties": false
+          }
+        },
+        "session_base": {"description": "Revision of the first brief of the piece: the base of the fingerprint of its executor session.", "type": "string"},
+        "authority": {
+          "description": "Digest of the authority envelope of the last launch of each role of the piece (P6.2); a launch with another digest says AUTHORITY_CHANGED.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {"^[a-z][a-z0-9-]*$": {"description": "sha256 digest of the envelope.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+        },
+        "released": {"description": "Releases of the claim.", "type": "array", "items": {"type": "object"}},
+        "tokens": {"$ref": "#/$defs/usage"},
+        "stage_usage": {
+          "description": "Fresh usage of each logical stage (P3.10).",
+          "type": "object",
+          "patternProperties": {"^.+$": {"$ref": "#/$defs/usage"}},
+          "additionalProperties": false
+        },
+        "usage_by_agent": {
+          "description": "Usage receipts of each agent by attempt (P3.10: receipt.step names the logical stage).",
+          "type": "object",
+          "patternProperties": {
+            "^.+$": {
+              "type": "object",
+              "description": "Receipts of one agent by attempt.",
+              "patternProperties": {"^.+$": {"$ref": "#/$defs/usage-receipt"}},
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "usage_incomplete": {"description": "A role run of the piece reported no complete usage.", "type": "boolean"},
+        "usage_charged": {"description": "Attempts charged as unmetered.", "type": "array"},
+        "budget_over": {"description": "Tokens used when BUDGET_OVER was first emitted.", "type": "integer"},
+        "retries_used": {"description": "Retries used.", "type": "integer", "minimum": 0},
+        "retries_by_stage": {"description": "Retries used by stage.", "type": "object", "patternProperties": {"^.+$": {"type": "integer"}}, "additionalProperties": false},
+        "route_overrides": {"description": "Fallback routes taken, by role.", "type": "object", "patternProperties": {"^.+$": {"type": "object"}}, "additionalProperties": false},
+        "skills_auto": {"description": "Answer of the skills bridge for each role whose skills are [\"auto\"], kept once per piece (context.auto_skills).", "type": "object", "patternProperties": {"^[a-z][a-z0-9-]*$": {"$ref": "#/$defs/skills-auto-role"}}, "additionalProperties": false},
+        "skills_checked": {"description": "Skills each role keeps after the selection checks, kept once per piece (context.skill_set).", "type": "object", "patternProperties": {"^[a-z][a-z0-9-]*$": {"$ref": "#/$defs/skills-checked-role"}}, "additionalProperties": false},
+        "risk": {"description": "Risk record of the piece.", "type": ["object", "null"]},
+        "deviation_ids": {"description": "Deviation ids recorded for the piece.", "type": ["array", "object"]},
+        "autofix_at": {"$ref": "#/$defs/round-list"},
+        "autofixed": {"description": "Deviations fixed automatically.", "type": "array"},
+        "adopted": {"$ref": "#/$defs/string-list"},
+        "check_fixes_at": {"$ref": "#/$defs/round-list"},
+        "check_fixes_used": {"description": "Check fix rounds used.", "type": "integer", "minimum": 0},
+        "corrections_at": {"$ref": "#/$defs/round-list"},
+        "corrections_used": {"description": "Correction rounds used.", "type": "integer", "minimum": 0},
+        "followup_corrections": {
+          "description": "Executor rounds assigned to the ordered fix-brief backlog of a group-review follow-up. Saved before execution for replay and correction budget accounting.",
+          "type": "array",
+          "items": {"description": "Executor round owning the corresponding queued fix-brief.", "type": "integer", "minimum": 2},
+          "uniqueItems": true
+        },
+        "correction_baselines": {"description": "Tree marks taken before corrections, by round.", "type": "object"},
+        "findings_at": {"description": "Findings counted by review round.", "type": ["object", "array"]},
+        "review_rounds_used": {"description": "Review rounds used.", "type": "integer", "minimum": 0},
+        "review_marks": {
+          "description": "Paths and their hashes seen by each review round (P2.4).",
+          "type": "object",
+          "patternProperties": {"^[0-9]+$": {"type": "object", "description": "Path to hash, or null when absent or unreadable in the canonical dirty snapshot.", "patternProperties": {"^.+$": {"type": ["string", "null"]}}, "additionalProperties": false}},
+          "additionalProperties": false
+        },
+        "review_debt": {"description": "Findings corrected after the last review round the wall allows (round, findings, corrected).", "type": "object"},
+        "settled": {"description": "Outcomes set by hand with orch conduct settle (from, to, reason, at).", "type": "array", "items": {"type": "object"}},
+        "review_requested_announced": {"description": "The requested review was announced.", "type": "boolean"},
+        "reviewer_upgrade_refused": {"description": "The reviewer upgrade was refused (reason).", "type": ["boolean", "string", "object"]},
+        "deferred_minors": {"description": "Minor findings deferred.", "type": "array"},
+        "dynamic_review": {"description": "The risk of the piece turned its review on.", "type": "boolean"},
+        "advice_of": {"description": "Advice taken by the piece, by problem.", "type": "object"},
+        "advice_applied": {
+          "description": "Advice the conductor applied on its own (the advisor or the panel, not held for the owner) to red checks or a rejected finding: one row per advice, recorded as a decision of the plan after register.",
+          "type": "array",
+          "items": {
+            "description": "One applied advice.",
+            "type": "object",
+            "required": ["number", "ref", "problem", "options", "recommendation", "confidence", "by", "file", "at"],
+            "additionalProperties": false,
+            "properties": {
+              "number": {"description": "Ordinal of the advice in the piece.", "type": "integer", "minimum": 1},
+              "ref": {"description": "Problem advised on (checks:<round> or findings:<review round>).", "type": "string", "minLength": 1},
+              "problem": {"description": "The problem as the advisor was asked.", "type": "string"},
+              "options": {
+                "description": "Options of the advice.",
+                "type": "array",
+                "items": {
+                  "description": "One option.",
+                  "type": "object",
+                  "required": ["id"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {"description": "Id of the option.", "type": "string", "minLength": 1},
+                    "label": {"description": "What the option does.", "type": "string"}
+                  }
+                }
+              },
+              "recommendation": {"description": "Id of the recommended option that was applied.", "type": "string", "minLength": 1},
+              "confidence": {"description": "Confidence of the advice.", "type": "string", "enum": ["low", "medium", "high"]},
+              "by": {"description": "Who advised.", "type": "string", "enum": ["advisor", "panel"]},
+              "file": {"description": "Advice file of the piece (repository path).", "type": "string", "minLength": 1},
+              "at": {"description": "UTC time the advice was applied.", "type": "string", "minLength": 1}
+            }
+          }
+        },
+        "advice_fix": {"description": "Advice text of each check fix round.", "type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+        "combined": {"description": "A review correction that waits to be combined with the red checks.", "type": "object"},
+        "combined_done": {"$ref": "#/$defs/round-list"},
+        "checks_changed": {"description": "The checks changed during the piece.", "type": ["boolean", "array", "object"]},
+        "executor_started": {"description": "An executor round of this run began.", "type": "boolean"},
+        "expected": {"description": "Expected outcome given by the work source.", "type": ["string", "null", "object"]},
+        "interrupted_note": {"description": "Interruption note of each executor step.", "type": "object", "patternProperties": {"^.+$": {"type": "string"}}, "additionalProperties": false},
+        "operator_context": {
+          "description": "Caller-supplied context snapshots for blocked executor retries; input, authority and budgets are unchanged.",
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["n", "step", "source", "file", "sha256", "at"],
+            "properties": {
+              "n": {"type": "integer", "minimum": 1},
+              "step": {"type": "string", "pattern": "^executor\\.[0-9]+(-q[0-9]+)?$"},
+              "source": {"type": "string", "minLength": 1},
+              "file": {"type": "string", "minLength": 1},
+              "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+              "at": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "no_diff_admitted": {"description": "A round without changes was admitted.", "type": ["boolean", "array", "object"]},
+        "no_diff_proofs": {"description": "Proofs of rounds without changes.", "type": ["array", "object"]},
+        "plan_notes": {"description": "Notes for the plan.", "type": "array"},
+        "relocated": {"description": "Runtime artifacts moved out of the tree, by step.", "type": "object"},
+        "self_check_returned": {"description": "Self-check results returned by the executor.", "type": "array"},
+        "source_paths": {"description": "Paths of the source the piece touched.", "type": "array"}
+      }
+    },
+    "usage-receipt": {
+      "description": "Usage of one attempt of an agent.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input": {"description": "Fresh input tokens.", "type": "integer"},
+        "cached": {"description": "Cached input tokens.", "type": "integer"},
+        "output": {"description": "Output tokens.", "type": "integer"},
+        "usage_complete": {"description": "The provider reported complete usage (null: unknown).", "type": ["boolean", "null"]},
+        "step": {"description": "Logical stage the attempt belongs to (P3.10).", "type": "string"},
+        "accounting": {
+          "description": "Native usage semantics and durable session counter; unknown input is not a measured zero.",
+          "type": "object", "additionalProperties": false,
+          "required": ["basis"],
+          "properties": {
+            "basis": {"type": "string", "enum": ["codex-session-cumulative", "agy-native"]},
+            "counter_id": {"type": "string", "minLength": 1},
+            "resumed": {"type": "boolean"},
+            "unavailable": {"type": "string", "minLength": 1},
+            "cumulative": {
+              "type": "object", "additionalProperties": false, "required": ["input", "cached", "output"],
+              "properties": {"input": {"type": "integer", "minimum": 0}, "cached": {"type": "integer", "minimum": 0}, "output": {"type": "integer", "minimum": 0}}
+            },
+            "reported": {
+              "type": "object", "additionalProperties": false,
+              "properties": {
+                "input_tokens": {"type": "integer", "minimum": 0}, "output_tokens": {"type": "integer", "minimum": 0},
+                "cache_read_tokens": {"type": "integer", "minimum": 0}, "total_tokens": {"type": "integer", "minimum": 0},
+                "thinking_tokens": {"type": "integer", "minimum": 0}
+              }
+            }
+          }
+        }
+      }
+    },
+    "skills-auto-role": {
+      "description": "What the skills bridge chose for one role.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skills"],
+      "properties": {
+        "skills": {"description": "Chosen skills (name, id, path, reason, tokens, digest, skill_md_sha256).", "type": "array", "items": {"type": "object"}},
+        "excluded": {"description": "Skills the bridge left out.", "type": "array"},
+        "discoverable": {"description": "Skills the provider may discover itself.", "type": "array"},
+        "tokens": {"description": "Tokens of the chosen skills.", "type": "number", "minimum": 0}
+      }
+    },
+    "skills-checked-role": {
+      "description": "Skills one role keeps after the selection checks, and the rows left out.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["names", "excluded"],
+      "properties": {
+        "names": {"description": "Skill names kept.", "type": "array", "items": {"type": "string"}},
+        "excluded": {"description": "Rows {id, reason} left out.", "type": "array", "items": {"type": "object"}}
+      }
+    },
+    "step-envelope": {
+      "description": "Properties every step record may carry: started (a boundary persisted before the work), done (with result and verdict) or stopped (with code).",
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"description": "Status of the step.", "type": "string", "enum": ["started", "done", "stopped"]},
+        "started_at": {"description": "UTC start of the step.", "type": "string"},
+        "role": {"description": "Role of the step.", "type": "string"},
+        "route": {"description": "Route label of the role.", "type": ["string", "null"]},
+        "base_head": {"description": "HEAD when the step started.", "type": ["string", "null"]},
+        "attempt": {"description": "attempt_id of the claim when the step started.", "type": ["string", "null"]},
+        "dirty_before": {"description": "Changed paths before a checks step.", "type": ["array", "null"], "items": {"type": "string"}},
+        "code": {"description": "Reason code of a stopped step.", "type": "string"},
+        "ended": {"description": "UTC end of the step.", "type": "string"},
+        "verdict": {"description": "One-line verdict of a done step.", "type": "string"},
+        "duration_s": {"description": "Duration of the step.", "type": "number"},
+        "tokens": {"$ref": "#/$defs/usage"},
+        "result": {"description": "Result of a done step."}
+      }
+    },
+    "step-any": {
+      "description": "Every step, also one of a key no family names (written by another conductor version): the closed envelope, and a done step carries a result. A started or stopped step of an unknown key reaches the recovery of resume, which stops with STAGE_RECOVERY_UNKNOWN.",
+      "$ref": "#/$defs/step-envelope",
+      "additionalProperties": false,
+      "properties": {
+        "status": {"description": "See step-envelope."}, "started_at": {"description": "See step-envelope."}, "role": {"description": "See step-envelope."},
+        "route": {"description": "See step-envelope."}, "base_head": {"description": "See step-envelope."}, "attempt": {"description": "See step-envelope."},
+        "dirty_before": {"description": "See step-envelope."}, "code": {"description": "See step-envelope."}, "ended": {"description": "See step-envelope."},
+        "verdict": {"description": "See step-envelope."}, "duration_s": {"description": "See step-envelope."}, "tokens": {"description": "See step-envelope."},
+        "result": {"description": "See step-envelope."}
+      },
+      "oneOf": [
+        {"description": "A done step: the result its stage returned, replayed by a resume.", "required": ["status", "result"], "properties": {"status": {"const": "done"}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-brief": {
+      "description": "The brief step. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done brief step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-brief"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-prepare": {
+      "description": "The prepare step (the launch plan). The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done prepare step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-prepare"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-scout": {
+      "description": "The context scout. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done scout step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-scout"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-research": {
+      "description": "A research round. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done research step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-research"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-research-save": {
+      "description": "The saving of a research result. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done research-save step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-research-save"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-executor": {
+      "description": "An executor round. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done executor step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-executor"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-checks": {
+      "description": "A round of checks. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done checks step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-checks"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-review": {
+      "description": "A review round. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done review step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-review"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-triage": {
+      "description": "A triage round. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done triage step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-triage"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-advice": {
+      "description": "An advice round. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done advice step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-advice"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-close": {
+      "description": "The closer. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done close step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-close"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-register": {
+      "description": "The registration of the outcome. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done register step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-register"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "step-commit": {
+      "description": "The commit of the piece. The closed envelope is step-any; a done step must carry the result its readers take.",
+      "oneOf": [
+        {"description": "A done commit step and its result.", "required": ["status", "result"], "properties": {"status": {"const": "done"}, "result": {"description": "One check of the result, so a done step that fails names this branch.", "oneOf": [{"$ref": "#/$defs/result-commit"}]}}},
+        {"description": "A started or stopped step: no result is read.", "required": ["status"], "properties": {"status": {"enum": ["started", "stopped"]}}}
+      ]
+    },
+    "result-brief": {"description": "Result of brief: conduct reads input_path.", "type": "object", "required": ["input_path"], "properties": {"input_path": {"description": "Path of input.json.", "type": "string", "minLength": 1}}},
+    "result-prepare": {"description": "Result of prepare: the launch plan of the piece.", "type": "object"},
+    "result-scout": {"description": "Result of the scout: the context map text.", "type": "object", "required": ["text"], "properties": {"text": {"description": "The context map.", "type": "string"}}},
+    "result-research": {"description": "Result of a research round.", "type": "object", "required": ["result"], "properties": {"result": {"description": "The research-result document.", "type": "object"}}},
+    "result-research-save": {"description": "Result of saving research.", "type": "object", "required": ["outcome"], "properties": {"outcome": {"description": "recorded, no-op, ...", "type": "string"}}},
+    "result-executor": {"description": "Result of an executor round: the stage-report is read on replay.", "type": "object", "required": ["report"], "properties": {"report": {"description": "The stage-report of the round.", "type": "object"}}},
+    "result-checks": {"description": "Result of a round of checks: one row per check.", "type": "array", "items": {"$ref": "#/$defs/check-row"}},
+    "result-review": {"description": "Result of a review round: verdict_file and the correction rounds read findings.verdict and findings.findings.", "type": "object", "required": ["findings"], "properties": {"findings": {"$ref": "urn:swissknifeman:orch:conductor:review-findings:v1"}, "base": {"type": "string", "description": "Git revision.", "pattern": "^[0-9a-f]{7,40}$"}, "candidate": {"type": "object", "description": "Contents at review time.", "additionalProperties": false, "properties": {"head": {"type": "string", "description": "Git revision.", "pattern": "^[0-9a-f]{7,40}$"}, "digest": {"type": "string", "description": "SHA-256 of sorted path-tab-fingerprint lines joined with newline.", "pattern": "^sha256:[0-9a-f]{64}$"}, "paths": {"type": "object", "description": "Repository-relative paths to Git fingerprints.", "patternProperties": {"^.+$": {"type": "string", "description": "Git mode and blob, absent, or unsupported type.", "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"}}, "additionalProperties": false}}, "required": ["head", "digest", "paths"]}, "outside": {"type": "object", "description": "Repository-relative paths to Git fingerprints.", "patternProperties": {"^.+$": {"type": "string", "description": "Git mode and blob, absent, or unsupported type.", "pattern": "^(absent|other|(100644|100755|120000) [0-9a-f]{40})$"}}, "additionalProperties": false}, "finding_keys": {"type": "object", "description": "Conductor-assigned identity by round-local finding id.", "patternProperties": {"^F[0-9]+$": {"type": "string", "description": "Conductor finding identity; exact repeats only.", "pattern": "^fk-[0-9a-f]{16}$"}}, "additionalProperties": false}}},
+    "result-triage": {"description": "Result of a triage round: verdict_file and the corrections read the confirmed and rejected findings.", "type": "object", "required": ["triage"], "properties": {"triage": {"$ref": "urn:swissknifeman:orch:conductor:triage-result:v1"}}},
+    "result-advice": {"description": "Result of an advice round.", "type": "object", "required": ["advice"], "properties": {"advice": {"description": "The advice document.", "type": "object"}}},
+    "result-close": {"description": "Result of the closer.", "type": "object", "required": ["by"], "properties": {"by": {"description": "closer or conductor.", "type": "string"}}},
+    "result-register": {"description": "Result of the registration.", "type": "object", "required": ["outcome", "gate"], "properties": {"outcome": {"description": "recorded, no-op, ...", "type": "string"}, "gate": {"description": "The gate verdict.", "type": "string"}}},
+    "result-commit": {"description": "Result of the commit.", "type": "object", "required": ["outcome"], "properties": {"outcome": {"description": "committed, no-op, ...", "type": "string"}, "sha": {"description": "The commit.", "type": ["string", "null"]}, "message": {"description": "What the commit step said.", "type": ["string", "null"]}}},
+    "check-row": {
+      "description": "Result of one check (P2.3 adds reuse, fingerprint, provenance, skipped, skip_reason, original_seconds).",
+      "type": "object",
+      "required": ["id", "green"],
+      "properties": {
+        "id": {"description": "Check id.", "type": "string"},
+        "cmd": {"description": "Command of the check.", "type": ["string", "null"]},
+        "kind": {"description": "acceptance, self_check, ...", "type": "string"},
+        "exit": {"description": "Exit code (null when it did not run).", "type": ["integer", "null"]},
+        "green": {"description": "The check passed.", "type": "boolean"},
+        "seconds": {"description": "Duration.", "type": ["number", "null"]},
+        "log": {"description": "Path of the log.", "type": ["string", "null"]},
+        "tail": {"description": "Tail of the log.", "type": ["string", "null"]},
+        "evidence": {"description": "Path of the evidence document.", "type": ["string", "null"]},
+        "skipped": {"description": "The check was not run (fail-fast, ...).", "type": "boolean"},
+        "skip_reason": {"description": "Why it was skipped.", "type": ["string", "null"]},
+        "reused": {"description": "The result of an earlier run of the same candidate was reused.", "type": "boolean"},
+        "original_seconds": {"description": "Duration of the reused run.", "type": ["number", "null"]}
+      }
+    }
+  }
+}

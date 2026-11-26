@@ -1,0 +1,304 @@
+{
+  "schema": 1,
+  "pack": "dart-flutter",
+  "version": "0.5.3",
+  "description": "Dev-loop for Flutter/Dart (mobile / POS / embedded): agents slice-builder/test-writer/reviewer (POS/embedded-aware)/ffi-reviewer(opt.), serial one-branch workflow, SubagentStop review-gate (dart analyze/format) + PostToolUse-validator. Knowledge Flutter/state/FFI — in agent prompts (bucket mobile thin).",
+  "stack": {
+    "shape": "mobile",
+    "language": "dart",
+    "framework": "flutter",
+    "project_type": "dart-flutter",
+    "detect": {
+      "all_of": [
+        "pubspec.yaml"
+      ]
+    }
+  },
+  "requires": {
+    "skills": [
+      "figma-to-flutter",
+      "code-simplifier",
+      "test-strategy"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Agent name prefix/work flow?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    },
+    {
+      "id": "PROJECT_DIR",
+      "q": "Absolute path to the project?",
+      "detect": "pwd"
+    },
+    {
+      "id": "FLUTTER_BIN",
+      "q": "Binary flutter?",
+      "detect": "command -v flutter",
+      "default": "flutter"
+    },
+    {
+      "id": "DART_BIN",
+      "q": "Binary dart?",
+      "detect": "command -v dart",
+      "default": "dart"
+    },
+    {
+      "id": "TEST_RUNNER_CMD",
+      "q": "Test team?",
+      "default": "{FLUTTER_BIN} test"
+    },
+    {
+      "id": "ANALYZE_CMD",
+      "q": "Statistical analysis?",
+      "default": "{DART_BIN} analyze"
+    },
+    {
+      "id": "FORMAT_CMD",
+      "q": "Check format?",
+      "default": "{DART_BIN} format --output=none --set-exit-if-changed ."
+    },
+    {
+      "id": "STATE_MGMT",
+      "q": "Government management?",
+      "detect": "pubspec.yaml:dependencies.flutter_riverpod",
+      "enum": [
+        "riverpod",
+        "bloc",
+        "provider",
+        "getx",
+        "setstate"
+      ],
+      "default": "riverpod"
+    },
+    {
+      "id": "HAS_FFI",
+      "q": "Yes FFI/native plugins (POS-peripherals)?",
+      "kind": "bool",
+      "default": false,
+      "detect": "grep -rql dart:ffi lib"
+    },
+    {
+      "id": "TARGET_KIND",
+      "q": "Target: mobile | pos-embedded | desktop?",
+      "enum": [
+        "mobile",
+        "pos-embedded",
+        "desktop"
+      ],
+      "default": "mobile"
+    },
+    {
+      "id": "BASE_BRANCH",
+      "q": "Basic branch?",
+      "detect": "git symbolic-ref --short refs/remotes/origin/HEAD",
+      "default": "main"
+    },
+    {
+      "id": "CHECK_CMD",
+      "q": "Fast review-gate check?",
+      "default": "{DART_BIN} analyze"
+    },
+    {
+      "id": "DOCS_DIR",
+      "q": "Where to put it guideline (internal AI-guide, not public docs/)?",
+      "default": ".claude/guidelines"
+    },
+    {
+      "id": "MODEL_REVIEWER",
+      "q": "Model reviewer?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_FFI_REVIEWER",
+      "q": "Model ffi-reviewer?",
+      "default": "frontier",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SLICE_BUILDER",
+      "q": "Model slice-builder?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_TEST_WRITER",
+      "q": "Model test-writer?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "MODEL_SPEC_WRITER",
+      "q": "Model spec-writer?",
+      "default": "implementation",
+      "enum": [
+        "inherit",
+        "economy",
+        "implementation",
+        "frontier",
+        "opus",
+        "sonnet",
+        "haiku"
+      ]
+    },
+    {
+      "id": "GATE_COVERAGE_MIN",
+      "q": "Min. coating (%)?",
+      "default": "70"
+    },
+    {
+      "id": "GATE_MAX_CRITICAL",
+      "q": "Acceptable critical-finds?",
+      "default": "0"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/slice-builder.md",
+      "target": ".claude/agents/{PACK_PREFIX}-slice-builder.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/test-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-test-writer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-reviewer.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/ffi-reviewer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-ffi-reviewer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "agents/spec-writer.md",
+      "target": ".claude/agents/{PACK_PREFIX}-spec-writer.md",
+      "kind": "template",
+      "role": "agent",
+      "optional": true
+    },
+    {
+      "src": "workflows/dev-loop.js",
+      "target": ".claude/workflows/{PACK_PREFIX}-dev-loop.js",
+      "kind": "template",
+      "role": "workflow"
+    },
+    {
+      "src": "hooks/review-gate.sh",
+      "target": ".claude/hooks/review-gate.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "hooks/review-gate.env.ini",
+      "target": ".claude/review-gate.env.ini",
+      "kind": "template",
+      "role": "config",
+      "user_owned": true
+    },
+    {
+      "src": "hooks/validate-flutter.sh",
+      "target": ".claude/hooks/validate-flutter.sh",
+      "kind": "verbatim",
+      "role": "hook",
+      "chmod": "+x"
+    },
+    {
+      "src": "settings/settings.fragment.json",
+      "target": ".claude/settings.json",
+      "kind": "merge",
+      "role": "settings",
+      "merge": "hooks.SubagentStop[]+hooks.PostToolUse[] append-if-absent"
+    },
+    {
+      "src": "rules/widgets.md",
+      "target": ".claude/rules/widgets.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/state.md",
+      "target": ".claude/rules/state.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "rules/ffi.md",
+      "target": ".claude/rules/ffi.md",
+      "kind": "verbatim",
+      "role": "rule"
+    },
+    {
+      "src": "rules/tests.md",
+      "target": ".claude/rules/tests.md",
+      "kind": "template",
+      "role": "rule"
+    },
+    {
+      "src": "docs/subagents-and-workflows.md",
+      "target": "{DOCS_DIR}/subagents-and-workflows.md",
+      "kind": "template",
+      "role": "doc"
+    },
+    {
+      "src": "rules/reviewer-overrides.md",
+      "target": ".claude/rules/{PACK_PREFIX}-reviewer-overrides.md",
+      "kind": "template",
+      "user_owned": true,
+      "role": "override"
+    }
+  ],
+  "notes": {
+    "verify_workflow": "dev-loop.js — top-level return/await, node --check DO NOT apply.",
+    "skill_gap": "Bucket mobile = 1 skill (figma-to-flutter). Architecture/state/FFI/POS — in agent prompts and rules/, NOT new portable skills (anti-bloat).",
+    "pos_ffi": "POS/embedded and FFI-specifics - in reviewer.md (prose by {{TARGET_KIND}}) + ffi-reviewer.md/rules/ffi.md under pack:if HAS_FFI.",
+    "orchestrator": "General orchestrator - pack _common (same PACK_PREFIX)."
+  }
+}

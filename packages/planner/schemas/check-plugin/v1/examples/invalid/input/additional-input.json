@@ -1,0 +1,10 @@
+{
+  "plan_id": "a",
+  "short_id": "a",
+  "plan_dir": "/",
+  "plans_root": "/",
+  "project_root": "a",
+  "planner_version": "a",
+  "schema_urn_prefix": "urn:swissknifeman:task:plan:",
+  "not-a-field": 1
+}

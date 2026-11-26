@@ -1,0 +1,31 @@
+{
+  "schema": "urn:swissknifeman:aicore:plugin-catalog:v1",
+  "marketplace": {"name": "sample", "owner": {"name": "Owner", "email": "owner@example.com"}},
+  "plugins": [
+    {
+      "name": "core",
+      "source": "./",
+      "skills": ["skills/general/one"],
+      "description": "Curated skills",
+      "category": "meta",
+      "tags": ["core"],
+      "codex": {
+        "source": "adapters/codex/core",
+        "description": "Curated skills for Codex",
+        "category": "meta",
+        "tags": ["core"],
+        "install_policy": "explicit",
+        "auth": "none"
+      }
+    },
+    {
+      "name": "old-bucket",
+      "source": "./",
+      "skills": ["skills/general/one"],
+      "description": "Alias",
+      "category": "",
+      "tags": [],
+      "alias_of": "general"
+    }
+  ]
+}

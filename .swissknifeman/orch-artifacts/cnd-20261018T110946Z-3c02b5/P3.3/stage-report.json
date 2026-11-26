@@ -1,0 +1,88 @@
+{
+  "changed_paths": [
+    "docs/project-launcher.md",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/lib/aicore/project/artifacts.py",
+    "packages/aicore/lib/aicore/project/cli.py",
+    "packages/aicore/lib/aicore/project/migrate.py",
+    "packages/aicore/tests/test_project_cli.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/project-launcher.md"
+      ],
+      "impact": "the commit takes docs/project-launcher.md",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "docs/project-launcher.md (outside packages/**) updated: command table of init, migrate, doctor and the launcher-only note."
+    },
+    {
+      "class": "spec_mismatch",
+      "impact": "the checkout's .swissknifeman/ still holds launcher.lock.json besides launcher.py and project.json",
+      "kind": "deviation",
+      "next": "owner: keep the lock (current) or retire it in a separate protocol piece",
+      "outcome": "owner_decision",
+      "severity": "low",
+      "text": "The goal says init writes only launcher.py and project.json, but the managed lock .swissknifeman/launcher.lock.json stays: the launcher/umbrella protocol check (state/invocation.py, project verify, project-launcher-lock/v1 schema) depends on it and removing it is a protocol change beyond this piece. Init writes launcher.py + lock + (on request) project.json and nothing of the project layer (config, state, backups, stubs)."
+    },
+    {
+      "impact": "init alone does not make a complete workspace project",
+      "kind": "assumption",
+      "next": "owner may want init to call the workspace attach flow; that lives in packages/workspace",
+      "text": "Assumption: the marker is written only when --project is given (no guessing of a project code from the folder name, no default marker). Init does not create the workspace project record or plans folder; it prints a note to run `workspace project attach` when the workspace has no such project on this machine. With plans_store workspace and no workspace project, plans resolution fails (WORKSPACE_PROJECT_MISSING) until attach/clone is done; project doctor reports it."
+    },
+    {
+      "impact": "user commits the removal after migrate",
+      "kind": "note",
+      "next": "none",
+      "text": "migrate does not touch the tracked files' git state: moving this repo's tracked .swissknifeman/config.toml shows as a deletion to commit. Orch reports, orch-artifacts, terminal-admission and provider-artifacts.lock.json stay in the checkout (not in the moved set, as in P3.2)."
+    },
+    {
+      "impact": "P3.4/P3.5 or a workspace piece must decide",
+      "kind": "pending",
+      "next": "switch attach/bind to localconfig.set_repo_path; decide whether local/ counts as held",
+      "text": "projects.remove in packages/workspace still treats local/ as held (PROJECT_NOT_EMPTY) and bindings.json is still the store of the repo path; init/migrate do not call set_repo_path. Not in this piece's include."
+    },
+    {
+      "impact": "V1 may be red outside this piece",
+      "kind": "note",
+      "next": "none",
+      "text": "Environment: AICORE_ROOT/SKM_*_ROOT point to a frozen copy taken before P3.1-P3.3; subprocess tests (workspace test_the_launcher_runs_the_module) can be red under V1 for that reason only; analyst tests.test_scan has 3 pre-existing failures (see lessons)."
+    },
+    {
+      "impact": "the commit must not take them for this piece",
+      "kind": "note",
+      "next": "coordinator: stage only changed_paths",
+      "text": "git status also lists modified lock/manifest files (docs/package-lock.json, packages/gui/**/package-lock.json, Cargo.lock, requirements.lock, packages/maind/package-lock.json, packages/skiller/package-lock.json, packages/skiller/skills.json) that I did not touch; `git diff` fails in this sandbox on docs/package-lock.json (unsupported file type). They are not in changed_paths."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "docs/project-launcher.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: docs/project-launcher.md"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "project/cli.py _options/_marker_request and the new migrate command",
+      "project/migrate.py move/drop/conflict rules",
+      "artifacts.apply_sync marker-before-launcher order and the refused logic"
+    ],
+    "reason_codes": [
+      "public_api_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Launcher-only repositories. aicore.project.artifacts: plan_marker/plan_sync(marker=...)/apply_sync write .swissknifeman/project.json (workspace, project_id, plans_store) atomically before the launcher; an existing marker with other values, an invalid marker or a symlink is refused (PROJECT_MARKER_CONFLICT etc.) and nothing is written. aicore.project.cli: init takes --project CODE [--workspace CODE] [--plans-store workspace|legacy] (workspace defaults to the selected one, store to legacy when plans/ holds plan folders, else workspace); without --project init is as before (launcher + lock). New aicore.project.migrate and `project migrate [--dry-run] [--json]` move config.toml, state/, backups/, stubs/ of the checkout's .swissknifeman/ into projects/<code>/local/ (never overwrites: identical files dropped, different ones are PROJECT_MIGRATE_CONFLICT, symlinks PROJECT_MIGRATE_SYMLINK, no workspace project folder PROJECT_LOCAL_UNAVAILABLE; idempotent, under the project sync lock). `project doctor` gets project.local (local/ folder, config against project-local-config/v1, repo.path against the checkout) and project.checkout-layer (warn on leftovers). Tests: new LauncherOnlyTests in test_project_cli.py (31 tests in the file OK); also OK: aicore test_cli, test_usage, test_workspace, config.test_project_local, test_contracts, test_schema, test_architecture, test_python39, state.test_locations, state.test_backups, test_stubs, test_localconfig; ecosystem-units check exit 0 (all run with PYTHONPATH=lib AICORE_ROOT=packages/aicore)."
+}

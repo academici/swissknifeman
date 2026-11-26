@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:log-event:v1",
+  "title": "Log event",
+  "description": "One append-only event, a line of log.jsonl.",
+  "type": "object",
+  "properties": {
+    "v": {
+      "type": "integer",
+      "description": "Event schema version, always 1.",
+      "const": 1
+    },
+    "ts": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ts",
+      "description": "Event time."
+    },
+    "type": {
+      "type": "string",
+      "description": "Lifecycle events are written by the API, friction events through plan.py log, scout and delegate by orchestration.",
+      "minLength": 1,
+      "enum": [
+        "plan_created",
+        "design_done",
+        "start",
+        "finish",
+        "phase_closed",
+        "gate_granted",
+        "decision",
+        "archived",
+        "migrated",
+        "deviation",
+        "blocker",
+        "difficulty",
+        "assumption",
+        "note",
+        "scout",
+        "delegate",
+        "readiness_recorded"
+      ]
+    },
+    "item": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/itemId",
+      "description": "Item the event is about."
+    },
+    "phase": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/phaseId",
+      "description": "Phase the event is about."
+    },
+    "actor": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who produced the event."
+    },
+    "summary": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "One-line summary."
+    },
+    "impact": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Impact in one line."
+    },
+    "next": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/text",
+      "description": "Follow-up in one line."
+    },
+    "refs": {
+      "type": "array",
+      "description": "Paths, refs or commit SHAs.",
+      "items": {
+        "type": "string",
+        "description": "One string.",
+        "minLength": 1
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Small free-form payload for lifecycle events."
+    },
+    "executed_by": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who executed the work, when the registrar or worker was named explicitly."
+    },
+    "registered_by": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/actor",
+      "description": "Who registered the transition, when it differs from the executor."
+    },
+    "attempt_id": {
+      "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/attemptId",
+      "description": "Attempt the transition registers; a repeat of the same attempt is a no-op."
+    }
+  },
+  "required": [
+    "v",
+    "ts",
+    "type",
+    "summary",
+    "actor"
+  ],
+  "additionalProperties": false
+}

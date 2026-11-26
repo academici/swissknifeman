@@ -1,0 +1,14 @@
+{
+  "name": "polyglot-python-node",
+  "description": "Polyglot stack Python + Node: python-bucket + general engineering + frontend (Vue) + bridge front↔back + DevOps. Separate bucket node no - Node-front cover frontend-buckets.",
+  "buckets": [
+    "architect",
+    "oss-dev",
+    "general",
+    "python",
+    "frontend",
+    "frontend-vue",
+    "frontend-backend",
+    "devops"
+  ]
+}

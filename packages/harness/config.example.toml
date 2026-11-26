@@ -1,0 +1,170 @@
+# harness configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[harness]
+# Expected permission policy profile of the project; `harness doctor` reports a deviation. String.
+# Allowed in layers: defaults, project.
+# policy_profile = <string>
+
+[harness.hooks]
+
+[harness.hooks.auto_approve]
+# Autonomy mode: strict allows read-only commands, permissive allows all but the deny list, bypass also approves plan exit, off leaves the normal permission flow. One of: "strict", "permissive", "bypass", "off".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.auto_approve.providers]
+# Overrides of the auto-approve keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.auto_approve.providers.example]
+
+# Autonomy mode: strict allows read-only commands, permissive allows all but the deny list, bypass also approves plan exit, off leaves the normal permission flow. One of: "strict", "permissive", "bypass", "off".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.memory]
+# Memory backend: maind delegates to the maind daemon, manual leaves memory to explicit MCP calls, file, federation and agentmemory use their stores, off disables the hook. One of: "maind", "manual", "file", "federation", "agentmemory", "off".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+# Name of the brain the project is attached to (used by the providers that keep it with the mode). String.
+# Allowed in layers: defaults, machine, project.
+# brain = <string>
+
+[harness.hooks.memory.providers]
+# Overrides of the memory keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.memory.providers.example]
+
+# Memory backend: maind delegates to the maind daemon, manual leaves memory to explicit MCP calls, file, federation and agentmemory use their stores, off disables the hook. One of: "maind", "manual", "file", "federation", "agentmemory", "off".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+# Name of the brain the project is attached to (used by the providers that keep it with the mode). String.
+# Allowed in layers: defaults, machine, project.
+# brain = <string>
+
+[harness.hooks.agent_router]
+# Routing policy: propose and auto_dispatch enable keyword hints, off disables the router. One of: "propose", "auto_dispatch", "off".
+# Allowed in layers: defaults, machine, project.
+# policy = <string>
+
+[harness.hooks.agent_router.providers]
+# Overrides of the agent-router keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.agent_router.providers.example]
+
+# Routing policy: propose and auto_dispatch enable keyword hints, off disables the router. One of: "propose", "auto_dispatch", "off".
+# Allowed in layers: defaults, machine, project.
+# policy = <string>
+
+[harness.hooks.run_report]
+# Write the run report at the end of a session: on or off. One of: "on", "off".
+# Allowed in layers: defaults, machine, project.
+# enabled = <string>
+
+# Number of run reports to keep; the hook keeps 30 when the key is not set. Integer >= 1.
+# Allowed in layers: defaults, machine, project.
+# runs_keep = <integer>
+
+[harness.hooks.run_report.providers]
+# Overrides of the run-report keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.run_report.providers.example]
+
+# Write the run report at the end of a session: on or off. One of: "on", "off".
+# Allowed in layers: defaults, machine, project.
+# enabled = <string>
+
+# Number of run reports to keep; the hook keeps 30 when the key is not set. Integer >= 1.
+# Allowed in layers: defaults, machine, project.
+# runs_keep = <integer>
+
+[harness.hooks.pack_guard]
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.pack_guard.providers]
+# Overrides of the pack-guard keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.pack_guard.providers.example]
+
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.plan_guard]
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.plan_guard.providers]
+# Overrides of the plan-guard keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.plan_guard.providers.example]
+
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.plan_regen]
+# Re-render plans after an edit: on or off. One of: "off", "on".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.plan_regen.providers]
+# Overrides of the plan-regen keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.plan_regen.providers.example]
+
+# Re-render plans after an edit: on or off. One of: "off", "on".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.changelog_gate]
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.changelog_gate.providers]
+# Overrides of the changelog-gate keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.changelog_gate.providers.example]
+
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.review_gate]
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.review_gate.providers]
+# Overrides of the review-gate keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.review_gate.providers.example]
+
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.git_guardrails]
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.git_guardrails.providers]
+# Overrides of the git-guardrails keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.git_guardrails.providers.example]
+
+# Gate mode: off, warn or strict. One of: "off", "warn", "strict".
+# Allowed in layers: defaults, machine, project.
+# mode = <string>
+
+[harness.hooks.observer]
+# Write the observer runtime log; false makes the hook a no-op. Boolean.
+# Allowed in layers: defaults, machine, project.
+# enabled = <boolean>
+
+[harness.hooks.observer.providers]
+# Overrides of the observer keys by provider id (claude-code, cursor, codex, grok).
+# [harness.hooks.observer.providers.example]
+
+# Write the observer runtime log; false makes the hook a no-op. Boolean.
+# Allowed in layers: defaults, machine, project.
+# enabled = <boolean>

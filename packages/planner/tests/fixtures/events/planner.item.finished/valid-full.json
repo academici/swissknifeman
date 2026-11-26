@@ -1,0 +1,27 @@
+{
+  "data": {
+    "attempt_id": "a-1",
+    "checks": {
+      "V1": 0
+    },
+    "commits": [
+      "abcdef1"
+    ],
+    "deviation_count": 0,
+    "item_id": "P1.1",
+    "phase_id": "P1",
+    "plan_id": "2026.10.07-№1-LIFE",
+    "repository": "r",
+    "short_id": "PLAN1",
+    "status": "done",
+    "title": "First"
+  },
+  "datacontenttype": "application/json",
+  "dataschema": "urn:swissknifeman:planner:event-data:planner-item-finished:v1",
+  "id": "316d922c39314df3ab99a6513339ee25",
+  "source": "urn:swissknifeman:module:planner",
+  "specversion": "1.0",
+  "subject": "2026.10.07-№1-LIFE",
+  "time": "2026-10-10T04:29:23.001Z",
+  "type": "planner.item.finished"
+}

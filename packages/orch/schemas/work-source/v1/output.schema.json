@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:work-source:output:v1",
+  "title": "work-source output",
+  "description": "Answer of the extension point orch:work-source to one operation; a refusal is a reason code, not a failure of the plugin.",
+  "oneOf": [
+    {"$ref": "#/$defs/claim"},
+    {"$ref": "#/$defs/brief"},
+    {"$ref": "#/$defs/register"},
+    {"$ref": "#/$defs/commit"},
+    {"$ref": "#/$defs/release"},
+    {"$ref": "#/$defs/note"},
+    {"$ref": "#/$defs/research"},
+    {"$ref": "#/$defs/decision"},
+    {"$ref": "#/$defs/readiness"},
+    {"$ref": "#/$defs/inspect"}
+  ],
+  "$defs": {
+    "inspect": {
+      "description": "Read-only snapshot; no attempt, ownership or artifact is created.",
+      "type": "object",
+      "properties": {
+        "op": {
+          "description": "Read-only inspection.",
+          "const": "inspect"
+        },
+        "outcome": {
+          "description": "Inspection outcome.",
+          "enum": [
+            "ok",
+            "refused"
+          ]
+        },
+        "ref": {
+          "description": "Named piece.",
+          "$ref": "#/$defs/text"
+        },
+        "input": {
+          "description": "Execution-input, additionally validated by the consumer against exec/v1.",
+          "type": "object"
+        },
+        "scenario": {
+          "description": "Run-policy scenario of the work.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "scenario_source": {
+          "description": "Where the scenario comes from.",
+          "$ref": "#/$defs/text"
+        },
+        "options": {
+          "description": "Run options of the work as layers, general first (the plan, the phase, the item); each layer is a run-options document of the orch conductor.",
+          "type": "array",
+          "items": {
+            "description": "One layer.",
+            "type": "object",
+            "properties": {
+              "source": {
+                "description": "Where the layer comes from, such as phase:P3 or item:P3.2.",
+                "$ref": "#/$defs/text"
+              },
+              "options": {
+                "description": "The run options of the layer; orch checks them against its run-options contract.",
+                "type": "object"
+              }
+            },
+            "required": [
+              "source",
+              "options"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reason_code": {
+          "description": "Why the claim was blocked.",
+          "$ref": "#/$defs/reasonCode"
+        },
+        "message": {
+          "description": "Human-readable detail of the outcome.",
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "op",
+        "outcome",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "outcome": {
+              "const": "ok"
+            }
+          },
+          "required": [
+            "scenario",
+            "options",
+            "input"
+          ]
+        },
+        {
+          "properties": {
+            "outcome": {
+              "const": "refused"
+            }
+          },
+          "required": [
+            "reason_code",
+            "message"
+          ]
+        }
+      ]
+    },
+    "text": {
+      "description": "Non-empty text.",
+      "type": "string",
+      "minLength": 1
+    },
+    "reasonCode": {
+      "description": "Stable upper-case code of a refusal.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+    },
+    "digest": {
+      "description": "SHA-256 hex digest.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "claim": {
+      "description": "Outcome of a claim: claimed (the run owns the work now), none (nothing ready) or blocked (refused).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "claim"},
+        "status": {"description": "Outcome of the claim.", "type": "string", "enum": ["claimed", "none", "blocked"]},
+        "ref": {"description": "Reference of the claimed or refused piece of work.", "$ref": "#/$defs/text"},
+        "title": {"description": "Title of the piece of work.", "$ref": "#/$defs/text"},
+        "lane": {
+          "description": "When the source picked the piece itself: every piece of the batch its lane names, in order (the claimed one first). Optional.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
+        "scenario": {
+          "description": "Run-policy scenario of the work.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "depends_on": {
+          "description": "References of the pieces this piece depends on, when the source knows them (optional): the conductor holds a piece whose dependency in the same run ended blocked.",
+          "type": "array",
+          "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}
+        },
+        "scenario_source": {"description": "Where the scenario comes from.", "$ref": "#/$defs/text"},
+        "actor_override": {"description": "The executor the run named replaced the plan's own executor of the piece (a warning, not a refusal). Optional.", "type": "object", "properties": {"reason_code": {"description": "Always ACTOR_OVERRIDE.", "const": "ACTOR_OVERRIDE"}, "ref": {"description": "Reference of the piece.", "$ref": "#/$defs/text"}, "plan": {"description": "Executor of the plan that was replaced.", "type": "object", "properties": {"provider": {"description": "Provider.", "$ref": "#/$defs/text"}, "model": {"description": "Model.", "$ref": "#/$defs/text"}, "effort": {"description": "Reasoning effort.", "$ref": "#/$defs/text"}}, "required": ["provider", "model"], "additionalProperties": false}, "run": {"description": "Executor the piece is started for.", "type": "object", "properties": {"provider": {"description": "Provider.", "$ref": "#/$defs/text"}, "model": {"description": "Model.", "$ref": "#/$defs/text"}, "effort": {"description": "Reasoning effort.", "$ref": "#/$defs/text"}}, "required": ["provider", "model"], "additionalProperties": false}, "message": {"description": "Human-readable warning.", "$ref": "#/$defs/text"}}, "required": ["reason_code", "ref", "plan", "run", "message"], "additionalProperties": false},
+        "route": {
+          "description": "Minimum model route of the work.",
+          "type": "object",
+          "properties": {
+            "class": {
+              "description": "Minimum semantic model class.",
+              "type": "string",
+              "enum": ["economy", "implementation", "frontier"]
+            },
+            "effort": {
+              "description": "Requested reasoning effort.",
+              "type": "string",
+              "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+            },
+            "correction": {
+              "description": "Minimum route of a bounded correction of recorded review findings, when the work names one (route.correction); the conductor uses it for the bounded-implementer, else the route above. Optional.",
+              "type": "object",
+              "properties": {
+                "class": {
+                  "description": "Minimum semantic model class of a correction.",
+                  "type": "string",
+                  "enum": ["economy", "implementation", "frontier"]
+                },
+                "effort": {
+                  "description": "Requested reasoning effort of a correction.",
+                  "type": "string",
+                  "enum": ["low", "medium", "high", "xhigh", "max", "ultra"]
+                },
+                "provider": {"description": "Explicit provider, when selected.", "$ref": "#/$defs/text"},
+                "model": {"description": "Explicit model, when selected.", "$ref": "#/$defs/text"}
+              },
+              "required": ["class", "effort"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["class", "effort"],
+          "additionalProperties": false
+        },
+        "attempt_id": {
+          "description": "Attempt that owns the work.",
+          "type": "string",
+          "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"
+        },
+        "session": {"description": "Owner session recorded by the source; the run id.", "$ref": "#/$defs/text"},
+        "options": {
+          "description": "Run options of the work as layers, general first (the plan, the phase, the item); each layer is a run-options document of the orch conductor.",
+          "type": "array",
+          "items": {
+            "description": "One layer.",
+            "type": "object",
+            "properties": {
+              "source": {"description": "Where the layer comes from, such as phase:P3 or item:P3.2.", "$ref": "#/$defs/text"},
+              "options": {"description": "The run options of the layer; orch checks them against its run-options contract.", "type": "object"}
+            },
+            "required": ["source", "options"],
+            "additionalProperties": false
+          }
+        },
+        "reason_code": {"description": "Why the claim was blocked.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "status"],
+      "additionalProperties": false
+    },
+    "brief": {
+      "description": "The brief stored as a content-addressed artifact.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "brief"},
+        "input_ref": {"description": "Reference of the stored brief.", "$ref": "urn:swissknifeman:aicore:artifact-ref:v1"},
+        "input_id": {"description": "Id of the brief, ending with @ and the first digest characters.", "$ref": "#/$defs/text"},
+        "digest": {"description": "Digest of the brief document.", "$ref": "#/$defs/digest"},
+        "reused": {"description": "Whether the store already held this brief.", "type": "boolean"},
+        "artifact_id": {
+          "description": "Name of the brief artifact, derived from the reference and the digest.",
+          "type": "string",
+          "pattern": "^brief-[A-Za-z0-9._-]+-[0-9a-f]{12}$"
+        },
+        "artifacts_dir": {
+          "description": "Repository-relative folder where a run keeps the committed artifacts of the piece of work (stage-report, review verdict, check evidence).",
+          "$ref": "#/$defs/text"
+        },
+        "output_write_dirs": {
+          "description": "Canonical absolute directories for declared outputs of this item outside the checkout.",
+          "type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/text"}
+        }
+      },
+      "required": ["op", "input_ref", "input_id", "digest", "reused", "artifact_id"],
+      "additionalProperties": false
+    },
+    "register": {
+      "description": "Outcome of a registration and the state of its acceptance gate.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "register"},
+        "outcome": {"description": "recorded, no-op for a repeat, or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "gate": {
+          "description": "Evidence gate: pass, missing or red evidence, stale owner, or none (no gate applied).",
+          "type": "object",
+          "properties": {
+            "verdict": {"description": "Gate verdict.", "type": "string", "enum": ["pass", "missing", "red", "stale", "none"]},
+            "checks": {
+              "description": "Exit proven by the evidence of each acceptance check; null when missing.",
+              "type": "object",
+              "patternProperties": {
+                "^V[0-9]+$": {"description": "Proven exit, or null.", "type": ["integer", "null"]}
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["verdict", "checks"],
+          "additionalProperties": false
+        },
+        "receipt": {"description": "Registration receipt of the source.", "type": "object"},
+        "evidence": {
+          "description": "Where the source keeps the evidence of the work for good, by check id, when not where the request named it (a plan in a workspace keeps it with the plan). Optional.",
+          "type": "object",
+          "patternProperties": {"^V[0-9]+$": {"description": "Path of the kept evidence, as the source refers to it.", "$ref": "#/$defs/text"}},
+          "additionalProperties": false
+        },
+        "reason_code": {"description": "Why the registration was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome", "gate"],
+      "additionalProperties": false
+    },
+    "commit": {
+      "description": "Outcome of a commit: committed, no-op (nothing left to commit, or the attempt already committed) or refused.",
+      "type": "object",
+      "properties": {
+        "attempt": {"description": "Attempt whose commit request produced this answer.", "type": "string", "pattern": "^att-[A-Za-z0-9._:/-]{1,200}$"},
+        "op": {"description": "Operation.", "const": "commit"},
+        "outcome": {"description": "committed, no-op or refused.", "type": "string", "enum": ["committed", "no-op", "refused"]},
+        "sha": {"description": "Commit revision.", "type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+        "repo": {"description": "Repository of sha: the project checkout or, when only plan files changed, the plan workspace. Given by a source whose plans live outside the checkout.", "type": "string", "enum": ["source", "workspace"]},
+        "workspace_sha": {"description": "Local commit of the plan files in the plan workspace, null when there is none.", "type": ["string", "null"], "pattern": "^[0-9a-f]{7,40}$"},
+        "workspace_commit": {
+          "description": "Outcome of the plan-file commit in the plan workspace; a failure does not undo the commit of sha.",
+          "type": "object",
+          "properties": {
+            "status": {"description": "Outcome.", "type": "string", "enum": ["committed", "nothing", "skipped-no-git", "locked", "failed"]},
+            "error": {"description": "Code and message of the failure.", "type": "string"}
+          },
+          "required": ["status"],
+          "additionalProperties": false
+        },
+        "reason_code": {"description": "Why the commit was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "release": {
+      "description": "Outcome of a release: released (the claim is off the run), no-op (the run does not hold the piece) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "release"},
+        "outcome": {"description": "released, no-op or refused.", "type": "string", "enum": ["released", "no-op", "refused"]},
+        "reason_code": {"description": "Why the release was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "note": {
+      "description": "Outcome of a note: recorded, no-op (the same note is already there) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "note"},
+        "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "reason_code": {"description": "Why the note was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "research": {
+      "description": "Outcome of saving a research result: recorded, no-op (the same result is already saved) or refused.",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "research"},
+        "outcome": {"description": "recorded, no-op or refused.", "type": "string", "enum": ["recorded", "no-op", "refused"]},
+        "path": {"description": "Repository-relative path of the saved result.", "$ref": "#/$defs/text"},
+        "reason_code": {"description": "Why the result was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "decision": {
+      "description": "Outcome of recording a decision: recorded, no-op (the decision of this question is already there), refused or unsupported (the source does not serve the operation).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "decision"},
+        "outcome": {"description": "recorded, no-op, refused or unsupported.", "type": "string", "enum": ["recorded", "no-op", "refused", "unsupported"]},
+        "decision_id": {"description": "Id of the decision in the source, such as D12.", "$ref": "#/$defs/text"},
+        "reason_code": {"description": "Why the decision was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    },
+    "readiness": {
+      "description": "Readiness of the detailed groups of a collection and its next step: ok with phases and next, or refused with a reason code (READINESS_UNSUPPORTED: the source does not serve the operation).",
+      "type": "object",
+      "properties": {
+        "op": {"description": "Operation.", "const": "readiness"},
+        "outcome": {"description": "ok or refused.", "type": "string", "enum": ["ok", "refused"]},
+        "phases": {
+          "description": "Every detailed group of the collection, in its order, with the state of its readiness certificate.",
+          "type": "array",
+          "items": {
+            "description": "One group.",
+            "type": "object",
+            "properties": {
+              "id": {"description": "Id of the group, such as P3.", "$ref": "#/$defs/text"},
+              "status": {"description": "missing (no certificate), ready, ready_with_advisories, not_ready or stale (the group or the policy changed since the certificate).", "type": "string", "enum": ["missing", "ready", "ready_with_advisories", "not_ready", "stale"]},
+              "digest": {"description": "Current semantic digest of the group.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+            },
+            "required": ["id", "status", "digest"],
+            "additionalProperties": false
+          }
+        },
+        "next": {
+          "description": "The first lane the source would give work for: run-items with its items, or another kind (waiting, audit-phase, design-phase, terminal, ...) with a message.",
+          "type": "object",
+          "properties": {
+            "kind": {"description": "Kind of the next step, such as run-items, waiting or audit-phase.", "$ref": "#/$defs/text"},
+            "items": {"description": "References of the pieces of a run-items lane, in order; empty for another kind.", "type": "array", "items": {"description": "Reference of a piece of work.", "$ref": "#/$defs/text"}},
+            "phase": {"description": "Group of the step, when it has one.", "type": ["string", "null"]},
+            "message": {"description": "Why there is no lane to run, for a kind other than run-items.", "type": ["string", "null"]}
+          },
+          "required": ["kind", "items", "phase", "message"],
+          "additionalProperties": false
+        },
+        "reason_code": {"description": "Why the readiness was refused.", "$ref": "#/$defs/reasonCode"},
+        "message": {"description": "Human-readable detail of the outcome.", "$ref": "#/$defs/text"}
+      },
+      "required": ["op", "outcome"],
+      "additionalProperties": false
+    }
+  }
+}

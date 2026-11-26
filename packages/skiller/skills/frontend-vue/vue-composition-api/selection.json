@@ -1,0 +1,14 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "MERGE",
+  "exclusive_group": "vue-core",
+  "triggers": {
+    "paths": [
+      "*.vue"
+    ],
+    "deps": [
+      "npm:vue"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:heartbeat:v1",
+  "title": "heartbeat.json of a run",
+  "description": "Proof of progress of a running conductor (<run>/heartbeat.json), replaced atomically by the conductor's own thread of control (every progress line, every look at a running role or check, every blocking call with a known limit); never by a timer thread, so a stuck main loop shows. The lease proves who owns the run, the heartbeat that the owner still moves. Read by status and runs (orch.conductor.health.classify); a missing or unreadable heartbeat never stops a run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "run_id", "pid", "start_ticks", "boot_id", "host", "seq", "at"],
+  "properties": {
+    "$schema": {"description": "Tag of the document.", "const": "urn:swissknifeman:orch:records:heartbeat:v1"},
+    "run_id": {"description": "The run the conductor drives.", "type": "string", "minLength": 1},
+    "pid": {"description": "Process id of the conductor.", "type": "integer", "minimum": 1},
+    "start_ticks": {"description": "Start time of the conductor in clock ticks since boot (/proc/<pid>/stat), null when it could not be read.", "type": ["integer", "null"]},
+    "boot_id": {"description": "/proc/sys/kernel/random/boot_id of the machine, null without /proc.", "type": ["string", "null"]},
+    "host": {"description": "Host name of the conductor.", "type": "string"},
+    "seq": {"description": "Number of this write within the process (1, 2, ...).", "type": "integer", "minimum": 1},
+    "at": {"description": "UTC time of this write.", "type": "string"},
+    "item": {"description": "Piece being conducted, null outside a piece.", "type": ["string", "null"]},
+    "step": {"description": "Step being conducted (executor.1, checks.1, ...), null outside a step.", "type": ["string", "null"]},
+    "role": {"description": "Role of the step, null outside a role.", "type": ["string", "null"]},
+    "last_progress_at": {"description": "UTC time of the last sign of progress.", "type": ["string", "null"]},
+    "last_progress_kind": {
+      "description": "The last sign of progress.",
+      "type": ["string", "null"],
+      "enum": ["run_start", "stage_start", "stage_end", "tool_use", "tool_result", "check_evidence", "tree_change", "cpu", "answer", null]
+    },
+    "stream_bytes": {"description": "Size of the stream of the running role (or the log of the running check).", "type": ["integer", "null"], "minimum": 0},
+    "last_growth_at": {"description": "UTC time the stream last grew.", "type": ["string", "null"]},
+    "tree_cpu_s": {"description": "CPU seconds (user + system) of the process tree of the running role or check at the last measure.", "type": ["number", "null"], "minimum": 0},
+    "last_cpu_at": {"description": "UTC time the CPU of the tree last grew.", "type": ["string", "null"]},
+    "repeat": {
+      "description": "The command the running role repeats: its last tool command and how many times in a row.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["command", "count"],
+      "properties": {
+        "command": {"description": "The last tool command (shortened).", "type": "string"},
+        "count": {"description": "How many times in a row.", "type": "integer", "minimum": 1}
+      }
+    },
+    "waiting": {
+      "description": "A blocking call with a known limit that is in progress (null: none). Inside its deadline a silent heartbeat is not a hang.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["kind", "reason_code", "since"],
+      "properties": {
+        "kind": {"description": "What the conductor waits for.", "enum": ["work_source", "provider", "git", "question", "budget", "lock", "subprocess"]},
+        "reason_code": {"description": "Why (WORK_SOURCE_CALL, PROVIDER_WAIT, ...).", "type": "string", "minLength": 1},
+        "since": {"description": "UTC time the wait began.", "type": "string"},
+        "deadline": {"description": "UTC time the wait is expected to be over; required for every kind but question.", "type": ["string", "null"]}
+      }
+    }
+  },
+  "$defs": {}
+}

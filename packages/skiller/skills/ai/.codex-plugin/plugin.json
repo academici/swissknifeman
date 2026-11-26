@@ -1,0 +1,10 @@
+{
+  "name": "ai",
+  "version": "0.4.1",
+  "description": "AI agent building: design, tools, evaluation",
+  "skills": [
+    "./ai-agents",
+    "./mcp-builder",
+    "./performance"
+  ]
+}

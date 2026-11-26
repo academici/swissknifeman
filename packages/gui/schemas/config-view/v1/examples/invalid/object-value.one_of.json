@@ -1,0 +1,102 @@
+{
+  "$schema": "urn:swissknifeman:gui:config-view:v1",
+  "kind": "config_view",
+  "module": "config-demo",
+  "project_id": null,
+  "schema_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:swissknifeman:config-demo:config:v1",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "verbose": {
+        "type": "boolean",
+        "default": false,
+        "description": "Print details."
+      }
+    }
+  },
+  "layers": [
+    {
+      "name": "defaults",
+      "file": null,
+      "present": true,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "machine",
+      "file": "/home/user/.config/swissknifeman/config.toml",
+      "present": false,
+      "writable": true,
+      "revision": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "raw": "",
+      "raw_truncated": false
+    },
+    {
+      "name": "project",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "env",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "invocation",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    },
+    {
+      "name": "flags",
+      "file": null,
+      "present": false,
+      "writable": false,
+      "revision": null,
+      "raw": null,
+      "raw_truncated": false
+    }
+  ],
+  "entries": [
+    {
+      "key": "verbose",
+      "type": "boolean",
+      "secret": false,
+      "description": "Print details.",
+      "allowed_layers": null,
+      "default": false,
+      "effective": {
+        "value": {
+          "a": 1
+        },
+        "layer": "defaults",
+        "file": null,
+        "line": null,
+        "source": null
+      },
+      "overridden": [],
+      "layer_values": {
+        "machine": null,
+        "project": null
+      }
+    }
+  ],
+  "maps": [],
+  "warnings": []
+}

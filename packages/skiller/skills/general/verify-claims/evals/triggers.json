@@ -1,0 +1,13 @@
+{
+  "skill": "verify-claims",
+  "should_trigger": [
+    "the library is still relevant X or outdated?",
+    "what is the standard way to do now Y?",
+    "is this package still supported and which version should I install?"
+  ],
+  "should_not": [
+    "correct the check for null in function foo()",
+    "rename the variable data in payload",
+    "what class is responsible for billing? (by repository code)?"
+  ]
+}

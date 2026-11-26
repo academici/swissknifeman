@@ -1,0 +1,1 @@
+{"files_checked": 12, "block": [], "warn": [{"rule": "PS-WARN", "path": "notes.md", "detail": "looks like a path"}], "local_only": [{"path": "local-only.json"}], "verdict": "warn"}

@@ -1,0 +1,122 @@
+{
+  "contract_version": "1.0.0",
+  "providers": {
+    "claude-code": {
+      "invocation_prefix": "/",
+      "class_selectors": {
+        "economy": "haiku",
+        "implementation": "sonnet",
+        "frontier": "opus"
+      }
+    },
+    "codex": {
+      "invocation_prefix": "$ ",
+      "class_selectors": {
+        "economy": "gpt-5.6-luna",
+        "implementation": "gpt-5.6-terra",
+        "frontier": "gpt-5.6-sol"
+      }
+    }
+  },
+  "commands": [
+    {
+      "command_id": "planner:design",
+      "kind": "intent",
+      "source": "packages/planner/commands/design.md",
+      "routing": ["fixed", "frontier", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.external-research", "command.subagents"]
+    },
+    {
+      "command_id": "planner:dev",
+      "kind": "intent",
+      "source": "packages/planner/commands/dev.md",
+      "routing": ["fixed", "implementation", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write", "command.external-research", "command.subagents"]
+    },
+    {
+      "command_id": "planner:fix",
+      "kind": "intent",
+      "source": "packages/planner/commands/fix.md",
+      "routing": ["fixed", "implementation", "medium"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"]
+    },
+    {
+      "command_id": "planner:make-workflow",
+      "kind": "workflow-authoring",
+      "source": "packages/planner/commands/make-workflow.md",
+      "routing": ["fixed", "implementation", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.subagents", "command.workflow-carrier"]
+    },
+    {
+      "command_id": "planner:research",
+      "kind": "intent",
+      "source": "packages/planner/commands/research.md",
+      "routing": ["fixed", "frontier", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.external-research", "command.subagents"]
+    },
+    {
+      "command_id": "planner:review",
+      "kind": "intent",
+      "source": "packages/planner/commands/review.md",
+      "routing": ["fixed", "implementation", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.git-read", "command.external-research", "command.subagents"]
+    },
+    {
+      "command_id": "planner:plan-design",
+      "kind": "plan-protocol",
+      "source": "packages/planner/commands/plan-design.md",
+      "routing": ["fixed", "frontier", "high"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.external-research"]
+    },
+    {
+      "command_id": "planner:plan-run",
+      "kind": "plan-protocol",
+      "source": "packages/planner/commands/plan-run.md",
+      "routing": ["inherited-plan", "routing-required", "routing-required"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"]
+    },
+    {
+      "command_id": "planner:plan-close",
+      "kind": "plan-protocol",
+      "source": "packages/planner/commands/plan-close.md",
+      "routing": ["fixed", "implementation", "low"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read", "command.git-write"]
+    },
+    {
+      "command_id": "planner:plan-audit",
+      "kind": "plan-protocol",
+      "source": "packages/planner/commands/plan-audit.md",
+      "routing": ["fixed", "frontier", "xhigh"],
+      "capabilities": ["skills.repository", "command.filesystem-read", "command.filesystem-write", "command.git-read"]
+    }
+  ],
+  "diagnostic_codes": [
+    "CMD_ID_UNKNOWN",
+    "CMD_ID_AMBIGUOUS",
+    "CMD_CATALOG_MISMATCH",
+    "CMD_VERSION_UNSUPPORTED",
+    "CMD_PROVIDER_DISABLED",
+    "CMD_CAPABILITY_UNSUPPORTED",
+    "CMD_MAPPING_MISSING",
+    "CMD_MAPPING_AMBIGUOUS",
+    "CMD_ROUTE_UNDERSHOOT",
+    "CMD_ROUTE_OVERSHOOT",
+    "CMD_INVOCATION_INVALID",
+    "CMD_SOURCE_DRIFT"
+  ],
+  "next_forms": [
+    {"kind": "exec-items", "valid": "exec-items: planner:plan-exec PLAN P4.5", "invalid": "exec-items: planner:plan-audit PLAN P4.5"},
+    {"kind": "run-items", "valid": "run-items: planner:plan-run PLAN P4.5", "invalid": "run-items: planner:plan-close PLAN P4.5"},
+    {"kind": "audit-design", "valid": "audit-design: planner:plan-audit PLAN design", "invalid": "audit-design: planner:plan-design PLAN design"},
+    {"kind": "design-phase", "valid": "design-phase: planner:plan-design PLAN P5", "invalid": "design-phase: planner:plan-audit PLAN P5"},
+    {"kind": "design-item", "valid": "design-item: planner:plan-design PLAN P4.5", "invalid": "design-item: planner:plan-audit PLAN P4.5"},
+    {"kind": "design-finish", "valid": "design-finish: planner:plan-design PLAN finish", "invalid": "design-finish: planner:plan-audit PLAN finish"},
+    {"kind": "design-roadmap", "valid": "design-roadmap: planner:plan-design PLAN roadmap", "invalid": "design-roadmap: planner:plan-audit PLAN roadmap"},
+    {"kind": "audit-phase", "valid": "audit-phase: planner:plan-audit PLAN P4", "invalid": "audit-phase: planner:plan-close PLAN P4"},
+    {"kind": "close", "valid": "close: planner:plan-close PLAN P4", "invalid": "close: planner:plan-audit PLAN P4"},
+    {"kind": "archive", "valid": "archive: planner:plan-close archive PLAN", "invalid": "archive: planner:plan-run archive PLAN"},
+    {"kind": "terminal", "valid": "terminal: plan closed", "invalid": "terminal: plan remains open"},
+    {"kind": "manual", "valid": "manual: frontier/xhigh", "invalid": "manual: opus/max"},
+    {"kind": "waiting", "valid": "waiting: gate P4 terminal → audit-phase: planner:plan-audit PLAN P4", "invalid": "waiting: someday"}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:bridge:v1",
+  "name": "planner-orch",
+  "partner": "orch",
+  "direction": "both",
+  "contract": "exec/v1",
+  "summary": "Projects a plan item or unit into an orch execution-input (exec/v1) and registers worker reports back into the plan, and returns scoped-commit fragments for a stage-result, and builds a role's launch command line from the partner's launch catalog with models resolved from Task's provider mappings.",
+  "entrypoints": {
+    "brief": "brief.py",
+    "register": "register.py",
+    "register-review": "register_review.py",
+    "commit": "commit.py",
+    "launch": "launch.py"
+  },
+  "extends": {
+    "orchestration.options": "schemas/run-options.schema.json"
+  },
+  "requires": {
+    "cli": "scripts/orch.py",
+    "env": "SKM_ORCH_ROOT"
+  }
+}

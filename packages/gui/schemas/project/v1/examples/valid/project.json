@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:gui:project:v1",
+  "kind": "project",
+  "id": "demo-1a2b3c4d",
+  "name": "demo",
+  "root": "/home/user/projects/demo",
+  "trusted": true,
+  "source": "open",
+  "added_at": "2026-10-16T12:00:00Z"
+}

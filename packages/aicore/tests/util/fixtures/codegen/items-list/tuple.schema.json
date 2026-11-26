@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:tuple:v1",
+  "description": "Fixture: items as a list is outside the profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pair": {"type": "array", "items": [{"type": "string"}, {"type": "integer"}]}
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "skill": "security-design",
+  "snippets": [
+    {
+      "file": "stride-threat-model.md",
+      "description": "stride threat model",
+      "tags": []
+    },
+    {
+      "file": "ops-security-checklist.md",
+      "description": "Operational security checklist for Spatie: application (SSL, CSRF, mutations POST/PUT/DELETE, authorization autotests), DB, server, credits, backups",
+      "tags": [
+        "security",
+        "checklist",
+        "ops"
+      ]
+    }
+  ]
+}

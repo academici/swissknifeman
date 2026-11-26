@@ -1,0 +1,580 @@
+"""Plan snapshot, canonical JSON, atomic saves, plan lock and event log for layout v4 (stdlib only).
+
+Every write goes through ``save``/``save_many``: the whole changed document is validated against its
+schema first, then written in canonical form (keys in schema order, UTF-8, indent 2, trailing newline)
+through a temporary file and ``os.replace``.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import threading
+import time
+import uuid
+from functools import cached_property
+from typing import Any, Iterable
+
+from . import schema as _schema
+from . import workspace
+from .model import SHORT_ID, PlanError, id_sort_key
+
+LOG = "log.jsonl"
+LOCK = ".lock"
+ARCHIVE = "archive"
+SEARCH_IGNORE = "views/\ncontext/\n*.md\n.lock\n"
+GITATTRIBUTES = "log.jsonl merge=union"
+_UNIT_REF = re.compile(r"^(P[0-9]+\.[0-9]+)/(U[0-9]+)$")
+
+
+def launcher_project_root() -> Path | None:
+    """The project root the project-local launcher bound to this process (``.swissknifeman/launcher.py`` → the installed
+    ``swissknifeman``; the umbrella checked it), else ``None``. Inherited launcher variables of a parent process (another
+    ``SKM_LAUNCHER_PID``) bind nothing. Same rule as ``aicore.state.launcher_root``; read here so the store stays stdlib-only."""
+    return workspace.launcher_root()
+
+
+_LEGACY_WARNED = False
+
+
+def _warn_legacy_present(project_root: Path) -> None:
+    """One ``LEGACY_PLANS_PRESENT`` line on stderr per process: the plans of the project live in the workspace, but the
+    old ``<root>/plans`` still holds plan folders. Stdout is not touched."""
+    global _LEGACY_WARNED
+    if not _LEGACY_WARNED and workspace.legacy_plans_present(project_root):
+        _LEGACY_WARNED = True
+        print(f"warning: LEGACY_PLANS_PRESENT: {project_root}/plans still holds plans; the workspace copy is used "
+              f"(swissknifeman workspace migrate verify|cleanup)", file=sys.stderr)
+
+
+def plans_store_of(project_root: str | Path) -> Path:
+    """The plans folder of the checkout at ``project_root`` by its marker (``workspace.resolve_plans_store``); warns once
+    about legacy plans left behind when the plans live in the workspace."""
+    found = workspace.resolve_plans_store(project_root)
+    if found.kind == "workspace":
+        _warn_legacy_present(Path(project_root))
+    return found.plans_root
+
+
+def require_project_plans(path: str | Path, what: str = "--plans-root") -> None:
+    """In launcher mode a plans location must be the plans folder of the launcher project (``<project>/plans``, or the
+    workspace folder its marker names) or inside it: anything else would retarget the command to another project
+    (``PROJECT_PATH_OVERRIDE_FORBIDDEN``). Outside launcher mode nothing is checked."""
+    bound = launcher_project_root()
+    if bound is None:
+        return
+    plans = Path(os.path.realpath(plans_store_of(bound)))
+    target = Path(os.path.realpath(path))
+    if target != plans and plans not in target.parents:
+        raise PlanError("PROJECT_PATH_OVERRIDE_FORBIDDEN",
+                        f"{what} {path} is outside {plans}, the plans folder of the launcher project; drop {what}")
+
+
+def find_plans_root(start: str | Path | None = None) -> Path:
+    """The plans folder of the launcher-bound project (no search); else, walking up from ``start``, the plans folder a
+    project marker names (``.swissknifeman/project.json``), or the nearest ``plans/`` (a ``plans`` folder at or above
+    ``start`` is itself the answer); or ``<start>/plans`` (maybe absent) when none exists."""
+    bound = launcher_project_root()
+    if bound is not None and start is None:
+        return plans_store_of(bound)
+    base = Path(start or Path.cwd()).resolve()
+    for candidate in (base, *base.parents):
+        if workspace.read_marker(candidate) is not None:
+            return plans_store_of(candidate)
+        if (candidate / "plans").is_dir():
+            return candidate / "plans"
+        if candidate.name == "plans" and candidate.is_dir():
+            return candidate
+    return base / "plans"
+
+
+def now() -> str:
+    """Current UTC time as ``YYYY-MM-DDTHH:MM:SSZ``; tests replace this function."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _natural(name: str) -> tuple:
+    try:
+        return (0, id_sort_key(name))
+    except ValueError:
+        return (1, name)
+
+
+# ---------------------------------------------------------------- paths
+
+def phase_path(root: Path, phase_id: str) -> Path:
+    return root / "phases" / phase_id / "phase.json"
+
+
+def item_path(root: Path, item_id: str) -> Path:
+    return root / "phases" / item_id.split(".", 1)[0] / f"{item_id}.json"
+
+
+def unit_path(root: Path, item_id: str, unit_id: str) -> Path:
+    return root / "phases" / item_id.split(".", 1)[0] / item_id / f"{unit_id}.json"
+
+
+def decision_path(root: Path, decision_id: str) -> Path:
+    return root / "decisions" / f"{decision_id}.json"
+
+
+# ---------------------------------------------------------------- snapshot
+
+@dataclass
+class Plan:
+    """Loaded snapshot of one plan directory. Documents are plain dicts keyed by their file-name id."""
+
+    root: Path
+    plan: dict = field(default_factory=dict)
+    brief: dict = field(default_factory=dict)
+    phases: dict[str, dict] = field(default_factory=dict)
+    items: dict[str, dict] = field(default_factory=dict)
+    decisions: dict[str, dict] = field(default_factory=dict)
+    units: dict[str, dict] = field(default_factory=dict)  # key "P1.2/U1"
+    documents: dict[str, dict] = field(default_factory=dict)
+    problems: list[tuple[str, str]] = field(default_factory=list)  # (relative file, message)
+
+    @cached_property
+    def source_root(self) -> Path | None:
+        """The checkout the plan belongs to: the launcher project, a checkout bound to the plan's workspace project, or the
+        parent of ``plans/`` (``plans/archive/``) for a plan outside the workspace; ``None`` when no checkout is bound."""
+        root = workspace.source_root_of(self.root)
+        if root is not None and workspace.launcher_root() is None:
+            try:
+                here = workspace.checkout_root_of(Path.cwd())
+            except OSError:
+                here = None
+            if here is not None and os.path.realpath(here) != os.path.realpath(root) \
+                    and workspace.marker_key(here) is not None and workspace.marker_key(here) == workspace.marker_key(root):
+                key = workspace.marker_key(root)
+                raise PlanError("CHECKOUT_BINDING_MISMATCH",
+                                f"this command runs in {here}, but the plans of {key[0]}/{key[1]} belong to {root}, the bound "
+                                f"checkout; run it through {here}/.swissknifeman/launcher.py, or make {here} the bound checkout: "
+                                f"swissknifeman workspace project rebind {key[1]} --path {here}")
+        return root
+
+    @property
+    def repo_root(self) -> Path:
+        """Repository root: ``source_root``; ``PLAN_SOURCE_UNBOUND`` when the plan has no checkout on this machine."""
+        root = self.source_root
+        if root is None:
+            raise PlanError("PLAN_SOURCE_UNBOUND", f"no checkout is bound to the plans of {self.root}; "
+                            f"bind a checkout: swissknifeman workspace project attach --project DIR")
+        return root
+
+    def path(self, kind: str, key: str | None = None) -> Path:
+        if kind == "plan":
+            return self.root / "plan.json"
+        if kind == "brief":
+            return self.root / "brief.json"
+        if kind == "phase":
+            return phase_path(self.root, key)
+        if kind == "item":
+            return item_path(self.root, key)
+        if kind == "decision":
+            return decision_path(self.root, key)
+        if kind == "document":
+            return self.root / "knowledge" / f"{key}.json"
+        if kind == "unit":
+            match = _UNIT_REF.fullmatch(key)
+            return unit_path(self.root, match[1], match[2])
+        raise ValueError(f"unknown kind: {kind!r}")
+
+    def rel(self, path: Path) -> str:
+        return path.relative_to(self.root).as_posix()
+
+    def adopt(self, other: "Plan") -> None:
+        """Replace this snapshot's content with ``other`` (used after a mutation reloaded the plan)."""
+        self.__dict__.update(other.__dict__)
+
+
+def _read_json(root: Path, path: Path, problems: list) -> dict | None:
+    rel = path.relative_to(root).as_posix()
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        problems.append((rel, "file is missing"))
+        return None
+    except (OSError, ValueError) as exc:
+        problems.append((rel, f"cannot read JSON: {exc}"))
+        return None
+    if not isinstance(doc, dict):
+        problems.append((rel, "document must be a JSON object"))
+        return None
+    return doc
+
+
+def load_plan(root: str | Path) -> Plan:
+    """Load every JSON document of a v4 plan directory; unreadable files become ``problems``, not exceptions."""
+    root = Path(root)
+    if not (root / "plan.json").is_file():
+        raise PlanError("PLAN_NOT_FOUND", f"{root} has no plan.json")
+    plan = Plan(root=root)
+    plan.plan = _read_json(root, root / "plan.json", plan.problems) or {}
+    plan.brief = _read_json(root, root / "brief.json", plan.problems) or {}
+    phases_dir = root / "phases"
+    phase_dirs = sorted((p for p in phases_dir.iterdir() if p.is_dir()), key=lambda p: _natural(p.name)) \
+        if phases_dir.is_dir() else []
+    for phase_dir in phase_dirs:
+        doc = _read_json(root, phase_dir / "phase.json", plan.problems)
+        plan.phases[phase_dir.name] = doc if doc is not None else {}
+        for item_file in sorted((f for f in phase_dir.glob("*.json") if f.name != "phase.json"),
+                                key=lambda f: _natural(f.stem)):
+            doc = _read_json(root, item_file, plan.problems)
+            plan.items[item_file.stem] = doc if doc is not None else {}
+        for item_dir in sorted((d for d in phase_dir.iterdir() if d.is_dir()), key=lambda d: _natural(d.name)):
+            for unit_file in sorted(item_dir.glob("*.json"), key=lambda f: _natural(f.stem)):
+                doc = _read_json(root, unit_file, plan.problems)
+                plan.units[f"{item_dir.name}/{unit_file.stem}"] = doc if doc is not None else {}
+    decisions_dir = root / "decisions"
+    if decisions_dir.is_dir():
+        for decision_file in sorted(decisions_dir.glob("*.json"), key=lambda f: _natural(f.stem)):
+            doc = _read_json(root, decision_file, plan.problems)
+            plan.decisions[decision_file.stem] = doc if doc is not None else {}
+    for path in sorted((root / "knowledge").glob("*.json")):
+        doc = _read_json(root, path, plan.problems)
+        plan.documents[path.stem] = doc if doc is not None else {}
+    return plan
+
+
+def plan_dirs(plans_root: Path) -> Iterable[Path]:
+    for parent in (plans_root, plans_root / ARCHIVE):
+        if parent.is_dir():
+            for path in sorted(parent.iterdir()):
+                if path.is_dir() and path.name != ARCHIVE and not path.name.startswith("."):
+                    yield path
+
+
+def resolve_plan_dir(ref: str | Path, plans_root: str | Path | None = None) -> Path:
+    """Resolve a plan directory from a path, a plan id or a ``PLAN<N>`` short id (live, then archive)."""
+    ref = str(ref)
+    if not ref:
+        raise PlanError("PLAN_NOT_FOUND", "empty plan reference")
+    candidate = Path(ref)
+    if (candidate / "plan.json").is_file():
+        require_project_plans(candidate, "plan path")
+        return candidate
+    root = Path(plans_root) if plans_root is not None else find_plans_root()
+    for parent in (root, root / ARCHIVE):
+        if (parent / ref / "plan.json").is_file():
+            return parent / ref
+    if SHORT_ID.fullmatch(ref):
+        matches = [d for d in plan_dirs(root) if short_id_of(d) == ref]
+        if len(matches) > 1:
+            raise PlanError("PLAN_AMBIGUOUS", f"{ref} matches {', '.join(d.name for d in matches)}")
+        if matches:
+            return matches[0]
+    raise PlanError("PLAN_NOT_FOUND", f"no plan {ref!r} under {root}")
+
+
+def open_plan(ref: str | Path, plans_root: str | Path | None = None) -> Plan:
+    return load_plan(resolve_plan_dir(ref, plans_root))
+
+
+def short_id_of(plan_dir: Path) -> str | None:
+    try:
+        value = json.loads((plan_dir / "plan.json").read_text(encoding="utf-8")).get("short_id")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return value if isinstance(value, str) else None
+
+
+# ---------------------------------------------------------------- lock
+
+def _guard_migrated(plan_dir: Path) -> None:
+    """``PLANS_MIGRATED`` when ``plan_dir`` is ``<x>/plans[/archive]/<plan>`` outside the workspace and the marker of ``<x>``
+    says the plans moved to the workspace (a write to the old copy would be lost). Folders inside the workspace and
+    folders without a marker beside them are not checked. A plan reached through the link ``<x>/plans`` into the workspace
+    (``workspace project link``) resolves to the workspace folder first, so it is a workspace plan, not the old copy."""
+    real = Path(os.path.realpath(plan_dir))
+    plans = real.parent.parent if real.parent.name == ARCHIVE else real.parent
+    if plans.name != "plans" or not (plans.parent / workspace.MARKER_RELPATH).exists():
+        return
+    if workspace.workspace_project_of(real) is not None:
+        return
+    marker = workspace.read_marker(plans.parent)
+    if marker is not None and marker["plans_store"] == "workspace":
+        raise PlanError("PLANS_MIGRATED", "plans of this project moved to the portable workspace; rerun the command")
+
+
+class PlanLock:
+    """Exclusive ``flock`` on ``<plan>/.lock``; waits up to ``timeout`` seconds, then ``PLAN_LOCKED``. A plan folder of a
+    project whose marker moved the plans to the workspace is refused with ``PLANS_MIGRATED`` once the lock is held."""
+
+    _holders: dict = {}   # lock path -> ident of the thread of this process that holds it
+
+    def __init__(self, plan_dir: str | Path, timeout: float = 30.0, poll: float = 0.05):
+        self.path = Path(plan_dir) / LOCK
+        self.timeout = timeout
+        self.poll = poll
+        self._handle = None
+
+    @property
+    def held(self) -> bool:
+        """True between ``__enter__`` and ``__exit__``."""
+        return self._handle is not None
+
+    def __enter__(self) -> "PlanLock":
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        key = str(self.path.resolve())
+        if PlanLock._holders.get(key) == threading.get_ident():
+            # Not reentrant: a second descriptor of the same process would wait for the first one forever.
+            raise PlanError("PLAN_LOCKED", f"{self.path} is already held by this thread (the lock is not reentrant)")
+        handle = open(self.path, "a+")
+        deadline = time.monotonic() + self.timeout
+        while True:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    handle.close()
+                    raise PlanError("PLAN_LOCKED", f"{self.path} is held by another process") from None
+                time.sleep(self.poll)
+        try:
+            _guard_migrated(self.path.parent)
+        except BaseException:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+            handle.close()
+            raise
+        self._handle = handle
+        PlanLock._holders[key] = threading.get_ident()
+        return self
+
+    def __exit__(self, *exc) -> None:
+        if self._handle is not None:
+            PlanLock._holders.pop(str(self.path.resolve()), None)
+            fcntl.flock(self._handle, fcntl.LOCK_UN)
+            self._handle.close()
+            self._handle = None
+
+
+# ---------------------------------------------------------------- canonical form and saves
+
+def canonical_dump(doc: object, kind: str, registry: _schema.Registry | None = None) -> str:
+    """Canonical text of ``doc``: keys in schema ``properties`` order, UTF-8, indent 2, trailing newline."""
+    reg = registry if registry is not None else _schema.load_registry()
+    node, base = reg.for_kind(kind)
+    return json.dumps(_order(reg, node, base, doc), ensure_ascii=False, indent=2) + "\n"
+
+
+def _order(reg: _schema.Registry, node: dict, base: str, value: Any) -> Any:
+    while "$ref" in node:
+        try:
+            node, base = reg.resolve(node["$ref"], base)
+        except LookupError:
+            return value
+    if "oneOf" in node:
+        for branch in node["oneOf"]:
+            if not _schema.validate_node(reg, branch, base, value):
+                return _order(reg, branch, base, value)
+        return value
+    if isinstance(value, dict) and "properties" in node:
+        properties = node["properties"]
+        ordered = {key: _order(reg, properties[key], base, value[key]) for key in properties if key in value}
+        ordered.update({key: item for key, item in value.items() if key not in properties})
+        return ordered
+    if isinstance(value, list) and "items" in node:
+        return [_order(reg, node["items"], base, item) for item in value]
+    return value
+
+
+def _issue_text(label: str, issues) -> str:
+    shown = "; ".join(issue.message for issue in issues[:3])
+    more = f" (+{len(issues) - 3} more)" if len(issues) > 3 else ""
+    return f"{label}: {len(issues)} schema issue(s): {shown}{more}"
+
+
+def check_doc(doc: object, kind: str, label: str, registry: _schema.Registry | None = None) -> None:
+    """Raise ``SCHEMA_INVALID`` (with the issues attached) unless ``doc`` is a valid ``kind`` document.
+
+    A field of an extension slot that no bridge supplies is refused as ``EXTENSION_UNAVAILABLE`` instead.
+    """
+    issues = _schema.validate(doc, kind, registry)
+    if any(issue.code == _schema.EXTENSION_CODE for issue in issues):
+        raise PlanError("EXTENSION_UNAVAILABLE", _issue_text(label, issues), issues)
+    if issues:
+        raise PlanError("SCHEMA_INVALID", _issue_text(label, issues), issues)
+
+
+def save_many(entries: Iterable[tuple[Path, dict, str]], registry: _schema.Registry | None = None) -> list[Path]:
+    """Validate every ``(path, doc, kind)`` first, then write them all; one invalid doc writes nothing.
+
+    The writes are all-or-nothing as far as the process can make them: every new text is staged in a temporary file
+    next to its target first, then the targets are replaced one by one; if a replace fails, the targets already
+    replaced get their previous text back. ``updated_at`` of the caller's documents changes only after the save.
+    """
+    reg = registry if registry is not None else _schema.load_registry()
+    prepared = []
+    stamped = []
+    for path, doc, kind in entries:
+        root_schema, _ = reg.for_kind(kind)
+        candidate = doc
+        if "updated_at" in root_schema.get("properties", {}) and isinstance(doc, dict):
+            candidate = {**doc, "updated_at": now()}
+            stamped.append((doc, candidate["updated_at"]))
+        check_doc(candidate, kind, Path(path).name, reg)
+        prepared.append((Path(path), canonical_dump(candidate, kind, reg)))
+    _write_all(prepared)
+    for doc, stamp in stamped:
+        doc["updated_at"] = stamp
+    return [path for path, _ in prepared]
+
+
+def _write_all(prepared: list[tuple[Path, str]]) -> None:
+    staged: list[tuple[Path, Path]] = []
+    replaced: list[tuple[Path, str | None]] = []
+    try:
+        for path, text in prepared:
+            staged.append((path, _stage(path, text)))
+        for path, tmp in staged:
+            try:
+                previous = path.read_text(encoding="utf-8")
+            except FileNotFoundError:
+                previous = None
+            os.replace(tmp, path)
+            replaced.append((path, previous))
+            _sync_dir(path.parent)
+    except BaseException:
+        for path, previous in reversed(replaced):
+            try:
+                if previous is None:
+                    path.unlink()
+                else:
+                    atomic_write(path, previous)
+            except OSError:
+                pass   # best effort: the original error is the one to report
+        raise
+    finally:
+        for _, tmp in staged:
+            if tmp.exists():
+                tmp.unlink()
+
+
+def save(path: str | Path, doc: dict, kind: str, registry: _schema.Registry | None = None) -> Path:
+    return save_many([(Path(path), doc, kind)], registry)[0]
+
+
+def _stage(path: Path, text: str) -> Path:
+    """Write ``text`` to a fresh temporary file next to ``path`` (flushed to disk) and return its name."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.{threading.get_ident()}.{uuid.uuid4().hex[:8]}.tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+            handle.flush()
+            os.fsync(handle.fileno())
+    except BaseException:
+        if tmp.exists():
+            tmp.unlink()
+        raise
+    return tmp
+
+
+def _sync_dir(directory: Path) -> None:
+    """Flush the rename to disk; a platform or file system that cannot sync a directory is not an error."""
+    try:
+        fd = os.open(directory, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
+def atomic_write(path: Path, text: str) -> None:
+    tmp = _stage(path, text)
+    try:
+        os.replace(tmp, path)
+        _sync_dir(path.parent)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+
+
+def ensure_gitattributes(root: str | Path) -> bool:
+    """Make ``<root>/.gitattributes`` carry ``log.jsonl merge=union``; True when the file was written."""
+    path = Path(root) / ".gitattributes"
+    previous = path.read_text(encoding="utf-8") if path.is_file() else ""
+    if GITATTRIBUTES in previous.splitlines():
+        return False
+    atomic_write(path, previous + ("\n" if previous and not previous.endswith("\n") else "") + GITATTRIBUTES + "\n")
+    return True
+
+
+# ---------------------------------------------------------------- event log
+
+def new_event(event_type: str, summary: str, actor: dict, *, item: str | None = None, phase: str | None = None,
+              impact: str | None = None, next: str | None = None, refs=None, data: dict | None = None) -> dict:
+    """Build a ``log-event`` document stamped with the current time."""
+    event: dict[str, Any] = {"v": 1, "ts": now(), "type": event_type, "summary": summary, "actor": actor}
+    for key, value in (("item", item), ("phase", phase), ("impact", impact), ("next", next),
+                       ("refs", list(refs) if refs else None), ("data", data)):
+        if value is not None:
+            event[key] = value
+    return event
+
+
+def append_log(plan_dir: str | Path, event: dict, *, lock: PlanLock | None = None,
+               registry: _schema.Registry | None = None, lock_timeout: float = 30.0) -> None:
+    """Validate ``event`` and append it as one line; takes the plan lock (waiting ``lock_timeout`` seconds) unless
+    the caller already holds it."""
+    reg = registry if registry is not None else _schema.load_registry()
+    issues = _schema.validate(event, "log-event", reg)
+    if issues:
+        raise PlanError("SCHEMA_INVALID", _issue_text("log event", issues), issues)
+    node, base = reg.for_kind("log-event")
+    line = json.dumps(_order(reg, node, base, event), ensure_ascii=False, separators=(",", ":")) + "\n"
+
+    def write() -> None:
+        with open(Path(plan_dir) / LOG, "a", encoding="utf-8", newline="\n") as handle:
+            handle.write(line)
+            handle.flush()
+            os.fsync(handle.fileno())
+
+    if lock is not None:
+        if not lock.held:
+            raise ValueError("append_log was given a PlanLock that is not held; enter it first")
+        write()
+    else:
+        with PlanLock(plan_dir, timeout=lock_timeout):
+            write()
+
+
+def log_lines(plan_dir: str | Path) -> list[tuple[int, dict | None, str | None]]:
+    """``(line number, event, error)`` for every non-blank line of ``log.jsonl``; a bad line has ``event=None``."""
+    path = Path(plan_dir) / LOG
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return []
+    rows = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except ValueError as exc:
+            rows.append((number, None, f"invalid JSON: {exc}"))
+            continue
+        rows.append((number, event, None) if isinstance(event, dict)
+                    else (number, None, "event must be a JSON object"))
+    return rows
+
+
+def read_log(plan_dir: str | Path) -> list[dict]:
+    """All events of ``log.jsonl``; a malformed line raises ``LOG_INVALID``."""
+    events = []
+    for number, event, error in log_lines(plan_dir):
+        if error is not None:
+            raise PlanError("LOG_INVALID", f"{LOG}:{number}: {error}")
+        events.append(event)
+    return events

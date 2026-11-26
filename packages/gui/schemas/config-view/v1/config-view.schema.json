@@ -1,0 +1,491 @@
+{
+  "$defs": {
+    "allowed_layers": {
+      "description": "Layers the key may be set in (x-skm-layers); null when the schema does not restrict it.",
+      "oneOf": [
+        {
+          "description": "Allowed layers.",
+          "items": {
+            "$ref": "#/$defs/layer_name",
+            "description": "One layer."
+          },
+          "type": "array"
+        },
+        {
+          "description": "Not restricted.",
+          "type": "null"
+        }
+      ]
+    },
+    "config_modules": {
+      "additionalProperties": false,
+      "description": "Modules that have a configuration schema.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "kind": {
+          "const": "config_modules",
+          "description": "Kind of document."
+        },
+        "modules": {
+          "description": "Modules by id.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One module.",
+            "properties": {
+              "description": {
+                "description": "Description of the schema; null when it has none.",
+                "oneOf": [
+                  {
+                    "description": "Text.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "description": "None.",
+                    "type": "null"
+                  }
+                ]
+              },
+              "id": {
+                "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+                "description": "Module id."
+              },
+              "title": {
+                "description": "Title of the schema; null when it has none.",
+                "oneOf": [
+                  {
+                    "description": "Text.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "description": "None.",
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "description"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "modules"
+      ],
+      "type": "object"
+    },
+    "config_view": {
+      "additionalProperties": false,
+      "description": "The configuration of one module: its schema, the layer files and every key with its effective value and where it comes from.",
+      "properties": {
+        "$schema": {
+          "$ref": "#/$defs/contract",
+          "description": "Contract id."
+        },
+        "entries": {
+          "description": "Every leaf of the schema in schema order, then the leaves of the entries of the maps.",
+          "items": {
+            "$ref": "#/$defs/entry",
+            "description": "One key."
+          },
+          "type": "array"
+        },
+        "kind": {
+          "const": "config_view",
+          "description": "Kind of document."
+        },
+        "layers": {
+          "description": "The layers in the order of precedence, lowest first.",
+          "items": {
+            "$ref": "#/$defs/layer",
+            "description": "One layer."
+          },
+          "type": "array"
+        },
+        "maps": {
+          "description": "Dictionary tables of the schema and the entries they hold now.",
+          "items": {
+            "additionalProperties": false,
+            "description": "One map.",
+            "properties": {
+              "entries": {
+                "description": "Entry names that exist in some layer.",
+                "items": {
+                  "description": "Entry name.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "entry_pattern": {
+                "description": "Pattern of the entry names; null when unknown.",
+                "oneOf": [
+                  {
+                    "description": "Regular expression.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "description": "Unknown.",
+                    "type": "null"
+                  }
+                ]
+              },
+              "key": {
+                "description": "Dotted key of the map.",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "entry_pattern",
+              "entries"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "module": {
+          "$ref": "urn:swissknifeman:aicore:common:v1#/$defs/module_id",
+          "description": "Module."
+        },
+        "project_id": {
+          "description": "Project whose project layer is shown; null for the machine view.",
+          "oneOf": [
+            {
+              "description": "Project id.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "No project.",
+              "type": "null"
+            }
+          ]
+        },
+        "schema": {
+          "description": "The config.schema.json of the module as it is (a document of the closed profile contract of aicore, without external references).",
+          "type": "object"
+        },
+        "schema_digest": {
+          "$ref": "urn:swissknifeman:aicore:digest:v1",
+          "description": "Digest of the bytes of the schema file."
+        },
+        "warnings": {
+          "description": "Notices of the resolution, for example unknown environment variables.",
+          "items": {
+            "description": "One notice.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "$schema",
+        "kind",
+        "module",
+        "project_id",
+        "schema_digest",
+        "schema",
+        "layers",
+        "entries",
+        "maps",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "contract": {
+      "const": "urn:swissknifeman:gui:config-view:v1",
+      "description": "Contract id of this document."
+    },
+    "entry": {
+      "additionalProperties": false,
+      "description": "One key of the module configuration.",
+      "properties": {
+        "allowed_layers": {
+          "$ref": "#/$defs/allowed_layers",
+          "description": "Layers the key may be set in."
+        },
+        "default": {
+          "$ref": "#/$defs/value",
+          "description": "Default of the schema; absent when the key has none."
+        },
+        "description": {
+          "description": "Description of the key; null when it has none.",
+          "oneOf": [
+            {
+              "description": "Text.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "None.",
+              "type": "null"
+            }
+          ]
+        },
+        "effective": {
+          "$ref": "#/$defs/origin",
+          "description": "The effective value and where it comes from."
+        },
+        "key": {
+          "description": "Dotted key of the module configuration.",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_:-]+)*$",
+          "type": "string"
+        },
+        "layer_values": {
+          "additionalProperties": false,
+          "description": "The value each writable file layer sets for the key; null when it does not.",
+          "properties": {
+            "machine": {
+              "$ref": "#/$defs/nullable_value",
+              "description": "Value in the machine layer."
+            },
+            "project": {
+              "$ref": "#/$defs/nullable_value",
+              "description": "Value in the project layer."
+            }
+          },
+          "required": [
+            "machine",
+            "project"
+          ],
+          "type": "object"
+        },
+        "overridden": {
+          "description": "Values of lower layers that the effective value hides, nearest first.",
+          "items": {
+            "$ref": "#/$defs/origin",
+            "description": "One hidden value."
+          },
+          "type": "array"
+        },
+        "secret": {
+          "description": "The key holds a secret reference (env:// or keyring://), never a value.",
+          "type": "boolean"
+        },
+        "type": {
+          "description": "Type of the key.",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "key",
+        "type",
+        "secret",
+        "description",
+        "allowed_layers",
+        "effective",
+        "overridden",
+        "layer_values"
+      ],
+      "type": "object"
+    },
+    "layer": {
+      "additionalProperties": false,
+      "description": "One configuration layer.",
+      "properties": {
+        "file": {
+          "description": "Path of the layer file; null for a layer without a file.",
+          "oneOf": [
+            {
+              "description": "Path.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "No file.",
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/layer_name",
+          "description": "Layer name."
+        },
+        "present": {
+          "description": "The layer has a file or values.",
+          "type": "boolean"
+        },
+        "raw": {
+          "description": "Text of the file of a writable layer with secrets redacted; null otherwise or when it is too large.",
+          "oneOf": [
+            {
+              "description": "Text.",
+              "type": "string"
+            },
+            {
+              "description": "Not shown.",
+              "type": "null"
+            }
+          ]
+        },
+        "raw_truncated": {
+          "description": "The file is larger than 262144 bytes and raw is null.",
+          "type": "boolean"
+        },
+        "revision": {
+          "description": "Revision of the file of a writable layer; null otherwise.",
+          "oneOf": [
+            {
+              "$ref": "urn:swissknifeman:aicore:digest:v1",
+              "description": "Revision."
+            },
+            {
+              "description": "Not writable.",
+              "type": "null"
+            }
+          ]
+        },
+        "writable": {
+          "description": "The GUI may write this layer: machine always, project when a project is chosen.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "file",
+        "present",
+        "writable",
+        "revision",
+        "raw",
+        "raw_truncated"
+      ],
+      "type": "object"
+    },
+    "layer_name": {
+      "description": "aicore configuration layer.",
+      "enum": [
+        "defaults",
+        "machine",
+        "project",
+        "env",
+        "invocation",
+        "flags"
+      ]
+    },
+    "nullable_value": {
+      "description": "A value or null when the key is not set.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/value",
+          "description": "Value."
+        },
+        {
+          "description": "Not set.",
+          "type": "null"
+        }
+      ]
+    },
+    "origin": {
+      "additionalProperties": false,
+      "description": "A value with the layer, file, line and source it comes from.",
+      "properties": {
+        "file": {
+          "description": "File of the value; null when it has none.",
+          "oneOf": [
+            {
+              "description": "Path.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "No file.",
+              "type": "null"
+            }
+          ]
+        },
+        "layer": {
+          "description": "Layer of the value; null when no layer sets it.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/layer_name",
+              "description": "Layer."
+            },
+            {
+              "description": "No layer.",
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "description": "Line in the file; null when unknown.",
+          "oneOf": [
+            {
+              "description": "Line.",
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "description": "Unknown.",
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "description": "Variable, option or marker (_unset) that gave the value; null for a file layer.",
+          "oneOf": [
+            {
+              "description": "Source.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "description": "None.",
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "$ref": "#/$defs/nullable_value",
+          "description": "The value; null when no layer sets it."
+        }
+      },
+      "required": [
+        "value",
+        "layer",
+        "file",
+        "line",
+        "source"
+      ],
+      "type": "object"
+    },
+    "value": {
+      "$ref": "urn:swissknifeman:gui:config-mutation:v1#/$defs/value",
+      "description": "A configuration value: a scalar or a list of scalars."
+    }
+  },
+  "$id": "urn:swissknifeman:gui:config-view:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Configuration editor view of the GUI: the modules with a schema (config_modules) and the layered configuration of one module with the provenance of every key (config_view). Secrets appear as references only.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/config_modules",
+      "description": "The modules that have a configuration schema."
+    },
+    {
+      "$ref": "#/$defs/config_view",
+      "description": "The configuration of one module."
+    }
+  ],
+  "title": "config-view"
+}

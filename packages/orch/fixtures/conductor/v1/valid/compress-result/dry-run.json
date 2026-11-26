@@ -1,0 +1,16 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:compress-result:v1",
+  "apply": false,
+  "runs": [
+    {
+      "run_id": "cnd-20261001T100000Z-abcdef",
+      "status": "done_with_deviations",
+      "age_days": 24.3,
+      "compressed": [
+        ".swissknifeman/state/orch/conductor/cnd-20261001T100000Z-abcdef/W1/streams/review.1.jsonl"
+      ],
+      "bytes_before": 1843200,
+      "bytes_after": null
+    }
+  ]
+}

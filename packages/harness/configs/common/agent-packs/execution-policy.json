@@ -1,0 +1,184 @@
+{
+  "policy_version": "1.0",
+  "spawn_threshold": {
+    "decision_rule": "spawn only if EVERY positive condition holds AND NO negative condition holds; a doubt is a negative",
+    "positive_conditions": [
+      {
+        "id": "bulk-raw-material",
+        "text": "the side task would flood the parent conversation with search results, logs or file contents",
+        "provenance": "findings/05 F22 — first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29), quoted verbatim"
+      },
+      {
+        "id": "summary-is-enough",
+        "text": "the parent needs only the condensed result, not the raw material itself",
+        "provenance": "findings/05 F20 — first-party anthropic.com/engineering/multi-agent-research-system (WebFetch 2026-07-29): compression is the point, parallelism is the means"
+      },
+      {
+        "id": "separable-objective",
+        "text": "the work has one objective statable in a single sentence with its own boundaries",
+        "provenance": "findings/05 F19 — first-party: an assignment without an objective and boundaries produces duplicated work and gaps"
+      }
+    ],
+    "negative_conditions": [
+      {
+        "id": "parent-reuses-raw-material",
+        "text": "the raw material WILL be needed by the parent on the following steps → do not spawn (mandatory row: this is the condition nothing in the repo records today)",
+        "provenance": "findings/05 F22 — first-party «content you won't reference again»: the negation of the reuse clause is a direct contra-indication"
+      },
+      {
+        "id": "decide-or-integrate",
+        "text": "the task is deciding, integrating or contracting (architecture, ADR, contract verdict) rather than gathering",
+        "provenance": "findings/05, cross-check paragraph: «use a subagent for gather/analyze/summarize, keep the main session for decide/integrate/continue»"
+      },
+      {
+        "id": "trivial-single-surface",
+        "text": "one edit in one layer or one file — do it directly",
+        "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Delegation threshold», the rule already canonical in the role body"
+      }
+    ],
+    "scale_by_task_class": [
+      {
+        "task_class": "fact-finding",
+        "agents": "1",
+        "tool_calls_hint": "3-10 per agent",
+        "unverified": true,
+        "provenance": "findings/05 F21 — first-party quote; [UNVERIFIED] for us: the numbers come from Anthropic's deep-research domain, not from monorepo code work; starting values, calibration is out of plan scope"
+      },
+      {
+        "task_class": "direct-comparison",
+        "agents": "2-4",
+        "tool_calls_hint": "10-15 per agent",
+        "unverified": true,
+        "provenance": "same source, same [UNVERIFIED] reservation"
+      },
+      {
+        "task_class": "complex-research",
+        "agents": ">10",
+        "tool_calls_hint": "clearly divided responsibilities",
+        "unverified": true,
+        "provenance": "same source, same [UNVERIFIED] reservation; our own ceiling still applies — see fleet_cap (§3.3)"
+      }
+    ]
+  },
+  "max_parallel_agents": {
+    "subjects": [
+      {
+        "subject": "session-agent-tool",
+        "provider": "claude-code",
+        "total": 200,
+        "total_scope": "session",
+        "concurrent": 20,
+        "nesting_depth": 3,
+        "settings": ["CLAUDE_CODE_MAX_SUBAGENTS_PER_SESSION", "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS"],
+        "controlled_by_us": false,
+        "provenance": "findings/04 F17 · first-party code.claude.com/docs/en/sub-agents (WebFetch 2026-07-29): 200 per session (v2.1.212+), 20 concurrent (v2.1.217+), nesting depth 3 (v2.1.219). Platform ceiling, not our measurement; env-tunable by the operator."
+      },
+      {
+        "subject": "workflow-runtime",
+        "provider": "claude-code",
+        "total": 1000,
+        "total_scope": "run",
+        "concurrent": 16,
+        "nesting_depth": null,
+        "settings": [],
+        "controlled_by_us": false,
+        "provenance": "findings/04 F17 · first-party, same page: agents spawned by a workflow script do not count against the session budget; the runtime caps ~16 concurrent (min(16, cores − 2), so 16 is an upper bound) and 1 000 per run. Outside our control."
+      },
+      {
+        "subject": "codex-subagents",
+        "provider": "codex",
+        "total": null,
+        "total_scope": "session",
+        "concurrent": null,
+        "nesting_depth": null,
+        "settings": [
+          "agents.enabled",
+          "agents.max_concurrent_threads_per_session",
+          "agents.default_subagent_model",
+          "agents.default_subagent_reasoning_effort"
+        ],
+        "controlled_by_us": false,
+        "provenance": "findings/03 F11 · first-party learn.chatgpt.com/docs/agent-configuration/subagents (WebFetch 2026-07-29): the ceiling is a native config.toml [agents] key, its value is the operator's, not ours. [UNVERIFIED] Codex behaviour on exceeding agents.max_concurrent_threads_per_session was never exercised live (findings/05, D3)."
+      }
+    ],
+    "fleet_cap": {
+      "value": 2,
+      "applies_to": "session-agent-tool",
+      "condition": "file-independent tasks only; concurrent writers to one working tree are never authorised",
+      "provenance": "RAG:— repo-grounded: packages/harness/configs/common/agent-packs/roles.json _common.orchestrator § «Execution modes» — the Parallel-max2 mode is already the canon rule; the policy records the existing fleet ceiling, it does not invent a new one"
+    }
+  },
+  "allowed_agent_roles": {
+    "source": "packages/harness/configs/common/agent-packs/roles.json",
+    "key": ["pack_id", "role_id"],
+    "rule": "allowed = every (pack_id, role_id) present in the canon for the packs installed in the project, minus exclusions; a role absent from the canon MUST NOT be addressed by a PLAN line",
+    "exclusions": [
+      {
+        "pack_id": "_common",
+        "role_id": "orchestrator",
+        "reason": "delegate-only role: the orchestrator plans and delegates, it is never a delegation target of its own plan"
+      }
+    ]
+  },
+  "delegation_contract": {
+    "required_fields": [
+      {
+        "id": "objective",
+        "text": "one sentence stating what the subagent must achieve",
+        "provenance": "findings/05 F19 — verbatim first-party enumeration: «Each subagent needs an objective, an output format, guidance on the tools and sources to use, and clear task boundaries.»; research/08 §4 (coverage measurement)"
+      },
+      {
+        "id": "output_format",
+        "text": "the shape the result is returned in",
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 marks this the single real gap in today's PLAN grammar"
+      },
+      {
+        "id": "tool_guidance",
+        "text": "which tools and skills the work is done with",
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+      },
+      {
+        "id": "source_guidance",
+        "text": "which sources are authoritative and how facts are verified",
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+      },
+      {
+        "id": "boundaries",
+        "text": "what the subagent must not touch, and where its work ends",
+        "provenance": "findings/05 F19 — verbatim first-party enumeration; research/08 §4 (coverage measurement)"
+      }
+    ],
+    "refusal_rule": "an assignment without a declared return format is not issued: the parent would receive arbitrary prose and would have to re-read the raw material, losing the compression the subagent exists for",
+    "enforcement_points": [
+      {
+        "id": "plan-grammar-canon",
+        "carrier": "packages/harness/configs/common/agent-packs/roles.json",
+        "carrier_kind": "role-canon-content",
+        "selector": {"pack_id": "_common", "role_id": "orchestrator", "field": "content"},
+        "field_markers": {
+          "objective": "- objective:",
+          "output_format": "- output:",
+          "tool_guidance": "- tools:",
+          "source_guidance": "- sources:",
+          "boundaries": "- boundaries:"
+        },
+        "grammar_marker": "; output:",
+        "status": "enforced"
+      },
+      {
+        "id": "plan-grammar-template",
+        "carrier": "packages/harness/configs/claude-code/agent-packs/_common/agents/orchestrator.md",
+        "carrier_kind": "markdown-template",
+        "field_markers": {
+          "objective": "- objective:",
+          "output_format": "- output:",
+          "tool_guidance": "- tools:",
+          "source_guidance": "- sources:",
+          "boundaries": "- boundaries:"
+        },
+        "grammar_marker": "; output:",
+        "status": "enforced"
+      }
+    ]
+  }
+}

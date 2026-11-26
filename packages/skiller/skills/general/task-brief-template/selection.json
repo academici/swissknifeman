@@ -1,0 +1,6 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "SCHEMA",
+  "replaced_by": "orch/schemas/exec/v1/execution-input.schema.json"
+}

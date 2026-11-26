@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "title": "check-evidence",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:check-evidence:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "evidence_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+      "description": "Evidence identifier."
+    },
+    "check_id": {
+      "type": "string",
+      "pattern": "^V[0-9]+$",
+      "description": "Check identifier."
+    },
+    "subject": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Qualified item, unit or ad-hoc input reference."
+    },
+    "procedure": {
+      "type": "object",
+      "properties": {
+        "cmd": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Executed command."
+        },
+        "procedure": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Observed manual procedure."
+        },
+        "cwd": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+          "description": "Command working directory."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Exactly one command or manual procedure."
+    },
+    "candidate": {
+      "type": "object",
+      "properties": {
+        "head": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/gitSha",
+          "description": "Candidate Git revision."
+        },
+        "dirty_digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Digest of dirty changes and untracked paths."
+        }
+      },
+      "required": [
+        "head"
+      ],
+      "additionalProperties": false,
+      "description": "Candidate under validation."
+    },
+    "exit": {
+      "type": "integer",
+      "description": "Observed command exit; never invented for a manual procedure."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ],
+      "description": "Manual procedure verdict."
+    },
+    "observation": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Manual procedure observation."
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Execution platform."
+        },
+        "python": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+          "description": "Python version."
+        },
+        "env_digest": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Environment digest."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Validation environment."
+    },
+    "log": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/path",
+          "description": "Validation log path."
+        },
+        "sha256": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/sha256",
+          "description": "Validation log digest."
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "description": "Validation log evidence."
+    },
+    "started_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Validation start timestamp."
+    },
+    "finished_at": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/ts",
+      "description": "Validation finish timestamp."
+    },
+    "producer": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "engine",
+            "executor",
+            "human"
+          ],
+          "description": "Evidence producer kind."
+        },
+        "actor": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/actor",
+          "description": "Producer actor identity."
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false,
+      "description": "Evidence producer."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "evidence_id",
+    "check_id",
+    "subject",
+    "procedure",
+    "candidate",
+    "started_at",
+    "finished_at",
+    "producer"
+  ],
+  "additionalProperties": false,
+  "description": "Engine-neutral check-evidence contract."
+}

@@ -1,0 +1,1146 @@
+{
+ "argv": [
+  {
+   "argv": [
+    "--safe-mode",
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-1/tmp",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+   ],
+   "n": 1,
+   "role": "context-scout"
+  },
+  {
+   "argv": [
+    "--safe-mode",
+    "--strict-mcp-config",
+    "--setting-sources",
+    "user",
+    "--add-dir",
+    "<project>/.swissknifeman/state/orch/conductor/<run>/W1/agents/agent-<run>-2/tmp",
+    "--settings",
+    "{\"permissions\": {\"deny\": [\"Bash(git push*)\", \"Bash(git reset --hard*)\", \"Bash(git clean*)\", \"Bash(git config --global --add *)\", \"Bash(git config --global --unset*)\", \"Bash(git config --global --replace-all *)\", \"Bash(git config --global --edit*)\", \"Bash(git config --global *.* *)\", \"Bash(sudo *)\", \"Read(.env)\", \"Read(.env.*)\", \"Bash(cat .env)\", \"Bash(cat .env.*)\", \"Read(**/*.pem)\", \"Read(**/*.key)\", \"Read(~/.ssh/**)\", \"Read(~/.aws/**)\"]}}"
+   ],
+   "n": 1,
+   "role": "executor"
+  },
+  {
+   "argv": [],
+   "n": 1,
+   "role": "reviewer"
+  }
+ ],
+ "events": [
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "started"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
+    "attempt_id": "att-run-<digest>-W1",
+    "project_resolution": "git",
+    "run_id": "run-<digest>",
+    "scenario": "full",
+    "source": {
+     "plugin": "fake-cs",
+     "ref": "W1"
+    },
+    "submission_id": "sub-<run>-item-W1"
+   },
+   "type": "orch.run.started"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "brief",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "prepare",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "stopped",
+    "phase": "ended",
+    "reason_code": "PROVIDER_UNAVAILABLE"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "phase": "resumed"
+   },
+   "type": "orch.conductor.lifecycle"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-1",
+    "attempt": 1,
+    "item": "W1",
+    "role": "context-scout",
+    "route": {
+     "effort": "low",
+     "model": "haiku",
+     "model_class": "economy",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "scout",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-1",
+    "attempt": 1,
+    "item": "W1",
+    "role": "context-scout",
+    "route": {
+     "effort": "low",
+     "model": "haiku",
+     "model_class": "economy",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "scout",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "scout",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-2",
+    "attempt": 1,
+    "item": "W1",
+    "role": "executor",
+    "route": {
+     "effort": "high",
+     "model": "sonnet",
+     "model_class": "implementation",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "session": {
+     "reason": "first_round",
+     "resumed": false
+    },
+    "step": "executor.1",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-2",
+    "attempt": 1,
+    "item": "W1",
+    "role": "executor",
+    "route": {
+     "effort": "high",
+     "model": "sonnet",
+     "model_class": "implementation",
+     "provider": "claude-code"
+    },
+    "run_id": "run-<digest>",
+    "step": "executor.1",
+    "tokens": {
+     "cached": 0,
+     "input": 100,
+     "output": 10
+    },
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "executor",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "checks",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-3",
+    "attempt": 1,
+    "item": "W1",
+    "role": "reviewer",
+    "route": {
+     "effort": "high",
+     "model": "grok-4.7",
+     "model_class": "implementation",
+     "provider": "grok"
+    },
+    "run_id": "run-<digest>",
+    "step": "review.1",
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.started"
+  },
+  {
+   "data": {
+    "agent_run_id": "agent-<run>-3",
+    "attempt": 1,
+    "item": "W1",
+    "role": "reviewer",
+    "route": {
+     "effort": "high",
+     "model": "grok-4.7",
+     "model_class": "implementation",
+     "provider": "grok"
+    },
+    "run_id": "run-<digest>",
+    "step": "review.1",
+    "tokens": {
+     "cached": 0,
+     "input": 100,
+     "output": 10
+    },
+    "work_id": "PLAN9.W1@<digest>"
+   },
+   "type": "orch.agent.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "review",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "primary",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt_id": "att-run-<digest>-W1",
+    "gate": "pass",
+    "outcome": "done",
+    "ref": "W1",
+    "run_id": "run-<digest>",
+    "submission_id": "sub-<run>-item-W1"
+   },
+   "type": "orch.run.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "register",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "attempt": 1,
+    "attempt_id": "att-run-<digest>-W1",
+    "run_id": "run-<digest>",
+    "stage_id": "commit",
+    "status": "completed"
+   },
+   "type": "orch.run.stage.finished"
+  },
+  {
+   "data": {
+    "conductor_run_id": "<run>",
+    "items": [
+     "W1"
+    ],
+    "launcher": "terminal",
+    "outcome": "finished",
+    "phase": "ended"
+   },
+   "type": "orch.conductor.lifecycle"
+  }
+ ],
+ "manifests": {
+  "W1/prompts/executor.1.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/executor.md",
+     "tokens": 3038
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 368
+    },
+    {
+     "kind": "authority",
+     "origin": "conductor",
+     "tokens": 141
+    },
+    {
+     "kind": "run_rules",
+     "origin": "conductor",
+     "tokens": 150
+    },
+    {
+     "kind": "context_map",
+     "origin": "scout-cache:.swissknifeman/state/orch/conductor/cache/scout/W1/<digest>.txt",
+     "tokens": 47
+    },
+    {
+     "kind": "verification",
+     "origin": "conductor",
+     "tokens": 193
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 37
+    },
+    {
+     "kind": "result_contract",
+     "origin": "conductor",
+     "tokens": 894
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 4162
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 338
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 368
+    }
+   },
+   "excluded": [],
+   "role": "executor",
+   "route": {
+    "effort": "high",
+    "model": "sonnet",
+    "provider": "claude-code"
+   },
+   "step": "executor.1"
+  },
+  "W1/prompts/review.1.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/reviewer.md",
+     "tokens": 907
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 358
+    },
+    {
+     "kind": "candidate",
+     "origin": "conductor",
+     "tokens": 65
+    },
+    {
+     "kind": "verification",
+     "origin": "conductor",
+     "tokens": 20
+    },
+    {
+     "kind": "diff",
+     "origin": "conductor",
+     "tokens": 40
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 37
+    },
+    {
+     "kind": "result_contract",
+     "origin": "conductor",
+     "tokens": 207
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 1171
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 463
+    }
+   },
+   "excluded": [],
+   "role": "reviewer",
+   "route": {
+    "effort": "high",
+    "model": "grok-4.7",
+    "provider": "grok"
+   },
+   "step": "review.1"
+  },
+  "W1/prompts/scout.manifest.json": {
+   "blocks": [
+    {
+     "kind": "role_text",
+     "origin": "roles/context-scout.md",
+     "tokens": 689
+    },
+    {
+     "kind": "input",
+     "origin": "input.json",
+     "tokens": 358
+    },
+    {
+     "kind": "progress",
+     "origin": "conductor",
+     "tokens": 35
+    }
+   ],
+   "budgets": {
+    "core": {
+     "limit": 12000,
+     "tokens": 724
+    },
+    "retrieval": {
+     "limit": 50000,
+     "tokens": 0
+    },
+    "supporting": {
+     "limit": 30000,
+     "tokens": 0
+    },
+    "task": {
+     "limit": 0,
+     "tokens": 358
+    }
+   },
+   "excluded": [],
+   "role": "context-scout",
+   "route": {
+    "effort": "low",
+    "model": "haiku",
+    "provider": "claude-code"
+   },
+   "step": "scout"
+  }
+ },
+ "progress": [
+  {
+   "event": "run.start",
+   "message": "plan T; items W1"
+  },
+  {
+   "event": "item.start",
+   "item": "W1",
+   "message": "Work W1"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "brief",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "prepare",
+   "verdict": "done"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "the claim of W1 is given back to the work source",
+   "reason_code": "CLAIM_RELEASED"
+  },
+  {
+   "event": "item.end",
+   "item": "W1",
+   "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume",
+   "outcome": "stopped",
+   "reason_code": "PROVIDER_UNAVAILABLE"
+  },
+  {
+   "event": "run.end",
+   "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume; observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "stopped",
+   "reason_code": "PROVIDER_UNAVAILABLE"
+  },
+  {
+   "event": "run.resume",
+   "message": "resume 1"
+  },
+  {
+   "event": "item.start",
+   "item": "W1",
+   "message": "Work W1"
+  },
+  {
+   "event": "stage.skip",
+   "item": "W1",
+   "message": "closed earlier; not repeated",
+   "role": "deterministic",
+   "stage": "brief",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.skip",
+   "item": "W1",
+   "message": "closed earlier; not repeated",
+   "role": "deterministic",
+   "stage": "prepare",
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout"
+  },
+  {
+   "event": "info",
+   "message": "context-scout/claude-code: partial isolation (the command of the route is not a provider CLI the profile can probe)",
+   "reason_code": "ISOLATION_PARTIAL"
+  },
+  {
+   "agent": "agent-<run>-1",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "context-scout",
+   "route": "claude-code/haiku/low",
+   "stage": "scout",
+   "verdict": "mapped"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "event": "info",
+   "item": "W1",
+   "message": "a fresh session starts; reason=first_round",
+   "reason_code": "SESSION_FRESH",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1"
+  },
+  {
+   "agent": "agent-<run>-2",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "executor",
+   "route": "claude-code/sonnet/high",
+   "stage": "executor.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "done"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "checks.1",
+   "verdict": "green"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1"
+  },
+  {
+   "event": "info",
+   "message": "reviewer/grok: partial isolation (the command of the route is not a provider CLI the profile can probe)",
+   "reason_code": "ISOLATION_PARTIAL"
+  },
+  {
+   "event": "info",
+   "message": "reviewer/grok: partial isolation (repository_instructions unknown, memory unknown, plugins unknown, hooks on, mcp observed, user_skills observed)",
+   "reason_code": "ISOLATION_PARTIAL"
+  },
+  {
+   "agent": "agent-<run>-3",
+   "event": "stage.end",
+   "item": "W1",
+   "role": "reviewer",
+   "route": "grok/grok-4.7/high",
+   "stage": "review.1",
+   "tokens": {
+    "cached": 0,
+    "input": 100,
+    "output": 10
+   },
+   "verdict": "GREEN 0 finding(s)"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "registrar",
+   "route": "orch/conductor",
+   "stage": "register",
+   "verdict": "recorded gate pass"
+  },
+  {
+   "event": "stage.start",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit"
+  },
+  {
+   "event": "stage.end",
+   "item": "W1",
+   "role": "deterministic",
+   "stage": "commit",
+   "verdict": "committed <digest>"
+  },
+  {
+   "event": "item.end",
+   "item": "W1",
+   "outcome": "done"
+  },
+  {
+   "event": "run.end",
+   "message": "observer report <project>/.swissknifeman/orch/reports/<run>/observer.md",
+   "outcome": "finished"
+  }
+ ],
+ "routes": {
+  "W1": {
+   "$schema": "urn:swissknifeman:orch:records:item-routes:v1",
+   "advisor": {
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "opus",
+     "--effort",
+     "high",
+     "--tools",
+     "Bash,Read,Grep,Glob",
+     "--allowedTools",
+     "Bash(python3 *orch.py research query *)",
+     "Bash(python3 *orch.py --config * research query *)",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "opus",
+    "model_class": "frontier",
+    "provider": "claude-code",
+    "role": "advisor",
+    "timeout_s": 1800,
+    "transport": "jsonl"
+   },
+   "context-scout": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "context-scout"
+    ],
+    "effort": "low",
+    "idle_timeout_s": 0,
+    "model": "haiku",
+    "model_class": "economy",
+    "provider": "claude-code",
+    "role": "context-scout",
+    "timeout_s": 900,
+    "transport": "text"
+   },
+   "executor": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "executor"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "sonnet",
+    "model_class": "implementation",
+    "provider": "claude-code",
+    "role": "executor",
+    "timeout_s": 0,
+    "transport": "jsonl"
+   },
+   "report-fixer": {
+    "argv": [
+     "claude",
+     "-p",
+     "--output-format",
+     "stream-json",
+     "--verbose",
+     "--model",
+     "haiku",
+     "--effort",
+     "low",
+     "--tools",
+     "",
+     "--permission-prompts",
+     "none",
+     "--no-session-persistence"
+    ],
+    "effort": "low",
+    "idle_timeout_s": 5400,
+    "model": "haiku",
+    "model_class": "economy",
+    "provider": "claude-code",
+    "role": "report-fixer",
+    "timeout_s": 600,
+    "transport": "jsonl"
+   },
+   "reviewer": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "reviewer"
+    ],
+    "effort": "high",
+    "idle_timeout_s": 5400,
+    "model": "grok-4.7",
+    "model_class": "implementation",
+    "provider": "grok",
+    "role": "reviewer",
+    "timeout_s": 1800,
+    "transport": "jsonl"
+   },
+   "triager": {
+    "argv": [
+     "<python>",
+     "<orch>/tests/fixtures/conductor/fake_role.py",
+     "triager"
+    ],
+    "effort": "medium",
+    "idle_timeout_s": 5400,
+    "model": "sonnet",
+    "model_class": "implementation",
+    "provider": "claude-code",
+    "role": "triager",
+    "timeout_s": 1800,
+    "transport": "jsonl"
+   }
+  }
+ },
+ "state": {
+  "agents": 3,
+  "claims": {
+   "item-W1": {
+    "orch_run": "run-<digest>",
+    "ref": "W1",
+    "submission": "sub-<run>-item-W1",
+    "title": "Work W1"
+   }
+  },
+  "executor_sessions": {
+   "*": {
+    "created_at": "<time>",
+    "fingerprint": {
+     "authority_digest": "sha256:<digest>",
+     "instructions_digest": "sha256:<digest>",
+     "isolation_home": "",
+     "project": "<project>",
+     "provider": "claude-code",
+     "role": "executor",
+     "worktree": "<project>"
+    },
+    "fingerprint_digest": "sha256:<digest>",
+    "last_item": "W1",
+    "last_used_at": "<time>",
+    "provider": "claude-code",
+    "rounds": 1,
+    "route": "claude-code/sonnet/high",
+    "session": "executor-session-1",
+    "task_digest": "<digest>"
+   }
+  },
+  "isolation_noted": [
+   "claude-code:PROBE_UNAVAILABLE",
+   "grok:PROBE_UNAVAILABLE",
+   "grok:SURFACES_UNCONFIRMED"
+  ],
+  "items": {
+   "W1": {
+    "adopted": [],
+    "authority": {
+     "context-scout": "sha256:<digest>",
+     "executor": "sha256:<digest>",
+     "reviewer": "sha256:<digest>"
+    },
+    "autofix_at": [],
+    "check_fixes_at": [],
+    "check_fixes_used": 0,
+    "corrections_at": [],
+    "corrections_used": 0,
+    "executor_started": true,
+    "expected": null,
+    "orch_run": "run-<digest>",
+    "outcome": "done",
+    "plan_notes": [],
+    "released": [
+     {
+      "ok": true,
+      "reason": "stopped before any work began: PROVIDER_UNAVAILABLE"
+     }
+    ],
+    "retries_used": 0,
+    "review_marks": {
+     "1": {
+      "out/W1.txt": "<digest>"
+     }
+    },
+    "source_paths": [],
+    "stage_usage": {
+     "executor.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "review.1": {
+      "cached": 0,
+      "input": 100,
+      "output": 10
+     },
+     "scout": {
+      "cached": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    "steps": {
+     "brief": {
+      "ended": "<time>",
+      "result": {
+       "artifacts_dir": "plans/T/artifacts/W1",
+       "base": "<digest>",
+       "input_id": "PLAN9.W1@<digest>",
+       "input_path": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/input.json"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "checks.1": {
+      "ended": "<time>",
+      "result": [
+       {
+        "cmd": "test -f out/W1.txt",
+        "evidence": "plans/T/artifacts/W1/evidence/V1.json",
+        "exit": 0,
+        "green": true,
+        "id": "V1",
+        "kind": "acceptance",
+        "log": "<project>/.swissknifeman/state/orch/conductor/<run>/W1/checks/1/V1.log",
+        "seconds": 0.0,
+        "tail": ""
+       }
+      ],
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "green"
+     },
+     "commit": {
+      "ended": "<time>",
+      "result": {
+       "outcome": "committed",
+       "sha": "<digest>"
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "committed <digest>"
+     },
+     "executor.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-2",
+       "attempts": 1,
+       "changed": [
+        "out/W1.txt"
+       ],
+       "exit": 0,
+       "model": "fake-model",
+       "report": {
+        "changed_paths": [
+         "out/W1.txt"
+        ],
+        "checks_run": [
+         {
+          "cmd": "test -f out/W1.txt",
+          "exit": 0,
+          "id": "V1"
+         }
+        ],
+        "evidence": [],
+        "open_issues": [],
+        "status": "done",
+        "summary": "made W1"
+       },
+       "session": "executor-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/executor.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "executor",
+      "route": "claude-code/sonnet/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "done"
+     },
+     "prepare": {
+      "ended": "<time>",
+      "result": {
+       "refusals": [
+        {
+         "reason_code": "INDEPENDENT_PROVIDER",
+         "stage_id": "review"
+        }
+       ],
+       "stages": [
+        {
+         "effort": "high",
+         "model": "haiku",
+         "provider": "claude-code",
+         "role": "context-scout",
+         "stage_id": "condense"
+        },
+        {
+         "effort": "high",
+         "model": "sonnet",
+         "provider": "claude-code",
+         "role": "executor",
+         "stage_id": "primary"
+        }
+       ]
+      },
+      "role": "deterministic",
+      "route": null,
+      "status": "done",
+      "verdict": "done"
+     },
+     "register": {
+      "ended": "<time>",
+      "result": {
+       "gate": "pass",
+       "outcome": "recorded"
+      },
+      "role": "registrar",
+      "route": "orch/conductor",
+      "status": "done",
+      "verdict": "recorded gate pass"
+     },
+     "review.1": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-3",
+       "attempts": 1,
+       "base": "<digest>",
+       "candidate": {
+        "digest": "sha256:<digest>",
+        "head": "<digest>",
+        "paths": {
+         "out/W1.txt": "100644 <digest>"
+        }
+       },
+       "exit": 0,
+       "finding_keys": {},
+       "findings": {
+        "findings": [],
+        "verdict": "GREEN"
+       },
+       "model": "fake-model",
+       "outside": {},
+       "session": "reviewer-session-1",
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/review.1.jsonl",
+       "usage": {
+        "cached": 0,
+        "input": 100,
+        "output": 10
+       }
+      },
+      "role": "reviewer",
+      "route": "grok/grok-4.7/high",
+      "status": "done",
+      "tokens": {
+       "cached": 0,
+       "input": 100,
+       "output": 10
+      },
+      "verdict": "GREEN 0 finding(s)"
+     },
+     "scout": {
+      "ended": "<time>",
+      "result": {
+       "agent": "agent-<run>-1",
+       "attempts": 1,
+       "cache": ".swissknifeman/state/orch/conductor/cache/scout/W1/<digest>.txt",
+       "exit": 0,
+       "hit": false,
+       "model": null,
+       "session": null,
+       "stream": ".swissknifeman/state/orch/conductor/<run>/W1/streams/scout.txt",
+       "text": "a context map line — why it matters\nUnknowns:\n- none",
+       "usage": {
+        "cached": 0,
+        "input": 0,
+        "output": 0
+       }
+      },
+      "role": "context-scout",
+      "route": "claude-code/haiku/low",
+      "status": "done",
+      "verdict": "mapped"
+     }
+    },
+    "stop": {
+     "code": "PROVIDER_UNAVAILABLE",
+     "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume"
+    },
+    "tokens": {
+     "cached": 0,
+     "input": 200,
+     "output": 20
+    }
+   }
+  },
+  "last_stop": {
+   "code": "PROVIDER_UNAVAILABLE",
+   "message": "cannot start reviewer (<project>/no-such-grok): install or log in the CLI, then resume",
+   "resume": 1
+  },
+  "on_blocked": "stop",
+  "questions": {
+   "W1": {}
+  },
+  "resumes": 1,
+  "status": "finished",
+  "tokens": {
+   "cached": 0,
+   "input": 200,
+   "output": 20
+  }
+ }
+}

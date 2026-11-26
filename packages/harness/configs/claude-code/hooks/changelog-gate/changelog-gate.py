@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+"""Internal documentation."""
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+_DEFAULT_MODE = "off"
+_MODES = ("off", "warn", "strict")
+_CONTENT_TYPES = ("feat", "fix", "perf", "refactor")
+_TYPE_RE = re.compile(r"^(feat|fix|perf|refactor)(\([^)]*\))?!?:\s")
+_SKIP_MARKER = "[changelog-skip]"
+_CHANGELOG_RE = re.compile(r"changelog", re.IGNORECASE)
+_SEGMENT_RE = re.compile(r"&&|\|\||;|\|")
+
+
+def _carrier(cwd, key):
+    """Value of `key` in the committed carrier .swissknifeman/hooks.env (provider key first)."""
+    try:
+        text = (Path(cwd) / ".swissknifeman" / "hooks.env").read_text(encoding="utf-8")
+    except Exception:
+        return None
+    found = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            found[k.strip()] = v.strip()
+    return found.get(key + "__CLAUDE_CODE", found.get(key))
+
+
+def _read_mode(cwd):
+    """Internal documentation."""
+    if not cwd:
+        return _DEFAULT_MODE
+    carried = _carrier(cwd, "CHANGELOG_GATE_MODE")
+    if carried is not None:
+        carried = carried.lower()
+        return carried if carried in _MODES else _DEFAULT_MODE
+    f = Path(cwd) / ".claude" / "changelog-gate.env.ini"
+    try:
+        text = f.read_text(encoding="utf-8")
+    except Exception:
+        return _DEFAULT_MODE
+    mode = _DEFAULT_MODE
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = (x.strip() for x in line.split("=", 1))
+        if k == "MODE":
+            v = v.lower()
+            mode = v if v in _MODES else _DEFAULT_MODE
+    return mode
+
+
+def _commit_messages(command):
+    """Internal documentation."""
+    if not isinstance(command, str) or not command.strip():
+        return []
+    for segment in _SEGMENT_RE.split(command):
+        try:
+            tokens = shlex.split(segment)
+        except ValueError:
+            continue
+        for i in range(len(tokens) - 1):
+            if tokens[i] == "git" and tokens[i + 1] == "commit":
+                rest = tokens[i + 2:]
+                return [rest[j + 1] for j in range(len(rest) - 1) if rest[j] == "-m"]
+    return []
+
+
+def _git(cwd, *args):
+    """Internal documentation."""
+    try:
+        out = subprocess.run(["git", "-C", cwd, *args], stdout=subprocess.PIPE,
+                              stderr=subprocess.DEVNULL, timeout=10, check=False)
+    except Exception:
+        return None
+    if out.returncode != 0:
+        return None
+    try:
+        text = out.stdout.decode("utf-8", errors="replace")
+    except Exception:
+        return None
+    return [line for line in text.splitlines() if line]
+
+
+def _has_changelog_in_tree(cwd):
+    files = _git(cwd, "ls-files")
+    if files is None:
+        return False
+    return any(_CHANGELOG_RE.search(f) for f in files)
+
+
+def _changelog_staged(cwd):
+    files = _git(cwd, "diff", "--cached", "--name-only")
+    if files is None:
+        return False
+    return any(_CHANGELOG_RE.search(f) for f in files)
+
+
+def _warn_json(reason):
+    print(json.dumps({"hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "allow",
+        "permissionDecisionReason": "changelog-gate: warn — not blocking",
+        "additionalContext": reason,
+    }}))
+
+
+def main():
+    try:
+        raw = sys.stdin.read()
+        payload = json.loads(raw) if raw.strip() else {}
+    except Exception:
+        sys.exit(0)
+    if not isinstance(payload, dict):
+        sys.exit(0)
+
+    if payload.get("tool_name") != "Bash":
+        sys.exit(0)
+    tool_input = payload.get("tool_input")
+    command = tool_input.get("command") if isinstance(tool_input, dict) else None
+
+    cwd = payload.get("cwd") or os.getcwd()
+    mode = _read_mode(cwd)
+    if mode == "off":
+        sys.exit(0)
+
+    messages = _commit_messages(command)
+    if not messages:
+        sys.exit(0)
+
+    full_text = "\n".join(messages)
+    if _SKIP_MARKER in full_text:
+        sys.exit(0)
+
+    m = _TYPE_RE.match(messages[0])
+    if not m:
+        sys.exit(0)
+    commit_type = m.group(1)
+
+    if not _has_changelog_in_tree(cwd):
+        sys.exit(0)
+    if _changelog_staged(cwd):
+        sys.exit(0)
+
+    reason = (
+        f"changelog-gate: commit `{commit_type}:` informative, but `[Unreleased]` not "
+        f"touched. Add a line to CHANGELOG of the desired group Keep a Changelog (or mark "
+        f"`[changelog-skip]`, if the entry is not needed). Discipline - skill "
+        f"`oss-dev/release-engineering`."
+    )
+    if mode == "strict":
+        sys.stderr.write(reason + "\n")
+        sys.exit(2)
+    _warn_json(reason)
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        sys.exit(0)

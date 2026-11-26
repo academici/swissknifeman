@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:autopilot-explain:v1",
+  "title": "autopilot-explain",
+  "description": "What `orch conduct autopilot explain --json` prints: the effective [orch.autopilot] policy with the layer each value comes from, the readiness answer of the work source (null when it was not asked) and the next action a controller would take now. Nothing is started or written.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "plan",
+    "policy",
+    "sources",
+    "readiness",
+    "next",
+    "mode"
+  ],
+  "properties": {
+    "$schema": {
+      "description": "Producer schema.",
+      "const": "urn:swissknifeman:orch:conductor:autopilot-explain:v1"
+    },
+    "plan": {
+      "description": "Collection of the work source.",
+      "type": "string",
+      "minLength": 1
+    },
+    "policy": {
+      "$ref": "#/$defs/policy"
+    },
+    "sources": {
+      "description": "Per key of the policy the layer it comes from (defaults, machine, project, env, invocation, flags, flag:--max-runs, none).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "enabled",
+        "require_readiness",
+        "max_runs",
+        "max_wall_s",
+        "max_no_progress_runs",
+        "max_auto_decisions",
+        "quota_wait_max_s",
+        "poll_s",
+        "max_recoveries",
+        "run_tokens_hard_max"
+      ],
+      "properties": {
+        "allowed": {
+          "description": "Source of allowed.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Source of enabled.",
+          "type": "string"
+        },
+        "require_readiness": {
+          "description": "Source of require_readiness.",
+          "type": "string"
+        },
+        "max_runs": {
+          "description": "Source of max_runs.",
+          "type": "string"
+        },
+        "max_wall_s": {
+          "description": "Source of max_wall_s.",
+          "type": "string"
+        },
+        "max_no_progress_runs": {
+          "description": "Source of max_no_progress_runs.",
+          "type": "string"
+        },
+        "max_auto_decisions": {
+          "description": "Source of max_auto_decisions.",
+          "type": "string"
+        },
+        "quota_wait_max_s": {
+          "description": "Source of quota_wait_max_s.",
+          "type": "string"
+        },
+        "poll_s": {
+          "description": "Source of poll_s.",
+          "type": "string"
+        },
+        "max_recoveries": {
+          "description": "Source of max_recoveries.",
+          "type": "string"
+        },
+        "run_tokens_hard_max": {
+          "description": "Source of run_tokens_hard_max.",
+          "type": "string"
+        }
+      }
+    },
+    "readiness": {
+      "description": "The work-source/v1 readiness answer, null when the next action needed none.",
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "next": {
+      "$ref": "#/$defs/next"
+    },
+    "mode": {
+      "description": "Mode of the session of this plan in autopilot.json, null when there is none.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$defs": {
+    "policy": {
+      "description": "The effective policy.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "enabled",
+        "require_readiness",
+        "max_runs",
+        "max_wall_s",
+        "max_no_progress_runs",
+        "max_auto_decisions",
+        "quota_wait_max_s",
+        "poll_s",
+        "max_recoveries",
+        "run_tokens_hard_max"
+      ],
+      "properties": {
+        "allowed": {
+          "description": "The machine allows the autopilot.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "The autopilot is enabled.",
+          "type": "boolean"
+        },
+        "require_readiness": {
+          "description": "A lane starts only when its phase is ready.",
+          "type": "boolean"
+        },
+        "max_runs": {
+          "description": "Runs per session.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_wall_s": {
+          "description": "Seconds per session.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_no_progress_runs": {
+          "description": "Runs in a row without a closed piece.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_auto_decisions": {
+          "description": "Questions answered by the advisor or panel.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "quota_wait_max_s": {
+          "description": "Longest quota wait.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "poll_s": {
+          "description": "Seconds between two looks.",
+          "type": "number",
+          "minimum": 0.1
+        },
+        "max_recoveries": {
+          "description": "Resumes per run.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "run_tokens_hard_max": {
+          "description": "Run cap handed to each run (0: none).",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "next": {
+      "description": "The next action: continue (an answered waiting run), run (the next lane), wait_answers, watch (the session drives a run) or stop (with its AUTOPILOT_* code).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "message"
+      ],
+      "properties": {
+        "action": {
+          "description": "The action.",
+          "enum": [
+            "continue",
+            "run",
+            "wait_answers",
+            "watch",
+            "stop"
+          ]
+        },
+        "code": {
+          "description": "AUTOPILOT_* stop code of a stop.",
+          "type": "string",
+          "pattern": "^AUTOPILOT_[A-Z_]+$"
+        },
+        "message": {
+          "description": "In one line.",
+          "type": "string"
+        },
+        "items": {
+          "description": "Pieces of the lane.",
+          "type": "array",
+          "items": {
+            "description": "A piece.",
+            "type": "string"
+          }
+        },
+        "phase": {
+          "description": "Phase of the lane.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "run_id": {
+          "description": "Run to continue or watch.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

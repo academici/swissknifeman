@@ -1,0 +1,6 @@
+{"root": "/ws", "workspace_id": "w-1", "git": {"branch": "main", "dirty": 2, "remote": "https://example.com/team/plans.git", "ahead": 1, "behind": 0, "diverged": false, "fetched_at": "2026-10-18T10:00:00Z"},
+ "projects": [{"project_id": "p-alpha", "name": "alpha", "bound": true, "paths": ["/work/alpha"], "plans_store": "workspace", "plans": 3},
+              {"project_id": "p-beta", "name": "beta", "bound": false, "paths": [], "plans_store": "legacy", "plans": 1}],
+ "last_sync": {"last_result": "WORKSPACE_CONFLICT", "pending_resolutions": {"projects/p-alpha/plans/a/plan.json": "local"},
+               "last_conflicts": {"conflicts": [{"path": "projects/p-alpha/plans/a/plan.json", "project_id": "p-alpha", "plan": "a", "ref": "plan.json"},
+                                                {"path": "projects/p-alpha/plans/a/log.jsonl", "project_id": "p-alpha", "plan": "a", "ref": "log.jsonl"}]}}}

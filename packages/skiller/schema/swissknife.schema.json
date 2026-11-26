@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:skiller:swissknife:v1",
+  "title": "swissknifeman project config (.swissknife.json)",
+  "description": "Legacy (deprecated for skiller keys; use [skiller] in .swissknifeman/config.toml). Easy project config: selecting buckets/exceptions/profile for channels connect (bucket-granular) and legacy vendor. Vendor-mode `skiller sync` uses a separate, extended .swissknifeman/config.json (see swissknifeman-config.schema.json). Keys are kept in sync with CONFIG_KEYS (lib/skiller/common.py) — gate tests/test_schema.py and skiller doctor.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^[_$]": {}
+  },
+  "properties": {
+    "project_type": {
+      "type": "string",
+      "description": "Project Type Profile (profiles/<id>.json): laravel-project, php-package, obsidian-vault, standalone etc. Validated against an actual set of profiles."
+    },
+    "buckets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Skill buckets for distribution."
+    },
+    "plugins": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Accurate project-local set marketplace-plugins for connect; null/missing - select by buckets/profile/autodetect."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Eliminate skills. Skill-granular in vendor; in connect (plugins) is ignored."
+    },
+    "presets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Named skill clusters (presets/<name>.json)."
+    },
+    "skills_path": {
+      "type": "string",
+      "description": "Override skills catalog (e.g. .cursor/skills for Cursor)."
+    },
+    "agent": {
+      "type": "string",
+      "enum": ["claude", "cursor", "generic"],
+      "description": "Target agent. Default skills_path: claude→.claude/skills, cursor→.cursor/skills, generic→.ai/skills."
+    },
+    "providers": {
+      "type": "object",
+      "description": "Optional provider-config v1.0.0; runtime resolution executes shared core resolver."
+    },
+    "memory_brain": {
+      "description": "Brain-valt (optional). String = path (backward compatibility: fed memory-hook). Object = doc-sync: path + synchronization rules BRAIN↔project.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to Brain-valtu."
+            },
+            "sync": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Rules doc-sync between BRAIN and the project.",
+              "properties": {
+                "direction": {
+                  "type": "string",
+                  "enum": ["push", "pull", "bidirectional"],
+                  "description": "Sync direction: push=project→BRAIN, pull=BRAIN→project, bidirectional=both."
+                },
+                "on_integrate": {
+                  "type": "boolean",
+                  "description": "Execute pull when integrate (BRAIN→project)."
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "glob-file patterns for synchronization (relative to root BRAIN/project)."
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "coordinator_ignore": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional."
+    },
+    "shape": {
+      "type": "string",
+      "enum": ["backend", "frontend", "fullstack"],
+      "description": "Project Form (agent framework profile)."
+    },
+    "stacks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Project stacks, e.g. ['laravel', 'vue']."
+    },
+    "skills_map": {
+      "type": "object",
+      "description": "Reserved: domain→skills for preloading roles under the stack (not yet implemented)."
+    },
+    "policy_profile": {
+      "type": "string",
+      "description": "Expected policy-settings profile Claude Code: the host settings doctor (`skiller doctor --settings`) checks the effective configuration of layers against the profile configs/claude-code/policy/<name>.json (e.g. max-permissive, base). Drift = find. The home of the declaration is here, not in.claude/settings.json."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "skill": "open-source-maintainer",
+  "snippets": [
+    {
+      "file": "issue-triage.md",
+      "description": "Issue triage",
+      "tags": [
+        "role"
+      ]
+    },
+    {
+      "file": "pr-review-checklist.md",
+      "description": "PR checklist",
+      "tags": [
+        "role"
+      ]
+    },
+    {
+      "file": "release-announcement.md",
+      "description": "Release announcement",
+      "tags": [
+        "role"
+      ]
+    }
+  ]
+}

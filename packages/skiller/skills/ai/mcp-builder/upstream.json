@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "anthropics/skills",
+  "strategy": "replace",
+  "license": "Apache-2.0",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/SKILL.md",
+      "sha256": "0f4592dcb53cf2b5d6b7febee6b4152018b565551a1c29e3c612f57b218ab295",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "references/mcp_best_practices.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/mcp_best_practices.md",
+      "sha256": "80fb4369a349447cf18ecdd7494fe7938b6065377e9f08c077cec411093a3007",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "references/python_mcp_server.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/python_mcp_server.md",
+      "sha256": "2da52f77e675191014ca2e146a4b95aa04d0ca7dd7e2b100322df15ade685e80",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "references/node_mcp_server.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/node_mcp_server.md",
+      "sha256": "c3ba35a4f599dd53be9c6555ae72c19a7bf412cd5426576c2c08d42755482c66",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "references/evaluation.md",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/evaluation.md",
+      "sha256": "8c99479f8a2d22a636c38e274537aac3610879e26f34e0709825077c4576f427",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "scripts/connections.py",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/scripts/connections.py",
+      "sha256": "9403668a2041568772082a8b334122c1f88daf0541fb393af4522d0094a47a6e",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "scripts/evaluation.py",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/scripts/evaluation.py",
+      "sha256": "49ed1d17cdce5da101b210197740713f49b935c29d4f339542a14b132658e6f7",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "scripts/example_evaluation.xml",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/scripts/example_evaluation.xml",
+      "sha256": "9272b348ddcc4b06ba562367ccd0770e018158c0068ac5116d5e34aaeff8777a",
+      "fetched_at": "2026-07-11"
+    },
+    {
+      "path": "scripts/requirements.txt",
+      "url": "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/scripts/requirements.txt",
+      "sha256": "d5d7558b2368ecea9dfeed7d1fbc71ee9e0750bebd1282faa527d528a344c3c7",
+      "fetched_at": "2026-07-11"
+    }
+  ],
+  "notes": "Mirror anthropics/skills skills/mcp-builder (Apache-2.0). strategy=replace: files are mirrored as is; upstream reference/ renamed to references/ under the repo convention. LICENSE.md — full text Apache-2.0 from upstream LICENSE.txt.",
+  "audit": {
+    "verdict": "attention",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "eee57c3b23fd59391822a06efd0b49ce2592b1fcdea25262896493fd7071b6e6",
+    "note": "the only bundle with executable code (scripts/connections.py, scripts/evaluation.py — pip anthropic/mcp, network, ANTHROPIC_API_KEY; read in full, no malware) + WebFetch README SDK from branch main: payload — help, not rules of conduct, accepted class"
+  }
+}

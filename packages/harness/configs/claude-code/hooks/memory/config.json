@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "default_brain": "core",
+  "brains": {
+    "core": {
+      "members": ["swissknifeman", "brain"],
+      "store": "~/.swissknifeman/memory/core",
+      "agentmemory": { "url": "http://127.0.0.1:4111", "namespace": "core" }
+    }
+  }
+}

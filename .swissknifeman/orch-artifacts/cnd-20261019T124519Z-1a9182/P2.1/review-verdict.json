@@ -1,0 +1,69 @@
+{
+  "item": "P2.1",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness (status/runs are documented as read-only commands; L7: the probe never writes)",
+          "confidence": "medium",
+          "failure_scenario": "probe_free (used by runs.effective_status for `conduct status`, `status --json`, `runs`) opens lease.lock with O_RDWR outside the try that only wraps flock. In a read-only context (a role running under ro-run/Landlock or a codex read-only sandbox, or a read-only mount) the open fails with EACCES/EROFS, and the PermissionError/OSError escapes probe_free, so `orch conduct status --run <live run>` exits with a traceback instead of printing `running`. This happens exactly when a run is live (journal running + run.json lease:true), so a read-only role that inspects the run it belongs to crashes the command. flock works on an O_RDONLY descriptor, so the probe needs no write access.",
+          "id": "F1",
+          "location": "packages/orch/lib/orch/conductor/infrastructure/lease.py:31",
+          "reproduction": "not run; from code: lease.py:31-32 (os.open O_RDWR), lease.py:64-72 (only FileNotFoundError is caught), runs.py:41-42",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "touch $D/lease.lock; chmod 444 $D/lease.lock; python3 -I -c \"...probe_free(Path('$D/lease.lock'))\" (sys.path = packages/orch/lib, packages/aicore/lib)",
+            "exit": 0,
+            "observed": "probe_free raised PermissionError(13, 'Permission denied') instead of returning a bool, so conduct status / runs would crash on a read-only lease.lock"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "`orch conduct answer --run <id> --item TYPO --question Q1 --text x` now calls questions_lock, which does mkdir(parents=True) and creates `<run>/TYPO/questions.lock` before read() returns None and QUESTION_UNKNOWN is raised. Before this change the command had no side effects. A mistyped item leaves a stray folder in the run. The error text also changed from `<item> has no questions in run <id>` to `no questions in <absolute path>`. docs/conductor.md:380 still says answer writes only questions.json.",
+          "id": "F2",
+          "location": "packages/orch/lib/orch/conductor/infrastructure/lease.py:160",
+          "reproduction": "attempt blocked by the sandbox (commands with quoted inline scripts need approval this session cannot give); from code: cli.py:121-123 -> questions.answer_file -> lease.questions_lock mkdir + FileLock(create=True)",
+          "severity": "Nit",
+          "triage_reproduction": {
+            "cmd": "python3 -I -c \"...with questions_lock(Path('$D')/'TYPO'): pass\" then os.listdir",
+            "exit": 0,
+            "observed": "directory TYPO/ was created containing questions.lock, a side effect of a mistyped --item"
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "medium",
+          "failure_scenario": "If prune --apply is killed, or rmtree fails, after directory.rename(target) and before _remove(target) finishes, `<runs root>/.pruning-<id>` remains. Neither listing nor prune (which glob only `cnd-*`) ever reports or removes it, so the partial run state (prompts, streams, answers) stays on disk with nothing pointing at it.",
+          "id": "F3",
+          "location": "packages/orch/lib/orch/conductor/runs.py:162",
+          "reproduction": "not run; from code",
+          "severity": "Nit"
+        }
+      ],
+      "model": "claude-opus-5-5",
+      "provider": "claude-code",
+      "round": 1,
+      "session": "f83b06f8-4e6c-415f-965d-857dd0bc1a06",
+      "stream": "/home/vostrikov/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/local/state/orch/conductor/cnd-20261019T124519Z-1a9182/P2.1/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2"
+        ],
+        "rejected": [
+          {
+            "finding": "F3",
+            "reason": "Nit with no running or double-writer state. A leftover .pruning-<id> after a crash between rename and rmtree comes with the rename-then-rmtree design that L6 prescribes. It only leaves unreferenced disk garbage inside the user's own runs root. Cleaning up such directories (a sweep in prune or runs) is better handled as a later improvement, not a correction in P2.1."
+          }
+        ],
+        "session": "bc23f6a8-4013-44b8-b07a-71f83af61f34"
+      },
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261019T124519Z-1a9182",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "claude-code/opus/high"
+}

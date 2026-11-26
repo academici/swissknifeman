@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# aicore — command line of the shared foundation. Thin launcher: all logic is in lib/aicore (python3 -m aicore).
+#
+# Groups:
+#   config <args>   layered module configuration: show, explain, set, unset, init, example, paths
+#   shell-env <args>  shell-profile snippet for SKM_HOME, SKM_WORKSPACES, SKM_WORKSPACE: show, install, uninstall, doctor
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: aicore requires python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+
+exec env PYTHONPATH="$ROOT/lib${PYTHONPATH:+:$PYTHONPATH}" python3 -m aicore "$@"

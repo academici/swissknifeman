@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.changelog-gate",
+        "matcher": "git.*commit",
+        "failClosed": true
+      },
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.daemon-safety",
+        "failClosed": true
+      },
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.git-guardrails",
+        "matcher": "\\bgit\\b",
+        "failClosed": true
+      },
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface security.safe-dirs",
+        "failClosed": true
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.command-log"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.pack-guard",
+        "matcher": "^(Write|Delete|Task|MCP:.*)$",
+        "failClosed": true
+      },
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.tool-telemetry"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.run-report"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.memory"
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "python3 \"${CURSOR_PROJECT_DIR:-.}/.cursor/hooks/lifecycle.py\" --surface lifecycle.review-gate",
+        "failClosed": true,
+        "loop_limit": 3
+      }
+    ]
+  }
+}

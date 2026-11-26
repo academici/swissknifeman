@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-links:v1",
+  "title": "Read Links",
+  "type": "object",
+  "description": "Bounded read-only traversal of the local link table. Foreign plans are never loaded.",
+  "properties": {
+    "ref": {
+      "description": "Requested graph root reference.",
+      "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/graphRef"
+    },
+    "edges": {
+      "type": "array",
+      "description": "Unique edges sorted by kind, from, to, relation and note.",
+      "items": {
+        "description": "One typed edge.",
+        "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/edge"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "description": "Root and every edge endpoint, sorted by reference.",
+      "items": {
+        "description": "One lightweight node.",
+        "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/node"
+      }
+    }
+  },
+  "required": [
+    "ref",
+    "edges",
+    "nodes"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "graphRef": {
+      "description": "Document reference, root plan/brief, or a brief requirement node emitted by the link table.",
+      "oneOf": [
+        {
+          "$ref": "urn:swissknifeman:task:plan:defs:v1#/$defs/ref"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "plan",
+            "brief"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^brief/B[0-9]+$"
+        }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "description": "Typed directed edge from the single plan link table.",
+      "properties": {
+        "from": {
+          "description": "Source node reference.",
+          "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/graphRef"
+        },
+        "to": {
+          "description": "Target node reference.",
+          "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/graphRef"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Link kind.",
+          "enum": [
+            "depends_on",
+            "related",
+            "decision",
+            "applies_to",
+            "unit_depends_on",
+            "parent",
+            "consumes",
+            "produces",
+            "supersedes"
+          ]
+        },
+        "relation": {
+          "type": "string",
+          "description": "Optional relation carried by the table row or source field."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional source link note."
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "description": "Lightweight node metadata; foreign references have null title and status.",
+      "properties": {
+        "ref": {
+          "description": "Node reference.",
+          "$ref": "urn:swissknifeman:task:plan:read-links:v1#/$defs/graphRef"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Document title, requirement text, or null when unavailable."
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Source document status, or null when unavailable."
+        }
+      },
+      "required": [
+        "ref",
+        "title",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

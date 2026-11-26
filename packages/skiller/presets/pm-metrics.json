@@ -1,0 +1,7 @@
+{
+  "name": "pm-metrics",
+  "description": "Metrics: unit-economics (LTV/CAC/payback/churn)",
+  "include": [
+    "pm/unit-economics"
+  ]
+}

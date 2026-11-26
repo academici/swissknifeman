@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "bindings": [
+    "native",
+    "cao",
+    "claude-only"
+  ],
+  "capabilities": [
+    {
+      "id": "prepare",
+      "native": {
+        "support": "supported"
+      },
+      "cao": {
+        "support": "supported",
+        "note": "profile dry-render"
+      },
+      "claude-only": {
+        "support": "supported",
+        "note": "prompt render"
+      }
+    },
+    {
+      "id": "run",
+      "native": {
+        "support": "supported",
+        "note": "Plan 2",
+        "by_provider": {
+          "antigravity": "unsupported"
+        }
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "cao launch, tmux"
+      },
+      "claude-only": {
+        "support": "adapted",
+        "note": "a human or Claude session executes the prompt"
+      }
+    },
+    {
+      "id": "watch",
+      "native": {
+        "support": "supported",
+        "note": "JSONL/ACP events"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "status parsed from the TUI; a parse failure becomes unknown_outcome"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    },
+    {
+      "id": "cancel",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "supported",
+          "grok": "supported",
+          "antigravity": "unknown"
+        },
+        "note": "process group SIGTERM then SIGKILL; independent of transport"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "cao shutdown"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    },
+    {
+      "id": "resume",
+      "native": {
+        "support": "adapted",
+        "by_provider": {
+          "claude-code": "adapted",
+          "codex": "adapted",
+          "grok": "adapted",
+          "antigravity": "unsupported"
+        },
+        "note": "native session resume with hash check"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "workflow replay"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    },
+    {
+      "id": "results",
+      "native": {
+        "support": "supported"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "CAO response normalization"
+      },
+      "claude-only": {
+        "support": "adapted",
+        "note": "report per result_contract converted to stage-result manually"
+      }
+    },
+    {
+      "id": "model_set",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "supported",
+          "grok": "supported",
+          "antigravity": "supported"
+        },
+        "note": "claude --model, codex --model, grok --model"
+      },
+      "cao": {
+        "support": "supported",
+        "note": "profile model"
+      },
+      "claude-only": {
+        "support": "unsupported",
+        "note": "the session model is the route"
+      }
+    },
+    {
+      "id": "model_observe",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "adapted",
+          "grok": "unknown",
+          "antigravity": "adapted"
+        },
+        "note": "claude system/init, codex events"
+      },
+      "cao": {
+        "support": "adapted"
+      },
+      "claude-only": {
+        "support": "adapted",
+        "note": "from the report"
+      }
+    },
+    {
+      "id": "effort_set",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "supported",
+          "grok": "supported",
+          "antigravity": "adapted"
+        },
+        "note": "claude --effort, codex -c model_reasoning_effort, grok --effort"
+      },
+      "cao": {
+        "support": "adapted",
+        "by_provider": {
+          "claude-code": "adapted",
+          "codex": "adapted",
+          "grok": "unsupported"
+        },
+        "note": "claudeConfig.effort, codexConfig; grok_cli has none"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    },
+    {
+      "id": "skill_delivery",
+      "native": {
+        "support": "native_plugin_dir",
+        "by_provider": {
+          "claude-code": "native_plugin_dir",
+          "codex": "isolated_home",
+          "grok": "unknown",
+          "antigravity": "unsupported"
+        },
+        "note": "claude --plugin-dir; codex CODEX_HOME with copied auth (adapted)"
+      },
+      "cao": {
+        "support": "profile_skills",
+        "note": "advertised catalog, not an ACL"
+      },
+      "claude-only": {
+        "support": "project_dir",
+        "note": "prompt_inline when the project has no skill directory"
+      }
+    },
+    {
+      "id": "tool_restrictions",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "supported",
+          "grok": "supported",
+          "antigravity": "unsupported"
+        },
+        "note": "claude --tools/--disallowedTools; codex --sandbox; grok --disallowed-tools and ro-run Landlock"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "allowedTools/role"
+      },
+      "claude-only": {
+        "support": "unsupported",
+        "note": "prompt-only"
+      }
+    },
+    {
+      "id": "plan_write_prevention",
+      "native": {
+        "support": "adapted",
+        "note": "tools and sandbox; shell can still write",
+        "by_provider": {
+          "antigravity": "unsupported"
+        }
+      },
+      "cao": {
+        "support": "adapted"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    },
+    {
+      "id": "usage",
+      "native": {
+        "support": "supported",
+        "by_provider": {
+          "claude-code": "supported",
+          "codex": "supported",
+          "grok": "supported",
+          "antigravity": "supported"
+        },
+        "note": "claude result, codex turn.completed, grok streaming-messages-json result"
+      },
+      "cao": {
+        "support": "unknown"
+      },
+      "claude-only": {
+        "support": "unknown"
+      }
+    },
+    {
+      "id": "effects",
+      "native": {
+        "support": "supported",
+        "note": "receipts are written by orch"
+      },
+      "cao": {
+        "support": "adapted",
+        "note": "outside CAO memoization; receipts are ours"
+      },
+      "claude-only": {
+        "support": "unsupported",
+        "note": "a human or registrar records effects"
+      }
+    },
+    {
+      "id": "stream_live",
+      "native": {
+        "support": "supported"
+      },
+      "cao": {
+        "support": "adapted"
+      },
+      "claude-only": {
+        "support": "unsupported"
+      }
+    }
+  ]
+}

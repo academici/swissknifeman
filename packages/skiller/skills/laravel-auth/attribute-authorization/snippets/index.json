@@ -1,0 +1,20 @@
+{
+  "skill": "attribute-authorization",
+  "snippets": [
+    {
+      "file": "CheckPermission.php",
+      "description": "Attribute #[CheckPermission]: repeatable, TARGET_METHOD, accepts enum-right (UnitEnum), list of route parameter names, abort-status and message",
+      "tags": ["attribute", "enum", "authorization", "php"]
+    },
+    {
+      "file": "CheckAccess.php",
+      "description": "Middleware-artist: ReflectionMethod::getAttributes() reads action attributes, resolves arguments from route-parameters, calls Gate::allows(right->value, arguments) with abort_if",
+      "tags": ["middleware", "reflection", "gate", "abort_if"]
+    },
+    {
+      "file": "OrderController.php",
+      "description": "Example controller: index without arguments, show with one right, update with several duplicates #[CheckPermission] and various abort-statuses",
+      "tags": ["controller", "example", "route-model-binding"]
+    }
+  ]
+}

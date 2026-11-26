@@ -1,0 +1,10 @@
+{
+  "$schema": "urn:swissknifeman:aicore:check-result:v1",
+  "check_id": "sample.config",
+  "status": "fail",
+  "category": "config",
+  "observed": "config section is missing",
+  "evidence": [".sample/config.json: not found"],
+  "remediation": "Create the config section.",
+  "repair": {"plan": ["bin/sample", "config", "init", "--dry-run"], "apply": ["bin/sample", "config", "init"]}
+}

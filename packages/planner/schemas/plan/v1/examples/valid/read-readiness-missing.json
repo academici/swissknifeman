@@ -1,0 +1,14 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:read-readiness:v1",
+  "plan": "2026.10.07-\u21161-LIFE",
+  "phases": [
+    {
+      "id": "P1",
+      "status": "missing",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "certificate": null,
+      "changed": []
+    }
+  ]
+}

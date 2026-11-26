@@ -1,0 +1,23 @@
+{
+  "changed_paths": [
+    "packages/workspace/lib/workspace/sync.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "A local-only file name containing glob characters could un-track other tracked files at commit time.",
+      "kind": "note",
+      "next": "Pass env=_literal_env() to that rm --cached call in a follow-up.",
+      "text": "Same pathspec weakness remains in _step_commit: `git rm --cached -- <untracked local-only paths>` (sync.py ~line 270) takes file names as pathspecs. Left unchanged because the finding named only the conflict-resolution path and the instruction was to change nothing else."
+    },
+    {
+      "impact": "The four fixed behaviours have no regression tests.",
+      "kind": "note",
+      "next": "Add tests in tests/test_sync.py in a follow-up piece.",
+      "text": "Tests were run only as test_sync and test_remote. No new test was added for the four fixes (late-changed file, glob-named conflict file, deleted remote branch with stale tracking ref, tag named like the branch); tests are outside the stated scope."
+    }
+  ],
+  "summary": "sync.py: (1) _recheck_staged re-scans the staged names after git add -A and blocks (PUBLISH_BLOCKED, unstages offenders, rule PS-CHANGED-DURING-SYNC for newly local-only files) if content changed after the first scan; (2) _apply_side runs its git calls with GIT_LITERAL_PATHSPECS=1 so conflict file names are not pathspecs; (3) _step_push asks the remote via ls-remote refs/heads/<branch> instead of trusting the tracking ref, so a deleted remote branch is pushed again; (4) push destination is HEAD:refs/heads/<branch>. tests.test_sync and tests.test_remote pass; no new tests were added.",
+  "status": "done"
+}

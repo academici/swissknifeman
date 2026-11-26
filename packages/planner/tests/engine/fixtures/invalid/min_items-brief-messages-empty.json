@@ -1,0 +1,24 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:brief:v1",
+  "messages": [],
+  "requirements": [
+    {
+      "id": "B1",
+      "text": "Report all problems at once.",
+      "source": "M1",
+      "owners": [
+        "P1",
+        "P1.1"
+      ]
+    }
+  ],
+  "constraints": [
+    "stdlib only"
+  ],
+  "environment": [
+    "Python 3.12"
+  ],
+  "out_of_scope": [
+    "CLI flags"
+  ]
+}

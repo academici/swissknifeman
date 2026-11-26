@@ -1,0 +1,4 @@
+#!/bin/sh
+# Terminal control sequences that must never reach a client.
+printf '\033]0;evil title\007\033[31mred\033[0m \033]8;;http://evil.example\033\\link\033]8;;\033\\ plain\n'
+printf 'bell\007 back\010space \033[2J\033[Hclear\n'

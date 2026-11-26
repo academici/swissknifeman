@@ -1,0 +1,25 @@
+{
+  "skill": "laravel-broadcasting",
+  "snippets": [
+    {
+      "file": "broadcast-event.php",
+      "description": "Broadcast-event: ShouldBroadcast/AfterCommit, broadcastOn/As/With/When, toOthers, model broadcasting",
+      "tags": ["broadcasting", "event", "queue"]
+    },
+    {
+      "file": "channels.php",
+      "description": "Authorization of channels in routes/channels.php: private (bool), presence (array), model binding, guards",
+      "tags": ["broadcasting", "channels", "authorization"]
+    },
+    {
+      "file": "echo-client.ts",
+      "description": "Configuration Laravel Echo for Reverb: VITE_REVERB_*, Sanctum-authorizer, listen/notification",
+      "tags": ["broadcasting", "echo", "client", "reverb"]
+    },
+    {
+      "file": "presence-whisper.ts",
+      "description": "Presence-channel (here/joining/leaving) and whisper for typing-indicators",
+      "tags": ["broadcasting", "presence", "whisper", "client"]
+    }
+  ]
+}

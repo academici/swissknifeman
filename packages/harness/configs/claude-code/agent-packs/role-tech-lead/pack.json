@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "pack": "role-tech-lead",
+  "version": "0.2.3",
+  "description": "Persona-pack tech-lead (role, not stack): subagents sprint-planner (kickoff/decomposition/context distribution), delegation-triage (do-it-yourselfvs-delegate + brief with DoD + technical debt accounting), review-gatekeeper (review process with severity-gradation, reconciliation with the branch model, escalation of architecture to CTO). Delegate-only/coordination - roles are not written in code. Stretches like companion to a stack pack with the same PACK_PREFIX.",
+  "stack": {
+    "shape": "role"
+  },
+  "requires": {
+    "skills": [
+      "complex-task-orchestrator",
+      "task-brief-template",
+      "cross-layer-change-checklist",
+      "session-handoff",
+      "git-commit-rules",
+      "code-review",
+      "test-strategy",
+      "tech-debt-audit",
+      "refactoring-plan",
+      "gitops",
+      "github-flow",
+      "gh-review",
+      "startup-cto",
+      "to-issues",
+      "diagnosing-bugs",
+      "tdd-discipline"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Project agent name prefix (like a stack pack)?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/sprint-planner.md",
+      "target": ".claude/agents/{PACK_PREFIX}-sprint-planner.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/delegation-triage.md",
+      "target": ".claude/agents/{PACK_PREFIX}-delegation-triage.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/review-gatekeeper.md",
+      "target": ".claude/agents/{PACK_PREFIX}-review-gatekeeper.md",
+      "kind": "template",
+      "role": "agent"
+    }
+  ],
+  "notes": {
+    "prerequisite": "Companion-pack to stack pack. {PACK_PREFIX} must match the stackpack prefix/_common, to @<prefix>-<role> in plans resolved into real roles (slice-builder/test-writer/reviewer/component-builder).",
+    "persona": "The role is selected, not detected - therefore stack.shape=role, without project_type/detect.",
+    "verify_workflow": "All files are agents (not a work flow): node --check do not apply.",
+    "model_selection": "Each agent's model is resolved from interview MODEL_<ROLE> (default inherit, enum inherit/opus/sonnet/haiku) — the only source of truth, like stack packs/_common."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:state:v1",
+  "claims": {},
+  "items": {
+    "W1": {
+      "orch_run": "run-3f3f3f3f3f3f",
+      "skills_auto": {
+        "executor": {
+          "discoverable": [],
+          "excluded": [{"id": "lib:legacy", "reason": "budget"}],
+          "skills": [{"digest": "3f3f3f3f3f3f", "id": "lib:python", "name": "python", "path": "/home/owner/skills/python/SKILL.md", "reason": "write set", "tokens": 120}],
+          "tokens": 120
+        }
+      },
+      "skills_checked": {
+        "executor": {"excluded": [], "names": ["python"]}
+      },
+      "steps": {
+        "brief": {"ended": "2026-10-22T12:00:01Z", "result": {"input_path": "/home/owner/project/.swissknifeman/state/orch/conductor/cnd-20261022T120000Z-a1b2c3/W1/input.json"}, "role": "deterministic", "route": null, "status": "done", "verdict": "done"},
+        "commit": {"ended": "2026-10-22T12:30:00Z", "result": {"outcome": "committed", "sha": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"}, "role": "deterministic", "route": null, "status": "done", "verdict": "committed 3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"},
+        "executor.1": {"attempt": "attempt-1", "base_head": "3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f", "dirty_before": null, "role": "executor", "route": "claude-code/sonnet/high", "started_at": "2026-10-22T12:00:02Z", "status": "started"}
+      }
+    }
+  },
+  "status": "running",
+  "tokens": {"input": 0, "output": 0}
+}

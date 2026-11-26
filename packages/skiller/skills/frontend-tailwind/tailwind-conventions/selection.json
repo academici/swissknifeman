@@ -1,0 +1,18 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "domain",
+  "decision": "KEEP",
+  "also": [
+    "OVERLAY"
+  ],
+  "triggers": {
+    "paths": [
+      "*.vue",
+      "*.tsx",
+      "tailwind.config.*"
+    ],
+    "deps": [
+      "npm:tailwindcss"
+    ]
+  }
+}

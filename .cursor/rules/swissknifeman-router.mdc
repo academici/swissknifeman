@@ -1,0 +1,12 @@
+---
+alwaysApply: false
+---
+<!-- semantic:cursor.lifecycle.router.session-scoped-static -->
+## Cursor planner routing (explicit invocation only)
+
+This managed rule is generated from the aicore model catalog.
+Apply only when the owner explicitly invokes planner or attaches this manual rule.
+Ordinary requests and existing plan files do not activate planner.
+
+- Model selectors: economy=composer-2.5-fast, implementation=composer-2.5, frontier=claude-opus-5-thinking-high.
+- Never replace fixed frontier or fixed implementation routes with `auto`.

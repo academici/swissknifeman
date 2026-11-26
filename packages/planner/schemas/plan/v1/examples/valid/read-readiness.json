@@ -1,0 +1,39 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:read-readiness:v1",
+  "plan": "2026.10.07-\u21161-LIFE",
+  "phases": [
+    {
+      "id": "P1",
+      "status": "ready",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "policy_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "certificate": {
+        "status": "ready",
+        "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "policy_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "validator_version": "0.33.0",
+        "checked_at": "2026-10-24T10:00:00Z",
+        "structural": {
+          "errors": 0,
+          "warnings": 0,
+          "external": {
+            "errors": 0,
+            "warnings": 0
+          }
+        },
+        "audit": {
+          "ref": "knowledge/audit-p1-test",
+          "verdict": "GREEN"
+        },
+        "findings": [],
+        "actor": {
+          "provider": "codex",
+          "model": "gpt-6-astra",
+          "effort": "xhigh"
+        },
+        "independent": true
+      },
+      "changed": []
+    }
+  ]
+}

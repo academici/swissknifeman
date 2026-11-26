@@ -1,0 +1,117 @@
+---
+name: release-discipline
+bucket: repository-bootstrap
+version: 0.1.0
+description: "Closing out any substantive change in this repository: validate.sh → skiller registry → CHANGELOG [Unreleased] → PR; semver tag rules. Activate before every commit/PR and when preparing a release."
+risk: draft
+persona: oss-dev
+tags: [release, changelog, validate, root-bootstrap]
+requires: []
+produces_for: []
+outputs: [chat]
+snippets: []
+adapters: [claude, cursor, fable]
+sha256: ""
+---
+
+# Change and release closeout discipline
+
+Internal skill (not exported). The **procedure** for finalizing a change; what exactly is
+generated and by what — [package-architecture]; the canonical Releases & Tagging section —
+`CONTRIBUTING.md`.
+
+[package-architecture]: ../package-architecture/SKILL.md
+[skill-authoring]: ../skill-authoring/SKILL.md
+[docs-maintenance]: ../docs-maintenance/SKILL.md
+[field-feedback-loop]: ../field-feedback-loop/SKILL.md
+
+## When to activate
+
+- Before any commit/PR in this repository.
+- When preparing a release tag.
+
+## Change closeout algorithm
+
+1. `bash packages/<package>/scripts/validate.sh` green for the affected package
+   (`skiller`/`harness`/`maind`; CI runs the same scripts). There is no root-level
+   `scripts/validate.sh`.
+2. Something under `skills/`, `generate-skill/`, `buckets.json` changed → `skiller registry`;
+   regenerated artifacts are committed **together** with the change (the validator fails on stale
+   manifests).
+3. Generated files are never hand-edited (list — [package-architecture]).
+4. A substantive change → an entry in CHANGELOG `[Unreleased]`, in the style of existing entries
+   (grouping, bold lead, Russian text).
+   Trivial changes (typos, formatting) — no CHANGELOG entry.
+5. PR.
+6. Run the [docs-maintenance] decision (does docs/ need updating).
+7. Before tagging run `python3 scripts/release-check.py vX.Y.Z --fix`, then without `--fix` (and `--full` for the
+   whole test pass): it syncs and verifies every version surface (CHANGELOG heading, `unit.json` = `package.json` =
+   plugin manifests = `__version__`, planner surfaces and projections, ownership table, bridge ranges, golden,
+   `releases/vX.Y.Z.json`, registry drift). A new surface that bit a release belongs in that script.
+8. After the annotated tag exists locally and points at `HEAD`, run
+   `./bin/swissknifeman release-fleet vX.Y.Z`. This validates the tag and attestation, delivers
+   every registered project, updates provider-native caches, prunes only unreferenced
+   exact-attested superseded SKM caches, runs `maind sync --all`, and proves the resulting sync is
+   idempotent. Use `--dry-run` for a preflight. The workflow never creates, moves, or pushes a tag
+   and never publishes a GitHub release.
+
+## Tags and versions
+
+- Annotated semver tags: `git tag -a vX.Y.Z -m "..."`.
+- **minor** — framework capabilities (CLI, installer, sync/registry, validator, schemas);
+  **patch** — skill content and fixes.
+- On tagging: `[Unreleased]` → `[X.Y.Z]` in CHANGELOG; pushing the tag — manual.
+- Tags are human markers: Claude Code plugin versions resolve to a git SHA and don't depend on
+  tags.
+- A release is incomplete until `release-fleet` succeeds. Cache deletion is fail-closed: an
+  unreferenced cache is pruned only when its bytes exactly match the current attestation or a
+  committed tagged release snapshot. A changed/unknown cache, unavailable provider state, or a
+  provider reference keeps it blocked.
+
+## Versioning and provider caches
+
+Provider caches are keyed by plugin version (`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>`).
+Changed bytes under an unchanged version are never re-fetched, so a stale `planner` (or any unit)
+keeps serving old commands until its version changes. Every shipped change to a unit needs a bump.
+
+- Owners (`configs/release-units.json`): `planner` follows the **umbrella** (top released CHANGELOG
+  heading, set by `skiller release`); `maind`/`analyst`/`harness`/`skiller` own
+  `packages/<name>/package.json` (+ `package-lock.json`, `.claude-plugin/plugin.json`);
+  skill units own their entry in `packages/skiller/configs/publication-versions.json`.
+- Changing only `planner` still means a new umbrella version: bump through `skiller release`, not by hand.
+- Check: `python3 scripts/version-guard.py status [--installed]` lists units whose content differs
+  from the last `releases/v*.json` snapshot but keep the same version (exit 1), and with
+  `--installed` the installed plugin versions that lag behind the repo.
+- Fix: `python3 scripts/version-guard.py bump <unit> [--part patch|minor|X.Y.Z]`, then
+  `skiller registry` and `version-guard.py status` again.
+- Installed copies refresh only after the tag: `./bin/swissknifeman release-fleet vX.Y.Z`, then
+  restart provider sessions. A SHA-keyed install follows the marketplace ref instead
+  (`claude plugin marketplace update`).
+
+## Checklist
+
+- [ ] `version-guard.py status` reports no NOT-BUMPED unit.
+- [ ] validate is green.
+- [ ] Regenerated output committed together with the change.
+- [ ] Generated files were not hand-edited.
+- [ ] CHANGELOG updated (or the change is trivial).
+- [ ] docs/ decision recorded ([docs-maintenance]).
+- [ ] `release-fleet vX.Y.Z` is green, including the post-apply dry-run.
+
+## Related skills
+
+[package-architecture] (map), [skill-authoring] (authoring), [docs-maintenance] (handoff),
+[field-feedback-loop] (a common source of changes — a deviation caught in field work).
+
+## Links
+
+`CONTRIBUTING.md` (Releases & Tagging), `CHANGELOG.md`.
+
+## Provenance (root-bootstrap, P1.2)
+
+Class-A private/source-only root-bootstrap identity (D31/D38):
+canonical source is this `SKILL.md`; thin projections —
+`.claude/skills/release-discipline/SKILL.md` and `.agents/skills/release-discipline/SKILL.md`
+(generated by `skiller registry`, never hand-edited). Bucket `repository-bootstrap` is
+private/source-only: never published as an ordinary unit/core/marketplace entry, never
+vendored/connected into a consumer project.

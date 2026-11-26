@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# swissknifeman — umbrella CLI: a thin launcher for scripts/umbrella.py.
+# Modules and their command groups are found by unit.json; aliases of former groups are data in
+# configs/umbrella.json. Run `swissknifeman help` for the generated list.
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+export PYTHONPATH="$ROOT/packages/aicore/lib${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 "$ROOT/scripts/umbrella.py" "$@"

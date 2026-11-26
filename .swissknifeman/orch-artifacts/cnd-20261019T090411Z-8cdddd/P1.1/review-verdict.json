@@ -1,0 +1,114 @@
+{
+  "item": "P1.1",
+  "rounds": [
+    {
+      "effort": "high",
+      "findings": [
+        {
+          "basis": "correctness",
+          "confidence": "medium",
+          "failure_scenario": "The RO_RUN_RW_ESCAPE check only looks at --rw paths inside DIR. `ro-run.py --protect /w --rw /w -- cmd` passes, because the path is inside-or-equal and not a symlink. `--protect /w --rw /home/u` (an ancestor) passes unchecked. Either way the whole protected tree becomes writable with exit 0, although --protect is meant to be fail-closed (D11). The shipped catalog entries cannot reach this. The runtime --rw addition in roles.py:381 only targets the executor, which has no --protect. A future caller or hand-written argv can.",
+          "id": "F1",
+          "location": "packages/orch/scripts/ro-run.py:53",
+          "reproduction": "Read-only analysis of _protect: for --rw equal to DIR, `_inside(absolute, directory)` is true, lstat is not a symlink and `_inside(real, resolved)` is true, so no error. For an ancestor, none of the three `_inside` tests is true, so the loop does nothing.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "W=$(mktemp -d -p $PWD .tri-XXXX); python3 -I packages/orch/scripts/ro-run.py --protect $W --rw $W -- true; python3 -I packages/orch/scripts/ro-run.py --protect $W --rw $PWD -- true",
+            "exit": 0,
+            "observed": "Both calls exit 0 with no RO_RUN_RW_ESCAPE; the protected tree is granted writable."
+          }
+        },
+        {
+          "basis": "security",
+          "confidence": "low",
+          "failure_scenario": "The overlap check only tests whether DIR is inside a default writable root. It does not test whether a default root resolves inside DIR. With HOME inside the checkout (or ~/.grok a symlink into it), `<checkout>/.grok` stays writable under --protect. A protected role can then write files into the checkout, including Grok's own config directory.",
+          "id": "F2",
+          "location": "packages/orch/scripts/ro-run.py:47",
+          "reproduction": "Read-only analysis. HOME=<DIR> makes roots[3]=<DIR>/.grok. `_inside(<DIR>, <DIR>/.grok)` is false, so there is no refusal, and the realpath'd root stays in `writable`.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "W=$(mktemp -d -p $PWD .tri-XXXX); HOME=$W python3 -I packages/orch/scripts/ro-run.py --protect $W -- true",
+            "exit": 0,
+            "observed": "exit 0; the default root $W/.grok resolves inside the protected DIR and stays writable."
+          }
+        },
+        {
+          "basis": "project rule",
+          "confidence": "medium",
+          "failure_scenario": "ProtectedRunTests.setUp creates its checkout in `SCRIPT.parents[3]`, assumed to be the repo root. If the repo sits under /tmp, /var/tmp or ~/.grok, the probe exits 3 with RO_RUN_PROTECT_OVERLAP. setUp only skips on LANDLOCK_UNAVAILABLE and ABI_TOO_OLD, so the next assertEqual fails instead of skipping. In an own-repo layout (module split) parents[3] is no longer the repo root. A killed run also leaves `.ro-run-test-*` in the repo root. The guidance suggested a directory under ~/.cache.",
+          "id": "F3",
+          "location": "packages/orch/tests/test_ro_run.py:112",
+          "reproduction": "Run the test from a checkout located under /tmp.",
+          "severity": "Minor",
+          "triage_reproduction": {
+            "cmd": "python3 -I packages/orch/scripts/ro-run.py --protect $TMPDIR -- true  (stands in for a repo under /tmp); sed -n 108,120p packages/orch/tests/test_ro_run.py",
+            "exit": 3,
+            "observed": "RO_RUN_PROTECT_OVERLAP with exit 3; the setUp skip condition covers only LANDLOCK_UNAVAILABLE and LANDLOCK_ABI_TOO_OLD, so the next assertEqual fails instead of skipping."
+          }
+        },
+        {
+          "basis": "input contract",
+          "confidence": "medium",
+          "failure_scenario": "test_without_a_project_the_run_is_refused_with_the_flag_named now patches the private `aicore.state.locations._marker_found` to False and blanks the SKM_* env vars. This is unrelated to Grok launch. It hides the environment condition that made the test fail on the executor's host (an ancestor of /tmp carries a project marker) and couples the test to a private aicore function.",
+          "id": "F4",
+          "location": "packages/orch/tests/test_conductor.py:2044",
+          "reproduction": "git diff packages/orch/tests/test_conductor.py, hunk at ProjectContextTests.",
+          "severity": "Minor"
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "On a kernel without Landlock, the syscall returns -1. With --protect the user sees `LANDLOCK_ABI_TOO_OLD: -1` and never gets LANDLOCK_UNAVAILABLE with the errno text. The same Landlock-less kernel without --protect still reports LANDLOCK_UNAVAILABLE. The contract says ABI < 3, so this is defensible. The message is misleading.",
+          "id": "F5",
+          "location": "packages/orch/scripts/ro-run.py:104",
+          "reproduction": "Read-only analysis: the `protected and abi < 3` branch precedes the `abi < 1` branch.",
+          "severity": "Nit",
+          "triage_reproduction": {
+            "cmd": "python3 -I with ro-run.py loaded as a module and _landlock_abi patched to -1; m.restrict([], ['/x'])",
+            "exit": 3,
+            "observed": "prints LANDLOCK_ABI_TOO_OLD: -1 instead of LANDLOCK_UNAVAILABLE with the errno text."
+          }
+        },
+        {
+          "basis": "correctness",
+          "confidence": "high",
+          "failure_scenario": "test_no_protect_preserves_default_writes_and_symlink_grants sits in ProtectedRunTests, whose setUp skips on ABI < 3. The 'behaviour without --protect is unchanged' check therefore disappears on ABI 1/2 kernels, where it is most relevant. It also never asserts that the default-root write file exists.",
+          "id": "F6",
+          "location": "packages/orch/tests/test_ro_run.py:148",
+          "reproduction": "Read-only analysis of setUp's skipTest condition.",
+          "severity": "Nit",
+          "triage_reproduction": {
+            "cmd": "sed -n 108,120p packages/orch/tests/test_ro_run.py",
+            "exit": 0,
+            "observed": "setUp calls skipTest on LANDLOCK_ABI_TOO_OLD for the whole class, which includes test_no_protect_preserves_default_writes_and_symlink_grants; that test never asserts the default-root file exists."
+          }
+        }
+      ],
+      "model": "claude-sonnet-5-5",
+      "provider": "claude-code",
+      "round": 1,
+      "session": "27353475-1fba-4110-a5a6-54993e8bd5de",
+      "stream": "/home/vostrikov/.local/share/swissknifeman/workspaces/axioma/projects/swissknifeman/local/state/orch/conductor/cnd-20261019T090411Z-8cdddd/P1.1/streams/review.1.jsonl",
+      "triage": {
+        "confirmed": [
+          "F1",
+          "F2",
+          "F3",
+          "F5",
+          "F6"
+        ],
+        "rejected": [
+          {
+            "finding": "F4",
+            "reason": "The _marker_found patch is test isolation inside the write set. It is not a Grok launch defect and breaks no acceptance command or stated rule. The finding gives no failing scenario, only coupling to a private aicore function. Not a Blocker or Major."
+          }
+        ],
+        "session": "069d0936-670b-4358-8c09-c9570a27250a"
+      },
+      "verdict": "GREEN"
+    }
+  ],
+  "run": "cnd-20261019T090411Z-8cdddd",
+  "schema": "orch-conductor-review-verdict/v1",
+  "selector": "claude-code/sonnet/high"
+}

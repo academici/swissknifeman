@@ -1,0 +1,6 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:risk:v1",
+  "score": 0,
+  "features": [],
+  "run": "cnd-20261022T100000Z-a1b2c3"
+}

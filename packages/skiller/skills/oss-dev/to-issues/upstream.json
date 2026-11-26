@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-issues/SKILL.md",
+      "sha256": "f8a72a5bc88aa830ae62b323a52b08934da52851b010984c55829a644c7f6ba6",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "From mattpocock/skills engineering/to-issues (disable-model-invocation saved). Body saved (English) + RU description-router; /setup-matt-pocock-skills replaced by gh+github-flow; in issue-template sections added «Affected projects» and «Environment» (multi-project/device); section «Related skills». strategy=notify. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "3b78611de8420847cff1d2928ee28f8c98b4fd71c0a5cfc34df7eca65d23491e"
+  }
+}

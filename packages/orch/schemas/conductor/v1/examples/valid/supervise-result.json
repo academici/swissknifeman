@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:orch:conductor:supervise-result:v1",
+  "busy": false,
+  "recover": "resume",
+  "actions": [
+    {"$schema": "urn:swissknifeman:orch:records:supervisor-action:v1", "at": "2026-10-24T10:00:00Z", "run_id": "cnd-1",
+     "health": "orphaned", "reason_code": "RUN_ORPHANED", "action": "reap", "detail": "stopped 1 orphaned role group(s), closed 1 agent record(s)"}
+  ]
+}

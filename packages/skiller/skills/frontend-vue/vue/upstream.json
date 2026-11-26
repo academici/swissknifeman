@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/SKILL.md",
+      "sha256": "f6c27e0f1cf037b26ded2a0b3c6a6bb537d7a8fb7cd7745448aa85bc01fc3a76",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/advanced-patterns.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/advanced-patterns.md",
+      "sha256": "f6b9e26e3ae582dca1dfe01261c9800cd8f8dec511384d6bc816848209d2bc51",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/core-new-apis.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/core-new-apis.md",
+      "sha256": "4afa9fdcdf62d2300d86686f890e4a52cbbed48e4c13a3e15f3e4572185c90ed",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/script-setup-macros.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/script-setup-macros.md",
+      "sha256": "ad47db85f8fbda6c055cedcc1d4175cd79d414e9be3ebf1e631d0e493eb4480a",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/vue/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "f9eed49447c7ed920bacd01f9a8416ac45129253c5137a502564be42a093e524"
+  }
+}

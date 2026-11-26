@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:supervise-result:v1",
+  "title": "supervise-result",
+  "description": "What `orch conduct supervise --json` prints for one pass: the actions of the supervisor (each is a records/v1 supervisor-action line of <run>/supervisor.jsonl), or busy when another supervisor of the project holds <runs root>/supervisor.lock.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "busy", "actions"],
+  "properties": {
+    "$schema": {"description": "Producer schema.", "const": "urn:swissknifeman:orch:conductor:supervise-result:v1"},
+    "busy": {"description": "True when another supervisor holds the project; nothing was done.", "type": "boolean"},
+    "recover": {"description": "The effective policy of the pass.", "enum": ["notify", "stop-only", "resume"]},
+    "actions": {
+      "description": "The actions of the pass, in order; empty when every run was healthy or already reported.",
+      "type": "array",
+      "items": {
+        "description": "One action (supervisor-action).",
+        "type": "object",
+        "required": ["run_id", "health", "action", "detail"],
+        "properties": {
+          "run_id": {"description": "The run.", "type": "string", "minLength": 1},
+          "health": {"description": "Class of health.", "type": "string"},
+          "action": {"description": "What was done.", "type": "string"},
+          "detail": {"description": "In one line.", "type": "string"}
+        }
+      }
+    }
+  }
+}

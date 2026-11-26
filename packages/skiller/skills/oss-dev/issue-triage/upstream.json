@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "mattpocock/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/SKILL.md",
+      "sha256": "d45827c299c021f77b0f146fefa3ee679b13f99e9a2ffdf48e8de2347adeefe1",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/AGENT-BRIEF.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/AGENT-BRIEF.md",
+      "sha256": "5b78d347cc53f6bcf7b875106005ccf5315055fa4cf75eb28d41e96ee426d27b",
+      "fetched_at": "2026-06-26"
+    },
+    {
+      "path": "snippets/OUT-OF-SCOPE.md",
+      "url": "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/triage/OUT-OF-SCOPE.md",
+      "sha256": "2526f998fd7ca5e956d3f6f234bcc2431a5971ee769f1148ddc60b92f04d5914",
+      "fetched_at": "2026-06-26"
+    }
+  ],
+  "notes": "From mattpocock/skills engineering/triage (name -> issue-triage; disable-model-invocation saved). Body saved (English) + RU description-router; /setup-matt-pocock-skills -> config gh+labels; /grilling+/domain-modeling -> grill-with-docs; role added needs-device-access + transitions for embedded (POS/libfptr10); disclaimer in Russian; sub-files -> snippets/; «Related skills» + agent binding issue-triager. strategy=notify. 2026-09-14: Local discovery metadata shortened for startup budget; canonical body/reference content unchanged by this metadata pass. Public skill identity and operational boundaries preserved.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "0adb1d9356a4b8c4705e4a500e20bbb8f1b97fc22f3cbac04579cb614c57d611"
+  }
+}

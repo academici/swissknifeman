@@ -1,0 +1,4 @@
+#!/bin/sh
+# Prints every argument on its own line and the working folder.
+for arg in "$@"; do printf 'arg:%s\n' "$arg"; done
+printf 'cwd:%s\n' "$(pwd -P)"

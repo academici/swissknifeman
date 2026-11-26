@@ -1,0 +1,10 @@
+{
+  "features": [
+    {
+      "evidence": "x",
+      "name": "schema",
+      "weight": 45
+    }
+  ],
+  "score": 45
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:event-data:orch-provider-quota-exhausted:v1",
+  "title": "orch.provider.quota-exhausted",
+  "description": "A provider refused for quota, or is gated for it.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the run."
+    },
+    "work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Id of the piece of work (the input id of the work source)."
+    },
+    "item": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Reference of the piece of work in its plan."
+    },
+    "role": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Role that was waiting for the provider."
+    },
+    "step": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}$",
+      "description": "Step of the role."
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider."
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "PROVIDER_WAIT",
+        "CAPACITY_GATED"
+      ],
+      "description": "Beacon."
+    },
+    "until": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Reset time of the limit, UTC, when known."
+    },
+    "wait_s": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Seconds the conductor waits."
+    }
+  },
+  "required": [
+    "run_id",
+    "provider",
+    "reason_code"
+  ],
+  "additionalProperties": false
+}

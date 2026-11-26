@@ -1,0 +1,128 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "demo",
+  "version": "0.1.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "handler": {
+    "extension": "handler/extension.json"
+  },
+  "routes": [
+    {
+      "id": "demo.greet",
+      "title": "Greet",
+      "path": "greet",
+      "view": "command-form",
+      "scope": "project",
+      "command": "demo.greet",
+      "nav": {
+        "section": "project",
+        "order": 10
+      }
+    },
+    {
+      "id": "demo.ticks",
+      "title": "Ticks",
+      "path": "ticks",
+      "view": "command-form",
+      "scope": "fleet",
+      "command": "demo.ticks",
+      "nav": {
+        "section": "fleet",
+        "order": 10
+      }
+    }
+  ],
+  "widgets": [
+    {
+      "id": "demo.summary",
+      "title": "Demo summary",
+      "view": "metric-group",
+      "query": "demo.summary",
+      "scope": "fleet",
+      "size": "medium"
+    }
+  ],
+  "queries": [
+    {
+      "id": "demo.summary",
+      "title": "Demo summary",
+      "scope": "fleet",
+      "returns": "metric-group",
+      "timeout_s": 30
+    }
+  ],
+  "commands": [
+    {
+      "id": "demo.greet",
+      "title": "Greet",
+      "description": "Say hello to someone.",
+      "scope": "project",
+      "input": [
+        {
+          "name": "name",
+          "title": "Name",
+          "type": "string",
+          "required": true,
+          "pattern": "^[A-Za-z]+$"
+        }
+      ],
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "supports": [
+        "dry-run",
+        "stream"
+      ],
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/greet",
+          {
+            "input": "name"
+          }
+        ],
+        "cwd": "project"
+      },
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      }
+    },
+    {
+      "id": "demo.ticks",
+      "title": "Ticks",
+      "description": "Tick ten times a second for a minute.",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "supports": [
+        "cancel",
+        "stream"
+      ],
+      "timeout_s": 120,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/ticks"
+        ],
+        "cwd": "owner"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1265 @@
+{
+  "schema_version": 1,
+  "_doc": "Every config has one owner and at least one consumer. Checked by scripts/test-config-inventory.py (CI hygiene). Decisions: plan PLAN2 knowledge configs-p11. Optional descriptors of an entry: kind, format, schema (a tracked schema file or \"native\": the provider or tool defines the format), generated (written by a tool, not by hand) and live_path (where the effective copy lives, null when the tracked file is read in place).",
+  "scope": [
+    "configs/*.json",
+    ".codex/config.toml.example",
+    ".grok/config.toml.example",
+    "packages/*/configs/*.json",
+    "bridges/*/*.json",
+    "packages/harness/configs/**/*.json",
+    "packages/skiller/budget-configs/*.json",
+    "packages/skiller/schema/*.json",
+    "packages/skiller/.swissknifeman.example/*.json",
+    "packages/*/config.example.toml",
+    "packages/orch/configs/run-policies/**",
+    "packages/orch/bindings/**/*.json",
+    "packages/orch/roles/*",
+    "packages/skiller/presets/**",
+    "packages/skiller/profiles/**",
+    ".codex/**",
+    ".cursor/**",
+    ".grok/**"
+  ],
+  "entries": [
+    {
+      "path": "packages/analyst/configs/config.schema.json",
+      "owner": "analyst",
+      "consumers": [
+        "packages/analyst/lib/analyst/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "analyst thresholds, schema defaults and generated config.example.toml"
+    },
+    {
+      "path": "packages/harness/configs/config.schema.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks_env.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "harness hook modes in [harness.hooks] (rendered to the committed .swissknifeman/hooks.env) and policy_profile"
+    },
+    {
+      "path": "packages/harness/configs/safe-dirs.example.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/safedirs.py"
+      ],
+      "released": false,
+      "note": "template of the safe-dirs list that `harness safe-dirs init` copies to <config>/harness/safe-dirs.json"
+    },
+    {
+      "path": "packages/brain/configs/config.schema.json",
+      "owner": "brain",
+      "consumers": [
+        "packages/brain/lib/brain/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "brain vault path, catalog folder, document sync and notes"
+    },
+    {
+      "path": "packages/skiller/configs/config.schema.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/skillset.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "skiller skill selection (buckets, plugins, profile) and vendor sync in [skiller] and [skiller.sync]"
+    },
+    {
+      "path": "packages/planner/configs/config.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/integration/config.py",
+        "packages/planner/lib/planner/plan/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "planner thresholds, defaults of new plans and items, review loop policies, view templates, orchestration scenarios, events and external checks in [planner]"
+    },
+    {
+      "path": "packages/maind/configs/config.schema.json",
+      "owner": "maind",
+      "consumers": [
+        "packages/maind/lib/maind/config.py",
+        "packages/maind/lib/maind/derive.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "maind node settings in [maind] (node, memory, graph and its links, code graph policy, agent timings, integrations, mcp policy, observability); generated config.example.toml"
+    },
+    {
+      "path": "packages/aicore/configs/config.schema.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/ext/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "aicore settings: events, subscriptions, plugins, overlays and the provider selection of a project"
+    },
+    {
+      "path": ".codex/config.toml.example",
+      "owner": "root",
+      "consumers": [
+        "user:copies to .codex/config.toml",
+        "packages/aicore/configs/gitignore-policy.json"
+      ],
+      "released": true,
+      "note": "sample",
+      "kind": "provider-config-sample",
+      "format": "toml",
+      "schema": "native",
+      "generated": false,
+      "live_path": ".codex/config.toml"
+    },
+    {
+      "path": ".grok/config.toml.example",
+      "owner": "root",
+      "consumers": [
+        "user:copies to .grok/config.toml",
+        "packages/aicore/configs/gitignore-policy.json"
+      ],
+      "released": true,
+      "note": "sample",
+      "kind": "provider-config-sample",
+      "format": "toml",
+      "schema": "native",
+      "generated": false,
+      "live_path": ".grok/config.toml"
+    },
+    {
+      "path": "packages/maind/configs/registry.example.json",
+      "owner": "maind",
+      "consumers": [
+        "packages/maind/install.sh",
+        "packages/maind/lib/maind/common.py",
+        "packages/maind/lib/maind/doctor.py",
+        "packages/maind/lib/maind/projects.py"
+      ],
+      "released": true,
+      "note": "template of the fleet registry (registry.json) that maind writes"
+    },
+    {
+      "path": "configs/neutrality.json",
+      "owner": "root",
+      "consumers": ["scripts/public-hygiene.py"],
+      "released": false,
+      "schema": "configs/schemas/neutrality.schema.json",
+      "note": "data-driven owner terms, tracked core scope and reasoned neutrality allowances"
+    },
+    {
+      "path": "configs/neutrality-baseline.json",
+      "owner": "root",
+      "consumers": ["scripts/public-hygiene.py"],
+      "released": false,
+      "generated": true,
+      "schema": "configs/schemas/neutrality.schema.json",
+      "note": "neutrality schema $defs/baseline; generated by --neutrality-update-baseline, growth is refused"
+    },
+    {
+      "path": "configs/schemas/neutrality.schema.json",
+      "owner": "root",
+      "consumers": ["scripts/public-hygiene.py"],
+      "released": false,
+      "note": "closed-profile neutrality rules, baseline and JSON report definitions"
+    },
+    {
+      "glob": "configs/examples/**/*.json",
+      "owner": "root",
+      "consumers": ["scripts/test-contract-examples.py"],
+      "released": false,
+      "dynamic": true,
+      "note": "valid/invalid example documents of the root hub schemas, checked by the contract examples test"
+    },
+    {
+      "glob": "packages/*/configs/examples/**/*.json",
+      "owner": "root",
+      "consumers": ["scripts/test-contract-examples.py"],
+      "released": false,
+      "dynamic": true,
+      "note": "valid/invalid example documents of each module config schema, checked by the contract examples test"
+    },
+    {
+      "path": "configs/schema-types.json",
+      "owner": "root",
+      "consumers": ["scripts/schema-types.py", "scripts/test-schema-types.py"],
+      "released": false,
+      "note": "registry of schema roots and generated type modules for scripts/schema-types.py"
+    },
+    {
+      "path": "configs/config-inventory.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-config-inventory.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/ecosystem-units.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "module split map: targets, aliases, version sources, ownership, path patterns"
+    },
+    {
+      "path": "configs/ecosystem-baseline.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "generated by ecosystem-units.py baseline --update: accepted module boundary violations"
+    },
+    {
+      "path": "configs/typecheck-baseline.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/typecheck.sh"
+      ],
+      "released": false,
+      "note": "generated by typecheck.sh --update-baseline: pyright error count of each package, may only shrink"
+    },
+    {
+      "path": "configs/managed-blocks.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/sync-managed-blocks.py",
+        ".github/workflows/hygiene.yml"
+      ],
+      "released": false,
+      "note": "registry is empty; gate kept for P5.5"
+    },
+    {
+      "path": "packages/aicore/configs/gitignore-policy.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/state/gitignore.py",
+        "packages/maind/lib/maind/doctor.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/aicore/configs/provider-capabilities.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/manifest.py",
+        "packages/harness/lib/harness/profiles.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/maind/lib/maind/config.py",
+        "packages/maind/lib/maind/provider_deploy.py",
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/planner/lib/planner/command_render.py"
+      ],
+      "released": false,
+      "note": "SSOT of support levels"
+    },
+    {
+      "path": "packages/aicore/configs/provider-distribution.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/distribution.py",
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/lib/skiller/publication.py",
+        "scripts/release-fleet.sh",
+        "configs/ecosystem-units.json"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/aicore/configs/provider-projection.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/projection.py",
+        "configs/ecosystem-units.json"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/aicore/configs/provider-errors.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/errors.py",
+        "packages/harness/lib/harness/run/worker.py"
+      ],
+      "released": false,
+      "note": "classification rules of provider failures (data, not code)"
+    },
+    {
+      "path": "packages/aicore/configs/model-catalog.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/provider/models.py",
+        "packages/planner/lib/planner/integration/models.py"
+      ],
+      "released": false,
+      "note": "canonical model catalog; the planner renderer writes a snapshot of it into command-routing.json"
+    },
+    {
+      "path": "packages/aicore/configs/telemetry-conventions.json",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/util/telemetry.py"
+      ],
+      "released": false,
+      "note": "names of spans, attributes and metric labels (telemetry-conventions/v1); data, not code"
+    },
+    {
+      "path": "configs/release-units.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/release_attestation.py",
+        "packages/planner/scripts/check-publication-version.py",
+        "scripts/version-guard.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "configs/schema-tags.json",
+      "owner": "root",
+      "consumers": ["scripts/test-schema-tags.py"],
+      "released": true,
+      "note": "published short document tags mapped to schema $ids; orch records aliases stay pending until P4.3"
+    },
+    {
+      "path": "configs/umbrella.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "aliases of the umbrella CLI (umbrella-config/v1); the hub reads module groups from unit.json"
+    },
+    {
+      "path": "configs/install-profiles.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/umbrella.py",
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "install profiles (install-profiles/v1) of swissknifeman install: module ids, per-module installer options, own-link patterns"
+    },
+    {
+      "path": "configs/install-profiles.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/install-profiles.json"
+    },
+    {
+      "path": "configs/umbrella.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "schema of configs/umbrella.json; the umbrella-units/v1 schema lives in configs/schemas/"
+    },
+    {
+      "path": "configs/schemas/umbrella-units.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-units/v1: output of swissknifeman units --json"
+    },
+    {
+      "path": "configs/schemas/umbrella-doctor.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/test-umbrella.py"
+      ],
+      "released": false,
+      "note": "umbrella-doctor/v1: output of swissknifeman doctor --json"
+    },
+    {
+      "path": "configs/schemas/bench-checks.schema.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/bench-checks.py",
+        "scripts/test-bench-checks.py"
+      ],
+      "released": false,
+      "note": "bench-checks/v1: output of scripts/bench-checks.py"
+    },
+    {
+      "path": "configs/repository-bootstrap-skills.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/publication.py"
+      ],
+      "released": false,
+      "note": "reached through skiller-host.json bootstrap"
+    },
+    {
+      "path": "configs/skiller-host.json",
+      "owner": "root",
+      "consumers": [
+        "packages/skiller/lib/skiller/host.py",
+        "packages/skiller/install.sh"
+      ],
+      "released": false
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/agent-packs/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/agentpacks.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/hooks/*/config.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/configs/claude-code/hooks/agent-router/_lib.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/mcp/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/mcp.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/policy/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/harness/lib/harness/permissions.py"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/harness/configs/claude-code/settings-keys.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/settings_audit.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/claude-code/settings.*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/doctor.py",
+        "packages/harness/lib/harness/settings_audit.py",
+        "packages/harness/lib/harness/permissions.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "presets discovered by glob"
+    },
+    {
+      "glob": "packages/harness/configs/codex/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/common/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/instructions.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/harness/lib/harness/execpolicy.py",
+        "packages/harness/lib/harness/reviewroles.py",
+        "packages/maind/lib/maind/provider_deploy.py",
+        "packages/maind/lib/maind/provision/deploy.py",
+        "scripts/provider-docs.py"
+      ],
+      "released": true,
+      "note": "direct maind reads are roadmap (harness <-> maind bridges)"
+    },
+    {
+      "path": "packages/harness/configs/common/profile-catalog.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/profiles.py",
+        "packages/harness/lib/harness/provider_audit.py",
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/maind/lib/maind/provision/workspace.py",
+        "scripts/provider-docs.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true,
+      "note": "canonical profile catalog"
+    },
+    {
+      "glob": "packages/harness/configs/cursor/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/cursor_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/harness/configs/grok/**/*.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/provider_render.py",
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/mcp.py",
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/maind/lib/maind/provider_deploy.py"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/orch/configs/launch-catalog.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/launch.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/orch/configs/isolation-profiles.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/conductor/policies/isolation.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "packages/orch/configs/config.schema.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "[orch]: engine choice, default run-policy, work source plugin, capability freshness, pack folders, events"
+    },
+    {
+      "glob": "packages/orch/configs/run-policies/**/*.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/policies.py"
+      ],
+      "released": false,
+      "note": "shipped run-policy packs (policy.json) and their test cases (cases/*.json)"
+    },
+    {
+      "path": "bridges/planner-orch/extension.json",
+      "owner": "root",
+      "consumers": [
+        "packages/aicore/lib/aicore/ext/plugins.py",
+        "bridges/planner-orch/worksource.py"
+      ],
+      "released": false,
+      "note": "plugin manifest of the orch:work-source port, registered by the machine in [aicore.plugins.planner-orch]"
+    },
+    {
+      "path": "packages/skiller/.swissknifeman.example/config.json",
+      "owner": "skiller",
+      "consumers": [
+        "user:copies to .swissknifeman/config.json for vendor mode"
+      ],
+      "released": true,
+      "note": "sample"
+    },
+    {
+      "glob": "packages/skiller/budget-configs/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/budget.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "skiller budget --compare <name>"
+    },
+    {
+      "path": "packages/skiller/configs/core-policy.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/lib/skiller/budget.py",
+        "packages/harness/lib/harness/instructions.py",
+        "packages/skiller/scripts/validate.sh"
+      ],
+      "released": true
+    },
+    {
+      "path": "packages/skiller/configs/exclusive-groups.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py",
+        "packages/skiller/scripts/validate.sh"
+      ],
+      "released": true,
+      "note": "skills of which a selection keeps at most one"
+    },
+    {
+      "path": "packages/skiller/configs/licenses.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/quality/compat.py"
+      ],
+      "released": true,
+      "note": "SPDX licenses an imported skill may carry; skiller compat quarantines any other"
+    },
+    {
+      "path": "packages/skiller/configs/selection-summary.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/selection.py"
+      ],
+      "released": true,
+      "note": "summary of the skill-selection decisions (skiller selection report)"
+    },
+    {
+      "path": "packages/skiller/configs/publication-versions.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/publication.py",
+        "packages/skiller/lib/skiller/registry.py",
+        "packages/skiller/lib/skiller/release_attestation.py",
+        "scripts/version-guard.py"
+      ],
+      "released": true
+    },
+    {
+      "glob": "packages/skiller/schema/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/doctor.py",
+        "packages/skiller/lib/skiller/host.py",
+        "packages/skiller/lib/skiller/config.py",
+        "packages/skiller/tests/test_schema.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "note": "frozen copies of the skiller schemas kept for external raw URLs; the canon is packages/skiller/schemas/<kind>/v1"
+    },
+    {
+      "path": "packages/planner/configs/command-routing.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/plan/lifecycle.py",
+        "packages/planner/lib/planner/command_render.py",
+        "packages/planner/lib/planner/command_catalog.py",
+        "packages/planner/scripts/render-provider-commands.py",
+        "packages/planner/scripts/check-publication-version.py",
+        "bridges/planner-orch/launch.py",
+        "packages/harness/lib/harness/cursor_render.py",
+        "packages/harness/lib/harness/run/worker.py",
+        "scripts/provider-docs.py",
+        "configs/skiller-host.json"
+      ],
+      "released": true
+    },
+    {
+      "path": "bridges/planner-orch/bridge.json",
+      "owner": "planner",
+      "consumers": [
+        "packages/planner/lib/planner/plan/bridges.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "bridges/planner-orch/schemas/run-options.schema.json",
+      "owner": "planner",
+      "consumers": [
+        "bridges/planner-orch/bridge.json",
+        "packages/planner/lib/planner/plan/extensions.py"
+      ],
+      "released": false,
+      "note": "schema of the planner's orchestration.options slot, supplied by the bridge; a literal copy of orch's conductor/v1 run-options"
+    },
+    {
+      "path": "bridges/orch-skiller/role-skills.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/orch-skiller/resolve_role.py"
+      ],
+      "released": false
+    },
+    {
+      "path": "bridges/gui-hub/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-hub/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-hub bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-hub/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-hub/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-hub bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-orch/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-orch/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-orch bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-orch/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-orch/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-orch bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-planner/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-planner/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-planner bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-planner/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-planner/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-planner bridge GUI contribution"
+    },
+    {
+      "path": "bridges/gui-workspace/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-workspace/adapter.py",
+        "packages/aicore/lib/aicore/ext/plugins.py"
+      ],
+      "released": false,
+      "note": "gui-workspace bridge extension manifest"
+    },
+    {
+      "path": "bridges/gui-workspace/gui.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/gui-workspace/unit.json",
+        "packages/gui/lib/gui/catalog/resolve.py"
+      ],
+      "released": false,
+      "note": "gui-workspace bridge GUI contribution"
+    },
+    {
+      "path": "bridges/workspace-planner/extension.json",
+      "owner": "root",
+      "consumers": [
+        "bridges/workspace-planner/migrator.py",
+        "packages/workspace/lib/workspace/migrator_port.py"
+      ],
+      "released": false,
+      "note": "workspace-planner bridge migration extension manifest"
+    },
+    {
+      "path": "packages/gui/configs/config.schema.json",
+      "owner": "gui",
+      "consumers": [
+        "packages/gui/lib/gui/settings.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "gui configuration schema and defaults"
+    },
+    {
+      "path": "packages/workspace/configs/config.schema.json",
+      "owner": "workspace",
+      "consumers": [
+        "packages/workspace/lib/workspace/links.py",
+        "packages/aicore/lib/aicore/config/model.py",
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "note": "workspace configuration schema and defaults"
+    },
+    {
+      "glob": "bridges/*/unit.json",
+      "owner": "root",
+      "consumers": [
+        "scripts/ecosystem-units.py",
+        "scripts/test-bridges.sh"
+      ],
+      "released": false,
+      "note": "unit manifest of a bridge; dev.test is run by the hub bridge runner"
+    },
+    {
+      "path": "packages/aicore/config.example.toml",
+      "owner": "aicore",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/aicore/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [aicore] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/analyst/config.example.toml",
+      "owner": "analyst",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/analyst/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [analyst] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/brain/config.example.toml",
+      "owner": "brain",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/brain/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [brain] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/gui/config.example.toml",
+      "owner": "gui",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/gui/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [gui] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/harness/config.example.toml",
+      "owner": "harness",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/harness/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [harness] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/maind/config.example.toml",
+      "owner": "maind",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/maind/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [maind] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/orch/config.example.toml",
+      "owner": "orch",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/orch/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [orch] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/planner/config.example.toml",
+      "owner": "planner",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/planner/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [planner] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/skiller/config.example.toml",
+      "owner": "skiller",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/skiller/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [skiller] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "path": "packages/workspace/config.example.toml",
+      "owner": "workspace",
+      "consumers": [
+        "packages/aicore/lib/aicore/config/example.py",
+        "scripts/ecosystem-units.py"
+      ],
+      "released": false,
+      "kind": "config-sample",
+      "format": "toml",
+      "schema": "packages/workspace/configs/config.schema.json",
+      "generated": true,
+      "live_path": "<SKM_HOME>/config/config.toml [workspace] (machine), .swissknifeman/config.toml (project)",
+      "note": "generated by aicore config example from the module config schema"
+    },
+    {
+      "glob": "packages/orch/bindings/capabilities/*.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/bindings/__init__.py"
+      ],
+      "released": false,
+      "kind": "capability-record",
+      "format": "json",
+      "schema": "packages/orch/schemas/exec/v1/capability-record.schema.json",
+      "generated": false,
+      "live_path": null,
+      "note": "what each binding can do with each provider; digest recorded by dry-run prepare"
+    },
+    {
+      "glob": "packages/orch/roles/*.json",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/render.py",
+        "packages/orch/lib/orch/conductor/infrastructure/roles.py",
+        "packages/orch/lib/orch/conductor/policies/sandbox.py"
+      ],
+      "released": false,
+      "kind": "role-manifest",
+      "format": "json",
+      "schema": "packages/orch/schemas/exec/v1/role-manifest.schema.json",
+      "generated": false,
+      "live_path": null,
+      "note": "role manifests of the conductor roles"
+    },
+    {
+      "glob": "packages/orch/roles/*.md",
+      "owner": "orch",
+      "consumers": [
+        "packages/orch/lib/orch/render.py",
+        "packages/orch/lib/orch/conductor/prompts/roles.py"
+      ],
+      "released": false,
+      "kind": "role-prompt",
+      "format": "markdown",
+      "schema": "native",
+      "generated": false,
+      "live_path": null,
+      "note": "role prompt texts; stubs in <SKM_HOME> add to them"
+    },
+    {
+      "glob": "packages/skiller/presets/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/skillset.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "kind": "skill-preset",
+      "format": "json",
+      "schema": "native",
+      "generated": false,
+      "live_path": null,
+      "note": "named skill clusters (presets/<name>.json), loaded by name"
+    },
+    {
+      "glob": "packages/skiller/profiles/*.json",
+      "owner": "skiller",
+      "consumers": [
+        "packages/skiller/lib/skiller/config.py"
+      ],
+      "released": true,
+      "dynamic": true,
+      "kind": "project-profile",
+      "format": "json",
+      "schema": "native",
+      "generated": false,
+      "live_path": null,
+      "note": "project profiles listed by skiller profiles, loaded by name"
+    },
+    {
+      "path": ".codex/agent-roles.lock.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/agentpacks.py"
+      ],
+      "released": false,
+      "kind": "provider-lock",
+      "format": "json",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "sha256 lock of the Codex role files installed from agent-packs (CODEX_ROLES_LOCK_REL)"
+    },
+    {
+      "glob": ".codex/agents/swissknifeman-*.toml",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/agentpacks.py",
+        "packages/harness/lib/harness/provider_audit.py"
+      ],
+      "released": false,
+      "kind": "provider-agent",
+      "format": "toml",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Codex roles rendered from harness agent-packs"
+    },
+    {
+      "glob": ".codex/agents/plan-*.toml",
+      "owner": "root",
+      "consumers": [
+        "user:Codex loads .codex/agents/*.toml as subagents"
+      ],
+      "released": false,
+      "kind": "provider-agent",
+      "format": "toml",
+      "schema": "native",
+      "generated": false,
+      "live_path": null,
+      "note": "hand-written Codex plan-execution subagents of this repository"
+    },
+    {
+      "path": ".codex/hooks.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py"
+      ],
+      "released": false,
+      "kind": "provider-hooks",
+      "format": "json",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Codex lifecycle hooks of this repository (harness hooks)"
+    },
+    {
+      "glob": ".codex/hooks/**",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/doctor.py"
+      ],
+      "released": false,
+      "kind": "provider-hook-handler",
+      "format": "script",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "hook handlers the hooks.json entries run"
+    },
+    {
+      "path": ".cursor/cli.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/cursor_render.py"
+      ],
+      "released": false,
+      "kind": "provider-permissions",
+      "format": "json",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Cursor CLI project permissions"
+    },
+    {
+      "path": ".cursor/permissions.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/cursor_render.py"
+      ],
+      "released": false,
+      "kind": "provider-permissions",
+      "format": "json",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Cursor permissions rendered by harness"
+    },
+    {
+      "path": ".cursor/hooks.json",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py",
+        "packages/harness/lib/harness/provider_audit.py"
+      ],
+      "released": false,
+      "kind": "provider-hooks",
+      "format": "json",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Cursor lifecycle hooks"
+    },
+    {
+      "glob": ".cursor/hooks/*.py",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py"
+      ],
+      "released": false,
+      "kind": "provider-hook-handler",
+      "format": "script",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "hook handler of .cursor/hooks.json"
+    },
+    {
+      "path": ".cursor/mcp.json.example",
+      "owner": "maind",
+      "consumers": [
+        "packages/maind/lib/maind/constants.py", "packages/maind/lib/maind/mcpconfig.py",
+        "user:copies to .cursor/mcp.json"
+      ],
+      "released": false,
+      "kind": "provider-mcp-sample",
+      "format": "json",
+      "schema": "native",
+      "generated": false,
+      "live_path": ".cursor/mcp.json",
+      "note": "sample MCP servers for Cursor"
+    },
+    {
+      "glob": ".cursor/rules/*.mdc",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/cursor_render.py",
+        "packages/harness/lib/harness/instructions.py"
+      ],
+      "released": false,
+      "kind": "provider-rules",
+      "format": "mdc",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Cursor rules rendered from the instruction canon and the router"
+    },
+    {
+      "glob": ".grok/hooks/*",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/hooks.py"
+      ],
+      "released": false,
+      "kind": "provider-hooks",
+      "format": "json+script",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Grok hooks (swissknifeman.json) and their handler"
+    },
+    {
+      "glob": ".grok/rules/*.md",
+      "owner": "harness",
+      "consumers": [
+        "packages/harness/lib/harness/instructions.py"
+      ],
+      "released": false,
+      "kind": "provider-rules",
+      "format": "markdown",
+      "schema": "native",
+      "generated": true,
+      "live_path": null,
+      "note": "Grok rules rendered from the instruction canon"
+    }
+  ]
+}

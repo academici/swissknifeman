@@ -1,0 +1,8 @@
+{
+  "name": "agent-tasks",
+  "description": "Setting tasks for the agent: cross-layer checklist and issue breakdown (the orchestration, brief, interview and implement skills moved to the orchestration contracts)",
+  "include": [
+    "general/cross-layer-change-checklist",
+    "oss-dev/to-issues"
+  ]
+}

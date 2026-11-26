@@ -1,0 +1,11 @@
+{
+  "skill": "spec-interview",
+  "should_trigger": [
+    "the task is vague, interview me before writing any code",
+    "ask me one question at a time to fill a task brief from a fuzzy idea"
+  ],
+  "should_not": [
+    "the spec is already fully written, just implement it",
+    "review already-merged code for style issues"
+  ]
+}

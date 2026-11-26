@@ -1,0 +1,14 @@
+{
+  "schema": "skill-selection/v1",
+  "kind": "contract",
+  "decision": "MERGE",
+  "also": [
+    "OVERLAY"
+  ],
+  "exclusive_group": "php-architecture",
+  "triggers": {
+    "deps": [
+      "composer:laravel/framework"
+    ]
+  }
+}

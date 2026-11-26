@@ -1,0 +1,10 @@
+{
+  "class": "quota",
+  "code": "PROVIDER_QUOTA",
+  "retryable": false,
+  "safe_message": "provider quota exhausted",
+  "retry_after_s": 7200,
+  "scope": "account",
+  "provider": "claude-code",
+  "evidence": "structured"
+}

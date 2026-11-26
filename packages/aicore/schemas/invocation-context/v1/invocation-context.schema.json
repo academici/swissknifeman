@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:invocation-context:v1",
+  "title": "invocation-context",
+  "type": "object",
+  "description": "Where a command runs, as `swissknifeman project context --json` prints it: the project (write, config and state boundary) and the folder the command was called from, and how the project was found.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:invocation-context:v1",
+      "description": "Schema identifier."
+    },
+    "project_root": {
+      "type": ["string", "null"],
+      "description": "Canonical absolute project root; null when no project was found."
+    },
+    "invocation_cwd": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absolute folder the command was called from."
+    },
+    "resolution": {
+      "enum": ["launcher", "flag", "environment", "git", "marker", "none"],
+      "description": "How the project was found: the project-local launcher, --project, SKM_PROJECT_ROOT, the nearest .git, the nearest .swissknifeman, or not at all."
+    },
+    "marker": {
+      "type": ["string", "null"],
+      "description": "Marker entry that matched when the project was searched for."
+    },
+    "launcher": {
+      "type": ["object", "null"],
+      "description": "The launcher that bound the project; null without one.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Absolute path of <project>/.swissknifeman/launcher.py."
+        },
+        "protocol": {
+          "type": ["integer", "null"],
+          "description": "Launcher protocol it spoke."
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the managed launcher matches its lock and the hub template."
+        }
+      },
+      "required": ["path", "protocol"],
+      "additionalProperties": false
+    },
+    "config": {
+      "type": ["string", "null"],
+      "description": "Project configuration file (it may not exist yet)."
+    },
+    "plans_root": {
+      "type": ["string", "null"],
+      "description": "Plans folder of the project: <project>/plans, or the folder in the portable workspace when the project marker says so (see plans_store)."
+    },
+    "plans_store": {
+      "type": ["object", "null"],
+      "description": "Where plans_root comes from; null when no project was found. Optional (added after the first release).",
+      "properties": {
+        "kind": {
+          "enum": ["legacy", "workspace", "unresolved"],
+          "description": "Plan store of the project; unresolved when the marker or the workspace folder could not be read (plans_root then stays <project>/plans)."
+        },
+        "project_id": {
+          "type": ["string", "null"],
+          "description": "Project code of the marker; null without a marker."
+        },
+        "workspace": {
+          "type": ["string", "null"],
+          "description": "Workspace code of the marker; null without a marker. Optional."
+        },
+        "reason": {
+          "enum": ["no-marker", "marker-legacy", "marker-workspace", "error"],
+          "description": "Why this store was chosen."
+        },
+        "error": {
+          "type": "string",
+          "description": "Error code when kind is unresolved."
+        }
+      },
+      "required": ["kind", "project_id", "reason"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "project_root", "invocation_cwd", "resolution", "launcher", "config", "plans_root"],
+  "additionalProperties": false
+}

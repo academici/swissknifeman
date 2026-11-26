@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-plans:v1",
+  "title": "Read Plans",
+  "type": "object",
+  "description": "The live plans of a project (archive excluded) in ascending id order, with progress; an unreadable plan is listed with an error code.",
+  "properties": {
+    "plans": {
+      "type": "array",
+      "description": "One row per plan directory.",
+      "items": {
+        "description": "One plan.",
+        "$ref": "urn:swissknifeman:task:plan:read-plans:v1#/$defs/plan"
+      }
+    }
+  },
+  "required": [
+    "plans"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "progress": {
+      "type": "object",
+      "description": "Counts of phases and items.",
+      "properties": {
+        "phases": {
+          "type": "integer",
+          "description": "Phases of the plan.",
+          "minimum": 0
+        },
+        "phases_closed": {
+          "type": "integer",
+          "description": "Closed phases.",
+          "minimum": 0
+        },
+        "items": {
+          "type": "integer",
+          "description": "Items of the plan.",
+          "minimum": 0
+        },
+        "items_done": {
+          "type": "integer",
+          "description": "Items with status done, done_with_deviations or skipped.",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "phases",
+        "phases_closed",
+        "items",
+        "items_done"
+      ],
+      "additionalProperties": false
+    },
+    "plan": {
+      "type": "object",
+      "description": "A readable plan, or {id, error} for a plan.json that cannot be read.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Plan id (directory name for an unreadable plan).",
+          "minLength": 1
+        },
+        "short_id": {
+          "description": "PLAN<N>.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Short id."
+            },
+            {
+              "type": "null",
+              "description": "Absent."
+            }
+          ]
+        },
+        "title": {
+          "description": "Plan title.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Title."
+            },
+            {
+              "type": "null",
+              "description": "Absent."
+            }
+          ]
+        },
+        "status": {
+          "description": "Plan status.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Status."
+            },
+            {
+              "type": "null",
+              "description": "Absent."
+            }
+          ]
+        },
+        "updated_at": {
+          "description": "Last update.",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Timestamp."
+            },
+            {
+              "type": "null",
+              "description": "Absent."
+            }
+          ]
+        },
+        "progress": {
+          "description": "Phase and item counts.",
+          "$ref": "urn:swissknifeman:task:plan:read-plans:v1#/$defs/progress"
+        },
+        "error": {
+          "type": "string",
+          "description": "Refusal code of an unreadable plan.",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

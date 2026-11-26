@@ -1,0 +1,1619 @@
+{
+  "schema_version": 1,
+  "source": "github",
+  "repo": "antfu/skills",
+  "strategy": "notify",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "references/catalog.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/SKILL.md",
+      "sha256": "8c4a245c65d73b6d6e95335c499d214faa85cc10cf5187b0d6132d822f1c7d88",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/computedAsync.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/computedAsync.md",
+      "sha256": "028f0643b3f5a6f5df4be8486ab6373fe7eb1c261db51f794b7f9f44c0fa349b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/computedEager.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/computedEager.md",
+      "sha256": "ec8db12bc47db477a6eca2786f3052201d70d96f22a165b2a590e9599210169d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/computedInject.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/computedInject.md",
+      "sha256": "6d617c53655acfb24eafa9e02a6f47955f6860b799ce122bb96fdc02bcd8faff",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/computedWithControl.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/computedWithControl.md",
+      "sha256": "fddac8001081957dcad13bda0bfb7bae6476d57c37536911c79ca4b95453263a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createEventHook.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createEventHook.md",
+      "sha256": "ab6bb48f7cc25b30654e48b40410e14c4ba25ea151d0aae17327d1eedae1864e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createGenericProjection.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createGenericProjection.md",
+      "sha256": "57a8dbad37f715b83a98bb3ca326f15b59e6b323e485e63c53fd85bb08356ed3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createGlobalState.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createGlobalState.md",
+      "sha256": "43a260724cb8610553d487a4cd59591efbc61a9876c07dbea04b07381ca7479f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createInjectionState.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createInjectionState.md",
+      "sha256": "50e9f029951b331175bffb1665554a7f50c2b2c614e9bb2ee72a95cad7642f79",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createProjection.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createProjection.md",
+      "sha256": "5180e0a5875242a0067e8b3ee57a9cee53c772846d83f04c45d1c2475316966e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createRef.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createRef.md",
+      "sha256": "3794cc3878c1729122e76f88849b9eb168399c2aa9f9f62629d4c53d44944805",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createReusableTemplate.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createReusableTemplate.md",
+      "sha256": "e50157c9e4416810a7e885dbaeefc4274349d019a19bbf337dd5cc18dfea3aa3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createSharedComposable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createSharedComposable.md",
+      "sha256": "6dd2dc0146bcd5b3d2daf8f960e1c9f1de44c8861d559135c0ca4ac67a0dcf28",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createTemplatePromise.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createTemplatePromise.md",
+      "sha256": "d68bb260bef8340cf78dc90d13eb1c9517f83e7be33c7157710344ed91bc56f4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/createUnrefFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/createUnrefFn.md",
+      "sha256": "1119a0b7b0fc2047353b7c8bb83b5a6aba8917fd914bc012bf3eada3db6e8233",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/extendRef.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/extendRef.md",
+      "sha256": "54969789cfc8d0c2839d00d52f70b7dfaaba9f53fedac686608c1acd71df20f1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/from.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/from.md",
+      "sha256": "ca67668da4a08bc3aeba57cf6eb5202b9e5b7ceab9971965fb57e28671e5c8ee",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/get.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/get.md",
+      "sha256": "ffb0de9a74e9522829296ab2a3b3185a4329aa28e84004952507dfa8d61dc2b7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/injectLocal.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/injectLocal.md",
+      "sha256": "aded9d267c4d1d086e35935de28341351d4ca52e72dc867ad6a7f364be08171f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/isDefined.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/isDefined.md",
+      "sha256": "c1448d81a120879d8dd3349bdb1f2583e02fa81cfd23b90adbb0b9943b5aab77",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/logicAnd.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/logicAnd.md",
+      "sha256": "6798d1e07ca411ec090b34de1720940f263a732d92dd2b98a5f8d86dbd360430",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/logicNot.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/logicNot.md",
+      "sha256": "e71f449ae2a30a7bad8eae1cd6daa265ada83bf1937546d7215de6a6e14db87a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/logicOr.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/logicOr.md",
+      "sha256": "f09d0de683078fd1fe8a233e9fb399589fb1b5e0cd2a2e304455a0902301e0c7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/makeDestructurable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/makeDestructurable.md",
+      "sha256": "c5d6304bb7065a8da1e29c5881872221d8cb04ae14d978542a997fdc23d869fb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/onClickOutside.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/onClickOutside.md",
+      "sha256": "ebd896bdcce2dd6cb1e3d727ba1492629d4631dd1aa89a960576a5f85cad4ab4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/onElementRemoval.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/onElementRemoval.md",
+      "sha256": "769112d5e08512d4c51be8d7328f640dab9314f259b6c80a64d5638f111f448d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/onKeyStroke.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/onKeyStroke.md",
+      "sha256": "676d2565771f20c31e03f553af5d8f5c26b90af7e87bb2188978d385e9a070e0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/onLongPress.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/onLongPress.md",
+      "sha256": "faa007d3cbb9585d1eee028843b46658b1ac154f127c3703345fab2fd325f31b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/onStartTyping.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/onStartTyping.md",
+      "sha256": "118d6f5a9a55b6799affef7ca0d6dbe6523b319a676b311c351b605681b33cc0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/provideLocal.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/provideLocal.md",
+      "sha256": "731a48d2be7dbfae11b3ffd9e7954acc49b6303d6b3e37e35fa611c5b8e0dbb1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/reactify.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/reactify.md",
+      "sha256": "e09b52ccefd75ef8951e744e892799f0cdbd64e10462f0c307f8c79ebc414cb8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/reactifyObject.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/reactifyObject.md",
+      "sha256": "38d6bd16dffd13abf893a6a33ef2d7a7a3514e4810865ae404b8a7054df02a5f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/reactiveComputed.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/reactiveComputed.md",
+      "sha256": "e77c31e7da5c85b2976c330aef5f02292ce78ee9cf974f51595ef3751f3deef0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/reactiveOmit.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/reactiveOmit.md",
+      "sha256": "06021647f000be3a6dd33eece42db32b31f13a59d8e967539b9b3d1ee9ac63c6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/reactivePick.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/reactivePick.md",
+      "sha256": "ec20b59e63ba42c17b1973fe83d4a8f550a6e114b6f6477705b480678addf06d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refAutoReset.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refAutoReset.md",
+      "sha256": "ec83c77303e99cddac04a25b74e21e7860412f88084da7a239215ccbeb982288",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refDebounced.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refDebounced.md",
+      "sha256": "2602eadb5103a66fe8fa1e9b1972866b6301617f422e3dfe4f385cd8926daed8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refDefault.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refDefault.md",
+      "sha256": "541357fef0a38f4ece4caabefd3d44bd2fd0278774a0ae08730322ed5a38379f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refManualReset.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refManualReset.md",
+      "sha256": "215d441a2cac4043533110de69fc15c87f39764f92d23055416a5f879f6e162a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refThrottled.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refThrottled.md",
+      "sha256": "90f5505e677e8e3f283e96587ebd5050b0d76c64e03a15550999b6b02e8fb76d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/refWithControl.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/refWithControl.md",
+      "sha256": "82bc28cbfbfc9be9d7523b475449946a2e0a3810e2478f45d03d6233421dd0cb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/set.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/set.md",
+      "sha256": "6dfa9a73dd8f5420520521c56029ec4c83cbf3b4b5244d646fb6106231899118",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/syncRef.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/syncRef.md",
+      "sha256": "00561019c13e0d593c9101069ced5693335c7f99d33b316b477677110d85a162",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/syncRefs.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/syncRefs.md",
+      "sha256": "02d90ad30334b791e67ff721c39d81a2997f3c2965fbcf75c8094cbedf6ec74d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/templateRef.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/templateRef.md",
+      "sha256": "a01df713abcda0515b7d6c8d8491a77d7d1aa919cf96468f128f512b79249920",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/toObserver.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/toObserver.md",
+      "sha256": "d8207f7dae7d1d0decc0a717e6b05c53177a0ca1fe11d79620371a4f6a36f0a6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/toReactive.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/toReactive.md",
+      "sha256": "7e8fda81ee8b655ac649ae386ec86ccd2d7c7be673f21db7c30dab96f23daa05",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/toRef.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/toRef.md",
+      "sha256": "4a08cd66f6af71c03156906d7b95a3a520ea46d0c15dc86836ef81a8e52a0616",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/toRefs.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/toRefs.md",
+      "sha256": "3c05f87cf7b1cc792a8057ca43ff288cf7ea6ab4ef2e602eaf024baa369f8421",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/tryOnBeforeMount.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/tryOnBeforeMount.md",
+      "sha256": "0054b94d4f3fcf6e6ec86e21acdaa6b86f759db5e92b7a1fac5d8aaefb530131",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/tryOnBeforeUnmount.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/tryOnBeforeUnmount.md",
+      "sha256": "5313df961b2d7f1662b772ef4200b02f3f28e6aee1f88610e394a40e7601aca5",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/tryOnMounted.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/tryOnMounted.md",
+      "sha256": "fae5a4d145772ac6e491361727d27f8edad81ed7149c2f8cc232e22a4e625dcd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/tryOnScopeDispose.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/tryOnScopeDispose.md",
+      "sha256": "31ffa27dcfba3cfcbab6d5ce4276d70d7de021f7833b637cd9469cec2bdd2a5d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/tryOnUnmounted.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/tryOnUnmounted.md",
+      "sha256": "276289803fd49ab0fbf91f9d50e7af5ac6c1201ae3fa7df3e227e722ceab0a92",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/unrefElement.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/unrefElement.md",
+      "sha256": "8b157e9f23658a3ef0c51511a34cc54bb739cd6e3466105b55ee7b8e571f6d94",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/until.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/until.md",
+      "sha256": "27c86fb53d6851064354281524222865468934dfd884d5e6930ba69c16191163",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAbs.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAbs.md",
+      "sha256": "cbbace8ba591904d27db87e5ce24e05be72dc50b368413bdff29ec2ebced0fa9",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useActiveElement.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useActiveElement.md",
+      "sha256": "48870732e4f46f15ad01955876782f481c32600ba7b599ccc762e28ab44f3e65",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAnimate.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAnimate.md",
+      "sha256": "b435cb3bd501300e257900dfde15ea45647f1cd7084450bf3365391d0bd13e7b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayDifference.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayDifference.md",
+      "sha256": "b86f7875b1b5e893f6e30bdd02fd2b1e9f704142b15811cd21873016a2d142bb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayEvery.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayEvery.md",
+      "sha256": "495419d7fde224e08729ecb7ad45996af4b719cdf6cab516aef71600e466dc09",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayFilter.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayFilter.md",
+      "sha256": "c231c34b1e621fde7c5299acf54b34dcc6d8b6a8f48cd6e8187e6e1d8bbc0a98",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayFind.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayFind.md",
+      "sha256": "b70c7c09613b42cf43816bd9d18a7b91aabf3bac09499bda8b1ad8a9e95e1a8b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayFindIndex.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayFindIndex.md",
+      "sha256": "2de584ceff0f0bd48aec70635d9294c76172ea2bcfe6c10ee29d9736e36a273b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayFindLast.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayFindLast.md",
+      "sha256": "7cb4c219fce5d961ae1a046da39074f8c7e7080a1691b830529d7fd5de3bbc6e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayIncludes.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayIncludes.md",
+      "sha256": "0cec4f26d465b5e9c7741b6a0159894100d27d8671684cc5bb24d80e8dae4d72",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayJoin.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayJoin.md",
+      "sha256": "cffccf556f745f9962ea3fe60c619f125d905a558311c7649f79ab5e2a73cc88",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayMap.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayMap.md",
+      "sha256": "a2846e305821761d6bc23a9800c949f9fb27c8aa98ff31a5489b3609ed2a8165",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayReduce.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayReduce.md",
+      "sha256": "5a522fbc13256a46c7b840991921aed06b3270a42e812d05bb0efaf2b7e9dd4c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArraySome.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArraySome.md",
+      "sha256": "3a3e9ef69e26db9073d6c209abbc8604dafb0fc1846a2b0fc2e025c064459528",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useArrayUnique.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useArrayUnique.md",
+      "sha256": "67182eba431c63436bc65eaa70266c771018304766b6da13321344c62ac63380",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAsyncQueue.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAsyncQueue.md",
+      "sha256": "2ee7a6ef33dbb3fe79bf76ee1579e631e64d99813071ec80c87969b44b092d27",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAsyncState.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAsyncState.md",
+      "sha256": "11defe19dde97dacb764695c43beb61214248de143ec084708891ecfb3193605",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAsyncValidator.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAsyncValidator.md",
+      "sha256": "625e339bc1a519fcb28d47f65d20cfa9cc43eb732e2abaaefce1d2be3f5996bb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAuth.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAuth.md",
+      "sha256": "ec93251e3c77f2cd2eeec026366c107083fa31784af09d458d6c94f080c14d37",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAverage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAverage.md",
+      "sha256": "587ff28415451a710002b56f2de7ee7c03d29a166e10b643dac10da8068e937e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useAxios.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useAxios.md",
+      "sha256": "c08f5256683cf09108b74e8903e95411ec5219377a8ad75a14c300ca64d5a2f8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBase64.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBase64.md",
+      "sha256": "6c1c6ac203d658368695b44001ae173934de29d7dd30a2428427e9f26f53df60",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBattery.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBattery.md",
+      "sha256": "c3acfe097e7afbc8b1bee4d90aaf4f2e9e860caf0dcfd44f029a1056f8304165",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBluetooth.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBluetooth.md",
+      "sha256": "48a5d47c82360f7bfcba2b624be7a735b3a16d99de3aa9678f32333304718c11",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBreakpoints.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBreakpoints.md",
+      "sha256": "5ecd37d8125e65fba07263b427e7f492d349fa36d59401ac0b4ca55788bb2033",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBroadcastChannel.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBroadcastChannel.md",
+      "sha256": "a3a194f943a5912411458d478feb93b893215365600dfbc2f46ec5675b4c01cc",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useBrowserLocation.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useBrowserLocation.md",
+      "sha256": "bd4f8796041a0d729390233e2a0e654b42bac60eb573d26ea8e52e636b859917",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCached.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCached.md",
+      "sha256": "a32de3ed6c7232bcd00df6988c30a88f2b1f53ae9adc2afb818fcc6d558fa127",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCeil.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCeil.md",
+      "sha256": "f97c34b8cbe729d20ef694d274b5d41a56d0f2c6779946b4f273b6b56f89107c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useChangeCase.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useChangeCase.md",
+      "sha256": "160b3201fd8ebc81fe0ded2df1e6038566a16c3c94406d77e3b5e7dbc6f80cc3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useClamp.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useClamp.md",
+      "sha256": "0fe500bfb884005bfbe6fe4a40704f7580b83b152fca5f07e3b80a7a04a05ed7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useClipboard.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useClipboard.md",
+      "sha256": "cd30d45161ae4062beb5d158e94a5333f8e98fa3fb3732ab6954ba8846f8b9cc",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useClipboardItems.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useClipboardItems.md",
+      "sha256": "34a754a49c8392e6eb82f99bb000647ec257dc67631268ef6e9bc5afddfdeeba",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCloned.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCloned.md",
+      "sha256": "73e0b3967cecb6780ddcc513cfdd2a1e0c7bfa50bf74debe312863d1cb0f307c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useColorMode.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useColorMode.md",
+      "sha256": "5a1cb244cd4cf1641be5feee115e98911a64f23dedf26f13a5711cc53b9697b1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useConfirmDialog.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useConfirmDialog.md",
+      "sha256": "023d0ee359871d39ec10844448765c4fc51ee3b7ac7a90626a6d69df98ce81e8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCookies.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCookies.md",
+      "sha256": "22c1f1ef60150e2067de151197b07ddf9ecef88e2369101ddfb65c6c5c69dd4c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCountdown.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCountdown.md",
+      "sha256": "2ba885424478d4956dfada2d724ec51b8e802f258397d890d9976f120c61c19e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCounter.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCounter.md",
+      "sha256": "5a60fbcfcdd2f98b0cecf62b73483af26ebd299abcb126fe8286729f64d4eb22",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCssSupports.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCssSupports.md",
+      "sha256": "f1d5de50de2057dbfd10eff772feab47242b706ee7f23bfa29befa882286c1c6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCssVar.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCssVar.md",
+      "sha256": "fdcfcd678a5220e2548108d285a8963f3cc1d436c6cb4bb9ca63c1899a63c0ee",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCurrentElement.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCurrentElement.md",
+      "sha256": "b6d3122b1596f9d4eb08c4b177496a5c5e0d48f7b3b52d49205e3229aa5a6878",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useCycleList.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useCycleList.md",
+      "sha256": "a5b62630d0666798ba70459e708d77cafa473d9ebf93ac8c937da9b2edfb5854",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDark.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDark.md",
+      "sha256": "b53e0f33e08bd5eecbc7f106691b7abb86a7b329967c6c800aa27e3100f6dc50",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDateFormat.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDateFormat.md",
+      "sha256": "055e785b7a5cf6ca5cb1bbe24be50ec174f8b25d45991e588f419aaf38761407",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDebounceFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDebounceFn.md",
+      "sha256": "d2f064d9766695bec87d312a6fc7295643b315f7a7f4e9003179050a4ccb8b81",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDebouncedRefHistory.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDebouncedRefHistory.md",
+      "sha256": "56b7241ae053baa0dfb85c18df0aa4b87fc2e1e16a70dee35a86f72e25f86237",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDeviceMotion.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDeviceMotion.md",
+      "sha256": "58e6ed59863da04e7e58dd471d4528987be925b6b3da65520f07920c0a22be56",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDeviceOrientation.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDeviceOrientation.md",
+      "sha256": "5ef59fe7752a4c4e2ce685f3715d9777689beaf3a5d96d9c45dcb2dc2a20412b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDevicePixelRatio.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDevicePixelRatio.md",
+      "sha256": "065c97094f313c85f47a342d26ea6c2e904539e048a1a64618ebfed119f22a87",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDevicesList.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDevicesList.md",
+      "sha256": "32aef1368ef57a7d30c8a76ef8555ce5fe59e93a031d6eca55cef163847d5835",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDisplayMedia.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDisplayMedia.md",
+      "sha256": "e599542193e881a8523a3e610d29a0b7020314dd9e140ab99dae6d73db3978ae",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDocumentVisibility.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDocumentVisibility.md",
+      "sha256": "e35a63d04a7a69b5e0bd5eb3f3e7427d6ca725ee7c4cdb16f8e41deccd3e1cd3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDraggable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDraggable.md",
+      "sha256": "1888d36900fe1157a51b331d87fc3d759e6badb74380000367e9183cd40bc78b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDrauu.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDrauu.md",
+      "sha256": "9ba4de9433b34e5ec9de1fe3d358daa9062fe15e76e1550b798837a5cac062a6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useDropZone.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useDropZone.md",
+      "sha256": "0a38ccea1b66bafe9b0bf472d4fa33db32c46436f01680209bc7b4def51e0624",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useElementBounding.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useElementBounding.md",
+      "sha256": "fc5825b79aa7a5a7ace599d5763c06ea060565bdc65cbfe603fe734a9adf38b8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useElementByPoint.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useElementByPoint.md",
+      "sha256": "2a1a7c8d14629bf180e56fe799f4aad098820b3f5e8d0c9ad1917695fc4dbbe8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useElementHover.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useElementHover.md",
+      "sha256": "f0d5db48bbf1d4948a7d5d44b8b4f08bcf98cfbe97bd8a276c27d9c3dd0e8802",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useElementSize.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useElementSize.md",
+      "sha256": "7ce07a9a4a143a754e04c20a6ceff46efe9c925bee8642bbfc2c21cae606746d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useElementVisibility.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useElementVisibility.md",
+      "sha256": "71e9a5601b0f4f59c36b764ea2d5446a6b339112c07d5482467fee3067fd725b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useEventBus.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useEventBus.md",
+      "sha256": "0a1ad55654b2bf3d11109554fa2cff7b4aa43e27f3aa1801064dcbd73fc42fdb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useEventListener.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useEventListener.md",
+      "sha256": "7b8857ef57999ee7c31362c3087a0b67a0eaa2929b9ee9b1025595d6a79155af",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useEventSource.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useEventSource.md",
+      "sha256": "000ceacecea023014374731bf60be675b40f839dd6e423622dabfb0cc4c066a7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useExtractedObservable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useExtractedObservable.md",
+      "sha256": "81d33c1c781ee6a6cd6c20290690d01bc1f1ca7b97fc7090e7869a839d223014",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useEyeDropper.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useEyeDropper.md",
+      "sha256": "b55a75e0e074f5ca16cfad9016a2cac87ebc7b4217e13d053f5157147edc1989",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFavicon.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFavicon.md",
+      "sha256": "c39deec43e890532f7cf2406a4dedb5af5ed45ecd72640b6eef0dcfaffb7f276",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFetch.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFetch.md",
+      "sha256": "abdf558236c498adb4aba893bdb219b84e4aa7e21c3080ca542e7f957f210f96",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFileDialog.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFileDialog.md",
+      "sha256": "1890096f821c5479c67fc1629dbff780ed9f5bc8c8beddff0caf218f497cae68",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFileSystemAccess.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFileSystemAccess.md",
+      "sha256": "61fc484d99f215b7bf40139176b6fa91f27ce0a68414192ce5e26e15cf1ef96d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFirestore.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFirestore.md",
+      "sha256": "cf59a9fb9d8620a98a755ae77666a9ec0041da618b61e903873f10d8d2ace8a0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFloor.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFloor.md",
+      "sha256": "00451d13f68071ba9a3aec06b7ba996bf306d248727fea21658ac0ffc883ea58",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFocus.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFocus.md",
+      "sha256": "0193b270a53e61834d1f9678cda40e0472c2e3c699c51570c3e83a5da12b4c7b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFocusTrap.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFocusTrap.md",
+      "sha256": "2afccc1b1666aec639c83b7e38d5bf23cee3c61de30f65e25597b6f214b57615",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFocusWithin.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFocusWithin.md",
+      "sha256": "1db34fc97936c7fac4c8f005fe546495b0c7edc3cb7d8c6584fe00c4d0925784",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFps.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFps.md",
+      "sha256": "7e241da721cdca170671d8f868057980a776e7e62d1e4087064e51ba88b5ebbf",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFullscreen.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFullscreen.md",
+      "sha256": "0a08cc0662b4d79e8c4364937949685733ed9a17bf3f6ca4a07bf15e59ba96c6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useFuse.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useFuse.md",
+      "sha256": "c83933cc9592c3ae587535e9924eee1735ef00f2ca6f8616db1c14371ee3af3b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useGamepad.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useGamepad.md",
+      "sha256": "aa966979569fe61a5fc52fff677ad8bc12d9ceaced20d19511da128249c77c69",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useGeolocation.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useGeolocation.md",
+      "sha256": "385ff708a5af6dca20e55455780bc4dcf573b6e1374ecacd4d51c7a22524a360",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIDBKeyval.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIDBKeyval.md",
+      "sha256": "400aeb269a193c5d5b44db5bb4f92881e8950ce36c6b895cbbfe16353b92dc8a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIdle.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIdle.md",
+      "sha256": "3fb458dec5eb08ed81c6347e750b203356737c19fbed58bad1345ea88f6fe256",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useImage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useImage.md",
+      "sha256": "4a33cfddf99675a1f4f99301e497ac45a2e198c1c6c45873b3a73d27530980c0",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useInfiniteScroll.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useInfiniteScroll.md",
+      "sha256": "b22abff18c13320abb389fbbfef56c2e5c7ba1b92a587179d4e7e70ec4a13503",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIntersectionObserver.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIntersectionObserver.md",
+      "sha256": "292ab67c9941d48989e912833bd5d07962354f135af2ede7f35336131e29b45f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useInterval.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useInterval.md",
+      "sha256": "b5984479275388ea06eab6aa0628e92ea8324636481029611561b92aaab20e34",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIntervalFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIntervalFn.md",
+      "sha256": "0a892c5b1b2aa48ef94fc8d571b61957cfe80abc287fa4f56ae7883cfbb1398d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIpcRenderer.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIpcRenderer.md",
+      "sha256": "a5338954728edadd48e8b0412d868a79e2bf66a72a0fc557f2d232d5aa3df471",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIpcRendererInvoke.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIpcRendererInvoke.md",
+      "sha256": "ee68b8684f9580889cec4ac9790a840e2479f3e9c849210132af7145baf29a04",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useIpcRendererOn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useIpcRendererOn.md",
+      "sha256": "c66ac50a03f13ae10814ea5636f762445d753a73d5e6801ba5c1657dc86b5b15",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useJwt.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useJwt.md",
+      "sha256": "a1a5de113dd2e57338bf4b62e5ae28aad29bb9860898ccdb35d38ce33a9fdb28",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useKeyModifier.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useKeyModifier.md",
+      "sha256": "8b6887b5898e7a8d2ecfea8d3170ee6c6bae8b959ccfa73659dfcc4d18d2b553",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useLastChanged.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useLastChanged.md",
+      "sha256": "3ed69dd236b7199c1b9e7434f39cc1f4930771db51d8c024f60b24538a591a1a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useLocalStorage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useLocalStorage.md",
+      "sha256": "f17a8fb769164ee096222d233db51c78e3a1b613c8496949bf5fb5a79be58e22",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMagicKeys.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMagicKeys.md",
+      "sha256": "70bd22fab3ed9c10f493151d6f1101b58ac8e2bcdd3f2f15a6625a9c30b6bdb5",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useManualRefHistory.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useManualRefHistory.md",
+      "sha256": "1a79a416ec4f05fa8466e3ca56397f88e130025cf5853b595aa295c2233542b1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMath.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMath.md",
+      "sha256": "f7b2f8091aa709de3a302b70a1b121375832264fd452d581e1f9ec9c91372579",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMax.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMax.md",
+      "sha256": "6ec5a359cea679e099268890a4da0d82dbf402435cd13cf1441666936aa1a474",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMediaControls.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMediaControls.md",
+      "sha256": "4e40797e10b2cb48c7653952c375386743d1d55fb54bc3abe7c2907ee29880a9",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMediaQuery.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMediaQuery.md",
+      "sha256": "f6e212ff7f2b5a5878db12bc3039c2a097dc7a3cb941a5275143c06dab3fcf50",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMemoize.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMemoize.md",
+      "sha256": "6660e721e7143720a4066a50a5173f4ee61062e6fb2025758af2917ad5fcf8a7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMemory.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMemory.md",
+      "sha256": "282f913448ced25fa02cdbc9362b1ee1796cdf1abf999d2abf9cae4362bcea88",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMin.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMin.md",
+      "sha256": "40557b6dc75ed299c5d2b0303d3fdb8207cead90440db6dd2989c4d4a0c9a1ca",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMounted.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMounted.md",
+      "sha256": "46e8e03b2e57f7fd1a1712767335faad58252376f70b01725d6c7761e2240ee1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMouse.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMouse.md",
+      "sha256": "567b7a2361801d0e004f638ffdd2aecefbc0f2270d68b43123f3dd48d3bcbe0b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMouseInElement.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMouseInElement.md",
+      "sha256": "a3e0de0f45e9fd610ea8b1221274bc4d9724f3f137517f9e0c3b7315c57abc26",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMousePressed.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMousePressed.md",
+      "sha256": "dcd8eb5bbe22bc13443a3d845fea246e2a9439a5dff2cb75d16a07a8166c9ee6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useMutationObserver.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useMutationObserver.md",
+      "sha256": "9c748cb0009ef3dd31daf8a4e89d986f9800e2f55daaf9985c34c29ebc9a4d50",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useNProgress.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useNProgress.md",
+      "sha256": "16734ccfa5d9711d4f10395e7f2e15a1096eec231f0dbcaf640455920c56a971",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useNavigatorLanguage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useNavigatorLanguage.md",
+      "sha256": "5e2834f6f7a90117cb2af61d40307f64f725b86f1635bf924e36be1d9a7c4b58",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useNetwork.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useNetwork.md",
+      "sha256": "6ab76d70990faa3575f584e67d4d3d451bcb5e16b7f0d369cc56e4883ecde43d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useNow.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useNow.md",
+      "sha256": "c05fab0ae70767c4e57a3a27696f0a3e640d2235a162d5a82773d08577b4c119",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useObjectUrl.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useObjectUrl.md",
+      "sha256": "3fb64238f491843c4767025d8d21177c025b2d394e3151490b161c383e628d8a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useObservable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useObservable.md",
+      "sha256": "71685806b3b593664e20fcf067900bb5c4ff586bed662a90b98e71ad50ef8e1b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useOffsetPagination.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useOffsetPagination.md",
+      "sha256": "59156418280f0418953ee2128d0ce5854eb70160e3b1ecdd3ce800df6e462c97",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useOnline.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useOnline.md",
+      "sha256": "33306a59772f83ce5ffd62aa008a4ba5885600bc45c0faf658b2efdd872de27c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePageLeave.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePageLeave.md",
+      "sha256": "954fe54cecf7443c174e3f004735231ee4cd02a61a5501b9119f2326ebf749ed",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useParallax.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useParallax.md",
+      "sha256": "c2ea1d90e584ec86fb750393b2c0ee8bac2dae1d292465de12bd03aba57737cb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useParentElement.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useParentElement.md",
+      "sha256": "de5ddaecd9fb1cf126c20145cc4553fca672bfe34cf85dce1db7b82897505097",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePerformanceObserver.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePerformanceObserver.md",
+      "sha256": "9041874fc22c55896ea847305be5b334fc997e38931b830f9639d4e32252ff28",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePermission.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePermission.md",
+      "sha256": "e9dbaa2049d7420e277867859148802a8f82fa254b1bf6275c2e19a7c58268a2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePointer.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePointer.md",
+      "sha256": "3096e3198ebef52c5a8a108c1fcab4f54301f54e4dbc4ffd7199627d13ad7422",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePointerLock.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePointerLock.md",
+      "sha256": "8d08a87a4135e1a001f43c4ee08eeff19fc1a3c2f09514fdaefe5cd3c6742601",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePointerSwipe.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePointerSwipe.md",
+      "sha256": "a2023e7c6720e00133b6a92db6127d75d64489c89c22712fd779b11a5f98a11d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePrecision.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePrecision.md",
+      "sha256": "0a94094ef8bb7659cd63844ac113def81b8a3ac2d6723e847e59c568257fe958",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredColorScheme.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredColorScheme.md",
+      "sha256": "25c97e786607edbe34f60fec16e71b8f0a8a6d0db2ffde4582c0ec783a71d39a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredContrast.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredContrast.md",
+      "sha256": "19d4c40156dde55c9b625ef62efe1d9da0732360af53a2f5741622dc870026e8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredDark.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredDark.md",
+      "sha256": "ba9a9f11b5252367c5c70e150418ba37ca5d59a88a0b75b1e877399e3cc7cd89",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredLanguages.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredLanguages.md",
+      "sha256": "39abf8b4e9848b8d1fd617c61d3e28c5de824a58c059ff339aecee8acae8bb3a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredReducedMotion.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredReducedMotion.md",
+      "sha256": "fee9885231f487e385b8b81913773c26d1b88b4b0d8ea2e7c2c1ce4aa0ba8198",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePreferredReducedTransparency.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePreferredReducedTransparency.md",
+      "sha256": "0e078f3338c838487a2a8bac9715bbbbaadefa0371aa337be98c3a2afa2e3426",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/usePrevious.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/usePrevious.md",
+      "sha256": "275f8e5f761534a87eed6063dfb10627378843fc756ae52bcc2e5cec328b8c14",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useProjection.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useProjection.md",
+      "sha256": "e50deb798391a9827880710edd2dfafa9d2578de3c2a46dcc74fc23f3c32ad22",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useQRCode.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useQRCode.md",
+      "sha256": "492ac04d588c39600af85281d12cf97f4a4c5f061769905463602995b3ddb5c2",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRTDB.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRTDB.md",
+      "sha256": "64fcefdd491c9d4649ed4dfcb411e391da9f620e09af8a724c5f9bae6752f22d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRafFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRafFn.md",
+      "sha256": "0ae0a77ff67407c0d85a96a4eddb041f5c2be76fdf005a8ce3fa3c5ce6753fcf",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRefHistory.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRefHistory.md",
+      "sha256": "e30deb6f667867da00cc1bd446d490e35eb61e303edd66dee180d1291b100338",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useResizeObserver.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useResizeObserver.md",
+      "sha256": "45c78c61f1d43e242320ce4baaa1401d1b752bcaffa0b78dbd555a7008c8f7d3",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRound.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRound.md",
+      "sha256": "0c679f89de4cc342ea534635ab2a6f34c3f2640999ceecb3f70133011dec159e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRouteHash.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRouteHash.md",
+      "sha256": "12416e7f4a5ee64b51dc7827d42a1f279b48e893180f0bd7184b64ff04f32834",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRouteParams.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRouteParams.md",
+      "sha256": "211ab2d00909cc6511e4ad4c75c5a9614a3299f6eaf7d6bad3143ad6fb60d746",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useRouteQuery.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useRouteQuery.md",
+      "sha256": "a03e5029fb2f3cf9c295d7cbfae62cda0a2bf1ec4b2ab99481e7a9b77542a885",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSSRWidth.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSSRWidth.md",
+      "sha256": "c55b29428278b5eaf0f66787485e764749572a48bc6f25b3c54892c2bc30b2e9",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useScreenOrientation.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useScreenOrientation.md",
+      "sha256": "0507feab52a7bfbb929d42f626889d0f94ad582b86a1c8341b35001651751b7d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useScreenSafeArea.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useScreenSafeArea.md",
+      "sha256": "82c6c358f42dfb558adb2e2c860f76a6b2b5967538cd0b261e13d576e6345fda",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useScriptTag.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useScriptTag.md",
+      "sha256": "d6c3cfee44f806d4dec8ccba3491ac39fac5a28d1217bb370de3ab4574421827",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useScroll.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useScroll.md",
+      "sha256": "99538e7a9023ec65c604c9c05cb76582791f85f7bf2b7959bd592b8fff125a4b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useScrollLock.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useScrollLock.md",
+      "sha256": "0901f163f5f907512f4d3e5c5a24c581fb546f9b4786d45c8f54f6568e182cc9",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSessionStorage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSessionStorage.md",
+      "sha256": "b273ce17f32622cdd387f2595d1573b34b625f71ee0d68cd7e7680a7f92856a8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useShare.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useShare.md",
+      "sha256": "c87894dcef3bf4b1b48fbf96374a1e7e2823af0a382e9803d307cac8bdc20d2e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSortable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSortable.md",
+      "sha256": "90c8c880464872f13061ebd3dbb7f998f8326394b01ba61eb2d5ac5210b64ff1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSorted.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSorted.md",
+      "sha256": "9446f7d6de3054faa9a901f8ae94e64b85a4b4d61dc59f8c8a3ec1f33a550b0f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSpeechRecognition.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSpeechRecognition.md",
+      "sha256": "2ae968c4c98ad33c7ba90ad54bb98af53453d6df2e6091128c62b25332652f7d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSpeechSynthesis.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSpeechSynthesis.md",
+      "sha256": "da176aeca78e964a52f4c506c0e4c6ed726e967431a9ac9ffb46637ee3a16f11",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useStepper.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useStepper.md",
+      "sha256": "1da12631d964f3f479ffe1f6b17d68cc0c3b375163655ab24e7cff726fea5dbd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useStorage.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useStorage.md",
+      "sha256": "055dd34a5a2dea27b398138a2818ff3dca67eb6000686651b11dd9e5e7a78172",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useStorageAsync.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useStorageAsync.md",
+      "sha256": "f1ff09c6026c6dcbac315e0d87ec258866240a1a2faebd100a8dc644684e123c",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useStyleTag.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useStyleTag.md",
+      "sha256": "d4813df222d9534aa7e6a820708a6201f6910b257d11b583a1ecfcf1e9e253bf",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSubject.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSubject.md",
+      "sha256": "2fa09944450eeba37d63fd80c323a1e3de5da95cf30b46399a5f98516ffb8f56",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSubscription.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSubscription.md",
+      "sha256": "6007e11d57a68c3811dbfdac576b4b5aff9ad6a62ac0957f6ee71af3080a942f",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSum.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSum.md",
+      "sha256": "91c01211bd2e25c353bdaaacb17d0a4903500a77f3e7f6bd33425982f38c90fe",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSupported.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSupported.md",
+      "sha256": "851afe051e3ee8a25486c9fcbac9436ae4f8b9ad28b0bc0e1c0fd0856be71937",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useSwipe.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useSwipe.md",
+      "sha256": "80d36644cbbf4c1e8bb7eeda9fca70cf38231d83d62d7c02e48cb2932c58f798",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTemplateRefsList.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTemplateRefsList.md",
+      "sha256": "e32c4076dca47d17f6f493a707eb57773a22e05b1dd36aae4725e304514453c5",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTextDirection.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTextDirection.md",
+      "sha256": "82e44c0cac58572a9fe3f0587752301fa302bdadbc2266e78f3ec7bd520de7cf",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTextSelection.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTextSelection.md",
+      "sha256": "fe4a606f2e8da35d4250b608e8bd7cd25deb85b63a60dde12741a2c0ee583b58",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTextareaAutosize.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTextareaAutosize.md",
+      "sha256": "2ac87bf5d9e76a984877849dd3aa1f8751bb24f21ff36f00e3bd755ee0276e97",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useThrottleFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useThrottleFn.md",
+      "sha256": "0220a8e25a7311e40b5ddc3aa856e603305fff380fe4f43a45ad9b3acbd1b630",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useThrottledRefHistory.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useThrottledRefHistory.md",
+      "sha256": "e5d38de5baf9fdca5a44a5c56033312ed1605dc8e723e6a83402598d7594c110",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimeAgo.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimeAgo.md",
+      "sha256": "b301e6a897c03ae7162f40a9c1e55e2c016e116f4018120b359622db5030adf7",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimeAgoIntl.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimeAgoIntl.md",
+      "sha256": "4907eb78da9458e2c5666d3c9a4c736e8e8c82e45e6f209b9a339f4f7399672d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimeout.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimeout.md",
+      "sha256": "1c6cd74f79b3dfec87b9f21d106755810ab2f7a74893353023b061dd1b4ba0aa",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimeoutFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimeoutFn.md",
+      "sha256": "1c382d48eaa773367f273e9db4fdec43ece2e8292a3718dc1f64426f5590ea81",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimeoutPoll.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimeoutPoll.md",
+      "sha256": "ee3658bf35fef96ea8f8d3636123731664213692f3ab927d559d88d04da35f10",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTimestamp.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTimestamp.md",
+      "sha256": "1977d892331e3c9d37a89cd6c341aa068cc9f9e907adf60fe85e2258081ab3ba",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTitle.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTitle.md",
+      "sha256": "9b7d25852942c56549cc74532c09afbe1dbec8f871196c5acd7315d0968cc53a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useToNumber.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useToNumber.md",
+      "sha256": "66c1134df7da70325913944560a05f08273ac594fd6ea271dda0da7492bf841a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useToString.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useToString.md",
+      "sha256": "8fb5da6e9fc107b54e07064335e91887db0541c5629a111d1676d39474e184d4",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useToggle.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useToggle.md",
+      "sha256": "6e4e50c65bbb0f56c14946c42bcc7b1dee4c3d7aa2dc10c1ea1dc358c8d87fd1",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTransition.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTransition.md",
+      "sha256": "bc6554d49f07cbea33d95af82bd7b0d64f22b6e93332728981b6db63750720fd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useTrunc.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useTrunc.md",
+      "sha256": "0b5a820bc016852c69a3b0ff23e135692ff16dfce82f9ba72a0e85f6d126903b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useUrlSearchParams.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useUrlSearchParams.md",
+      "sha256": "a5fdc15161cf9460bb186a2c53b88c894784f472a27a322afc6da57085787771",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useUserMedia.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useUserMedia.md",
+      "sha256": "7ccb5ac41d39a7d07fc4c69b2ab34e6d9e19cfa861e46ee443c128083d7d4f4d",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useVModel.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useVModel.md",
+      "sha256": "516581825e284ab4cb1d2a7ebdae7d6add0a70092e62cc4d95a73fe624dedb6e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useVModels.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useVModels.md",
+      "sha256": "7239ad95ed54dc551e006e46516a6455f45c6fca45da64a69746e9a8e6bdd701",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useVibrate.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useVibrate.md",
+      "sha256": "fdd227321f2aeab6f7ebbb5d6982c162069d31a335347ecf8a95442329b7a95b",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useVirtualList.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useVirtualList.md",
+      "sha256": "6c3a70b04067e1edb34e2e814f1bcc20d9ffd2efc88f9da68cbd35f3291a2a86",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWakeLock.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWakeLock.md",
+      "sha256": "3eb9000244e7e478c029b5f1075c08dd8b0a2f1b178635f539cc6dd8da37b619",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWebNotification.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWebNotification.md",
+      "sha256": "781ec5b04a06e99935e97f2f81546f9ddb250f7906b2809ce51d0c727bd403fd",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWebSocket.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWebSocket.md",
+      "sha256": "1b8ad036010833eac95fe1af6843a25429c0b1f550982d28036dd280bdf7f718",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWebWorker.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWebWorker.md",
+      "sha256": "f3ae619db6f1e00668492ab9674fc43bbe6f5d14114be7b3b47fee5ae95005ec",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWebWorkerFn.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWebWorkerFn.md",
+      "sha256": "6cb4d10a7124319de12234fb60bf2fd68e0828368749fdf4ffe088230cbb7b1e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWindowFocus.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWindowFocus.md",
+      "sha256": "8317bf35fa08f9a3babf2549c7f36b98cf268b4f2c86f1c07b614dfa1f089d57",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWindowScroll.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWindowScroll.md",
+      "sha256": "564bb964dae2c51a9b75e9550247f97c80bd6d99d15b3769fd0e84e18283f6b6",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useWindowSize.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useWindowSize.md",
+      "sha256": "eb41f40edc625036a15f69917b7e4a234dcb9b383b5514ffdf58a1bd9819feaa",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useZoomFactor.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useZoomFactor.md",
+      "sha256": "204895b74c22d9247f127255b3da75b164c07f9cd872c9e7dc7c12b28d8e8252",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/useZoomLevel.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/useZoomLevel.md",
+      "sha256": "273c55a58d1b0306f6ee54c93a5b55c0151bb8b9d9cf0d26a58306735a048e84",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchArray.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchArray.md",
+      "sha256": "eb3730e84f59450706b6955ea1ad3f626c78d1e95b192ddbe81d0e344ccd4694",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchAtMost.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchAtMost.md",
+      "sha256": "25c869b611fb5469e522c9f6440cdbed2ef4e0eb34b59539e571b11dd3172477",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchDebounced.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchDebounced.md",
+      "sha256": "ccc3cc5c44ffa6dd92d20de73d8aa28b55ee0c85a3454beca55bb5336ad48037",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchDeep.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchDeep.md",
+      "sha256": "f6d1cd4fe4f81743f6d22fc60021fd6423d0fc54f6b657a4ab115c2f4de91678",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchExtractedObservable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchExtractedObservable.md",
+      "sha256": "2a9ab189b51fdc9f8c454f28113824ebdaa2f4399e491a0ee05b1b67bbc97108",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchIgnorable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchIgnorable.md",
+      "sha256": "9ca1f33895ad29f7d0cfc955af3ae0fd2ec3e624690cd99ddd3c1d5f9251e3f8",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchImmediate.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchImmediate.md",
+      "sha256": "6a8892771151d1443f6105a392a4919d9ef1d4d9cbcc3e2f9d65e1de138845bb",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchOnce.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchOnce.md",
+      "sha256": "ea6dac085e8b6afe2ac854cbe6a3361ed827ec9ed81d72853fa6c734c98da627",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchPausable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchPausable.md",
+      "sha256": "2a071457bd4582ad353a9f476fb771e759c58841bc820ba0b105dcf367c2832a",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchThrottled.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchThrottled.md",
+      "sha256": "3824edcbb17f15009d64d03a80bed80be62aa703c7bfa146f8c53fab389ea74e",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchTriggerable.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchTriggerable.md",
+      "sha256": "414e29cc0a6c57fbfd5c3fdcc6b00f7a1587d79e7c42a88d255752d6f4576f72",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/watchWithFilter.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/watchWithFilter.md",
+      "sha256": "3139e533277d82a749c208995a90fd69cc3ff9f6fcb9ede9d7948131616499ed",
+      "fetched_at": "2026-06-17"
+    },
+    {
+      "path": "references/whenever.md",
+      "url": "https://raw.githubusercontent.com/antfu/skills/main/skills/vueuse-functions/references/whenever.md",
+      "sha256": "4436994524decdc0ff7fcb9da5a66b6f62853c091af5f1bab0aad6c813e3e663",
+      "fetched_at": "2026-06-17"
+    }
+  ],
+  "notes": "Imported from antfu/skills (skills/vueuse-functions/SKILL.md). strategy=notify: upstream changes are reported only — review and merge manually. 2026-09-14: Local navigator replaces the broad entry. The upstream-derived Functions catalog moved to references/catalog.md with links rebased and a local scope note; every table row and invocation class preserved. Per-function reference files unchanged. Historical source SHA is retained; the catalog is an adapted extraction, not byte-faithful upstream SKILL.md. strategy=notify reports drift without overwriting local adaptations.",
+  "audit": {
+    "verdict": "clean",
+    "at": "2026-08-01",
+    "by": "vendor audit",
+    "upstream_sha": "e833f58780207770088609af97b35d72d14bfa9a3cf7389fa345d142007630c3"
+  },
+  "body_path": "references/catalog.md",
+  "local_adaptation": {
+    "at": "2026-09-14",
+    "reason": "skills audit",
+    "catalog": "references/catalog.md",
+    "reference_policy": "unchanged per-function reference bytes"
+  }
+}

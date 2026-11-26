@@ -1,0 +1,371 @@
+"""Tests of the closed-profile validator aicore.util.schema."""
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from aicore.util import schema
+
+PREFIX = "urn:test:"
+
+
+def write_schema(directory: Path, kind: str, body: dict, version: str = "v1") -> None:
+    doc = {"$schema": schema.DIALECT, "$id": f"{PREFIX}{kind}:{version}", **body}
+    (directory / f"{kind}.schema.json").write_text(json.dumps(doc), encoding="utf-8")
+
+
+class SchemaCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.dir = Path(self._tmp.name)
+        schema.clear_registry_cache()
+        self.addCleanup(schema.clear_registry_cache)
+
+    def registry(self, body: dict, kind: str = "thing"):
+        schema.clear_registry_cache()  # the same directory is rewritten within one test
+        write_schema(self.dir, kind, body)
+        return schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=(kind,))
+
+    def codes(self, body: dict, doc: object, kind: str = "thing") -> list:
+        return [issue.code for issue in schema.validate(doc, kind, self.registry(body, kind))]
+
+
+class TestProfile(SchemaCase):
+    def test_unsupported_keyword_fails_closed(self):
+        write_schema(self.dir, "bad", {"type": "integer", "multipleOf": 2})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unsupported keyword 'multipleOf'"):
+            schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("bad",))
+
+    def test_profile_rules(self):
+        for body in ({"type": "bogus"}, {"additionalProperties": True}, {"required": "a"}, {"enum": []},
+                     {"minItems": -1}, {"uniqueItems": 1}, {"pattern": "("}, {"$ref": 3}, {"oneOf": []},
+                     {"properties": {"a": {"$schema": schema.DIALECT}}}):
+            with self.subTest(body=body):
+                schema.clear_registry_cache()
+                write_schema(self.dir, "bad", body)
+                with self.assertRaises(schema.SchemaProfileError):
+                    schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("bad",))
+
+    def test_empty_directory_and_unknown_kind(self):
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("x",))
+        registry = self.registry({"type": "string"})
+        with self.assertRaises(schema.SchemaProfileError):
+            registry.for_kind("other")
+
+    def test_duplicate_id(self):
+        write_schema(self.dir, "a", {})
+        doc = {"$schema": schema.DIALECT, "$id": f"{PREFIX}a:v1"}
+        (self.dir / "b.schema.json").write_text(json.dumps(doc), encoding="utf-8")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "duplicate"):
+            schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("a",))
+
+    def test_registry_is_cached_per_parameters(self):
+        write_schema(self.dir, "thing", {"type": "string"})
+        first = schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("thing",))
+        self.assertIs(first, schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("thing",)))
+        self.assertIsNot(first, schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("thing",), version="v2"))
+
+
+class TestValidation(SchemaCase):
+    def test_type_enum_const(self):
+        self.assertEqual(self.codes({"type": "integer"}, "x"), ["type"])
+        self.assertEqual(self.codes({"type": "integer"}, True), ["type"])
+        self.assertEqual(self.codes({"enum": ["a", "b"]}, "c"), ["enum"])
+        self.assertEqual(self.codes({"enum": [1]}, True), ["enum"])
+        self.assertEqual(self.codes({"const": "v"}, "w"), ["const"])
+        self.assertEqual(self.codes({"type": ["string", "null"]}, None), [])
+
+    def test_string_keywords(self):
+        body = {"type": "string", "minLength": 2, "pattern": "^[a-z]+$"}
+        self.assertEqual(self.codes(body, "ab"), [])
+        self.assertEqual(self.codes(body, "A"), ["min_length", "pattern"])
+        self.assertEqual(self.codes(body, "ab\n"), ["pattern"])  # "$" matches only at the very end
+
+    def test_array_keywords(self):
+        body = {"type": "array", "minItems": 2, "uniqueItems": True, "items": {"type": "integer"}}
+        self.assertEqual(self.codes(body, [1, 2]), [])
+        self.assertEqual(self.codes(body, [1]), ["min_items"])
+        self.assertEqual(self.codes(body, [1, 1]), ["unique"])
+        self.assertEqual(self.codes(body, [1, "a"]), ["type"])
+
+    def test_object_keywords_and_pointer(self):
+        body = {"type": "object", "required": ["a"], "additionalProperties": False,
+                "properties": {"a": {"type": "string"}, "b/c": {"type": "integer"}}}
+        self.assertEqual(self.codes(body, {"a": "x"}), [])
+        self.assertEqual(self.codes(body, {}), ["required"])
+        registry = self.registry(body)
+        issues = schema.validate({"a": "x", "extra": 1, "b/c": "s"}, "thing", registry)
+        self.assertEqual(sorted((issue.path, issue.code) for issue in issues),
+                         [("/b~1c", "type"), ("/extra", "additional")])
+
+    def test_one_of(self):
+        body = {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+        self.assertEqual(self.codes(body, 1), [])
+        self.assertEqual(self.codes(body, None), ["one_of"])
+        self.assertEqual(self.codes({"oneOf": [{"type": "integer"}, {"type": "number"}]}, 1), ["one_of"])
+
+    def test_one_of_says_what_the_nearest_branch_misses(self):
+        body = {"oneOf": [
+            {"description": "Command check.", "type": "object", "required": ["id", "exit"],
+             "properties": {"id": {"type": "string", "pattern": "^V[0-9]+$"}, "exit": {"type": "integer"}}},
+            {"description": "Manual check.", "type": "object", "required": ["id", "verdict"],
+             "properties": {"id": {"type": "string"}, "verdict": {"enum": ["pass", "fail"]}}}]}
+        issues = schema.validate({"id": "tests", "exit": 0}, "thing", self.registry(body))
+        self.assertEqual([issue.code for issue in issues], ["one_of"])
+        self.assertIn("Command check:", issues[0].message)
+        self.assertIn('"tests" does not match pattern ^V[0-9]+$', issues[0].message)
+
+    def test_ref_inside_registry_and_unresolved(self):
+        body = {"type": "object", "properties": {"h": {"$ref": "#/$defs/hex"}, "z": {"$ref": "#/$defs/none"}},
+                "$defs": {"hex": {"type": "string", "pattern": "^[0-9a-f]+$"}}}
+        self.assertEqual(self.codes(body, {"h": "ab"}), [])
+        self.assertEqual(self.codes(body, {"h": "zz"}), ["pattern"])
+        self.assertEqual(self.codes(body, {"z": 1}), ["ref"])
+
+    def test_validate_node(self):
+        registry = self.registry({"$defs": {"n": {"type": "integer"}}})
+        base = f"{PREFIX}thing:v1"
+        self.assertEqual(schema.validate_node(registry, {"$ref": "#/$defs/n"}, base, 1), [])
+        self.assertTrue(schema.validate_node(registry, {"$ref": "#/$defs/n"}, base, "s"))
+
+
+class TestPatternProperties(SchemaCase):
+    BODY = {"type": "object", "additionalProperties": False,
+            "properties": {"fixed": {"type": "string"}},
+            "patternProperties": {"^x-[a-z]+$": {"type": "integer"}}}
+
+    def issues(self, body: dict, doc: object) -> list:
+        return [(issue.path, issue.code) for issue in schema.validate(doc, "thing", self.registry(body))]
+
+    def test_name_matching_a_pattern_is_checked_by_its_schema(self):
+        self.assertEqual(self.issues(self.BODY, {"x-one": 1}), [])
+        self.assertEqual(self.issues(self.BODY, {"x-one": "s"}), [("/x-one", "type")])
+
+    def test_unmatched_name_is_additional(self):
+        self.assertEqual(self.issues(self.BODY, {"other": 1, "x-ok": 2}), [("/other", "additional")])
+
+    def test_property_that_matches_a_pattern_meets_both_schemas(self):
+        body = {"type": "object", "additionalProperties": False,
+                "properties": {"x-fixed": {"type": "string"}},
+                "patternProperties": {"^x-": {"minLength": 3}}}
+        self.assertEqual(self.issues(body, {"x-fixed": "abc"}), [])
+        self.assertEqual(self.issues(body, {"x-fixed": "ab"}), [("/x-fixed", "min_length")])
+        self.assertEqual(self.issues(body, {"x-fixed": 5}), [("/x-fixed", "type")])
+
+    def test_property_names_rejects_a_name(self):
+        body = {"type": "object", "additionalProperties": False,
+                "propertyNames": {"pattern": "^[a-z]+$", "minLength": 2},
+                "properties": {"ab": {}, "A": {}}}
+        self.assertEqual(self.issues(body, {"ab": 1}), [])
+        self.assertEqual(self.issues(body, {"A": 1}), [("/A", "property_name")])
+        self.assertEqual(sorted(self.issues(body, {"a": 1})),
+                         [("/a", "additional"), ("/a", "property_name")])
+
+    def test_property_names_does_not_extend_coverage(self):
+        body = {"type": "object", "additionalProperties": False, "properties": {},
+                "propertyNames": {"pattern": "^[a-z]+$"}}
+        self.assertEqual(self.issues(body, {"abc": 1}), [("/abc", "additional")])
+
+    def test_profile_rejects_bad_regex_and_property_names_keywords(self):
+        for body, message in (
+                ({"patternProperties": {"(": {}}}, "invalid pattern"),
+                ({"patternProperties": []}, "patternProperties must be an object"),
+                ({"patternProperties": {"^a$": 1}}, "schema node must be an object"),
+                ({"propertyNames": {"format": "email"}}, "unsupported keyword 'format'"),
+                ({"propertyNames": {"properties": {}}}, "propertyNames may only use"),
+                ({"propertyNames": {"type": "integer"}}, "propertyNames type must be")):
+            with self.subTest(body=body):
+                schema.clear_registry_cache()
+                write_schema(self.dir, "bad", body)
+                with self.assertRaisesRegex(schema.SchemaProfileError, message):
+                    schema.load_registry(self.dir, urn_prefix=PREFIX, kinds=("bad",))
+
+    def test_unanchored_pattern_matches_a_substring(self):
+        body = {"type": "object", "additionalProperties": False, "patternProperties": {"ab": {"type": "integer"}}}
+        self.assertEqual(self.issues(body, {"xabx": 1}), [])
+        self.assertEqual(self.issues(body, {"xbx": 1}), [("/xbx", "additional")])
+
+    def test_property_name_is_an_error_code(self):
+        self.assertIn("property_name", schema.ERROR_CODES)
+        self.assertLessEqual({"patternProperties", "propertyNames"}, schema.SUPPORTED_KEYWORDS)
+
+
+class TestLoadContract(SchemaCase):
+    def contract(self, name: str = "thing", version: str = "v1") -> Path:
+        directory = self.dir / name / version
+        directory.mkdir(parents=True)
+        return directory
+
+    def test_loads_kind_and_version(self):
+        directory = self.contract("thing", "v2")
+        write_schema(directory, "thing", {"type": "string"}, version="v2")
+        registry, kind = schema.load_contract(directory, urn_prefix=PREFIX)
+        self.assertEqual(kind, "thing")
+        self.assertEqual(schema.validate("x", kind, registry), [])
+        self.assertTrue(schema.validate(1, kind, registry))
+
+    def test_rejects_wrong_layout(self):
+        directory = self.contract("thing", "v1")
+        write_schema(directory, "other", {})
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_contract(directory, urn_prefix=PREFIX)
+        bad_version = self.contract("thing2", "latest")
+        write_schema(bad_version, "thing2", {}, version="latest")
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_contract(bad_version, urn_prefix=PREFIX)
+
+    def test_id_version_must_match_directory(self):
+        directory = self.contract("thing", "v2")
+        write_schema(directory, "thing", {}, version="v1")
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_contract(directory, urn_prefix=PREFIX)
+
+    def test_ref_to_a_neighbouring_contract(self):
+        base = self.contract("base", "v1")
+        write_schema(base, "base", {"$defs": {"name": {"type": "string", "pattern": "^[a-z]+$"}}})
+        user = self.contract("user", "v1")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False,
+                                    "properties": {"n": {"$ref": f"{PREFIX}base:v1#/$defs/name"}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(registry.kinds, ("user",))
+        self.assertEqual(schema.validate({"n": "abc"}, kind, registry), [])
+        self.assertEqual([i.code for i in schema.validate({"n": "AB"}, kind, registry)], ["pattern"])
+        with self.assertRaises(schema.SchemaProfileError):
+            registry.for_kind("base")
+
+    def test_refs_are_followed_transitively_and_cycles_terminate(self):
+        for name, target in (("a", "b"), ("b", "c"), ("c", "a")):
+            write_schema(self.contract(name), name, {"$defs": {"x": {"$ref": f"{PREFIX}{target}:v1#/$defs/x"}}})
+        registry, _ = schema.load_contract(self.dir / "a" / "v1", urn_prefix=PREFIX)
+        self.assertEqual({f"{PREFIX}{n}:v1" for n in "abc"}, set(registry._schemas))
+
+    def test_ref_to_a_whole_schema_and_into_nested_nodes(self):
+        write_schema(self.contract("base"), "base", {"type": "integer"})
+        user = self.contract("user")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False,
+                                    "patternProperties": {"^k$": {"items": {"$ref": f"{PREFIX}base:v1"}}},
+                                    "properties": {"o": {"oneOf": [{"$ref": f"{PREFIX}base:v1"}]}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(schema.validate({"o": 1, "k": [2]}, kind, registry), [])
+        self.assertTrue(schema.validate({"o": 1, "k": ["s"]}, kind, registry))
+
+    def test_missing_neighbour_is_a_profile_error(self):
+        user = self.contract("user")
+        write_schema(user, "user", {"properties": {"n": {"$ref": f"{PREFIX}absent:v1#/$defs/name"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved contract reference"):
+            schema.load_contract(user, urn_prefix=PREFIX)
+
+    def test_module_contract_reaches_the_foundation_and_its_neighbours(self):
+        write_schema(self.contract("base"), "base", {"$defs": {"name": {"type": "string", "pattern": "^[a-z]+$"}}})
+        user = self.contract("user")
+        write_schema(user, "user", {"type": "object", "additionalProperties": False, "properties": {
+            "v": {"$ref": f"{schema.CONTRACT_URN_PREFIX}common:v1#/$defs/semver"},
+            "d": {"$ref": f"{schema.CONTRACT_URN_PREFIX}digest:v1"},
+            "n": {"$ref": f"{PREFIX}base:v1#/$defs/name"}}})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX)
+        self.assertEqual(schema.validate({"v": "1.2.3", "d": "sha256:" + "0" * 64, "n": "abc"}, kind, registry), [])
+        self.assertEqual(sorted(i.code for i in schema.validate({"v": "1", "d": "x", "n": "A"}, kind, registry)),
+                         ["pattern", "pattern", "pattern"])
+
+    def test_module_contract_with_unknown_foundation_contract_is_a_profile_error(self):
+        user = self.contract("user")
+        write_schema(user, "user", {"properties": {"n": {"$ref": f"{schema.CONTRACT_URN_PREFIX}absent:v1"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved contract reference"):
+            schema.load_contract(user, urn_prefix=PREFIX)
+
+    def test_module_contract_finds_the_foundation_only_in_the_foundation(self):
+        # A module folder named like a foundation contract is not used for a foundation reference.
+        write_schema(self.contract("common"), "common", {"$defs": {"semver": {"type": "integer"}}})
+        foundation = self.dir / "foundation"
+        (foundation / "common" / "v1").mkdir(parents=True)
+        (foundation / "common" / "v1" / "common.schema.json").write_text(json.dumps({
+            "$schema": schema.DIALECT, "$id": f"{schema.CONTRACT_URN_PREFIX}common:v1",
+            "$defs": {"semver": {"type": "string"}}}), encoding="utf-8")
+        user = self.contract("user")
+        write_schema(user, "user", {"$ref": f"{schema.CONTRACT_URN_PREFIX}common:v1#/$defs/semver"})
+        registry, kind = schema.load_contract(user, urn_prefix=PREFIX, foundation=foundation)
+        self.assertEqual(schema.validate("1.0.0", kind, registry), [])
+        self.assertEqual([i.code for i in schema.validate(1, kind, registry)], ["type"])
+
+
+class TestLoadContractSet(SchemaCase):
+    PLAN = "urn:test:plan:"
+
+    def directory(self, name: str = "plan", version: str = "v1") -> Path:
+        directory = self.dir / name / version
+        directory.mkdir(parents=True)
+        return directory
+
+    def write(self, directory: Path, file_stem: str, kind: str, body: dict, prefix: str = None, version: str = "v1"):
+        doc = {"$schema": schema.DIALECT, "$id": f"{prefix or self.PLAN}{kind}:{version}", **body}
+        (directory / f"{file_stem}.schema.json").write_text(json.dumps(doc), encoding="utf-8")
+
+    def test_loads_every_kind_under_a_shared_prefix(self):
+        directory = self.directory()
+        self.write(directory, "defs", "defs", {"$defs": {"id": {"type": "string", "pattern": "^[a-z]+$"}}})
+        self.write(directory, "item", "item", {"type": "object", "additionalProperties": False,
+                                               "properties": {"id": {"$ref": f"{self.PLAN}defs:v1#/$defs/id"}}})
+        registry, kinds = schema.load_contract_set(directory)
+        self.assertEqual(["defs", "item"], kinds)
+        self.assertEqual(self.PLAN, registry.urn_prefix)
+        self.assertEqual([], schema.validate({"id": "abc"}, "item", registry))
+        self.assertEqual(["pattern"], [i.code for i in schema.validate({"id": "A"}, "item", registry)])
+
+    def test_the_kind_comes_from_the_id_not_from_the_file_name(self):
+        directory = self.directory("event-data")
+        self.write(directory, "thing.created", "thing-created", {"type": "string"})
+        registry, kinds = schema.load_contract_set(directory)
+        self.assertEqual(["thing-created"], kinds)
+        self.assertEqual([], schema.validate("x", "thing-created", registry))
+
+    def test_prefix_and_version_must_agree(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {})
+        self.write(directory, "b", "b", {}, prefix="urn:other:")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "does not share the prefix"):
+            schema.load_contract_set(directory)
+        elsewhere = self.directory("plan2", "v2")
+        self.write(elsewhere, "a", "a", {}, version="v1")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "must be <prefix><kind>:v2"):
+            schema.load_contract_set(elsewhere)
+        bad = self.directory("plan3", "latest")
+        self.write(bad, "a", "a", {}, version="latest")
+        with self.assertRaises(schema.SchemaProfileError):
+            schema.load_contract_set(bad)
+
+    def test_an_unresolved_reference_is_a_profile_error(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {"properties": {"x": {"$ref": f"{self.PLAN}missing:v1"}}})
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved reference"):
+            schema.load_contract_set(directory)
+
+    def test_the_foundation_contracts_are_found_next_to_aicore(self):
+        directory = self.directory()
+        self.write(directory, "a", "a", {"properties": {"ref": {"$ref": f"{schema.CONTRACT_URN_PREFIX}artifact-ref:v1"}}})
+        registry, _ = schema.load_contract_set(directory)
+        self.assertIn(f"{schema.CONTRACT_URN_PREFIX}artifact-ref:v1", registry._schemas)
+
+    def test_a_set_refers_to_a_sibling_set_of_the_same_module(self):
+        options = self.directory("conductor")
+        self.write(options, "run-options", "run-options", {"type": "object", "additionalProperties": False,
+                                                           "properties": {"x": {"type": "integer"}}},
+                   prefix="urn:test:conductor:")
+        records = self.directory("records")
+        self.write(records, "item-options", "item-options", {
+            "type": "object", "properties": {"options": {"$ref": "urn:test:conductor:run-options:v1"}}},
+            prefix="urn:test:records:")
+        registry, kinds = schema.load_contract_set(records)
+        self.assertEqual(["item-options"], kinds)
+        self.assertEqual([], schema.validate({"options": {"x": 1}}, "item-options", registry))
+        self.assertEqual(["additional"], [i.code for i in schema.validate({"options": {"y": 1}}, "item-options",
+                                                                            registry)])
+        self.write(records, "broken", "broken", {"properties": {"o": {"$ref": "urn:test:absent:thing:v1"}}},
+                   prefix="urn:test:records:")
+        with self.assertRaisesRegex(schema.SchemaProfileError, "unresolved reference"):
+            schema.load_contract_set(records)
+
+
+if __name__ == "__main__":
+    unittest.main()

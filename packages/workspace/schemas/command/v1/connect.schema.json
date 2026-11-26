@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:connect:v1",
+  "title": "workspace connect",
+  "description": "Stdout of `workspace connect --remote URL --json`: the remote was classified and added as origin; nothing was pushed.",
+  "type": "object",
+  "properties": {
+    "root": {
+      "$ref": "urn:swissknifeman:workspace:command:common:v1#/$defs/abs_path",
+      "description": "Folder of the workspace repository."
+    },
+    "remote": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The remote URL without user information."
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The branch the workspace pushes."
+    },
+    "classification": {
+      "enum": ["empty", "same"],
+      "description": "What the remote held: empty (no branch) or the same workspace."
+    },
+    "next": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The command to run next."
+    }
+  },
+  "required": ["root", "remote", "branch", "classification", "next"],
+  "additionalProperties": false
+}

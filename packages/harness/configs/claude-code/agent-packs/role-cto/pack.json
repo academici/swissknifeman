@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "pack": "role-cto",
+  "version": "0.1.3",
+  "description": "Persona-pack startup-CTO: set delegate/read-first technical leader level subagents - architecture-decision (ADR/C4/boundaries/scalability + data/api/observability/security), tech-radar-curator (stack selection and build-vs-buy like trade-off matrix + tech radar adopt/trial/hold with audit supply-chain), ai-viability-assessor (reality vs hype AI-directions via agent design, eval-metrics and product-market risks). Stack-agnostic role: connects explicitly as a companion to any stack pack, not auto-detected.",
+  "stack": {
+    "shape": "role"
+  },
+  "requires": {
+    "skills": [
+      "tech-stack-selection",
+      "architecture",
+      "data-schema",
+      "api-design",
+      "observability-design",
+      "security-design",
+      "agent-design",
+      "eval-design",
+      "dependency-audit",
+      "dx-design",
+      "risk-assessment",
+      "tech-debt-audit",
+      "complex-task-orchestrator",
+      "tech-lead",
+      "solo-founder"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Project agent name prefix (like the companion stack pack)?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/architecture-decision.md",
+      "target": ".claude/agents/{PACK_PREFIX}-architecture-decision.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/tech-radar-curator.md",
+      "target": ".claude/agents/{PACK_PREFIX}-tech-radar-curator.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/ai-viability-assessor.md",
+      "target": ".claude/agents/{PACK_PREFIX}-ai-viability-assessor.md",
+      "kind": "template",
+      "role": "agent"
+    }
+  ],
+  "notes": {
+    "prerequisite": "Persona-pack level CTO/tech-lead: stack-agnostic (shape=role), without detect — is connected explicitly as a companion to the stack pack. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved and the stack pack orchestrator could route to these roles.",
+    "persona": "Roles - Technical Leader/architect/CTO-helper, not coder: read-first, issue ADR/trade-off matrices/radar/viability assessments. Write only decision documents (ADR/radar/spec), is not an implementation.",
+    "verify_workflow": "All files are agents (.md frontmatter), not a work flow; node --check does not apply."
+  }
+}

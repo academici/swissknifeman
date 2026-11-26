@@ -1,0 +1,8 @@
+{
+  "name": "agents-eval",
+  "description": "Agent design and evaluation: agentic loop, tool contracts, eval-sets/metrics",
+  "include": [
+    "architect/agent-design",
+    "architect/eval-design"
+  ]
+}

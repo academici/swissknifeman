@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:error:v1",
+  "title": "workspace error",
+  "description": "Stdout of any `workspace ... --json` command that fails with a refusal (exit 1) or an invalid argument value (exit 2). The same failure is printed on stderr as `CODE: message`. Commands whose failure carries a report of its own (sync, doctor --publish-safety, migrate plan) print that report instead.",
+  "type": "object",
+  "properties": {
+    "error": {
+      "type": "object",
+      "description": "The failure.",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable upper-case code of the refusal, such as WORKSPACE_NOT_INITIALIZED."
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable message, the text after `CODE: ` on stderr."
+        }
+      },
+      "required": ["code", "message"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["error"],
+  "additionalProperties": false
+}

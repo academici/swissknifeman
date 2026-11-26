@@ -1,0 +1,334 @@
+{
+  "$schema": "urn:swissknifeman:gui:contribution:v1",
+  "owner": "xdemo",
+  "version": "0.3.0",
+  "gui_protocol": {
+    "min": "1",
+    "max": "1"
+  },
+  "requires_contracts": [
+    {
+      "id": "urn:swissknifeman:gui:view-data",
+      "version": "v1"
+    }
+  ],
+  "handler": {
+    "extension": "handler/extension.json"
+  },
+  "commands": [
+    {
+      "id": "xdemo.echo",
+      "title": "Echo",
+      "scope": "project",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/echo-args",
+          "--",
+          {
+            "input": "name"
+          }
+        ],
+        "cwd": "project"
+      },
+      "input": [
+        {
+          "name": "name",
+          "title": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "loud",
+          "title": "Loud",
+          "type": "boolean",
+          "required": false,
+          "flag": "--loud"
+        },
+        {
+          "name": "count",
+          "title": "Count",
+          "type": "integer",
+          "required": false,
+          "flag": "--count",
+          "minimum": 1,
+          "maximum": 9
+        }
+      ],
+      "supports": [
+        "dry-run",
+        "cancel",
+        "stream"
+      ],
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      },
+      "concurrency_key": "xdemo-echo:{project_id}"
+    },
+    {
+      "id": "xdemo.risky",
+      "title": "Risky",
+      "scope": "project",
+      "effects": [
+        "project.write"
+      ],
+      "risk": "medium",
+      "confirmation": "risk-based",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/echo-args",
+          "risky"
+        ],
+        "cwd": "project"
+      },
+      "supports": [
+        "dry-run"
+      ],
+      "dry_run": {
+        "argv_append": [
+          "--dry-run"
+        ]
+      }
+    },
+    {
+      "id": "xdemo.always",
+      "title": "Always",
+      "scope": "project",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "always",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/echo-args",
+          "always"
+        ],
+        "cwd": "project"
+      }
+    },
+    {
+      "id": "xdemo.ticks",
+      "title": "Ticks",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 60,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/ticks"
+        ],
+        "cwd": "owner"
+      },
+      "supports": [
+        "cancel",
+        "stream"
+      ]
+    },
+    {
+      "id": "xdemo.stubborn",
+      "title": "Stubborn",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 60,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/stubborn"
+        ],
+        "cwd": "owner"
+      },
+      "supports": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "xdemo.daemon",
+      "title": "Daemon",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/daemon"
+        ],
+        "cwd": "owner"
+      }
+    },
+    {
+      "id": "xdemo.hostile",
+      "title": "Hostile",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/hostile"
+        ],
+        "cwd": "owner"
+      }
+    },
+    {
+      "id": "xdemo.leak",
+      "title": "Leak",
+      "scope": "fleet",
+      "effects": [
+        "secrets.read"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/leak"
+        ],
+        "cwd": "owner",
+        "env": [
+          "SKM_TEST_SECRET"
+        ]
+      }
+    },
+    {
+      "id": "xdemo.fail",
+      "title": "Fail",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/fail"
+        ],
+        "cwd": "owner"
+      }
+    },
+    {
+      "id": "xdemo.quiet",
+      "title": "Quiet",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 1,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/quiet"
+        ],
+        "cwd": "owner"
+      }
+    },
+    {
+      "id": "xdemo.silent",
+      "title": "Silent",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 60,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/quiet"
+        ],
+        "cwd": "owner"
+      },
+      "supports": [
+        "cancel"
+      ]
+    },
+    {
+      "id": "xdemo.flood",
+      "title": "Flood",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "argv",
+        "argv": [
+          "bin/flood"
+        ],
+        "cwd": "owner"
+      }
+    },
+    {
+      "id": "xdemo.hello",
+      "title": "Hello",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "invoke"
+      },
+      "input": [
+        {
+          "name": "name",
+          "title": "Name",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "xdemo.broken",
+      "title": "Broken",
+      "scope": "fleet",
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "timeout_s": 30,
+      "exec": {
+        "kind": "invoke"
+      }
+    }
+  ]
+}

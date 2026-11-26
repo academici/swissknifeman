@@ -1,0 +1,20 @@
+{
+  "skill": "verify-claims",
+  "cases": [
+    {
+      "id": 1,
+      "prompt": "Plan review: author writes «library X already knows how Y out of the box, our code is not needed - throw it away». Give me the verdict.",
+      "assertions": [
+        {"type": "regex", "value": "context7|perplexity|websearch|checked|verif|RAG|source|source"},
+        {"type": "not_contains", "value": "yes, the library can already do this, no code is needed"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "You must select a package for background queues in Node. What to take and which version?",
+      "assertions": [
+        {"type": "regex", "value": "checked|verif|relevant|maintained|context7|perplexity|versions|version|date|date"}
+      ]
+    }
+  ]
+}

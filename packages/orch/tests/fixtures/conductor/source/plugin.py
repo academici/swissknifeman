@@ -1,0 +1,275 @@
+"""Test work source of the conductor (protocol 1): a small plan kept in the JSON file ``$FAKE_CS_STATE``.
+
+State: ``order`` (references in plan order), ``items`` (per reference: ``status``, ``title``, ``scenario``,
+``options`` layers, ``checks``, ``write_set``, ``route``, ``holder``), ``registered`` (attempt id -> status),
+``commits`` and ``calls`` (every request, in order). ``refuse`` names operations to refuse once (``commit``,
+``register``, ``release``, ``decision``, ``readiness``); ``no_decision`` and ``no_readiness`` make the source a plugin
+without the ``decision`` or ``readiness`` operation. ``readiness`` (``phases``, ``next``, ``phase``) is what ``readiness``
+answers; ``reopen_blocked`` gives a piece registered blocked back as ``todo`` at once.
+An accepted ``decision`` is kept in ``decisions`` and in the ``decisions`` of its item, which the next brief carries
+into the execution-input (like the planner bridge, ``question_key`` and ``question_digest`` included). The brief is built from the execution-input ``$FAKE_CS_INPUT`` with the item's checks and write set.
+"""
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(os.environ["AICORE_ROOT"]) / "lib"))
+from aicore.state import blobs  # noqa: E402
+from aicore.util.digest import canonical_json_bytes, digest_json, sha256_hex, sha256_tagged  # noqa: E402
+
+HERE = Path(__file__).resolve().parent
+STATE = Path(os.environ["FAKE_CS_STATE"])
+
+
+def load():
+    return json.loads(STATE.read_text(encoding="utf-8"))
+
+
+def save(state):
+    STATE.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def reply(request_id, status="ok", **fields):
+    document = {"$schema": "urn:swissknifeman:aicore:plugin-response:v1", "protocol": "1",
+                "request_id": request_id, "status": status}
+    document.update(fields)
+    sys.stdout.write(json.dumps(document))
+
+
+def claim(state, given):
+    run_id = given["run_id"]
+    ref = (given.get("items") or [None])[0]
+    if ref is None:
+        held = [name for name in state["order"] if state["items"][name].get("holder") == run_id]
+        ready = [name for name in state["order"] if state["items"][name]["status"] == "todo"]
+        ref = (held or ready or [None])[0]
+    if ref is None:
+        return {"op": "claim", "status": "none", "message": "no item is ready"}
+    item = state["items"][ref]
+    lane = [name for name in state["order"] if state["items"][name]["status"] == "todo"] if not given.get("items") else []
+    if item.get("holder") not in (None, run_id):
+        return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "ITEM_OWNED", "message": "held"}
+    unmet = [dep for dep in item.get("depends_on", [])
+             if state["items"][dep]["status"] != "done"
+             and not (given.get("batch") and state["items"][dep]["status"] == "in_progress")]
+    if unmet:
+        return {"op": "claim", "status": "blocked", "ref": ref, "reason_code": "DEPENDENCY_NOT_READY",
+                "message": f"{ref} waits for {', '.join(unmet)}"}
+    if item["status"] == "todo":
+        item["status"] = "in_progress"
+    item["holder"] = run_id
+    answer = {"op": "claim", "status": "claimed", "ref": ref, "title": item.get("title", ref),
+              "scenario": item.get("scenario", "full"), "scenario_source": "item",
+              "route": item.get("route", {"class": "implementation", "effort": "high"}),
+              "attempt_id": f"att-{run_id}-{ref}", "session": run_id}
+    if item.get("options"):
+        answer["options"] = item["options"]
+    state.setdefault("claim_requests", []).append({key: given[key] for key in ("actor", "actor_source", "actor_fields", "actor_class")
+                                                   if key in given})
+    if item.get("plan_executor") and given.get("actor_source") == "options" and given["actor"] != item["plan_executor"]:
+        answer["actor_override"] = {"reason_code": "ACTOR_OVERRIDE", "ref": ref, "plan": item["plan_executor"],
+                                    "run": given["actor"], "message": f"{ref}: the run executor replaces the plan's"}
+    if item.get("depends_on"):
+        answer["depends_on"] = item["depends_on"]
+    if len(lane) > 1 and lane[0] == ref and state.get("lanes", True):
+        answer["lane"] = lane
+    return answer
+
+
+def brief(state, given, project):
+    item = state["items"][given["ref"]]
+    doc = json.loads(Path(os.environ["FAKE_CS_INPUT"]).read_text(encoding="utf-8"))
+    doc["provenance"]["item"] = given["ref"]
+    doc["acceptance"]["checks"] = item["checks"]
+    doc["scope"]["write_set"] = item.get("write_set", ["out/**"])
+    doc["goal"] = item.get("goal", f"Create the output of {given['ref']}.")
+    for key in ("review_mode", "review_route", "review_rounds_max"):  # the review of the plan item, as the bridge carries it
+        if key in item:
+            doc[key] = item[key]
+    if "research" in item:  # the research need of the plan item, as the planner bridge carries it
+        doc["research"] = item["research"]
+    if item.get("decisions"):  # the accepted decisions of the item, as the planner bridge carries them
+        doc["decisions"] = item["decisions"]
+    doc.pop("digest", None)
+    doc["input_id"] = f"PLAN9.{given['ref']}"
+    digest = sha256_hex(canonical_json_bytes(doc))
+    doc["digest"] = digest
+    doc["input_id"] = f"PLAN9.{given['ref']}@{digest[:12]}"
+    reused = blobs.blob_path(sha256_tagged(canonical_json_bytes(doc)), project=project).is_file()
+    ref = blobs.put_json(doc, name=f"brief-{given['ref']}", project=project)
+    answer = {"op": "brief", "input_ref": ref, "input_id": doc["input_id"], "digest": digest, "reused": reused,
+              "artifact_id": f"brief-{given['ref'].replace('.', '-')}-{digest[:12]}",
+              "artifacts_dir": f"plans/T/artifacts/{given['ref']}"}
+    if state.get("workspace_plan"):  # a plan outside the checkout: no artifact folder of its own, evidence kept by the source
+        answer.pop("artifacts_dir")
+    return answer
+
+
+def register(state, given, project):
+    if "register" in state.get("refuse", []):
+        state["refuse"].remove("register")
+        return {"op": "register", "outcome": "refused", "gate": {"verdict": "none", "checks": {}},
+                "reason_code": "REGISTER_TEST_REFUSAL", "message": "refused once by the test"}
+    item = state["items"][given["ref"]]
+    attempt = given["attempt_id"]
+    checks = {}
+    for check in item["checks"]:
+        if check.get("kind") != "acceptance":
+            continue
+        path = given["evidence"].get(check["id"])
+        if path and (Path(project) / path).is_file():
+            checks[check["id"]] = json.loads((Path(project) / path).read_text(encoding="utf-8")).get("exit", 0)
+        else:
+            checks[check["id"]] = None
+    if given["status"] == "blocked":
+        verdict = "none"
+    elif any(value is None for value in checks.values()):
+        return {"op": "register", "outcome": "refused", "gate": {"verdict": "missing", "checks": checks},
+                "reason_code": "REGISTER_EVIDENCE_MISSING", "message": "evidence missing"}
+    elif any(value != 0 for value in checks.values()):
+        return {"op": "register", "outcome": "refused", "gate": {"verdict": "red", "checks": checks},
+                "reason_code": "REGISTER_EVIDENCE_RED", "message": "evidence red"}
+    else:
+        verdict = "pass"
+    if state["registered"].get(attempt) == given["status"]:
+        return {"op": "register", "outcome": "no-op", "gate": {"verdict": verdict, "checks": checks}}
+    kept = {key: f"@plan/artifacts/{given['ref']}/{given['run_id']}/evidence/{key}.json"
+            for key in given.get("evidence", {})} if state.get("workspace_plan") else {}
+    state["registered"][attempt] = given["status"]
+    item["status"] = given["status"]
+    if given["status"] == "blocked" and state.get("reopen_blocked"):  # the owner reopened the piece at once
+        item["status"], item["holder"] = "todo", None
+    if kept:
+        item["evidence_kept"] = kept
+    item["report"] = given["report"]
+    item["executed_by"] = given["executed_by"]
+    return {"op": "register", "outcome": "recorded", "gate": {"verdict": verdict, "checks": checks},
+            **({"evidence": kept} if kept else {})}
+
+
+def commit(state, given, project):
+    """A commit with a ``stage`` (a split run) takes exactly the ``paths`` it is given and carries the ``trailers``; one without
+    a stage takes everything that is dirty, as the first conductor tests expect."""
+    if "commit" in state.get("refuse", []):
+        state["refuse"].remove("commit")
+        return {"op": "commit", "outcome": "refused", "reason_code": "COMMIT_TEST_REFUSAL", "message": "once"}
+    git = ["git", "-C", project]
+    staged = given.get("stage") is not None
+    only = ["--", *given["paths"]] if staged else []
+    if staged and not given["paths"]:
+        return {"op": "commit", "outcome": "no-op", "message": "no paths to commit"}
+    subprocess.run(git + ["add", *(only or ["-A"])], check=True, capture_output=True)
+    if subprocess.run(git + ["diff", "--cached", "--quiet", *only]).returncode == 0:
+        return {"op": "commit", "outcome": "no-op", "message": "nothing to commit"}
+    message = f"feat: {given['ref']}" + ("\n\n" + "\n".join(given["trailers"]) if given.get("trailers") else "")
+    subprocess.run(git + ["commit", "-q", "-m", message, *only], check=True, capture_output=True)
+    sha = subprocess.run(git + ["rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+    state["commits"].append({"ref": given["ref"], "sha": sha, "paths": given["paths"],
+                             **{key: given[key] for key in ("role", "stage", "trailers") if key in given}})
+    return {"op": "commit", "outcome": "committed", "sha": sha}
+
+
+def release(state, given):
+    if "release" in state.get("refuse", []):
+        state["refuse"].remove("release")
+        return {"op": "release", "outcome": "refused", "reason_code": "RELEASE_TEST_REFUSAL", "message": "once"}
+    item = state["items"][given["ref"]]
+    if item.get("holder") != given["run_id"] or item["status"] != "in_progress":
+        return {"op": "release", "outcome": "no-op", "message": "not held by this run"}
+    item["status"], item["holder"] = "todo", None
+    return {"op": "release", "outcome": "released"}
+
+
+def note(state, given):
+    if "note" in state.get("refuse", []):
+        state["refuse"].remove("note")
+        return {"op": "note", "outcome": "refused", "reason_code": "NOTE_TEST_REFUSAL", "message": "once"}
+    state.setdefault("notes", []).append({"collection": given["collection"], "text": given["text"], "refs": given["refs"]})
+    return {"op": "note", "outcome": "recorded"}
+
+
+def research(state, given, project):
+    """Keeps the result where the planner bridge does: ``plans/<plan>/research/<ref>-<n>.json``."""
+    if "research" in state.get("refuse", []):
+        state["refuse"].remove("research")
+        return {"op": "research", "outcome": "refused", "reason_code": "RESEARCH_TEST_REFUSAL", "message": "once"}
+    relative = f"plans/{given['plan']}/research/{given['ref']}-{given['number']}.json"
+    target = Path(project) / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(given["result"], indent=2) + "\n", encoding="utf-8")
+    state.setdefault("research", []).append({"ref": given["ref"], "number": given["number"], "path": relative})
+    return {"op": "research", "outcome": "recorded", "path": relative}
+
+
+def readiness(state, given):
+    """The readiness the test set: ``readiness`` of the state (``phases``, ``next``; default no phases and the first todo
+    item as a run-items lane of the phase ``readiness.phase``, null when unset), or a refusal once when ``refuse`` names
+    it."""
+    if "readiness" in state.get("refuse", []):
+        state["refuse"].remove("readiness")
+        return {"op": "readiness", "outcome": "refused", "reason_code": "READINESS_TEST_REFUSAL", "message": "once"}
+    kept = state.get("readiness") or {}
+    todo = [name for name in state["order"] if state["items"][name]["status"] == "todo"]
+    lane = ({"kind": "run-items", "items": todo[:1], "phase": kept.get("phase"), "message": None} if todo
+            else {"kind": "terminal", "items": [], "phase": None, "message": "no item is left"})
+    return {"op": "readiness", "outcome": "ok", "phases": kept.get("phases", []), "next": kept.get("next", lane)}
+
+
+def decision(state, given):
+    """Records the answered question as an accepted decision of the item; a repeat of the same question_key is a no-op."""
+    if "decision" in state.get("refuse", []):
+        state["refuse"].remove("decision")
+        return {"op": "decision", "outcome": "refused", "reason_code": "DECISION_TEST_REFUSAL", "message": "once"}
+    item = state["items"][given["ref"]]
+    for known in item.get("decisions", []):
+        if known.get("question_key") == given["question_key"]:
+            return {"op": "decision", "outcome": "no-op", "decision_id": known["ref"]}
+    options = {row["id"]: row for row in given["question"].get("options", [])}
+    value = given["resolution"]["value"]
+    if value in options:
+        text = f"{value}: {options[value]['label']}" if options[value].get("label") else value
+    else:
+        text = value if isinstance(value, str) else json.dumps(value)
+    number = len(state.setdefault("decisions", [])) + 1
+    entry = {"ref": f"D{number}", "loaded": True, "title": f"{given['ref']} {given['question']['id']}", "status": "accepted",
+             "decision": text, "rationale": given["rationale"], "question_key": given["question_key"],
+             "question_digest": given["question_digest"]}
+    item.setdefault("decisions", []).append(entry)
+    state["decisions"].append({**entry, "authority": given["authority"], "ref_item": given["ref"],
+                               "evidence": given["evidence"], "resolution": given["resolution"]})
+    return {"op": "decision", "outcome": "recorded", "decision_id": entry["ref"]}
+
+
+manifest = json.loads((HERE / "extension.json").read_text(encoding="utf-8"))
+request = json.load(sys.stdin)
+request_id = request.get("request_id", "0" * 32)
+if request.get("op") == "describe":
+    reply(request_id, output={
+        "$schema": "urn:swissknifeman:aicore:plugin-describe:v1", "protocol": "1", "id": manifest["id"],
+        "kind": manifest["kind"], "version": manifest["version"],
+        "capabilities_digest": digest_json(manifest["provides"]), "transport": "stdio-json"})
+elif request.get("op") == "invoke":
+    given = request["input"]
+    project = request["context"]["project_root"]
+    state = load()
+    state.setdefault("calls", []).append(given)
+    handlers = {"claim": lambda: claim(state, given), "brief": lambda: brief(state, given, project),
+                "register": lambda: register(state, given, project), "commit": lambda: commit(state, given, project),
+                "release": lambda: release(state, given), "note": lambda: note(state, given),
+                "research": lambda: research(state, given, project), "decision": lambda: decision(state, given),
+                "readiness": lambda: readiness(state, given)}
+    if given["op"] == "decision" and state.get("no_decision"):  # a source without the operation
+        save(state)
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source records no decisions"})
+        sys.exit(0)
+    if given["op"] == "readiness" and state.get("no_readiness"):  # a source without the operation
+        save(state)
+        reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "this source tells no readiness"})
+        sys.exit(0)
+    answer = handlers[given["op"]]()
+    save(state)
+    reply(request_id, output=answer)
+else:
+    reply(request_id, "error", error={"code": "OP_UNSUPPORTED", "message": "unknown op"})

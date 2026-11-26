@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:records:review-verdict:v1",
+  "title": "review-verdict.json of a piece",
+  "description": "The short committed record of every review round of a piece (<artifacts>/review-verdict.json, stages/review.py verdict_file): reviewer, verdict, findings with the triage reproduction, triage. Keeps its published tag schema orch-conductor-review-verdict/v1 (no $schema); readers outside orch take it as published.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["item", "run", "rounds"],
+  "properties": {
+    "schema": {"description": "Published tag of the document.", "const": "orch-conductor-review-verdict/v1"},
+    "item": {"description": "Reference of the piece.", "type": "string", "minLength": 1},
+    "run": {"description": "Conductor run id.", "type": "string", "minLength": 1},
+    "selector": {"description": "Reviewer selector of the run options (PROVIDER/MODEL[/CONTEXT][/EFFORT]), null when none.", "type": ["string", "null"]},
+    "reviewer_source": {"description": "Where the reviewer route came from when it was not the selector (plan:review.reviewer).", "type": "string", "minLength": 1},
+    "rounds": {"description": "Review rounds in order.", "type": "array", "items": {"$ref": "#/$defs/round"}}
+  },
+  "$defs": {
+    "round": {
+      "description": "One review round.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["round", "verdict", "findings"],
+      "properties": {
+        "round": {"description": "Number of the round, from 1.", "type": "integer", "minimum": 1},
+        "provider": {"description": "Provider of the reviewer.", "type": ["string", "null"]},
+        "model": {"description": "Model of the reviewer.", "type": ["string", "null"]},
+        "effort": {"description": "Effort of the reviewer.", "type": ["string", "null"]},
+        "session": {"description": "Session of the reviewer.", "type": ["string", "null"]},
+        "verdict": {"description": "Verdict of the round (review-findings).", "type": "string", "enum": ["GREEN", "ATTENTION", "RED"]},
+        "findings": {"description": "Findings of the round.", "type": "array", "items": {"$ref": "#/$defs/finding"}},
+        "triage": {"$ref": "#/$defs/triage"},
+        "stream": {"description": "Stream of the reviewer, relative to the project.", "type": ["string", "null"]},
+        "base": {
+          "type": "string",
+          "description": "Git revision.",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "candidate_digest": {
+          "type": "string",
+          "description": "SHA-256 of sorted path-tab-fingerprint lines joined with newline.",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "finding": {
+      "description": "One finding as the reviewer gave it (conductor/v1 review-findings), with the reproduction of triage when triage confirmed it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "confidence", "location", "failure_scenario", "basis"],
+      "properties": {
+        "id": {"description": "Finding id, unique in the round.", "type": "string", "pattern": "^F[0-9]+$"},
+        "severity": {"description": "Severity.", "type": "string", "enum": ["Blocker", "Major", "Minor", "Nit"]},
+        "confidence": {"description": "Confidence of the reviewer.", "type": "string", "enum": ["high", "medium", "low"]},
+        "location": {"description": "file:line.", "type": "string", "minLength": 1},
+        "failure_scenario": {"description": "Concrete inputs or state and the wrong outcome.", "type": "string", "minLength": 1},
+        "basis": {"description": "Correctness, security, performance, a project rule or the input contract.", "type": "string", "minLength": 1},
+        "reproduction": {"description": "How the reviewer observed the failure.", "type": "string", "minLength": 1},
+        "triage_reproduction": {"description": "How triage reproduced the confirmed finding (conductor/v1 triage-result reproduction: cmd, exit, observed).", "$ref": "urn:swissknifeman:orch:conductor:triage-result:v1#/$defs/reproduction"},
+        "key": {
+          "type": "string",
+          "description": "Conductor finding identity; exact repeats only.",
+          "pattern": "^fk-[0-9a-f]{16}$"
+        }
+      }
+    },
+    "triage": {
+      "description": "Triage of the round, null when none ran.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["confirmed", "rejected"],
+      "properties": {
+        "confirmed": {"description": "Ids of the confirmed findings.", "type": "array", "items": {"description": "A finding id.", "type": "string"}},
+        "rejected": {"description": "Rejected findings with the reason.", "type": "array", "items": {"$ref": "#/$defs/rejected"}},
+        "session": {"description": "Session of the triager.", "type": ["string", "null"]}
+      }
+    },
+    "rejected": {
+      "description": "One rejected finding.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding", "reason"],
+      "properties": {
+        "finding": {"description": "Finding id.", "type": "string"},
+        "reason": {"description": "Why triage rejected it.", "type": "string"}
+      }
+    }
+  }
+}

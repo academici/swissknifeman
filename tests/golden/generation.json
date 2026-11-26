@@ -1,0 +1,401 @@
+{
+  "schema": "golden-generation/v1",
+  "captured_from": "ba8687842199",
+  "reason": "Antigravity integration with verified CLI flags and release 0.36.0 surfaces",
+  "generators": [
+    {
+      "id": "skiller-registry",
+      "check_argv": [
+        "packages/skiller/bin/skiller",
+        "registry",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/skiller/skills.json",
+        "packages/skiller/skills/_index.md",
+        "packages/skiller/skills/*/.claude-plugin/plugin.json",
+        "packages/skiller/skills/*/.codex-plugin/plugin.json",
+        "packages/skiller/generate-skill/.claude-plugin/plugin.json",
+        "packages/skiller/generate-skill/.codex-plugin/plugin.json",
+        "packages/skiller/.claude-plugin/catalog.json",
+        "packages/skiller/adapters/codex/**",
+        "packages/skiller/docs/guide/budget.md",
+        "packages/skiller/docs/guide/graph.md",
+        ".claude-plugin/marketplace.json",
+        ".agents/plugins/marketplace.json",
+        ".agents/skills/*/SKILL.md",
+        ".claude/skills/*/SKILL.md",
+        "bootstrap/publication-lock.json"
+      ]
+    },
+    {
+      "id": "skiller-skill-template",
+      "check_argv": [
+        "python3",
+        "packages/skiller/scripts/generate-skill-template.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/skiller/generate-skill/generate-skill/snippets/SKILL_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "harness-instructions",
+      "check_argv": [
+        "python3",
+        "-m",
+        "harness.instructions",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [
+        ".cursor/rules/*.mdc",
+        ".grok/rules/*.md"
+      ],
+      "note": "CLAUDE.md and AGENTS.md hold hand-written text around managed blocks, so their bytes are covered by this --check, not by digests"
+    },
+    {
+      "id": "harness-provider-instructions",
+      "check_argv": [
+        "python3",
+        "scripts/generate-provider-instructions.py",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [
+        "packages/harness/docs/reference/provider-instructions.md",
+        "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json"
+      ]
+    },
+    {
+      "id": "harness-cursor-rules",
+      "check_argv": [
+        "python3",
+        "scripts/render-cursor-rules.py",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [
+        ".cursor/rules/*.mdc"
+      ]
+    },
+    {
+      "id": "harness-hook-handlers",
+      "check_argv": [
+        "python3",
+        "scripts/render-hook-handlers.py",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [
+        ".codex/hooks/lifecycle.py",
+        ".cursor/hooks/lifecycle.py",
+        ".grok/hooks/lifecycle.py"
+      ],
+      "note": "the lifecycle handlers are rendered by harness.hooks.render_*_hook_handler; the committed copies must equal the renderer"
+    },
+    {
+      "id": "harness-execpolicy",
+      "check_argv": [
+        "python3",
+        "-m",
+        "harness.execpolicy",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [],
+      "note": "validator of execution-policy: it writes nothing, only the exit code is compared"
+    },
+    {
+      "id": "harness-reviewroles",
+      "check_argv": [
+        "python3",
+        "-m",
+        "harness.reviewroles",
+        "--check"
+      ],
+      "cwd": "packages/harness",
+      "env": {
+        "PYTHONPATH": "{REPO}/packages/harness/lib:{REPO}/packages/aicore/lib"
+      },
+      "outputs": [],
+      "note": "validator of the role registry: it writes nothing, only the exit code is compared"
+    },
+    {
+      "id": "planner-provider-commands",
+      "check_argv": [
+        "python3",
+        "packages/planner/scripts/render-provider-commands.py",
+        "--check",
+        "--root",
+        "{REPO}"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/planner/docs/reference/provider-commands.md",
+        "packages/planner/docs/reference/provider-model-roles.md",
+        "packages/planner/tests/fixtures_data/claude-command-golden/**"
+      ]
+    },
+    {
+      "id": "managed-blocks",
+      "check_argv": [
+        "python3",
+        "scripts/sync-managed-blocks.py",
+        "--check",
+        "--root",
+        "{REPO}"
+      ],
+      "cwd": ".",
+      "outputs": [],
+      "note": "blocks are listed in configs/managed-blocks.json inside hand-written files, so only the exit code is compared"
+    },
+    {
+      "id": "provider-docs",
+      "check_argv": [
+        "python3",
+        "scripts/provider-docs.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "docs/provider-support.md"
+      ],
+      "note": "the README.md block is covered by --check only, the rest of README.md is hand-written"
+    },
+    {
+      "id": "jsonschema-core-planner",
+      "check_argv": [
+        "python3",
+        "scripts/vendor-jsonschema-core.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/planner/lib/planner/plan/_jsonschema_core.py"
+      ],
+      "note": "planner vendors the validator core of aicore byte for byte (planner runs without aicore)"
+    },
+    {
+      "id": "schema-types",
+      "check_argv": [
+        "python3",
+        "scripts/schema-types.py",
+        "--check"
+      ],
+      "cwd": ".",
+      "outputs": [
+        "packages/orch/lib/orch/_types/records.py",
+        "packages/orch/lib/orch/_types/conductor.py",
+        "packages/orch/lib/orch/_types/exec.py",
+        "packages/orch/lib/orch/_types/work_source.py",
+        "packages/planner/lib/planner/plan/_types.py"
+      ],
+      "note": "Python types generated from the contract schemas by aicore schema codegen (configs/schema-types.json)"
+    }
+  ],
+  "digests": {
+    ".agents/plugins/marketplace.json": "3cb1fecd8a9aae53609997ee2b09513901a5403653dbef1bb6aec59550f092c7",
+    ".agents/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
+    ".agents/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
+    ".agents/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",
+    ".agents/skills/ecosystem-integration/SKILL.md": "2f5dcb7396827f1411c33251c2ffc07f5137698b1a492785d4ce8fd062467b3c",
+    ".agents/skills/ecosystem-mcp/SKILL.md": "69d00a15e2ebadbf485a02a5ce967d3170f96d3cfab089ec01d026646b2fd90c",
+    ".agents/skills/ecosystem-setup/SKILL.md": "42b4651cb5c5b5e9fde7d288dc200ebdf8194cad5501120a9d23ce95147d758d",
+    ".agents/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
+    ".agents/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
+    ".agents/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
+    ".agents/skills/orch-debug/SKILL.md": "7f1bd993ea9fdf5aa7372004fa39b44abaf4ba1e85226f27157271f88acdde94",
+    ".agents/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
+    ".agents/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
+    ".agents/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
+    ".agents/skills/release-discipline/SKILL.md": "0eb760697092208ecf2a64bca9004722a391dd80d34f7b81f2c82d818da791d3",
+    ".agents/skills/skill-authoring/SKILL.md": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8",
+    ".claude-plugin/marketplace.json": "4c11576c39d97ab1ea6722af059fa3d6166eb4d80b9a67344579b7bb34a2f397",
+    ".claude/skills/cross-project-optimizer/SKILL.md": "65fd42d4ca156d11de439e3d647b2cabefca51a335af8ad8e959aff0986c20d6",
+    ".claude/skills/decision-verification/SKILL.md": "ec011df7be43eab2189b9a25061fcc3153770a6110e758138357ea9fa65b5d4a",
+    ".claude/skills/docs-maintenance/SKILL.md": "bca55c677ab6b2b42318292b739f9baece2ac4db8a87fe926e690bce3db04f10",
+    ".claude/skills/ecosystem-integration/SKILL.md": "2f5dcb7396827f1411c33251c2ffc07f5137698b1a492785d4ce8fd062467b3c",
+    ".claude/skills/ecosystem-mcp/SKILL.md": "69d00a15e2ebadbf485a02a5ce967d3170f96d3cfab089ec01d026646b2fd90c",
+    ".claude/skills/ecosystem-setup/SKILL.md": "42b4651cb5c5b5e9fde7d288dc200ebdf8194cad5501120a9d23ce95147d758d",
+    ".claude/skills/field-feedback-loop/SKILL.md": "d453f967f9718dd8064b9178247dcc7e89963369dae313cbef1c36873d2e8a35",
+    ".claude/skills/harness-operations/SKILL.md": "2a2f53e5570cc16952405b16fac186bc96aefad59d63c469424c38e665b8000b",
+    ".claude/skills/maind-overview/SKILL.md": "1a887bfcd7b121de5f4171d3491be93a9685ad1d473ca260643b4c5236ab8d3f",
+    ".claude/skills/orch-debug/SKILL.md": "7f1bd993ea9fdf5aa7372004fa39b44abaf4ba1e85226f27157271f88acdde94",
+    ".claude/skills/package-architecture/SKILL.md": "c867afcdce88d11acb5e62efbfa1e2c0bf76c6f673d55c6535fc77eb1e376a86",
+    ".claude/skills/planner-development-philosophy/SKILL.md": "5d483ff32b1142fa8ccc1607758f4a40b97ad94cedafe30b8eab00861f9c68f3",
+    ".claude/skills/project-tooling-runbook/SKILL.md": "67ba92b93777f69271fe4883d8de1d61afe0fe78675179e8d43ad660d1c15023",
+    ".claude/skills/release-discipline/SKILL.md": "0eb760697092208ecf2a64bca9004722a391dd80d34f7b81f2c82d818da791d3",
+    ".claude/skills/skill-authoring/SKILL.md": "79b0f4a16e29eab3345cc30b826ab79133b98aaa6ae874d7077dfbe47f68d5d8",
+    ".codex/hooks/lifecycle.py": "4b747765eb19016eaa010afd8abff6928f72f7586bc09bf9f22f93f9ee2b72fb",
+    ".cursor/hooks/lifecycle.py": "7f1fdf9188f41fe85900d38d6746ac9998995b94fca248a315a5623b361d3477",
+    ".cursor/rules/swissknifeman-core.mdc": "7e66d7860d2d67929ba66d40900088a299c75b82a84df639462b9f54db22a0b1",
+    ".cursor/rules/swissknifeman-instructions.mdc": "47f28158b12d3525320ad2d8c87899c9d994618dabcc90a50e0158532f05dcf3",
+    ".cursor/rules/swissknifeman-launch.mdc": "28879cba56d068d7a2aee70075882b2d05eafc76c16f515b37334a57db6b1866",
+    ".cursor/rules/swissknifeman-observer.mdc": "89b05eeeb14c14a754f9e312985601c34565f55f326a2e8787a0ebe1d1f1a87f",
+    ".cursor/rules/swissknifeman-packages.mdc": "e33abaca3f65746ecdb01e1b2948db955528aa9955f807d73158da955a2034da",
+    ".cursor/rules/swissknifeman-router.mdc": "e3be1b179d98ca3956b76517663327ea42a9370bb51de337d9755ef017795b97",
+    ".grok/hooks/lifecycle.py": "9456b937e536733f32a824f55bde824c8031d1e1df87c78ddbc707e2502dfde5",
+    ".grok/rules/swissknifeman-instructions.md": "f05f5bcb3ad67ce5942780861f2ae6caf5bea80d00a18c900382e985df4acb99",
+    "bootstrap/publication-lock.json": "39ba2294429e13b60250ec8a9415b8c18d8f111918e214d32546952d5f74ab38",
+    "docs/provider-support.md": "15acc790ca35d6f0eaa3e32ee399d931415f040f3d267fb269bcd60cdc12dc70",
+    "packages/harness/docs/reference/provider-instructions.md": "a3e3325f4776e5ef23ed8c781b34558626f8743ed5613e2975d0d8012cb5c146",
+    "packages/harness/tests/fixtures_data/instruction-literal-coverage-v1.json": "93189a5a33f48dc060017be5a749573d3f0aead49cfa8143ee61101e7bc36e25",
+    "packages/orch/lib/orch/_types/conductor.py": "d2b9e71045331c52d927ded63631fcf1a4d36934896b43f933d3f9df9757147c",
+    "packages/orch/lib/orch/_types/exec.py": "1c1f6ba939dc0d8c076452676700622e000b0fd353a87b10a6c619eb6e6c32ab",
+    "packages/orch/lib/orch/_types/records.py": "225fdd8c9fbbb5f46882a0dcd6f382e1a5878845a0f76d64671710734e4ff045",
+    "packages/orch/lib/orch/_types/work_source.py": "be9ff331f3c29fcc076de07b4ba624d0a65c76a7bfbaca8006f3b87b08002dc3",
+    "packages/planner/docs/reference/provider-commands.md": "b0fe7e61854353366ce97c6c74e239d6f3186be798a3a07a01230b4d76f0e0ff",
+    "packages/planner/docs/reference/provider-model-roles.md": "877ac0f5c46c850971b324ac4bf23480ae1fe5df6c10476d2826f7360871693a",
+    "packages/planner/lib/planner/plan/_jsonschema_core.py": "1e7af86cc956e5fe52f6b54dfdaa8662e504fd0e9ca92d498c9306c13e3c2673",
+    "packages/planner/lib/planner/plan/_types.py": "3387f88355863ebba3e702765a9135931f82c6b97333c4582bf48b7d91887033",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/design.md": "1ea50aa97adbde27580b0c04913c0ed7afd0dba929a8188d3939abba3cac3b6d",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/dev.md": "00c494b9ee2ceee2f8b1832303e99b3f1c5ff84db5d6ea6175b71fb685bc58a7",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/fix.md": "6e7574d4d67fa5861ca5051f9a97e21c3972d89aac82bd757a7c85cb429dbd5a",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/make-workflow.md": "9086b1ae53826a71b9e422a7fcf71025dc5c932cb7364a5f48ac84ee75dd90dd",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-audit.md": "00787d0d0207672b8669544ece39360c45d2ea73b87b1e6bd601c6d6682a440b",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-close.md": "71622dd35042f16da2401737a4aaddb5fea75687b7ea9a560f2162394f406925",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-design.md": "c92359c561b8de889c1eb35ff66f12b5545678c012b16acd45a5dc2497c03f9c",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/plan-run.md": "5cd53630f036c8ec4ff05a0801b7e64c7d6816f60e2af33cc858b3e2ae90af09",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/research.md": "6080f825740c10cc28214b86cafadf3ceb3e1fd48079996f8aa6634ceb18e2c8",
+    "packages/planner/tests/fixtures_data/claude-command-golden/commands/review.md": "ccf60839f1e992e2cec149fe68f36c673824cdff8eb0e8ba8d46e8a14e2a435f",
+    "packages/planner/tests/fixtures_data/claude-command-golden/plugin.json": "cd93f6472c4768de3ffb5de0c37ccbd4c325719a9036da4538486dd93aef6194",
+    "packages/skiller/.claude-plugin/catalog.json": "112dac245b7ad3e99356cd42ef68cf181273037194a5754a11b92f0c13f85521",
+    "packages/skiller/adapters/codex/core/.codex-plugin/plugin.json": "dd59120751e6a94f72849d690566e0ec04042d653f674f142ee4a459172d2280",
+    "packages/skiller/adapters/codex/core/publication-lock.json": "f54d35dc75aeb6ae0781dee2ec864f2f1d2facab7d862f173aacdfdfffb57593",
+    "packages/skiller/adapters/codex/core/skills/general/anti-drift/SKILL.md": "372f28ee10dab7fb7d5db713c355a2b39f020007604269e58bfc206295abe7b8",
+    "packages/skiller/adapters/codex/core/skills/general/anti-drift/snippets/claude-md-anti-drift.md": "0582f58a6a1952b7e1f92511c7fe3d7aa4c664916c86fe76d897afe4179a5099",
+    "packages/skiller/adapters/codex/core/skills/general/anti-drift/snippets/index.json": "728fed408f187a2efb943daaa1ea59a310f507eb6910f722cb51757b8b3398b0",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/SKILL.md": "6f2ad4cc61ae2df8d0f939607aaeeacb94de8b31f0d5acf05e4813e6ed546200",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/claude-md-checklist.md": "9e09169fb73703be29efba34e52ad61dc7eccc71c7d62f5ec8f36b1570db27b5",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/claude-md-fact-vs-procedure-examples.md": "1f41e9e7d317936ff64fc0985a42a926f775aa45bfa5073004dff9314a3a72d2",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/claude-md-template.md": "cb84719196978bf3a6c052a5f14378c4b27b2a68b1ea623ac628db7b8e628af0",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/command-execute.md": "655fe9d157bffe3cd047296c63c90e7a98efcbbad8374a4c6d28adc82d0509a8",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/command-plan.md": "02e42ad1022d451bfaa5ae0af0446d6e0c21ab60841d31f8a030621465c4d2d6",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/command-prime.md": "ff6afc37cac630709010af74920d49b4ff3aaa7ec714f9c96bec9f544ab534d8",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/index.json": "0c8be409214b498766909e44b1bba4382c5783aaf6e49096a36cea0c9dd02602",
+    "packages/skiller/adapters/codex/core/skills/general/context-economy/snippets/rules-example.md": "cbbe55bd041da13a039852dfede878ddb7cc690bcf1d7c47540e4b46525db72f",
+    "packages/skiller/adapters/codex/core/skills/general/session-handoff/SKILL.md": "b60c9d8efc2e1fad350eabcf8ee57bdce0acafcc9e294f396b92611bd6a149a9",
+    "packages/skiller/adapters/codex/core/skills/general/session-handoff/snippets/handoff-template.md": "fc7d4781e12a19e2cd7ea0f670111c025268f39c31ec3e73c455d8e4b9433a89",
+    "packages/skiller/adapters/codex/core/skills/general/session-handoff/snippets/index.json": "df48da222872688e10579aa4126504271e9cb282568018257d2c1f6c4f4896f8",
+    "packages/skiller/adapters/codex/core/skills/general/verify-claims/SKILL.md": "821ff84d254dd5a4fc9e56360a2e2a5d14023126e48cf9de1966530b585224a6",
+    "packages/skiller/docs/guide/budget.md": "398899522a4a040358c70df229d8226cf9f6f3ca01ea8028e2aabf27b728b845",
+    "packages/skiller/docs/guide/graph.md": "388fe587dbd9afeb6f6163d4d68075f0e1f5c421a7956f49927b42d9bba7951a",
+    "packages/skiller/generate-skill/.claude-plugin/plugin.json": "2052fdc81213dd0c50c220ea9753118f76f30ff66ef95ecda7f2593596e2e10f",
+    "packages/skiller/generate-skill/.codex-plugin/plugin.json": "05157f8990810f67f7c0f0c28fef6fd40580da029ae1285b2b04a2b783877073",
+    "packages/skiller/generate-skill/generate-skill/snippets/SKILL_TEMPLATE.md": "90aff9e0d25cdb0dd933c51b7b2150c3ffd29b5fa9bde91e6946a9694c86118d",
+    "packages/skiller/skills.json": "5c9294ff83d5ac5757f35fbc661d1f2ddf11dec0be7007a0ba698df293da88a1",
+    "packages/skiller/skills/_index.md": "6b9f1ef2521aac8344f619ba83cdded81cae1c09ed934e2a7b3b0ed87b18927e",
+    "packages/skiller/skills/ai/.claude-plugin/plugin.json": "b92d6476f4838ac09cecd5049a6befc8b3f28284cfb3714fe336ccf6c75572e9",
+    "packages/skiller/skills/ai/.codex-plugin/plugin.json": "aed390ab0e91a292c8daf4f872711b1135088bab0c3b3990720fbede19488cdb",
+    "packages/skiller/skills/architect/.claude-plugin/plugin.json": "316b8a46251233cef79f91ce6481df511cd3cd6010740da7ca4a84a5bdb414d2",
+    "packages/skiller/skills/architect/.codex-plugin/plugin.json": "98a5c76fb47bb46518fd0091f754be6e5a462bfbb5753922556cbc2ac0adefcd",
+    "packages/skiller/skills/axioma/.claude-plugin/plugin.json": "117e501b6a1d6ca01f7a530380fb769af8a74299a0a988ffd2b1f95fc91b5812",
+    "packages/skiller/skills/axioma/.codex-plugin/plugin.json": "62ada73c13e600d10f3c850565e9c76ec4ae30b2cd221f2cfc0073cb84eaa8bc",
+    "packages/skiller/skills/azguard/.claude-plugin/plugin.json": "e93c3a77943745e8ff1af9b9b17a386f0be3be1408a85236477f5bd87207a54b",
+    "packages/skiller/skills/azguard/.codex-plugin/plugin.json": "48edc6be105c22bef8ef6608fe292f8eb1e388ae33da9ad850345e94b3a72560",
+    "packages/skiller/skills/blender-modeling/.claude-plugin/plugin.json": "642af77af375e0ee0491bea1163eba1a736fab609a45ff1e760be77ae34ebdf8",
+    "packages/skiller/skills/blender-modeling/.codex-plugin/plugin.json": "c826e9e6d28fde40a245b81015f85902f3d74be0f154044301809fc4d1d451d0",
+    "packages/skiller/skills/blender/.claude-plugin/plugin.json": "7a8b8b7fd7fdfce6550d55d7082992665cd33f43801e2649a121ea82fecf83c8",
+    "packages/skiller/skills/blender/.codex-plugin/plugin.json": "5ea0e595092e12d06d0b04f8ee892295bf6c2f0987d780df5654c55608974b10",
+    "packages/skiller/skills/botkit/.claude-plugin/plugin.json": "a09658becf44be1dd9a033f3356e0764442397dacbf4c70c57e60b991d9ca028",
+    "packages/skiller/skills/botkit/.codex-plugin/plugin.json": "5dda8438d060df0fe0d0fde2ccd23f55a9285e4371052787a74033084bd62976",
+    "packages/skiller/skills/creative/.claude-plugin/plugin.json": "d3425156bc34dd2008806a1368c6812608e3d41eccc215e0fe171716016e9510",
+    "packages/skiller/skills/creative/.codex-plugin/plugin.json": "d7586d9f17581a3e485108f93adae0207a1935cf09ea019ef5d9357b0ea39b16",
+    "packages/skiller/skills/dart/.claude-plugin/plugin.json": "9075d300477079b93022f8a9346a62ffdef063f61ece8602c645b72480c08002",
+    "packages/skiller/skills/dart/.codex-plugin/plugin.json": "5ef6347bd1ece41d84dd0be731abf550e2816d8bcaeb3651380291fc543a46d2",
+    "packages/skiller/skills/devops/.claude-plugin/plugin.json": "f3890eea83a064f75d6f39611a0e5e681ae1323d7888d9b3a03bf84017699b50",
+    "packages/skiller/skills/devops/.codex-plugin/plugin.json": "9751c863cb8d22d1345179e22b52adabf2563e1ec9f9f28a00d7a81636f41c7f",
+    "packages/skiller/skills/finance/.claude-plugin/plugin.json": "e6ae33a7e46b518ae62aa50274fbfae67eb3c67f44d01f704a9bb77f2cf34bc5",
+    "packages/skiller/skills/finance/.codex-plugin/plugin.json": "6153dec75d845444c244517ac196b9bb3baf519084b2dad81adb3342c45577fa",
+    "packages/skiller/skills/founder/.claude-plugin/plugin.json": "80442bd7839ef3f6275fd5ed8968c732902c635511c2063ff639dfcacc3c55e9",
+    "packages/skiller/skills/founder/.codex-plugin/plugin.json": "f3b66ad83f22483d7fd6b976491162492165e8863f815e69b3c6cab3d321c40c",
+    "packages/skiller/skills/frontend-animations/.claude-plugin/plugin.json": "c5458c11fabe00ecde1448abe843c63446a21241a0d119314c93b347ece3fee8",
+    "packages/skiller/skills/frontend-animations/.codex-plugin/plugin.json": "a579d6d610a10c8011a93e8d98f3b82a46034051722fc4060bfaab7c9f998656",
+    "packages/skiller/skills/frontend-backend/.claude-plugin/plugin.json": "62361ccd70d6f181ba1500c40ffd3523ad02cd66a8c41a41ee3af282047c5fe0",
+    "packages/skiller/skills/frontend-backend/.codex-plugin/plugin.json": "b7904e1ef6bebc8e135c1797d4e257c3dc505371be1a11df605c555a8268a9d7",
+    "packages/skiller/skills/frontend-figma/.claude-plugin/plugin.json": "cf74f3287d18a50f96078b89c0325f56a5baa21de339cabf588fc13f68fde7e7",
+    "packages/skiller/skills/frontend-figma/.codex-plugin/plugin.json": "135fea6e2508e0e39b402d6bf13d5ce588ff838da23402650f7c5b5cc992f61a",
+    "packages/skiller/skills/frontend-linting/.claude-plugin/plugin.json": "232f25e6df8ec9484d9197d32f4cf67696cc654e7c1e630cd9364887a3748c10",
+    "packages/skiller/skills/frontend-linting/.codex-plugin/plugin.json": "1bf9cb80168e660a5e187135ecb24b3c1308e396419395372fc8f5ae8d1cfc89",
+    "packages/skiller/skills/frontend-naive-ui/.claude-plugin/plugin.json": "dc845506b185c6a50915383e0c9a5be4f8a093c898c992a38178cebfcc65b3ff",
+    "packages/skiller/skills/frontend-naive-ui/.codex-plugin/plugin.json": "1cef9f487e5e0636205e31998589620893bb76dfadf0278554a3b0a2dfe9a386",
+    "packages/skiller/skills/frontend-nuxt/.claude-plugin/plugin.json": "b386f936684b767ef866331959afd593c68cb934a3119b39398055df5445442c",
+    "packages/skiller/skills/frontend-nuxt/.codex-plugin/plugin.json": "f030d36b0cfb85e65fbf3e9934c22ad86736508ab28cf874bb6b1644850fa432",
+    "packages/skiller/skills/frontend-reka/.claude-plugin/plugin.json": "cdb279657cfd7e181abf3e8c5a1e1c87e5b28b6a9747755f45fe78833c751978",
+    "packages/skiller/skills/frontend-reka/.codex-plugin/plugin.json": "18c6e58730b6f7f93046198282b676b37be331d8cb291de65f91f86c66b6bffc",
+    "packages/skiller/skills/frontend-tailwind/.claude-plugin/plugin.json": "3678781f0f864512aac2c0ed7c34ce4e272d94786f8e1974d800adcb49ae0aed",
+    "packages/skiller/skills/frontend-tailwind/.codex-plugin/plugin.json": "657187dc1ff83a94003881f40f4c0b37b1cf7d2db54999e55ca681ba93e7da3b",
+    "packages/skiller/skills/frontend-vite/.claude-plugin/plugin.json": "a6d546b10cbfbf2d1c49844eff7de2fde86e673a99d08c865aaa8f960db81dc2",
+    "packages/skiller/skills/frontend-vite/.codex-plugin/plugin.json": "18f8c716b650e3eb27b0883f0edf46dc88a596392584b2c0d256547e0517d4d2",
+    "packages/skiller/skills/frontend-vue/.claude-plugin/plugin.json": "d5cee8f8e05aa422171fc4a4f60d43c3c3bdfeb537e48a8f47ad76499f33c2c3",
+    "packages/skiller/skills/frontend-vue/.codex-plugin/plugin.json": "2d6cd12ee47572dd44fbf6fb33fb2c77e1023a6f161bc016598b991b8e742bce",
+    "packages/skiller/skills/frontend-wayfinder/.claude-plugin/plugin.json": "4adc7998e6526e5e17efaa8576d7ae714a19cdef4c894c1f38abce3dc27fa733",
+    "packages/skiller/skills/frontend-wayfinder/.codex-plugin/plugin.json": "b93db11938b631d8f37d42c1a1a8e83c32e3f7a5ea0730ff818e997abf831ba6",
+    "packages/skiller/skills/frontend/.claude-plugin/plugin.json": "e3e19c888a9093a9ca75ed09ef20b75dd994ef608c680ddd177e21414ee51a1e",
+    "packages/skiller/skills/frontend/.codex-plugin/plugin.json": "429c78c6cf39e8066eed116df82244cb31f026c468fdc4b8a7833a59336fdc8e",
+    "packages/skiller/skills/general/.claude-plugin/plugin.json": "972125d60b69b837417f29b48353775c7aed9368467729b376e63f0c1412d8f6",
+    "packages/skiller/skills/general/.codex-plugin/plugin.json": "b482d2d859df579ff0be10641d4a854e327a048b2d7033925495aa9251969593",
+    "packages/skiller/skills/laravel-architecture/.claude-plugin/plugin.json": "271eb53c15ce5f172b520bc8d532f0964c24272bc97bcb59623fd59ec4e0464e",
+    "packages/skiller/skills/laravel-architecture/.codex-plugin/plugin.json": "074cbf9571302d70c8f145890d7b97d7de981c0e84d60a7e27c6c73149cf1f44",
+    "packages/skiller/skills/laravel-auth/.claude-plugin/plugin.json": "7bbac61b1bdcc16319a014b37b63654a25cb167a760b9e6df2cde081ad83f253",
+    "packages/skiller/skills/laravel-auth/.codex-plugin/plugin.json": "90567b1e1b7d56085ffc0a227568a757d8b5b50f5f5285c2fd7a96e09c2599ba",
+    "packages/skiller/skills/laravel-data-layer/.claude-plugin/plugin.json": "fbbac2b95378c91bdf1d9348fad05cd40541e165fea90555284bd316a41762ee",
+    "packages/skiller/skills/laravel-data-layer/.codex-plugin/plugin.json": "06964364c88c8c42ebb4840ab875509c6cb24fbab1cdb12aa5ad9d9a20346eae",
+    "packages/skiller/skills/laravel-extras/.claude-plugin/plugin.json": "8665e77fd2b3c96280afb9c80c844d361f3b3c780b71ccb21bbd85dbcf72443d",
+    "packages/skiller/skills/laravel-extras/.codex-plugin/plugin.json": "d95177f86388f7be77b0f68ec2a1c04308103dae4234ee4fd77e376195cc92b4",
+    "packages/skiller/skills/laravel-filament/.claude-plugin/plugin.json": "532713ac8e1d3746d8248fdba28b1b4266c0686d742bd9f0333aab92dc785779",
+    "packages/skiller/skills/laravel-filament/.codex-plugin/plugin.json": "3b1e0da2bea51742e1d9b23b686fe4a784d5a618fec7473791c0fb9872631c51",
+    "packages/skiller/skills/laravel-livewire/.claude-plugin/plugin.json": "25cd61267aed806151b2a2c7479e5f7b9133e797419b753a582e0533c66503cf",
+    "packages/skiller/skills/laravel-livewire/.codex-plugin/plugin.json": "dbf6f9c3f13465f8e0f1ff760614fb5693d2b4cfdf313f7c9d57eb98820fae0d",
+    "packages/skiller/skills/laravel-testing/.claude-plugin/plugin.json": "bf9f18bcad94fe8fa5d80e40f1321aeb6dd0872906b79a525c89b913ca7f29f6",
+    "packages/skiller/skills/laravel-testing/.codex-plugin/plugin.json": "59b8df4fe11a167dbefb227303303ae60494a255b4e98c8cde415616b1f6ac8a",
+    "packages/skiller/skills/legal/.claude-plugin/plugin.json": "a9765709a2daee90c553f1519e43ae543f4d1114cb482341d6f30c5836b3d546",
+    "packages/skiller/skills/legal/.codex-plugin/plugin.json": "9787f69965d6fb364d575b0e6b9c83156472c675c69079b7424ec74d4d58a405",
+    "packages/skiller/skills/marketing/.claude-plugin/plugin.json": "ad31c51f7b6e20dbf8032a2d4e776102d3b54fb29d9eb3a2436ebeedaf6d66d2",
+    "packages/skiller/skills/marketing/.codex-plugin/plugin.json": "5a811f2d8f731a3a420e4f7dd800d8c75d24584ef268edd0d7356eb323d3467a",
+    "packages/skiller/skills/mobile/.claude-plugin/plugin.json": "a24e67270388137dece8fbbd96b9815a7c7f0128989d7e382988b5a964d66973",
+    "packages/skiller/skills/mobile/.codex-plugin/plugin.json": "a5abd1f827604c6deb6d5130e4f7b552430501f9943448046dbeeee3fae7d3dc",
+    "packages/skiller/skills/operator/.claude-plugin/plugin.json": "a1309db09c5ed1c5075ec3557c8fcc3db5374f1afe56111e68f4d463bd60ce34",
+    "packages/skiller/skills/operator/.codex-plugin/plugin.json": "1147e7797fd6e56c30cbf94e631fe9d1feecf98c7faad659e3265ba6c05a194b",
+    "packages/skiller/skills/oss-dev/.claude-plugin/plugin.json": "5cd703d1fdff61bebefe5960b8d701940241563c2b904ef29adcd8b687054254",
+    "packages/skiller/skills/oss-dev/.codex-plugin/plugin.json": "0885b6e0def5bcc029aef6d89af590dd0aa53e7f0d84dd68e877f777b1a10a31",
+    "packages/skiller/skills/php-packages/.claude-plugin/plugin.json": "8245b42b352af12a851c83c854aa31913533a408e85e40a1ec769d6364326662",
+    "packages/skiller/skills/php-packages/.codex-plugin/plugin.json": "f970ed120aa14f1538bf37f0e0ec3b1f0c6235d815cd202b77fd57fb4b858f97",
+    "packages/skiller/skills/php/.claude-plugin/plugin.json": "b5305dcffb21fb6e84d2392ef7e7be5d5701501f4e7b31ed1ad59d48f6176aa3",
+    "packages/skiller/skills/php/.codex-plugin/plugin.json": "826e153be7244a7c46be76ebf8bc242fb97888dca46a26698256b2b610a94448",
+    "packages/skiller/skills/pm/.claude-plugin/plugin.json": "c28188ceb333acded6bff2e0c8132f098fb8601f5526caadbc67412d3e686893",
+    "packages/skiller/skills/pm/.codex-plugin/plugin.json": "1bbf2ddc3567e6c8743e9719c4ee8df67a84fa663570fd2606e22fd04d6a4118",
+    "packages/skiller/skills/python/.claude-plugin/plugin.json": "04071bec12ec819e9abdce44c47762c26c43f064e3612dbfefc90848b474debb",
+    "packages/skiller/skills/python/.codex-plugin/plugin.json": "4112ab03e99a8c251f6671421469158fd23e6bfed2d5a0742ff6674ed1e9802f",
+    "packages/skiller/skills/quality/.claude-plugin/plugin.json": "3c64910076ee7b0b700f9168ef083d673c41ee2a5a799571ef1d16f4a43d9a4c",
+    "packages/skiller/skills/quality/.codex-plugin/plugin.json": "12e9245652379f19c8faf5f9b58fe533d565c05488952801db7696db81795323",
+    "packages/skiller/skills/research/.claude-plugin/plugin.json": "765c1e488df0980e3268835294c9139ce89b4a3f84d127aeb009abc3b80626c0",
+    "packages/skiller/skills/research/.codex-plugin/plugin.json": "34655319e637c21c0923325afce6fac6a8e3294aaadde9f86f6d8f2ef07b8915",
+    "packages/skiller/skills/roles/.claude-plugin/plugin.json": "9150e6c298b4772a1a1718814c0581e1158db934f35ddac348d724153585381b",
+    "packages/skiller/skills/roles/.codex-plugin/plugin.json": "e676f78c5570c069f41768da43a318c0f9e82394c6225075c5dc4829f1f3f6b3",
+    "packages/skiller/skills/sales/.claude-plugin/plugin.json": "cf44b6e4d005e41a56146b5d1f471fcbf0f969663026532c3cf12f6fc232dc2c",
+    "packages/skiller/skills/sales/.codex-plugin/plugin.json": "24a40d186fe00f2b3758820eed5ce8dbf249d28d0af2ad252566b12c17e39205",
+    "packages/skiller/skills/security/.claude-plugin/plugin.json": "bb7ea2d3678904fb47bc1ab50569799792355008e2b5122e429ea942bece537c",
+    "packages/skiller/skills/security/.codex-plugin/plugin.json": "20aaed4f359abb0cf45a7272853b45f549ea334b27d48cf8a127c5f94596f84e",
+    "packages/skiller/skills/voice-ai/.claude-plugin/plugin.json": "0ead4e7c9599818b4e4002e714850095f13d90ea84f7e94e1df773a07230c602",
+    "packages/skiller/skills/voice-ai/.codex-plugin/plugin.json": "3ad46d78e5d1641cb842fa9dbd0db5be3f7f960ab47ddab02ab0b087ffd6c4b4"
+  }
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+.claude/settings.json
+.claude/settings.local.json
+.claude/auto-approve.env.ini
+# fork-skills: transient staged-upstream (update-upstreams.sh --apply when drifting)
+*.incoming.md

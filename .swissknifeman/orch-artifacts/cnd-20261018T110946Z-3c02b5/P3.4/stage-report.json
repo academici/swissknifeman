@@ -1,0 +1,65 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/gui-workspace/README.md",
+    "bridges/gui-workspace/gui.json",
+    "bridges/gui-workspace/run.py",
+    "bridges/gui-workspace/tests/test_commands.py",
+    "docs/workspace.md",
+    "packages/aicore/CHANGELOG.md",
+    "packages/aicore/lib/aicore/project/cli.py",
+    "packages/aicore/lib/aicore/workspace/__init__.py",
+    "packages/aicore/lib/aicore/workspace/links.py",
+    "packages/aicore/lib/aicore/workspace/resolve.py",
+    "packages/aicore/tests/test_project_cli.py",
+    "packages/aicore/tests/test_workspace.py",
+    "packages/planner/lib/planner/plan/store.py",
+    "packages/planner/lib/planner/plan/workspace.py",
+    "packages/planner/tests/engine/test_workspace.py",
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/config.example.toml",
+    "packages/workspace/configs/config.schema.json",
+    "packages/workspace/lib/workspace/cli.py",
+    "packages/workspace/lib/workspace/doctor.py",
+    "packages/workspace/lib/workspace/links.py",
+    "packages/workspace/lib/workspace/migrate.py",
+    "packages/workspace/lib/workspace/policy.py",
+    "packages/workspace/lib/workspace/projects.py",
+    "packages/workspace/lib/workspace/sync.py",
+    "packages/workspace/schemas/command/v1/common.schema.json",
+    "packages/workspace/schemas/command/v1/project-add.schema.json",
+    "packages/workspace/schemas/command/v1/project-attach.schema.json",
+    "packages/workspace/schemas/command/v1/project-link.schema.json",
+    "packages/workspace/tests/test_command_contracts.py",
+    "packages/workspace/tests/test_links.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "none new",
+      "kind": "note",
+      "next": "conductor reruns V1",
+      "text": "Other pieces of the earlier report stand unchanged (changes outside packages/**: docs/workspace.md, CHANGELOG.md; the frozen AICORE_ROOT may make V1 red on workspace tests; assumptions on link/unlink recording the per-project setting and on tasks/)."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "CHANGELOG.md",
+        "bridges/gui-workspace/README.md",
+        "bridges/gui-workspace/gui.json",
+        "bridges/gui-workspace/run.py",
+        "bridges/gui-workspace/tests/test_commands.py",
+        "docs/workspace.md"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: CHANGELOG.md, bridges/gui-workspace/README.md, bridges/gui-workspace/gui.json, bridges/gui-workspace/run.py, bridges/gui-workspace/tests/test_commands.py, docs/workspace.md"
+    }
+  ],
+  "status": "done_with_deviations",
+  "summary": "Fixed the public-hygiene violations of the previous candidate: the literal tasks/.gitkeep in packages/workspace/lib/workspace/projects.py (_held now builds the free set from ('plans','tasks') with f'{name}/.gitkeep', same behaviour) and in packages/workspace/CHANGELOG.md (reworded). scripts/public-hygiene.py now reports 0 violations; workspace tests.test_links and tests.test_projects pass (55 OK)."
+}

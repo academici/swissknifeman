@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(tree *)",
+      "Bash(which *)",
+      "Bash(file *)",
+      "Bash(diff *)",
+      "Bash(stat *)",
+      "Bash(test *)",
+      "Bash(du *)",
+      "Bash(jq *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(awk *)",
+      "Bash(sed -n *)",
+      "Bash(echo *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(git ls-files *)",
+      "Bash(git config --global --get*)",
+      "Bash(git config --global --list*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git restore *)",
+      "Bash(git stash *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh issue list *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(touch *)",
+      "Bash(chmod +x *)",
+      "Workflow",
+      "Agent",
+      "TodoWrite",
+      "mcp__perplexity-web",
+      "mcp__plugin_core_perplexity-web",
+      "mcp__playwright"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset --hard *)"
+    ],
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git config --global --add *)",
+      "Bash(git config --global --unset*)",
+      "Bash(git config --global --replace-all *)",
+      "Bash(git config --global --edit*)",
+      "Bash(git config --global *.* *)",
+      "Bash(chmod 777 *)",
+      "Bash(chmod -R 777 *)",
+      "Bash(npm install -g *)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(**/secrets/**)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "perplexity-web"
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/daemon-safety/block-daemon-ops.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/log-bash-command.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/notify/notify.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/review-gate/review-gate.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "prompt-manifest/v1",
+  "step": "executor.2",
+  "role": "executor",
+  "route": {
+    "provider": "claude-code",
+    "model": "sonnet",
+    "effort": "high"
+  },
+  "blocks": [
+    {
+      "kind": "resumed",
+      "origin": "conductor",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "tokens": 40
+    },
+    {
+      "kind": "correction",
+      "origin": "conductor",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "tokens": 120
+    }
+  ],
+  "excluded": [],
+  "estimated_tokens": 160,
+  "prompt_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "resumed_session": true,
+  "task_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

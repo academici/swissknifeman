@@ -1,0 +1,43 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "contract_version": "exec/v1",
+  "input_id": "adhoc@e6fc3137d64d",
+  "digest": "e6fc3137d64d26559b335f10ce8cc0f02ce3d401753cb160b956c42032260e8d",
+  "provenance": {
+    "kind": "adhoc",
+    "request": "Fix the typo in README install section",
+    "created_by": "owner"
+  },
+  "goal": "Fix the typo in README install section",
+  "scope": {
+    "include": [
+      "README.md install section"
+    ],
+    "exclude": []
+  },
+  "acceptance": {
+    "checks": [
+      {
+        "id": "V1",
+        "procedure": "README install section reads `pip install`",
+        "expect": "observed",
+        "kind": "acceptance"
+      }
+    ]
+  },
+  "route": {
+    "minimum": {
+      "class": "economy",
+      "effort": "low"
+    }
+  },
+  "result_contract": {
+    "report": [
+      "summary",
+      "changed_paths"
+    ],
+    "write_authority": "code_scope",
+    "commit_owner": "coordinator",
+    "plan_mutation": "forbidden"
+  }
+}

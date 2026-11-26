@@ -1,0 +1,45 @@
+{
+  "item": "P2.3",
+  "correction": "executor.4: F1, F2, F3",
+  "verification": [
+    {
+      "runner": "python3 -I -",
+      "modules": [
+        "tests.test_adhoc",
+        "tests.test_resume_receipts",
+        "tests.test_resume_reconcile",
+        "tests.test_boundaries"
+      ],
+      "tests": 53,
+      "exit": 0
+    },
+    {
+      "runner": "python3 -I -",
+      "modules": ["test_commit_bridge"],
+      "tests": 12,
+      "exit": 0
+    },
+    {
+      "procedure": "Parse the seven changed Python files with ast.parse(feature_version=(3, 9))",
+      "exit": 0
+    },
+    {
+      "cmd": "git diff --check",
+      "exit": 0
+    }
+  ],
+  "regressions": [
+    "Blocked registration may become done under the same attempt; done followed by blocked is still refused.",
+    "SIGKILL after retry's durable started record but before its source request cannot reuse the old blocked receipt.",
+    "A source SHA survives a workspace-only repeat and a second crash after the repeated receipt, before step done.",
+    "The bridge creates exactly one source commit and one workspace commit across two conductor SIGKILLs; step SHA exists in the source repository.",
+    "Without a known source SHA, a workspace-only result exposes sha=null and keeps the workspace SHA in its message."
+  ],
+  "before_fix": {
+    "selected_regressions": 4,
+    "exit": 1,
+    "result": "Reproduced F1, F2 and F3 before changing their implementation."
+  },
+  "acceptance_commands": "Not run; delegated to the coordinator.",
+  "goldens": "Unchanged; no existing characterization scenario was re-recorded."
+}

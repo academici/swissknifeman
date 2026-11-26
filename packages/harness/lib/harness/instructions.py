@@ -1,0 +1,1849 @@
+"""Frozen D86 instruction catalog, semantic validation, and public operations.
+
+The semantic gate is deliberately independent from P2 observation.  Invalid catalog,
+fragment, parity, extension, or compatibility input never reaches artifact planning.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, replace
+import hashlib
+import json
+from pathlib import Path
+import re
+import sys
+from typing import Mapping
+
+from aicore.util.cli import parse_args
+from aicore.content.budget import CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, estimate_tokens  # noqa: F401 (re-export)
+from aicore.util.io import atomic_write_text
+from aicore.provider.values import CapabilityId, CapabilityRequirement, ProviderId, SupportLevel
+from aicore.provider.projection import load_projection_catalog, project_common_instructions
+from aicore.artifacts.artifact import (
+    ArtifactAdapterIdentity, ArtifactRenderRequest, ArtifactSource, ArtifactTarget,
+    canonical_json_bytes, plan_artifact_render, sha256_digest,
+)
+from aicore.artifacts.lock import (
+    LOCK_RELATIVE_PATH, ArtifactActionKind, ArtifactLock, ArtifactPlan, DriftObservation, apply_plan,
+    parse_lock, plan_artifact_lock, serialize_lock,
+)
+
+
+CONTRACT_VERSION = "1.0.0"
+PROVIDERS = tuple(item.value for item in ProviderId)
+
+
+def _frozen_catalog_head():
+    """(catalog_version, scope ids, target paths by scope) of the packaged catalog, the owner of this data."""
+    path = Path(__file__).resolve().parents[2] / "configs/common/instructions/catalog.json"
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        scopes = value["scopes"]
+        return (value["catalog_version"], tuple(scope["id"] for scope in scopes),
+                {scope["id"]: dict(scope["targets"]) for scope in scopes})
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        raise RuntimeError(f"INSTRUCTION_CATALOG_UNREADABLE: {path.name}: {error}") from error
+
+
+CATALOG_VERSION, SCOPES, TARGETS = _frozen_catalog_head()
+COMMON_IDS = {
+    "root": ("root.ecosystem-identity", "root.repository-layout", "root.package-boundaries",
+             "root.cli-routing", "root.shared-core", "root.marketplace",
+             "root.engineering-invariants", "root.plan-lifecycle",
+             "root.development-validation", "root.reference-provenance",
+             "root.decision-verification", "root.provider-parity", "root.worktree-safety",
+             "root.untrusted-content", "root.evidence-integrity", "root.generated-artifacts",
+             "root.speculative-work", "root.docs-build", "root.module-folders",
+             "root.product-philosophy"),
+    "skiller": ("skiller.identity", "skiller.distribution-channels",
+                "skiller.configuration-ownership", "skiller.core-policy",
+                "skiller.layout-and-generation", "skiller.module-boundaries",
+                "skiller.engineering-invariants", "skiller.validation-release"),
+    "harness": ("harness.identity", "harness.semantic-source", "harness.layout",
+                "harness.command-surface", "harness.agent-pack-lifecycle",
+                "harness.engineering-invariants", "harness.cross-package-boundaries",
+                "harness.validation-release"),
+    "maind": ("maind.identity", "maind.three-planes", "maind.layout",
+              "maind.module-boundaries", "maind.orchestration",
+              "maind.engineering-invariants", "maind.validation-release"),
+    "analyst": ("analyst.identity-human-gate", "analyst.layer-boundary", "analyst.layout",
+                "analyst.module-boundaries", "analyst.data-lifecycle", "analyst.privacy",
+                "analyst.engineering-invariants", "analyst.validation-release"),
+    "planner": ("planner.identity", "planner.command-catalog", "planner.plan-protocol", "planner.plan-files",
+                "planner.layout", "planner.schema-ownership", "planner.engineering-invariants",
+                "planner.configuration", "planner.events-and-extensions",
+                "planner.validation-release"),
+    "brain": ("brain.identity", "brain.layout", "brain.module-boundaries",
+              "brain.vault-safety", "brain.engineering-invariants",
+              "brain.validation-release"),
+    "orch": ("orch.identity", "orch.module-boundaries", "orch.engineering-invariants",
+             "orch.validation-release"),
+}
+# Root common is on demand for every provider except these ids: they are projected to every root
+# target, so the rule reaches any agent that opens the repository (the first-turn budget gates additions).
+ROOT_PINNED_COMMON_IDS = ("root.module-folders", "root.product-philosophy")
+EXTENSION_IDS = {
+    ("root", "claude-code"): ("root.claude-code.native-surfaces",
+                              "root.claude-code.context-budget",
+                              "root.claude-code.research-routing"),
+    ("root", "codex"): ("root.codex.bootstrap", "root.codex.launch-and-hook-integrity",
+                        "root.codex.fresh-agent-execution",
+                        "root.codex.package-scope-routing"),
+    ("root", "cursor"): ("root.cursor.instruction-precedence",
+                         "root.cursor.launch-and-autonomy",
+                         "root.cursor.package-scope-routing"),
+    ("root", "grok"): ("root.grok.instruction-precedence",
+                       "root.grok.launch-and-autonomy",
+                       "root.grok.package-scope-routing"),
+    ("root", "antigravity"): ("root.antigravity.instruction-precedence",
+                              "root.antigravity.launch-and-autonomy",
+                              "root.antigravity.package-scope-routing"),
+    ("skiller", "claude-code"): ("skiller.claude-code.marketplace-connect",
+                                 "skiller.claude-code.vendor-targets",
+                                 "skiller.claude-code.agent-hub"),
+    ("harness", "claude-code"): ("harness.claude-code.config-surfaces",
+                                 "harness.claude-code.lifecycle-surfaces",
+                                 "harness.claude-code.settings-precedence",
+                                 "harness.claude-code.safe-dirs"),
+    ("maind", "claude-code"): ("maind.claude-code.plugin-and-mcp",
+                               "maind.claude-code.workspace-trust"),
+    ("analyst", "claude-code"): ("analyst.claude-code.capture-surfaces",
+                                 "analyst.claude-code.plugin"),
+    ("planner", "claude-code"): ("planner.claude-code.slash-projection",
+                                 "planner.claude-code.model-pins"),
+}
+for _scope in SCOPES:
+    for _provider in PROVIDERS:
+        EXTENSION_IDS.setdefault((_scope, _provider), ())
+
+DIAGNOSTIC_CODES = frozenset({
+    "INSTRUCTION_SCOPE_INVALID", "INSTRUCTION_TARGET_SET_MISMATCH",
+    "INSTRUCTION_SEMANTIC_ID_MISSING", "INSTRUCTION_SEMANTIC_ID_DUPLICATE",
+    "INSTRUCTION_SEMANTIC_ORDER_INVALID", "INSTRUCTION_EXTENSION_ID_INVALID",
+    "INSTRUCTION_EXTENSION_CONFLICT", "INSTRUCTION_TARGET_MISSING",
+    "INSTRUCTION_OWNERSHIP_CONFLICT", "INSTRUCTION_BOUNDARY_INVALID",
+    "INSTRUCTION_PROVENANCE_INVALID", "INSTRUCTION_STALE_SOURCE",
+    "INSTRUCTION_MANAGED_DRIFT", "INSTRUCTION_PARITY_MISMATCH",
+    "INSTRUCTION_COMPATIBILITY_MISMATCH", "INSTRUCTION_WRITE_FORBIDDEN",
+})
+OBSERVATION_CODES = frozenset({
+    "semantic-invalid", "semantic-conflict", "missing", "clean", "stale-source",
+    "managed-drift", "boundary-invalid", "provenance-invalid", "ownership-conflict",
+    "write-forbidden",
+})
+
+
+
+
+
+
+
+
+ROOT_CANON_LINE_LIMIT = 200
+
+
+
+
+
+ROOT_CANON_TOKEN_LIMIT = 6_000
+
+
+
+
+PACKAGE_CANON_LINE_LIMIT = 100
+PACKAGE_CANON_TOKEN_LIMIT = 3_000
+
+
+_IDENTIFIER = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$")
+_DIGEST = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$")
+_TAG = re.compile(r"^<!-- instruction:([a-z][a-z0-9.-]*) -->$", re.M)
+_SECTION_FIELDS = {
+    "id", "scope_id", "kind", "provider_id", "order", "intent", "obligations",
+    "sources", "compatibility_assertions",
+}
+_DIAGNOSTIC_FIELDS = (
+    "severity", "code", "scope_id", "provider_id", "target_path", "artifact_id",
+    "observation", "semantic_id", "expected", "observed", "next_action", "message",
+)
+
+
+@dataclass(frozen=True)
+class InstructionDiagnostic:
+    severity: str
+    code: str
+    scope_id: str | None
+    provider_id: str | None
+    target_path: str | None
+    artifact_id: str | None
+    observation: str | None
+    semantic_id: str | None
+    expected: str | None
+    observed: str | None
+    next_action: str | None
+    message: str | None
+
+    def __post_init__(self) -> None:
+        if self.severity != "error" or self.code not in DIAGNOSTIC_CODES:
+            raise ValueError("unknown instruction diagnostic")
+        if self.observation is not None and self.observation not in OBSERVATION_CODES:
+            raise ValueError("unknown instruction observation")
+
+    def as_dict(self) -> dict[str, str | None]:
+        return {field: getattr(self, field) for field in _DIAGNOSTIC_FIELDS}
+
+
+class InstructionValidationError(ValueError):
+    """Internal convenience surface; public operations return the diagnostics."""
+
+    def __init__(self, diagnostics: tuple[InstructionDiagnostic, ...]):
+        self.diagnostics = _ordered_diagnostics(diagnostics)
+        super().__init__(", ".join(item.code for item in self.diagnostics))
+
+
+@dataclass(frozen=True)
+class InstructionRequest:
+    contract_version: str
+    catalog_version: str
+    operation_id: str
+    scope_ids: tuple[str, ...]
+    provider_ids: tuple[str, ...]
+    target_root: str
+    config_provenance: tuple[tuple[str, str], ...]
+    authorization_provenance: tuple[tuple[str, str], ...]
+    authorized_target_paths: tuple[str, ...] = ()
+    observed_hashes: tuple[tuple[str, str], ...] = ()
+    preimage_destination: str | None = None
+    owner_decision: str | None = None
+    mapping_path: str | None = None
+
+
+@dataclass(frozen=True)
+class InstructionProjection:
+    scope_id: str
+    provider_id: str
+    target_path: str
+    common_ids: tuple[str, ...]
+    extension_ids: tuple[str, ...]
+    result: object
+
+
+@dataclass(frozen=True)
+class InstructionTargetResult:
+    artifact_id: str
+    scope_id: str
+    provider_id: str
+    target_path: str
+    ordered_semantic_ids: tuple[str, ...]
+    observation: str
+    action: str
+    source_hash: str
+    render_hash: str
+    marker_ids: tuple[str, ...]
+    block_ids: tuple[str, ...]
+    diagnostics: tuple[InstructionDiagnostic, ...]
+    changed: bool
+    # Digest of the drifted target; a repair names it. Present only on managed-drift targets.
+    observed_hash: str | None = None
+
+    def as_dict(self) -> dict[str, object]:
+        value = {
+            "artifact_id": self.artifact_id, "scope_id": self.scope_id,
+            "provider_id": self.provider_id, "target_path": self.target_path,
+            "ordered_semantic_ids": list(self.ordered_semantic_ids),
+            "observation": self.observation, "action": self.action,
+            "source_hash": self.source_hash, "render_hash": self.render_hash,
+            "marker_ids": list(self.marker_ids), "block_ids": list(self.block_ids),
+            "diagnostics": [item.as_dict() for item in self.diagnostics],
+            "changed": self.changed,
+        }
+        if self.observed_hash is not None:
+            value["observed_hash"] = self.observed_hash
+        return value
+
+
+@dataclass(frozen=True)
+class CanonSizeFinding:
+    """Internal documentation."""
+    scope_id: str
+    provider_id: str
+    target_path: str
+    metric: str
+    limit: int
+    observed: int
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "scope_id": self.scope_id, "provider_id": self.provider_id,
+            "target_path": self.target_path, "metric": self.metric,
+            "limit": self.limit, "observed": self.observed,
+        }
+
+
+@dataclass(frozen=True)
+class InstructionOperationResult:
+    request: InstructionRequest
+    targets: tuple[InstructionTargetResult, ...]
+    diagnostics: tuple[InstructionDiagnostic, ...]
+    green: bool
+    artifact_plan: ArtifactPlan | None = None
+    size_findings: tuple[CanonSizeFinding, ...] = ()
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "request": {
+                "contract_version": self.request.contract_version,
+                "catalog_version": self.request.catalog_version,
+                "operation_id": self.request.operation_id,
+                "scope_ids": list(self.request.scope_ids),
+                "provider_ids": list(self.request.provider_ids),
+                "target_root": self.request.target_root,
+                "config_provenance": dict(self.request.config_provenance),
+                "authorization_provenance": dict(self.request.authorization_provenance),
+                "authorized_target_paths": list(self.request.authorized_target_paths),
+                "observed_hashes": dict(self.request.observed_hashes),
+                "preimage_destination": self.request.preimage_destination,
+                "owner_decision": self.request.owner_decision,
+                "mapping_path": self.request.mapping_path,
+            },
+            "targets": [item.as_dict() for item in self.targets],
+            "diagnostics": [item.as_dict() for item in self.diagnostics],
+            "size_findings": [item.as_dict() for item in self.size_findings],
+            "green": self.green,
+        }
+
+
+def package_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def repository_root() -> Path:
+    """Hub checkout around this module (the default target of the CLI); meaningless in a standalone copy."""
+    return Path(__file__).resolve().parents[4]
+
+
+_PACKAGE_PREFIX = "packages/harness/"
+
+
+def package_file(hub_relative: str) -> Path:
+    """Package-owned file named by its hub-relative identifier (`packages/harness/<rest>`), in any layout."""
+    if not hub_relative.startswith(_PACKAGE_PREFIX):
+        raise ValueError(f"not a harness file: {hub_relative}")
+    return package_root() / hub_relative[len(_PACKAGE_PREFIX):]
+
+
+def _identifier(path: Path) -> str:
+    """Hub-relative identifier of a file: package files are `packages/harness/<rest>` wherever the package lives."""
+    try:
+        return _PACKAGE_PREFIX + path.relative_to(package_root()).as_posix()
+    except ValueError:
+        return path.relative_to(repository_root()).as_posix()
+
+
+def catalog_path() -> Path:
+    return package_root() / "configs/common/instructions/catalog.json"
+
+
+def contract_path() -> Path:
+    return package_root() / "docs/reference/provider-instruction-contract.md"
+
+
+def compatibility_path() -> Path:
+    return package_root() / "tests/fixtures_data/instruction-compatibility-v1.json"
+
+
+def literal_coverage_path() -> Path:
+    return package_root() / "tests/fixtures_data/instruction-literal-coverage-v1.json"
+
+
+def literal_coverage_section(text: str, section_heading: str) -> str | None:
+    """Text from `section_heading` up to the next `^## ` line (or end of file) — the
+    byte-exact rule the D76/D81 coverage fixture provenance is keyed to. `None` if
+    `section_heading` is absent (fail-closed at the caller)."""
+    start = text.find(section_heading)
+    if start == -1:
+        return None
+    tail_start = start + len(section_heading)
+    next_match = re.search(r"^## ", text[tail_start:], re.M)
+    end = tail_start + next_match.start() if next_match else len(text)
+    return text[start:end]
+
+
+def load_catalog(path: Path | None = None) -> dict[str, object]:
+    try:
+        value = json.loads((path or catalog_path()).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            expected="canonical catalog JSON", observed=type(error).__name__,
+            next_action="restore the frozen catalog"),)) from error
+    diagnostics = validate_catalog(value)
+    if diagnostics:
+        raise InstructionValidationError(diagnostics)
+    return value
+
+
+def validate_catalog(value: object) -> tuple[InstructionDiagnostic, ...]:
+    """Validate D86 exact inventories, records, fragments, conflicts, and fixture."""
+    diagnostics: list[InstructionDiagnostic] = []
+    if not isinstance(value, dict) or set(value) != {
+            "contract_version", "catalog_version", "capability_requirements", "scopes"}:
+        return (_diag("INSTRUCTION_SCOPE_INVALID", expected="D86 catalog envelope",
+                      observed=_shape(value)),)
+    if value["contract_version"] != CONTRACT_VERSION or value["catalog_version"] != CATALOG_VERSION:
+        diagnostics.append(_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            expected=f"{CONTRACT_VERSION}/{CATALOG_VERSION}",
+            observed=f"{value['contract_version']}/{value['catalog_version']}",
+            next_action="use the frozen contract and catalog versions"))
+    scopes = value["scopes"]
+    if not isinstance(scopes, list):
+        return _ordered_diagnostics(tuple(diagnostics) + (_diag(
+            "INSTRUCTION_TARGET_SET_MISMATCH", expected="six ordered scope records",
+            observed=_shape(scopes)),))
+    scope_ids = tuple(item.get("id") if isinstance(item, dict) else None for item in scopes)
+    if len(set(scope_ids)) != len(scope_ids):
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", expected="unique scope IDs",
+                                 observed=_display(scope_ids)))
+    if scope_ids != SCOPES:
+        diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH",
+                                 expected=_display(SCOPES), observed=_display(scope_ids)))
+    records_by_id: dict[str, dict] = {}
+    normalized_by_kind: dict[tuple[str, str | None], dict[tuple[str, ...], str]] = {}
+    for scope_index, scope_id in enumerate(SCOPES):
+        if scope_index >= len(scopes) or not isinstance(scopes[scope_index], dict):
+            continue
+        scope = scopes[scope_index]
+        if scope.get("id") != scope_id:
+            continue
+        targets = scope.get("targets")
+        if (set(scope) != {"id", "sections", "targets"} or not isinstance(targets, dict)
+                or set(targets) != set(PROVIDERS)):
+            diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                     expected="scope record fields", observed=_shape(scope)))
+            continue
+        observed_targets = tuple(targets[p] for p in PROVIDERS)
+        expected_targets = tuple(TARGETS[scope_id][p] for p in PROVIDERS)
+        if observed_targets != expected_targets:
+            diagnostics.append(_diag("INSTRUCTION_TARGET_SET_MISMATCH", scope_id=scope_id,
+                                     expected=_display(expected_targets),
+                                     observed=_display(observed_targets)))
+        sections = scope["sections"]
+        if not isinstance(sections, list):
+            diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                     expected="ordered semantic records", observed=_shape(sections)))
+            continue
+        raw_ids = tuple(record.get("id") if isinstance(record, dict) else None for record in sections)
+        duplicate_ids = sorted({item for item in raw_ids if item is not None and raw_ids.count(item) > 1})
+        for semantic_id in duplicate_ids:
+            diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ID_DUPLICATE", scope_id=scope_id,
+                                     semantic_id=semantic_id, expected="unique ID",
+                                     observed="duplicate"))
+        for record in sections:
+            if not isinstance(record, dict) or set(record) != _SECTION_FIELDS:
+                diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                         expected="semantic record fields",
+                                         observed=_shape(record)))
+                continue
+            semantic_id = record["id"]
+            if not isinstance(semantic_id, str):
+                diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                         observed=_shape(semantic_id)))
+                continue
+            if semantic_id in records_by_id and semantic_id not in duplicate_ids:
+                diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ID_DUPLICATE",
+                                         scope_id=scope_id, semantic_id=semantic_id))
+            records_by_id[semantic_id] = record
+            _validate_record(record, scope_id, diagnostics, normalized_by_kind)
+        _validate_inventory(scope_id, sections, diagnostics)
+        _validate_fragments(scope_id, sections, diagnostics)
+        _validate_conflicts(scope_id, sections, diagnostics)
+    _validate_compatibility_fixture(records_by_id, diagnostics)
+    return _ordered_diagnostics(tuple(diagnostics))
+
+
+def plan_instructions(request: InstructionRequest, *,
+                      catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    request_diagnostics = _validate_request(request, {"plan"})
+    if request_diagnostics:
+        return InstructionOperationResult(request, (), request_diagnostics, False)
+    try:
+        value = load_catalog() if catalog is None else catalog
+        semantic_diagnostics = validate_catalog(value)
+    except InstructionValidationError as error:
+        semantic_diagnostics = error.diagnostics
+        value = None
+    if semantic_diagnostics:
+        return InstructionOperationResult(request, (), semantic_diagnostics, False)
+    return _observe(request, value)
+
+
+def canon_size_limits(scope_id: str) -> tuple[int, int]:
+    """Internal documentation."""
+    if scope_id == "root":
+        return ROOT_CANON_LINE_LIMIT, ROOT_CANON_TOKEN_LIMIT
+    return PACKAGE_CANON_LINE_LIMIT, PACKAGE_CANON_TOKEN_LIMIT
+
+
+def validate_canon_size(root: Path, *, scope_ids: tuple[str, ...] = SCOPES,
+                        provider_ids: tuple[str, ...] = PROVIDERS) -> tuple[CanonSizeFinding, ...]:
+    """Internal documentation."""
+    findings: list[CanonSizeFinding] = []
+    for scope_id in scope_ids:
+        line_limit, token_limit = canon_size_limits(scope_id)
+        for provider_id in provider_ids:
+            target_path = TARGETS[scope_id][provider_id]
+            path = root / target_path
+            if not path.is_file():
+                continue
+            text = path.read_text(encoding="utf-8")
+            for metric, limit, observed in (
+                    ("lines", line_limit, len(text.splitlines())),
+                    ("tokens", token_limit, estimate_tokens(text))):
+                if observed > limit:
+                    findings.append(CanonSizeFinding(scope_id, provider_id, target_path,
+                                                     metric, limit, observed))
+    return tuple(findings)
+
+
+def check_instructions(request: InstructionRequest, *,
+                       catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    request_diagnostics = _validate_request(request, {"check"})
+    if request_diagnostics:
+        return InstructionOperationResult(request, (), request_diagnostics, False)
+    planned = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
+    try:
+        value = load_catalog() if catalog is None else catalog
+    except InstructionValidationError:
+        value = None
+    coverage_diagnostics = validate_literal_coverage(value) if value is not None else ()
+    diagnostics = _ordered_diagnostics(planned.diagnostics + coverage_diagnostics)
+    size_findings = validate_canon_size(Path(request.target_root),
+                                        scope_ids=request.scope_ids,
+                                        provider_ids=request.provider_ids)
+    return replace(planned, request=request, diagnostics=diagnostics,
+                  size_findings=size_findings,
+                  green=planned.green and not coverage_diagnostics and not size_findings)
+
+
+def apply_instructions(request: InstructionRequest, *,
+                       catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    diagnostics = _validate_request(request, {"apply", "update"}, write=True)
+    if diagnostics:
+        return InstructionOperationResult(request, (), diagnostics, False)
+    fresh = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
+    if fresh.artifact_plan is None:
+        return replace(fresh, request=request)
+    writable = tuple(action for action in fresh.artifact_plan.actions
+                     if action.action is not ArtifactActionKind.NOOP)
+    if (any(action.action not in {ArtifactActionKind.CREATE, ArtifactActionKind.UPDATE}
+            for action in writable)
+            or tuple(action.target_path for action in writable) != request.authorized_target_paths):
+        return _write_refusal(
+            request, fresh, "authorized missing/create or stale-source/update targets",
+            message="target order expected (alphabetical order target_path): "
+                    + ",".join(action.target_path for action in writable))
+    if not writable:
+        try:
+            _prune_retired_scope_records(Path(request.target_root))
+        except (OSError, ValueError) as error:
+            return _write_refusal(request, fresh, type(error).__name__)
+        return replace(fresh, request=request, green=True)
+    try:
+        apply_plan(Path(request.target_root), fresh.artifact_plan)
+        _prune_retired_scope_records(Path(request.target_root))
+    except (OSError, TypeError, ValueError) as error:
+        return _write_refusal(request, fresh, type(error).__name__)
+    return _completed_write(request, fresh, writable)
+
+
+def _prune_retired_scope_records(root: Path) -> None:
+    """Drop lock records of instruction scopes that left the catalog; other records stay."""
+    lock_path = root / LOCK_RELATIVE_PATH
+    if not lock_path.is_file():
+        return
+    existing = parse_lock(lock_path.read_bytes())
+    kept = tuple(record for record in existing.records
+                 if not _retired_scope_record(record.artifact_id))
+    if len(kept) != len(existing.records):
+        atomic_write_text(lock_path, serialize_lock(ArtifactLock(1, kept)).decode("utf-8"))
+
+
+def repair_instructions(request: InstructionRequest, *,
+                        catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    diagnostics = _validate_request(request, {"repair"}, write=True)
+    if diagnostics:
+        return InstructionOperationResult(request, (), diagnostics, False)
+    probe = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
+    if probe.artifact_plan is None:
+        return replace(probe, request=request)
+    drift = tuple(action for action in probe.artifact_plan.actions
+                  if action.observation is DriftObservation.MANAGED_DRIFT)
+    observed = dict(request.observed_hashes)
+    if (not drift or tuple(action.target_path for action in drift) != request.authorized_target_paths
+            or request.preimage_destination != "adjacent-backup"
+            or any(observed.get(action.target_path) != action.observed_hash for action in drift)):
+        return _write_refusal(request, probe, "explicit drift hashes and adjacent-backup pre-image")
+    value = load_catalog() if catalog is None else catalog
+    repaired_probe = _observe(replace(request, operation_id="plan"), value,
+                              repairs=tuple(action.artifact_id for action in drift))
+    if repaired_probe.artifact_plan is None or any(
+            action.action not in {ArtifactActionKind.NOOP, ArtifactActionKind.REPAIR}
+            for action in repaired_probe.artifact_plan.actions):
+        return _write_refusal(request, repaired_probe, "managed-drift repair only")
+    try:
+        apply_plan(Path(request.target_root), repaired_probe.artifact_plan)
+    except (OSError, TypeError, ValueError) as error:
+        return _write_refusal(request, repaired_probe, type(error).__name__)
+    writable = tuple(action for action in repaired_probe.artifact_plan.actions
+                     if action.action is ArtifactActionKind.REPAIR)
+    return _completed_write(request, repaired_probe, writable)
+
+
+def adopt_instructions(request: InstructionRequest, *,
+                       catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    """Owner-gated adoption of an existing unmanaged target (contract §Consumer API).
+
+    Not ordinary ``apply``/``repair``: it requires ``owner_decision``, ``mapping_path``
+    (source-to-semantic mapping) and ``preimage_destination``, refuses any target that
+    is not currently `ownership-conflict`, records a byte-verified pre-image before any
+    mutation, and preserves mapping-uncovered bytes verbatim after the two managed
+    blocks. See ``rollback_adoption`` for the recovery path.
+    """
+    diagnostics = _validate_request(request, {"adopt"}, write=True)
+    if diagnostics:
+        return InstructionOperationResult(request, (), diagnostics, False)
+    if not request.owner_decision or not request.mapping_path or not request.preimage_destination:
+        return _write_refusal(request, InstructionOperationResult(request, (), (), False),
+                              "owner_decision, mapping_path, and preimage_destination are required")
+    fresh = plan_instructions(replace(request, operation_id="plan"), catalog=catalog)
+    if fresh.artifact_plan is None:
+        return replace(fresh, request=request)
+    conflicts = {item.target_path: item for item in fresh.targets
+                if item.observation == "ownership-conflict"}
+    if (not request.authorized_target_paths
+            or len(set(request.authorized_target_paths)) != len(request.authorized_target_paths)
+            or any(path not in conflicts for path in request.authorized_target_paths)):
+        return _write_refusal(request, fresh, "authorized ownership-conflict targets only")
+    try:
+        mapping = json.loads(Path(request.mapping_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return _write_refusal(request, fresh, "mapping file unreadable")
+    if not isinstance(mapping, dict):
+        return _write_refusal(request, fresh, "mapping must be a JSON object")
+    value = load_catalog() if catalog is None else catalog
+    root = _absolute_root(Path(request.target_root))
+    # Validate every authorized target (read-only) before writing anything at all —
+    # an incomplete/non-covering mapping must refuse without a single write.
+    plans = []
+    for target_path in request.authorized_target_paths:
+        target = root / target_path
+        try:
+            raw = target.read_bytes()
+        except OSError:
+            return _write_refusal(request, fresh, f"target unreadable: {target_path}")
+        spans = _adoption_spans(mapping.get(target_path), len(raw))
+        if spans is None:
+            return _write_refusal(request, fresh, f"incomplete mapping for {target_path}")
+        if not b"".join(raw[start:end] for start, end in spans).strip():
+            return _write_refusal(request, fresh,
+                                  f"mapping does not cover substantive bytes of {target_path}")
+        plans.append((target_path, target, raw, spans))
+    preimage_dir = Path(request.preimage_destination)
+    written = []
+    for target_path, target, raw, spans in plans:
+        pre_image_hash = sha256_digest(raw)
+        pre_image_path = preimage_dir / (target_path.replace("/", "__") + ".preimage")
+        try:
+            atomic_write_text(pre_image_path, raw.decode("utf-8"))
+        except (OSError, UnicodeDecodeError):
+            return _write_refusal(request, fresh, f"pre-image write failed for {target_path}")
+        if sha256_digest(pre_image_path.read_bytes()) != pre_image_hash:
+            return _write_refusal(request, fresh, f"pre-image verification failed for {target_path}")
+        try:
+            pre_image_relative = pre_image_path.resolve().relative_to(root.resolve()).as_posix()
+        except ValueError:
+            pre_image_relative = str(pre_image_path)
+        written.append((target_path, target, raw, spans, pre_image_hash, pre_image_relative))
+    # Adoption facts become part of `semantic_metadata` *before* rendering the adopted
+    # projection (not patched on afterwards): the lock record's `source_hash` already
+    # covers `semantic_metadata` (core.provider.artifact._source_envelope), so the
+    # record written here and the one a future plain check re-derives from this same
+    # lock (via `_adoption_hints`/`_projection`) must come from the identical render —
+    # patching semantic_metadata post-hoc on the un-hinted provenance would leave
+    # `source_hash` mismatched against every later check (`stale-source` forever).
+    hints = {conflicts[target_path].artifact_id: {
+        "owner_decision": request.owner_decision, "pre_image_hash": pre_image_hash,
+        "pre_image_path": pre_image_relative, "mapping_path": request.mapping_path,
+    } for target_path, _target, _raw, _spans, pre_image_hash, pre_image_relative in written}
+    projections = {item.target_path: item for item in _projections(
+        value, request.scope_ids, request.provider_ids, adoption_hints=hints)}
+    lock_path = root / LOCK_RELATIVE_PATH
+    try:
+        existing_lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
+                         else ArtifactLock(1, ()))
+    except ValueError:
+        return _write_refusal(request, fresh, "existing lock is corrupt")
+    augmented_records = {}
+    adopted_targets = {}
+    for target_path, target, raw, spans, _pre_image_hash, _pre_image_relative in written:
+        projection = projections[target_path]
+        provenance = projection.result.provenance
+        preserved = _uncovered_bytes(raw, spans)
+        final_bytes = projection.result.managed_bytes + (b"\n" + preserved if preserved else b"")
+        try:
+            atomic_write_text(target, final_bytes.decode("utf-8"))
+        except (OSError, UnicodeDecodeError):
+            return _write_refusal(request, fresh, f"target write failed for {target_path}")
+        augmented_records[provenance.artifact_id] = provenance
+        adopted_targets[target_path] = InstructionTargetResult(
+            provenance.artifact_id, projection.scope_id, projection.provider_id, target_path,
+            projection.common_ids + projection.extension_ids, "clean", "adopt",
+            provenance.source_hash, provenance.rendered_hash,
+            _marker_ids(provenance.managed_boundary[1]), provenance.managed_boundary[1], (), True)
+    retained = tuple(record for record in existing_lock.records
+                     if record.artifact_id not in augmented_records)
+    new_lock = ArtifactLock(1, retained + tuple(augmented_records.values()))
+    try:
+        atomic_write_text(lock_path, serialize_lock(new_lock).decode("utf-8"))
+    except OSError:
+        return _write_refusal(request, fresh, "lock write failed")
+    targets = tuple(adopted_targets.get(item.target_path, item) for item in fresh.targets)
+    result_diagnostics = _ordered_diagnostics(tuple(
+        diagnostic for target in targets for diagnostic in target.diagnostics))
+    green = not result_diagnostics and all(item.observation == "clean" for item in targets)
+    return InstructionOperationResult(request, targets, result_diagnostics, green, fresh.artifact_plan)
+
+
+def rollback_adoption(root: Path, target_path: str) -> bytes:
+    """Restore ``target_path`` to its recorded adoption pre-image, byte-for-byte.
+
+    Fail-closed recovery path required by the contract's "rollback" adoption field: no
+    CLI verb (adoption is owner-gated, rollback is an explicit out-of-band recovery
+    action). Drops the lock record for the adopted artifact so a subsequent `check`
+    sees the target as `ownership-conflict` again, exactly as before adoption. Raises
+    ``InstructionValidationError`` (reusing existing diagnostic codes) if no adoption
+    record exists or the pre-image no longer matches its recorded hash.
+    """
+    root = _absolute_root(Path(root))
+    lock_path = root / LOCK_RELATIVE_PATH
+    try:
+        lock = (parse_lock(lock_path.read_bytes()) if lock_path.is_file()
+                else ArtifactLock(1, ()))
+    except ValueError as error:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected="valid lock", observed=type(error).__name__),)
+            ) from error
+    record = next((item for item in lock.records if item.target_path == target_path), None)
+    adoption = dict(record.semantic_metadata).get("adoption") if record is not None else None
+    if record is None or adoption is None:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_OWNERSHIP_CONFLICT", observation="ownership-conflict",
+            target_path=target_path, expected="adoption record", observed="none"),))
+    pre_image_path = root / adoption["pre_image_path"]
+    try:
+        pre_image_bytes = pre_image_path.read_bytes()
+    except OSError as error:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected="readable pre-image",
+            observed=type(error).__name__),)) from error
+    if sha256_digest(pre_image_bytes) != adoption["pre_image_hash"]:
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+            target_path=target_path, expected=adoption["pre_image_hash"],
+            observed="hash-mismatch"),))
+    atomic_write_text(root / target_path, pre_image_bytes.decode("utf-8"))
+    remaining = tuple(item for item in lock.records if item.artifact_id != record.artifact_id)
+    atomic_write_text(lock_path, serialize_lock(ArtifactLock(1, remaining)).decode("utf-8"))
+    return pre_image_bytes
+
+
+def plan(root: Path, *, repairs: tuple[str, ...] = (),
+         catalog: dict[str, object] | None = None) -> tuple[tuple[InstructionProjection, ...], ArtifactPlan]:
+    """Backward-compatible convenience wrapper; explicit catalogs are still validated."""
+    value = load_catalog() if catalog is None else catalog
+    diagnostics = validate_catalog(value)
+    if diagnostics:
+        raise InstructionValidationError(diagnostics)
+    request = default_request("plan", root)
+    result = _observe(request, value, repairs=repairs)
+    if result.artifact_plan is None:
+        raise InstructionValidationError(result.diagnostics)
+    lock_path = Path(request.target_root) / LOCK_RELATIVE_PATH
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    projections = _projections(value, request.scope_ids, request.provider_ids,
+                               adoption_hints=_adoption_hints(lock_bytes))
+    return projections, result.artifact_plan
+
+
+def check(root: Path, *, catalog: dict[str, object] | None = None):
+    return plan(root, catalog=catalog)
+
+
+def apply(root: Path, artifact_plan: ArtifactPlan, *, authorized_targets: tuple[str, ...]) -> ArtifactPlan:
+    writable = tuple(action for action in artifact_plan.actions
+                     if action.action is not ArtifactActionKind.NOOP)
+    if (any(action.action not in {ArtifactActionKind.CREATE, ArtifactActionKind.UPDATE}
+            for action in writable)
+            or tuple(action.target_path for action in writable) != authorized_targets):
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_WRITE_FORBIDDEN", observation="write-forbidden",
+            expected="authorized create/update set", observed=_display(authorized_targets)),))
+    return apply_plan(_absolute_root(root), artifact_plan)
+
+
+def repair(root: Path, artifact_plan: ArtifactPlan, *, authorized_targets: tuple[str, ...]) -> ArtifactPlan:
+    writable = tuple(action for action in artifact_plan.actions
+                     if action.action is not ArtifactActionKind.NOOP)
+    if (not writable or any(action.action is not ArtifactActionKind.REPAIR for action in writable)
+            or tuple(action.target_path for action in writable) != authorized_targets):
+        raise InstructionValidationError((_diag(
+            "INSTRUCTION_WRITE_FORBIDDEN", observation="write-forbidden",
+            expected="authorized repair set", observed=_display(authorized_targets)),))
+    return apply_plan(_absolute_root(root), artifact_plan)
+
+
+def adopt(root: Path, *, authorized_targets: tuple[str, ...], owner_decision: str,
+          mapping_path: str, preimage_destination: str,
+          catalog: dict[str, object] | None = None) -> InstructionOperationResult:
+    """Backward-compatible convenience wrapper; explicit catalogs are still validated."""
+    request = replace(default_request("adopt", root),
+                      authorized_target_paths=authorized_targets,
+                      owner_decision=owner_decision, mapping_path=mapping_path,
+                      preimage_destination=preimage_destination)
+    return adopt_instructions(request, catalog=catalog)
+
+
+def default_request(operation_id: str, root: Path) -> InstructionRequest:
+    return InstructionRequest(
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, SCOPES, PROVIDERS,
+        str(_absolute_root(root)), (("source", "explicit-test-config"),),
+        (("authority", "synthetic-temp-root"),),
+    )
+
+
+def operator_reference(catalog: dict[str, object] | None = None) -> str:
+    value = load_catalog() if catalog is None else catalog
+    diagnostics = validate_catalog(value)
+    if diagnostics:
+        raise InstructionValidationError(diagnostics)
+    header = (["Scope"] + [f"{p} target" for p in PROVIDERS] + ["Common IDs"]
+              + [f"{p} extensions" for p in PROVIDERS])
+    align = "|" + "|".join([":--"] * (1 + len(PROVIDERS)) + ["--:"] * (1 + len(PROVIDERS))) + "|"
+    lines = ["# Provider instructions", "", "Generated from the validated D86 catalog.", "",
+             "| " + " | ".join(header) + " |",
+             align]
+    for scope_id in SCOPES:
+        cells = [f"`{scope_id}`"]
+        cells.extend(f"`{TARGETS[scope_id][p]}`" for p in PROVIDERS)
+        cells.append(str(len(COMMON_IDS[scope_id])))
+        cells.extend(str(len(EXTENSION_IDS[(scope_id, p)])) for p in PROVIDERS)
+        lines.append("| " + " | ".join(cells) + " |")
+    extension_count = sum(len(EXTENSION_IDS[(scope_id, p)]) for scope_id in SCOPES for p in PROVIDERS)
+    common_count = sum(len(COMMON_IDS[scope_id]) for scope_id in SCOPES)
+    target_count = len(SCOPES) * len(PROVIDERS)
+    lines += ["", f"The frozen inventory contains {common_count} common and {extension_count} "
+              f"provider-extension IDs ({common_count + extension_count} total) across exactly "
+              f"{target_count} targets.", "",
+              "## Public API", "",
+              "`InstructionRequest` carries contract/catalog versions, operation ID, explicit "
+              "ordered scope/provider IDs, an absolute target root, and config/authorization "
+              "provenance. `InstructionTargetResult` carries artifact/scope/provider/path, "
+              "ordered semantic IDs, observation/action, source/render hashes, marker/block "
+              "IDs, ordered structured diagnostics, and `changed`. "
+              "`InstructionOperationResult` adds aggregate diagnostics and `green`.", "",
+              "The public operations are `plan_instructions`, `check_instructions`, "
+              "`apply_instructions`, and `repair_instructions`; their serialized result is "
+              "available through `as_dict()` without reinterpretation.", "",
+              "`plan` and `check` are no-write. `apply` requires explicit authorization "
+              "for a missing create or stale-source update; `repair` requires explicit "
+              "managed-drift hashes and an adjacent recoverable pre-image. Existing unmarked "
+              "or unlocked files are ownership conflicts.", ""]
+    return "\n".join(lines)
+
+
+def _observe(request: InstructionRequest, value: dict[str, object], *,
+             repairs: tuple[str, ...] = ()) -> InstructionOperationResult:
+    root = Path(request.target_root)
+    lock_path = root / LOCK_RELATIVE_PATH
+    lock_bytes = lock_path.read_bytes() if lock_path.is_file() else None
+    projections = _projections(value, request.scope_ids, request.provider_ids,
+                               adoption_hints=_adoption_hints(lock_bytes))
+    projection_diagnostics = _validate_projection_semantics(value, projections)
+    if projection_diagnostics:
+        return InstructionOperationResult(request, (), projection_diagnostics, False)
+    codecs = {item.result.provenance.artifact_id: _codec(item.scope_id, item.provider_id)
+              for item in projections}
+    artifact_plan = plan_artifact_lock(
+        root, tuple(item.result for item in projections), lock_bytes=lock_bytes,
+        repair_artifact_ids=repairs, managed_block_codecs=codecs)
+    artifact_plan = _instruction_observation_corrections(root, artifact_plan, lock_bytes)
+    artifact_plan = _preserve_unselected_lock(artifact_plan, lock_bytes)
+    actions_by_id = {action.artifact_id: action for action in artifact_plan.actions}
+    target_results = tuple(
+        _target_result(projection, actions_by_id[projection.result.provenance.artifact_id])
+        for projection in projections)
+    diagnostics = _ordered_diagnostics(tuple(
+        diagnostic for target in target_results for diagnostic in target.diagnostics))
+    green = not diagnostics and all(item.observation == "clean" for item in target_results)
+    return InstructionOperationResult(request, target_results, diagnostics, green, artifact_plan)
+
+
+def _validate_projection_semantics(value: dict[str, object],
+                                   projections: tuple[InstructionProjection, ...]
+                                   ) -> tuple[InstructionDiagnostic, ...]:
+    """Validate rendered IDs, common parity, extensions, and compatibility before P2."""
+    diagnostics = []
+    projection_policy = load_projection_catalog()
+    records = {record["id"]: record for scope in value["scopes"]
+               for record in scope["sections"]}
+    by_scope = {scope_id: tuple(item for item in projections if item.scope_id == scope_id)
+                for scope_id in SCOPES}
+    for scope_id, scoped in by_scope.items():
+        if not scoped:
+            continue
+        for projection in scoped:
+            rendered = projection.result.managed_bytes.decode("utf-8")
+            expected_common = (ROOT_PINNED_COMMON_IDS if scope_id == "root" else
+                               COMMON_IDS[scope_id] if project_common_instructions(
+                                   projection_policy, ProviderId(projection.provider_id)) else ())
+            if projection.common_ids != expected_common:
+                diagnostics.append(_diag(
+                    "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
+                    provider_id=projection.provider_id,
+                    expected=_display(expected_common), observed=_display(projection.common_ids)))
+            if projection.common_ids:
+                common_found = tuple(re.findall(r"<!-- semantic:([^ ]+) -->", rendered))[
+                    :len(projection.common_ids)]
+                if common_found != projection.common_ids:
+                    diagnostics.append(_diag(
+                        "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
+                        provider_id=projection.provider_id,
+                        target_path=projection.target_path,
+                        artifact_id=projection.result.provenance.artifact_id,
+                        observation="semantic-invalid", expected=_display(projection.common_ids),
+                        observed=_display(common_found)))
+            if projection.extension_ids != EXTENSION_IDS[(scope_id, projection.provider_id)]:
+                diagnostics.append(_diag(
+                    "INSTRUCTION_EXTENSION_ID_INVALID", scope_id=scope_id,
+                    provider_id=projection.provider_id,
+                    target_path=projection.target_path,
+                    observed=_display(projection.extension_ids)))
+            for semantic_id in projection.common_ids + projection.extension_ids:
+                missing = tuple(assertion for assertion in records[semantic_id]["compatibility_assertions"]
+                                if assertion not in rendered)
+                if missing:
+                    diagnostics.append(_diag(
+                        "INSTRUCTION_COMPATIBILITY_MISMATCH", scope_id=scope_id,
+                        provider_id=projection.provider_id,
+                        target_path=projection.target_path,
+                        artifact_id=projection.result.provenance.artifact_id,
+                        observation="semantic-invalid", semantic_id=semantic_id,
+                        expected=_display(missing), observed="rendered assertion missing"))
+        if len(scoped) == len(PROVIDERS):
+            for semantic_id in COMMON_IDS[scope_id]:
+                obligation = tuple(tuple(record.items()) for record in records[semantic_id]["obligations"])
+                if not obligation:
+                    diagnostics.append(_diag(
+                        "INSTRUCTION_PARITY_MISMATCH", scope_id=scope_id,
+                        semantic_id=semantic_id, expected="common obligation", observed="empty"))
+    return _ordered_diagnostics(tuple(diagnostics))
+
+
+def _projections(value: dict[str, object], scope_ids: tuple[str, ...],
+                 provider_ids: tuple[str, ...], *,
+                 adoption_hints: Mapping[str, Mapping[str, object]] | None = None
+                 ) -> tuple[InstructionProjection, ...]:
+    by_scope = {scope["id"]: scope for scope in value["scopes"]}
+    return tuple(_projection(value, by_scope[scope_id], provider_id, adoption_hints=adoption_hints)
+                 for scope_id in scope_ids for provider_id in provider_ids)
+
+
+def _projection(value: dict[str, object], scope: dict, provider: str, *,
+                adoption_hints: Mapping[str, Mapping[str, object]] | None = None
+                ) -> InstructionProjection:
+    scope_id = scope["id"]
+    target = TARGETS[scope_id][provider]
+    common_ids = COMMON_IDS[scope_id]
+    extension_ids = EXTENSION_IDS[(scope_id, provider)]
+    base = catalog_path().parent / ("root" if scope_id == "root" else f"packages/{scope_id}")
+    common, extension = base / "common.md", base / f"{provider}.md"
+    sources = tuple(sorted((
+        _source("instruction.contract", contract_path()),
+        _catalog_source(value),
+        _source(f"instruction.fragment.{scope_id}.common", common),
+        _source(f"instruction.fragment.{scope_id}.{provider}", extension),
+    )))
+    blocks = (f"instructions.{scope_id}.{provider}.common",
+              f"instructions.{scope_id}.{provider}.extension")
+    markers = (f"swissknifeman:instructions:{scope_id}:{provider}:common",
+               f"swissknifeman:instructions:{scope_id}:{provider}:extension")
+    requirements = tuple(CapabilityRequirement(CapabilityId(item["id"]), tuple(
+        SupportLevel(level) for level in item["accepted_levels"]))
+        for item in value["capability_requirements"])
+    identity = ArtifactAdapterIdentity(
+        f"harness.instruction.{provider}", "1.0.0", ProviderId(provider), "1.0.0",
+        requirements)
+    artifact_id = f"harness.instruction-projection.{scope_id}.{provider}"
+    semantic = {
+        "instruction_contract_version": CONTRACT_VERSION,
+        "catalog_version": CATALOG_VERSION, "scope_id": scope_id, "provider_id": provider,
+        "artifact_kind": "instruction-projection",
+        "semantic_sections": {"common": common_ids, "provider_extension": extension_ids},
+        "marker_ids": markers, "block_ids": blocks,
+        "capabilities": ("instructions.project",), "registry": "explicit",
+    }
+    # P1.4: once a target is adopted, its lock record carries a `semantic_metadata.adoption`
+    # sidecar (owner_decision/pre_image_hash/pre_image_path/mapping_path). Re-deriving the
+    # identical entry here from the lock on every later plan/check keeps the "expected"
+    # projection equal to the recorded one (core.provider.lock._classify compares them by
+    # full dataclass equality) — the fixed point that makes a re-check `clean`, not
+    # `provenance-invalid`.
+    hint = (adoption_hints or {}).get(artifact_id)
+    if hint is not None:
+        semantic["adoption"] = dict(hint)
+    catalog = load_projection_catalog()
+    # Repository-wide common guidance is on demand for every provider, except the pinned ids,
+    # which every root target carries. Package guides retain their provider policy, so entering
+    # a package still supplies it.
+    if scope_id == "root":
+        projected_common_ids = ROOT_PINNED_COMMON_IDS
+    else:
+        projected_common_ids = (common_ids if project_common_instructions(catalog, ProviderId(provider))
+                                else ())
+    common_source = common.read_text(encoding="utf-8") if projected_common_ids else ""
+    common_text = ("".join(_fragment_body(common_source, semantic_id) for semantic_id in projected_common_ids)
+                   if scope_id == "root" else common_source)
+    result = plan_artifact_render(ArtifactRenderRequest(
+        artifact_id, sources,
+        ArtifactTarget(target, ("managed-blocks", blocks)), identity, (), semantic,
+        lambda _request: _managed(
+            scope_id, provider, common_text,
+            extension.read_text(encoding="utf-8"), projected_common_ids, extension_ids),
+        contract_version="1.1.0"))
+    return InstructionProjection(scope_id, provider, target, projected_common_ids,
+                                 extension_ids, result)
+
+
+def _validate_record(record: dict, scope_id: str, diagnostics: list[InstructionDiagnostic],
+                     normalized_by_kind: dict) -> None:
+    semantic_id = record["id"]
+    kind, provider = record["kind"], record["provider_id"]
+    if record["scope_id"] != scope_id or kind not in {"common", "provider-extension"}:
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                 semantic_id=semantic_id, expected=scope_id,
+                                 observed=str(record["scope_id"])))
+    if kind == "common" and provider is not None:
+        diagnostics.append(_diag("INSTRUCTION_EXTENSION_ID_INVALID", scope_id=scope_id,
+                                 provider_id=str(provider), semantic_id=semantic_id))
+    if kind == "provider-extension":
+        prefix = f"{scope_id}.{provider}." if provider in PROVIDERS else ""
+        if provider not in PROVIDERS or not semantic_id.startswith(prefix):
+            diagnostics.append(_diag("INSTRUCTION_EXTENSION_ID_INVALID", scope_id=scope_id,
+                                     provider_id=provider if isinstance(provider, str) else None,
+                                     semantic_id=semantic_id))
+    obligations = record["obligations"]
+    if not isinstance(obligations, list) or not obligations:
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                 semantic_id=semantic_id, expected="structured obligations",
+                                 observed=_shape(obligations)))
+    else:
+        seen: set[tuple[str, ...]] = set()
+        for obligation in obligations:
+            if (not isinstance(obligation, dict)
+                    or set(obligation) != {"modality", "subject", "action", "object", "boundary"}
+                    or obligation.get("modality") not in {"must", "must-not", "may"}
+                    or any(not isinstance(obligation.get(field), str)
+                           or not _IDENTIFIER.fullmatch(obligation[field])
+                           for field in ("subject", "action", "object", "boundary"))):
+                diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                         provider_id=provider, semantic_id=semantic_id,
+                                         expected="normalized obligation fields",
+                                         observed=_shape(obligation)))
+                continue
+            normalized = tuple(obligation[field] for field in
+                               ("modality", "subject", "action", "object", "boundary"))
+            if normalized in seen:
+                diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ID_DUPLICATE",
+                                         scope_id=scope_id, provider_id=provider,
+                                         semantic_id=semantic_id,
+                                         observed="duplicate normalized obligation"))
+            seen.add(normalized)
+            owner_key = (kind, provider)
+            previous = normalized_by_kind.setdefault(owner_key, {}).get(normalized)
+            if previous is not None and previous != semantic_id:
+                diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ID_DUPLICATE",
+                                         scope_id=scope_id, provider_id=provider,
+                                         semantic_id=semantic_id, expected=previous,
+                                         observed="equivalent obligation under another ID"))
+            normalized_by_kind[owner_key][normalized] = semantic_id
+    sources = record["sources"]
+    expected_fragment = _fragment_relative(scope_id, provider)
+    if (not isinstance(sources, list) or len(sources) != 1
+            or not isinstance(sources[0], dict)
+            or set(sources[0]) != {"source_id", "path", "sha256"}
+            or sources[0].get("path") != expected_fragment
+            or not isinstance(sources[0].get("sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", sources[0]["sha256"])):
+        diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID", scope_id=scope_id,
+                                 provider_id=provider, semantic_id=semantic_id,
+                                 observation="provenance-invalid",
+                                 expected=expected_fragment, observed=_display(sources)))
+    else:
+        source_path = package_file(expected_fragment)
+        expected_hash = sha256_digest(source_path.read_bytes()).removeprefix("sha256:")
+        if sources[0]["sha256"] != expected_hash:
+            diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID", scope_id=scope_id,
+                                     provider_id=provider, semantic_id=semantic_id,
+                                     observation="provenance-invalid",
+                                     expected=expected_hash, observed=sources[0]["sha256"]))
+    if (not isinstance(record["intent"], str) or not record["intent"].strip()
+            or not isinstance(record["compatibility_assertions"], list)
+            or not record["compatibility_assertions"]
+            or any(not isinstance(item, str) or not item
+                   for item in record["compatibility_assertions"])):
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", scope_id=scope_id,
+                                 provider_id=provider, semantic_id=semantic_id,
+                                 expected="non-empty intent and assertions"))
+
+
+def _validate_inventory(scope_id: str, sections: list, diagnostics: list) -> None:
+    common = tuple(item["id"] for item in sections
+                   if isinstance(item, dict) and item.get("kind") == "common")
+    _compare_ids(scope_id, None, COMMON_IDS[scope_id], common, diagnostics)
+    for provider in PROVIDERS:
+        extension = tuple(item["id"] for item in sections
+                          if isinstance(item, dict)
+                          and item.get("kind") == "provider-extension"
+                          and item.get("provider_id") == provider)
+        _compare_ids(scope_id, provider, EXTENSION_IDS[(scope_id, provider)],
+                     extension, diagnostics, extension=True)
+    expected_all = set(COMMON_IDS[scope_id]).union(
+        *[set(EXTENSION_IDS[(scope_id, provider)]) for provider in PROVIDERS])
+    for record in sections:
+        if isinstance(record, dict) and isinstance(record.get("id"), str):
+            semantic_id = record["id"]
+            if semantic_id not in expected_all:
+                code = ("INSTRUCTION_EXTENSION_ID_INVALID"
+                        if record.get("kind") == "provider-extension"
+                        else "INSTRUCTION_SEMANTIC_ORDER_INVALID")
+                diagnostics.append(_diag(code, scope_id=scope_id,
+                                         provider_id=record.get("provider_id"),
+                                         semantic_id=semantic_id,
+                                         expected="frozen D86 ID set", observed="extra ID"))
+    for owner, expected in [(None, COMMON_IDS[scope_id])] + [
+            (provider, EXTENSION_IDS[(scope_id, provider)]) for provider in PROVIDERS]:
+        owned = [item for item in sections if isinstance(item, dict)
+                 and item.get("kind") == ("common" if owner is None else "provider-extension")
+                 and item.get("provider_id") == owner]
+        observed_orders = tuple(item.get("order") for item in owned)
+        expected_orders = tuple(range(1, len(expected) + 1))
+        if observed_orders != expected_orders:
+            diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ORDER_INVALID",
+                                     scope_id=scope_id, provider_id=owner,
+                                     expected=_display(expected_orders),
+                                     observed=_display(observed_orders)))
+
+
+def _compare_ids(scope_id: str, provider_id: str | None, expected: tuple[str, ...],
+                 observed: tuple[str, ...], diagnostics: list, extension: bool = False) -> None:
+    missing = tuple(item for item in expected if item not in observed)
+    for semantic_id in missing:
+        diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ID_MISSING", scope_id=scope_id,
+                                 provider_id=provider_id, semantic_id=semantic_id,
+                                 expected="present", observed="missing"))
+    if not missing and set(observed) == set(expected) and observed != expected:
+        diagnostics.append(_diag("INSTRUCTION_SEMANTIC_ORDER_INVALID", scope_id=scope_id,
+                                 provider_id=provider_id, expected=_display(expected),
+                                 observed=_display(observed)))
+    if extension and any(not item.startswith(f"{scope_id}.{provider_id}.") for item in observed):
+        diagnostics.append(_diag("INSTRUCTION_EXTENSION_ID_INVALID", scope_id=scope_id,
+                                 provider_id=provider_id, expected=f"{scope_id}.{provider_id}.*",
+                                 observed=_display(observed)))
+
+
+def _validate_fragments(scope_id: str, sections: list, diagnostics: list) -> None:
+    by_id = {item.get("id"): item for item in sections if isinstance(item, dict)}
+    for provider in (None,) + PROVIDERS:
+        expected_ids = COMMON_IDS[scope_id] if provider is None else EXTENSION_IDS[(scope_id, provider)]
+        path = package_file(_fragment_relative(scope_id, provider))
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as error:
+            diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID", scope_id=scope_id,
+                                     provider_id=provider, observation="provenance-invalid",
+                                     expected=path.as_posix(), observed=type(error).__name__))
+            continue
+        found = tuple(_TAG.findall(text))
+        if found != expected_ids:
+            code = ("INSTRUCTION_SEMANTIC_ID_MISSING"
+                    if any(item not in found for item in expected_ids)
+                    else "INSTRUCTION_SEMANTIC_ORDER_INVALID")
+            diagnostics.append(_diag(code, scope_id=scope_id, provider_id=provider,
+                                     expected=_display(expected_ids), observed=_display(found)))
+        for semantic_id in expected_ids:
+            record = by_id.get(semantic_id)
+            if not isinstance(record, dict):
+                continue
+            body = _fragment_body(text, semantic_id)
+            missing = tuple(item for item in record.get("compatibility_assertions", ())
+                            if item not in body)
+            if missing:
+                diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                         scope_id=scope_id, provider_id=provider,
+                                         semantic_id=semantic_id,
+                                         observation="semantic-invalid",
+                                         expected=_display(missing),
+                                         observed="fragment assertion missing"))
+
+
+def _validate_conflicts(scope_id: str, sections: list, diagnostics: list) -> None:
+    common = [item for item in sections if isinstance(item, dict) and item.get("kind") == "common"]
+    extensions = [item for item in sections if isinstance(item, dict)
+                  and item.get("kind") == "provider-extension"]
+    for extension in extensions:
+        for candidate in common:
+            for left in extension.get("obligations", ()):
+                for right in candidate.get("obligations", ()):
+                    conflict = _conflict_class(left, right)
+                    if conflict:
+                        diagnostics.append(_diag(
+                            "INSTRUCTION_EXTENSION_CONFLICT", scope_id=scope_id,
+                            provider_id=extension.get("provider_id"),
+                            semantic_id=extension.get("id"),
+                            observation="semantic-conflict",
+                            expected=f"{candidate.get('id')} remains authoritative",
+                            observed=conflict,
+                            next_action="revise the extension or supersede D86"))
+
+
+def _conflict_class(extension: object, common: object) -> str | None:
+    if not isinstance(extension, dict) or not isinstance(common, dict):
+        return None
+    exact = all(extension.get(field) == common.get(field)
+                for field in ("modality", "subject", "action", "object", "boundary"))
+    if exact:
+        return "equivalent obligation under another ID"
+    same_predicate = all(extension.get(field) == common.get(field)
+                         for field in ("subject", "action", "object"))
+    if same_predicate:
+        modalities = {extension.get("modality"), common.get("modality")}
+        if modalities == {"must", "must-not"}:
+            return "opposite modality"
+        if (extension.get("modality") == "may" and common.get("modality") == "must-not"
+                and _boundary_broader_or_equal(extension.get("boundary"), common.get("boundary"))):
+            return "broader permission"
+        if (extension.get("modality") == common.get("modality") == "must"
+                and _boundary_narrower(extension.get("boundary"), common.get("boundary"))):
+            return "narrower required coverage"
+    if (extension.get("subject") == common.get("subject")
+            and extension.get("action") == common.get("action")
+            and (_boundaries_overlap(extension.get("boundary"), common.get("boundary")))):
+        return "common-owner replacement or shadow"
+    return None
+
+
+def _validate_compatibility_fixture(records: dict[str, dict],
+                                    diagnostics: list[InstructionDiagnostic]) -> None:
+    try:
+        fixture = json.loads(compatibility_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                 observation="semantic-invalid",
+                                 expected="independent P5.6 fixture",
+                                 observed=type(error).__name__))
+        return
+    if (not isinstance(fixture, dict)
+            or set(fixture) != {"contract_version", "fixture_version", "provenance", "records"}
+            or fixture.get("contract_version") != CONTRACT_VERSION
+            or not isinstance(fixture.get("records"), list)):
+        diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                 observation="semantic-invalid",
+                                 expected="P5.6 compatibility fixture schema",
+                                 observed=_shape(fixture)))
+        return
+    fixture_records = fixture["records"]
+    fixture_ids = tuple(item.get("id") for item in fixture_records if isinstance(item, dict))
+    expected_ids = tuple(item for scope_id in SCOPES for item in (
+        COMMON_IDS[scope_id] + tuple(sid for p in PROVIDERS
+                                     for sid in EXTENSION_IDS[(scope_id, p)])))
+    if fixture_ids != expected_ids:
+        diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                 observation="semantic-invalid",
+                                 expected=_display(expected_ids), observed=_display(fixture_ids)))
+    for item in fixture_records:
+        if not isinstance(item, dict) or set(item) != {"id", "provider_ids", "assertions"}:
+            diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                     observation="semantic-invalid",
+                                     expected="record-level compatibility fixture",
+                                     observed=_shape(item)))
+            continue
+        record = records.get(item["id"])
+        if record is None:
+            continue
+        provider_ids = (("claude-code", "codex") if record["kind"] == "common"
+                        else (record["provider_id"],))
+        if (tuple(item["provider_ids"]) != provider_ids
+                or tuple(item["assertions"]) != tuple(record["compatibility_assertions"])):
+            diagnostics.append(_diag("INSTRUCTION_COMPATIBILITY_MISMATCH",
+                                     scope_id=record["scope_id"],
+                                     provider_id=record["provider_id"],
+                                     semantic_id=record["id"],
+                                     observation="semantic-invalid",
+                                     expected=_display(item),
+                                     observed="catalog compatibility record differs"))
+
+
+def _literal_coverage_source_text(source: object) -> str:
+    """Read the provenance source (repository-relative path). Patchable by name from tests."""
+    if not isinstance(source, str):
+        raise ValueError("provenance.source must be a string")
+    return package_file(source).read_text(encoding="utf-8")
+
+
+def _provenance_diagnostics(provenance: object) -> tuple[InstructionDiagnostic, ...]:
+    """D81 equality gate: the recorded `source_sha256` must equal the hash of the
+    RIGHT NOW extracted §2 section — independent of the literal-coverage check below,
+    since a stale provenance and a stale literal set are different failures."""
+    if not isinstance(provenance, dict):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="D81 provenance object", observed=_shape(provenance)),)
+    scope = provenance.get("source_hash_scope")
+    if scope not in {"section", "file"}:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected="section", observed=_display(scope)),)
+    try:
+        text = _literal_coverage_source_text(provenance.get("source"))
+    except (OSError, ValueError) as error:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=type(error).__name__),)
+    section = text if scope == "file" else literal_coverage_section(text, provenance.get("source_section"))
+    if section is None:
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed="section not found"),)
+    actual = hashlib.sha256(section.encode("utf-8")).hexdigest()
+    if actual != provenance.get("source_sha256"):
+        return (_diag("INSTRUCTION_PROVENANCE_INVALID", observation="provenance-invalid",
+                      expected=provenance.get("source_sha256"), observed=actual),)
+    return ()
+
+
+def validate_literal_coverage(value: dict[str, object]) -> tuple[InstructionDiagnostic, ...]:
+    """Validate D76 coverage: every matrix-mandated literal is asserted by its own
+    record. Wired only into `check_instructions` (P1.6) — never into `validate_catalog`
+    or `plan_instructions`, both called from `apply`/`repair`/`adopt`, where a red
+    coverage verdict would deadlock the very operation that repairs it."""
+    try:
+        fixture = json.loads(literal_coverage_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture", observed=type(error).__name__),)
+    if (not isinstance(fixture, dict)
+            or set(fixture) != {"contract_version", "fixture_version", "provenance", "literals"}
+            or fixture.get("contract_version") != CONTRACT_VERSION
+            or not isinstance(fixture.get("literals"), list)):
+        return (_diag("INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                      expected="D76 literal coverage fixture schema", observed=_shape(fixture)),)
+    records = {record["id"]: record for scope in value["scopes"] for record in scope["sections"]}
+    diagnostics: list[InstructionDiagnostic] = list(_provenance_diagnostics(fixture["provenance"]))
+    for item in fixture["literals"]:
+        if not isinstance(item, dict) or set(item) != {"semantic_id", "literal"}:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                expected="literal-coverage entry {semantic_id, literal}", observed=_shape(item)))
+            continue
+        semantic_id, literal = item["semantic_id"], item["literal"]
+        record = records.get(semantic_id)
+        if record is None:
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="unknown semantic id"))
+            continue
+        if not any(literal in assertion for assertion in record["compatibility_assertions"]):
+            diagnostics.append(_diag(
+                "INSTRUCTION_COMPATIBILITY_MISMATCH", scope_id=record.get("scope_id"),
+                provider_id=record.get("provider_id"), observation="semantic-invalid",
+                semantic_id=semantic_id, expected=literal, observed="matrix literal not asserted"))
+    return _ordered_diagnostics(tuple(diagnostics))
+
+
+def _validate_request(request: object, operations: set[str], *,
+                      write: bool = False) -> tuple[InstructionDiagnostic, ...]:
+    if not isinstance(request, InstructionRequest):
+        return (_diag("INSTRUCTION_SCOPE_INVALID", expected="InstructionRequest",
+                      observed=_shape(request)),)
+    diagnostics = []
+    if request.contract_version != CONTRACT_VERSION or request.catalog_version != CATALOG_VERSION:
+        diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID",
+                                 observation="provenance-invalid",
+                                 expected=f"{CONTRACT_VERSION}/{CATALOG_VERSION}",
+                                 observed=f"{request.contract_version}/{request.catalog_version}"))
+    if request.operation_id not in operations:
+        diagnostics.append(_diag("INSTRUCTION_WRITE_FORBIDDEN" if write else "INSTRUCTION_SCOPE_INVALID",
+                                 observation="write-forbidden" if write else "semantic-invalid",
+                                 expected=_display(tuple(sorted(operations))),
+                                 observed=request.operation_id))
+    if (not request.scope_ids or len(set(request.scope_ids)) != len(request.scope_ids)
+            or any(item not in SCOPES for item in request.scope_ids)
+            or tuple(item for item in SCOPES if item in request.scope_ids) != request.scope_ids):
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID", expected="explicit ordered D86 scope subset",
+                                 observed=_display(request.scope_ids)))
+    if (not request.provider_ids or len(set(request.provider_ids)) != len(request.provider_ids)
+            or any(item not in PROVIDERS for item in request.provider_ids)
+            or tuple(item for item in PROVIDERS if item in request.provider_ids) != request.provider_ids):
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID",
+                                 expected="explicit ordered provider subset",
+                                 observed=_display(request.provider_ids)))
+    try:
+        _absolute_root(Path(request.target_root))
+    except (TypeError, ValueError):
+        diagnostics.append(_diag("INSTRUCTION_SCOPE_INVALID",
+                                 expected="absolute target_root", observed=request.target_root))
+    if (not request.config_provenance
+            or any(not isinstance(pair, tuple) or len(pair) != 2
+                   or not all(isinstance(value, str) and value for value in pair)
+                   for pair in request.config_provenance)):
+        diagnostics.append(_diag("INSTRUCTION_PROVENANCE_INVALID",
+                                 observation="provenance-invalid",
+                                 expected="non-empty config provenance",
+                                 observed=_display(request.config_provenance)))
+    if (not request.authorization_provenance
+            or any(not isinstance(pair, tuple) or len(pair) != 2
+                   or not all(isinstance(value, str) and value for value in pair)
+                   for pair in request.authorization_provenance)):
+        diagnostics.append(_diag("INSTRUCTION_WRITE_FORBIDDEN" if write else "INSTRUCTION_PROVENANCE_INVALID",
+                                 observation="write-forbidden" if write else "provenance-invalid",
+                                 expected="non-empty authorization provenance",
+                                 observed=_display(request.authorization_provenance)))
+    return _ordered_diagnostics(tuple(diagnostics))
+
+
+def _target_result(projection: InstructionProjection, action,
+                   *, changed: bool = False) -> InstructionTargetResult:
+    observation = action.observation.value
+    code = {
+        "missing": "INSTRUCTION_TARGET_MISSING",
+        "ownership-conflict": "INSTRUCTION_OWNERSHIP_CONFLICT",
+        "boundary-invalid": "INSTRUCTION_BOUNDARY_INVALID",
+        "provenance-invalid": "INSTRUCTION_PROVENANCE_INVALID",
+        "stale-source": "INSTRUCTION_STALE_SOURCE",
+        "managed-drift": "INSTRUCTION_MANAGED_DRIFT",
+    }.get(observation)
+    diagnostics = ()
+    if code:
+        diagnostics = (_diag(
+            code, scope_id=projection.scope_id, provider_id=projection.provider_id,
+            target_path=projection.target_path,
+            artifact_id=projection.result.provenance.artifact_id,
+            observation=observation, expected="clean",
+            observed=action.diagnostic,
+            next_action=action.action.value),)
+    elif observation != "clean":
+        diagnostics = (_diag(
+            "INSTRUCTION_WRITE_FORBIDDEN", scope_id=projection.scope_id,
+            provider_id=projection.provider_id, target_path=projection.target_path,
+            artifact_id=projection.result.provenance.artifact_id,
+            observation="write-forbidden", expected="known P2 observation",
+            observed=observation, next_action="refuse"),)
+    block_ids = projection.result.provenance.managed_boundary[1]
+    marker_ids = _marker_ids(block_ids)
+    return InstructionTargetResult(
+        projection.result.provenance.artifact_id, projection.scope_id,
+        projection.provider_id, projection.target_path,
+        projection.common_ids + projection.extension_ids, observation,
+        action.action.value, projection.result.provenance.source_hash,
+        projection.result.provenance.rendered_hash, marker_ids, block_ids,
+        diagnostics, changed,
+        action.observed_hash if observation == "managed-drift" else None)
+
+
+def _completed_write(request: InstructionRequest, fresh: InstructionOperationResult,
+                     writable: tuple) -> InstructionOperationResult:
+    writable_by_path = {action.target_path: action for action in writable}
+    targets = tuple(replace(
+        target, changed=target.target_path in writable_by_path,
+        diagnostics=(), observation=(
+            writable_by_path[target.target_path].observation.value
+            if target.target_path in writable_by_path else "clean"),
+        action=(writable_by_path[target.target_path].action.value
+                if target.target_path in writable_by_path else "noop"))
+        for target in fresh.targets)
+    return InstructionOperationResult(request, targets, (), True, fresh.artifact_plan)
+
+
+def _write_refusal(request: InstructionRequest, result: InstructionOperationResult,
+                   observed: str, *, message: str | None = None) -> InstructionOperationResult:
+    diagnostic = _diag("INSTRUCTION_WRITE_FORBIDDEN", observation="write-forbidden",
+                       expected="fresh explicitly authorized write plan", observed=observed,
+                       next_action="refuse", message=message)
+    return InstructionOperationResult(request, result.targets,
+                                      _ordered_diagnostics(result.diagnostics + (diagnostic,)),
+                                      False, result.artifact_plan)
+
+
+def _marker_ids(block_ids: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(block_id.replace("instructions.", "swissknifeman:instructions:", 1)
+                .replace(".common", ":common").replace(".extension", ":extension")
+                .replace(".", ":", 2) for block_id in block_ids)
+
+
+def _adoption_hints(lock_bytes: bytes | None) -> dict[str, Mapping[str, object]]:
+    """Per-artifact `semantic_metadata.adoption` already recorded in the P2 lock."""
+    if lock_bytes is None:
+        return {}
+    try:
+        lock = parse_lock(lock_bytes)
+    except ValueError:
+        return {}
+    hints = {}
+    for record in lock.records:
+        adoption = dict(record.semantic_metadata).get("adoption")
+        if adoption is not None:
+            hints[record.artifact_id] = adoption
+    return hints
+
+
+def _adoption_spans(entry: object, raw_length: int) -> tuple[tuple[int, int], ...] | None:
+    """Validated, sorted, non-overlapping in-bounds `covered_spans` for one mapping entry."""
+    if not isinstance(entry, dict):
+        return None
+    spans = entry.get("covered_spans")
+    if not isinstance(spans, list) or not spans:
+        return None
+    normalized = []
+    for item in spans:
+        if (not isinstance(item, list) or len(item) != 2
+                or any(isinstance(value, bool) or not isinstance(value, int) for value in item)):
+            return None
+        start, end = item
+        if start < 0 or end > raw_length or start >= end:
+            return None
+        normalized.append((start, end))
+    normalized.sort()
+    for (_start, previous_end), (next_start, _end) in zip(normalized, normalized[1:]):
+        if next_start < previous_end:
+            return None
+    return tuple(normalized)
+
+
+def _uncovered_bytes(raw: bytes, spans: tuple[tuple[int, int], ...]) -> bytes:
+    """Bytes of ``raw`` outside every span in ``spans``, in original order."""
+    pieces = []
+    cursor = 0
+    for start, end in spans:
+        pieces.append(raw[cursor:start])
+        cursor = end
+    pieces.append(raw[cursor:])
+    return b"".join(pieces)
+
+
+def _retired_scope_record(artifact_id: str) -> bool:
+    """Whether the lock record belongs to an instruction scope that the catalog no longer has."""
+    prefix = "harness.instruction-projection."
+    if not artifact_id.startswith(prefix):
+        return False
+    return artifact_id[len(prefix):].split(".", 1)[0] not in SCOPES
+
+
+def _preserve_unselected_lock(plan_value: ArtifactPlan,
+                              lock_bytes: bytes | None) -> ArtifactPlan:
+    if plan_value.next_lock is None or lock_bytes is None:
+        return plan_value
+    try:
+        existing = parse_lock(lock_bytes)
+    except ValueError:
+        return plan_value
+    selected = {action.artifact_id for action in plan_value.actions}
+    records = tuple(record for record in existing.records
+                    if record.artifact_id not in selected
+                    and not _retired_scope_record(record.artifact_id)) + plan_value.next_lock.records
+    return replace(plan_value, next_lock=ArtifactLock(1, records))
+
+
+def _instruction_observation_corrections(root: Path, plan_value: ArtifactPlan,
+                                         lock_bytes: bytes | None) -> ArtifactPlan:
+    """Apply D86's ownership-before-boundary classification over the generic P2 codec."""
+    try:
+        lock = ArtifactLock(1, ()) if lock_bytes is None else parse_lock(lock_bytes)
+    except ValueError:
+        return plan_value
+    records = {record.artifact_id: record for record in lock.records}
+    changed = False
+    actions = []
+    for action in plan_value.actions:
+        target = root / action.target_path
+        if (action.observation is DriftObservation.BOUNDARY_INVALID
+                and (target.exists() or target.is_symlink())
+                and action.artifact_id not in records):
+            action = replace(action, observation=DriftObservation.OWNERSHIP_CONFLICT,
+                             action=ArtifactActionKind.REFUSE,
+                             diagnostic="unmanaged-target")
+            changed = True
+        actions.append(action)
+    return replace(plan_value, actions=tuple(actions), next_lock=None) if changed else plan_value
+
+
+def _source(source_id: str, path: Path) -> ArtifactSource:
+    return ArtifactSource(source_id, _identifier(path), sha256_digest(path.read_bytes()))
+
+
+def _catalog_source(value: dict[str, object]) -> ArtifactSource:
+    path = catalog_path()
+    raw = path.read_bytes()
+    content = raw if json.loads(raw) == value else canonical_json_bytes(value)
+    return ArtifactSource("instruction.catalog", _identifier(path), sha256_digest(content))
+
+
+def _fragment_relative(scope_id: str, provider_id: str | None) -> str:
+    leaf = provider_id or "common"
+    middle = "root" if scope_id == "root" else f"packages/{scope_id}"
+    return f"packages/harness/configs/common/instructions/{middle}/{leaf}.md"
+
+
+def _fragment_body(text: str, semantic_id: str) -> str:
+    marker = f"<!-- instruction:{semantic_id} -->"
+    start = text.find(marker)
+    if start < 0:
+        return ""
+    next_start = text.find("<!-- instruction:", start + len(marker))
+    return text[start:] if next_start < 0 else text[start:next_start]
+
+
+def fragment_section(scope_id: str, provider_id: str | None, semantic_id: str, *,
+                     root: Path | None = None) -> str:
+    """Body of one catalog section, so a projection never restates the text itself."""
+    relative = _fragment_relative(scope_id, provider_id)
+    path = package_file(relative) if root is None else Path(root) / relative
+    body = _fragment_body(path.read_text(encoding="utf-8"), semantic_id)
+    if not body:
+        raise ValueError(f"HARNESS_INSTRUCTION_FRAGMENT_MISSING:{semantic_id}")
+    return body
+
+
+def semantic_block(scope: str, provider: str, kind: str, text: str,
+                   ids: tuple[str, ...]) -> bytes:
+    return _block(scope, provider, kind, text, ids)
+
+
+def _managed(scope: str, provider: str, common: str, extension: str,
+             common_ids: tuple[str, ...], extension_ids: tuple[str, ...]) -> bytes:
+    return (_block(scope, provider, "common", common, common_ids)
+            + _block(scope, provider, "extension", extension, extension_ids))
+
+
+def _block(scope: str, provider: str, kind: str, text: str,
+           ids: tuple[str, ...]) -> bytes:
+    begin = f"<!-- swissknifeman:instructions:{scope}:{provider}:{kind}:begin -->\n"
+    end = f"<!-- swissknifeman:instructions:{scope}:{provider}:{kind}:end -->\n"
+    body = "".join(f"<!-- semantic:{item} -->\n" for item in ids) + text
+    return (begin + body.rstrip() + "\n" + end).encode("utf-8")
+
+
+def _codec(scope: str, provider: str):
+    def extract(raw: bytes, _ids: tuple[str, ...]) -> bytes:
+        return b"".join(raw[start:end] for start, end in _spans(raw, scope, provider))
+
+    def replace_blocks(raw: bytes, managed: bytes, _ids: tuple[str, ...]) -> bytes:
+        parts = _split_blocks(managed, scope, provider)
+        if not raw:
+            return parts[0] + b"\n" + parts[1]
+        spans = _spans(raw, scope, provider)
+        return (raw[:spans[0][0]] + parts[0] + raw[spans[0][1]:spans[1][0]]
+                + parts[1] + raw[spans[1][1]:])
+
+    return extract, replace_blocks
+
+
+def _spans(raw: bytes, scope: str, provider: str) -> tuple[tuple[int, int], ...]:
+    spans = []
+    for kind in ("common", "extension"):
+        begin = f"<!-- swissknifeman:instructions:{scope}:{provider}:{kind}:begin -->".encode()
+        end = f"<!-- swissknifeman:instructions:{scope}:{provider}:{kind}:end -->".encode()
+        if raw.count(begin) != 1 or raw.count(end) != 1:
+            raise ValueError("boundary-invalid")
+        start, stop = raw.index(begin), raw.index(end)
+        if stop < start:
+            raise ValueError("boundary-invalid")
+        stop += len(end)
+        if stop < len(raw) and raw[stop:stop + 1] == b"\n":
+            stop += 1
+        spans.append((start, stop))
+    if spans[0][0] >= spans[1][0] or spans[0][1] > spans[1][0]:
+        raise ValueError("boundary-invalid")
+    return tuple(spans)
+
+
+def _split_blocks(managed: bytes, scope: str, provider: str) -> tuple[bytes, bytes]:
+    spans = _spans(managed, scope, provider)
+    if spans[0][0] != 0 or spans[1][1] != len(managed):
+        raise ValueError("boundary-invalid")
+    return (managed[spans[0][0]:spans[0][1]],
+            managed[spans[1][0]:spans[1][1]])
+
+
+def _boundary_broader_or_equal(left: object, right: object) -> bool:
+    return left == right or (isinstance(left, str) and left.endswith(".all"))
+
+
+def _boundary_narrower(left: object, right: object) -> bool:
+    return (left != right and isinstance(left, str) and isinstance(right, str)
+            and right.endswith(".all") and left.startswith(right[:-3]))
+
+
+def _boundaries_overlap(left: object, right: object) -> bool:
+    return (left == right or _boundary_broader_or_equal(left, right)
+            or _boundary_broader_or_equal(right, left)
+            or _boundary_narrower(left, right) or _boundary_narrower(right, left))
+
+
+def _absolute_root(root: Path) -> Path:
+    if not isinstance(root, Path) or not root.is_absolute():
+        raise ValueError("target root must be explicit and absolute")
+    return root
+
+
+def _diag(code: str, *, scope_id: str | None = None,
+          provider_id: str | None = None, target_path: str | None = None,
+          artifact_id: str | None = None, observation: str | None = "semantic-invalid",
+          semantic_id: str | None = None, expected: str | None = None,
+          observed: str | None = None, next_action: str | None = "refuse",
+          message: str | None = None) -> InstructionDiagnostic:
+    return InstructionDiagnostic(
+        "error", code, scope_id, provider_id, target_path, artifact_id, observation,
+        semantic_id, expected, observed, next_action, message)
+
+
+def _ordered_diagnostics(values: tuple[InstructionDiagnostic, ...]) -> tuple[InstructionDiagnostic, ...]:
+    scope_order = {value: index for index, value in enumerate(SCOPES)}
+    provider_order = {value: index for index, value in enumerate(PROVIDERS)}
+    semantic_order = {
+        semantic_id: index for index, semantic_id in enumerate(
+            item for scope_id in SCOPES for item in (
+                COMMON_IDS[scope_id] + EXTENSION_IDS[(scope_id, "claude-code")]
+                + EXTENSION_IDS[(scope_id, "codex")]))}
+    return tuple(sorted(values, key=lambda item: (
+        scope_order.get(item.scope_id, len(SCOPES)),
+        provider_order.get(item.provider_id, len(PROVIDERS)),
+        item.target_path or "",
+        semantic_order.get(item.semantic_id, 10_000),
+        item.code,
+        item.observed or "",
+    )))
+
+
+def _display(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _shape(value: object) -> str:
+    if isinstance(value, Mapping):
+        return _display(tuple(sorted(value)))
+    return type(value).__name__
+
+
+_OPERATIONS = {
+    "plan": plan_instructions, "check": check_instructions, "adopt": adopt_instructions,
+    "apply": apply_instructions, "repair": repair_instructions,
+}
+
+
+def _cli_request(operation_id: str, root: Path, **overrides) -> InstructionRequest:
+    base = InstructionRequest(
+        CONTRACT_VERSION, CATALOG_VERSION, operation_id, SCOPES, PROVIDERS,
+        str(_absolute_root(root)), (("source", "harness-cli"),),
+        (("authority", "operator-cli"),))
+    return replace(base, **overrides)
+
+
+def _print_report(result: InstructionOperationResult) -> None:
+    print(f"harness instructions {result.request.operation_id}: "
+          f"{'OK' if result.green else 'ERROR'} — {len(result.targets)} targets")
+    for target in result.targets:
+        mark = "✓" if target.observation == "clean" else "✗"
+        print(f"  {mark} {target.target_path} [{target.provider_id}] "
+              f"— {target.observation}/{target.action}")
+    for diagnostic in result.diagnostics:
+        print(f"  ! {diagnostic.code}: {diagnostic.scope_id or '-'}/{diagnostic.provider_id or '-'} "
+              f"{diagnostic.target_path or ''} — "
+              f"{diagnostic.message or diagnostic.next_action or diagnostic.observed or ''}",
+              file=sys.stderr)
+    for finding in result.size_findings:
+        print(f"  ! CANON_SIZE_EXCEEDED: {finding.target_path} — {finding.metric} "
+              f"{finding.observed} > {finding.limit} (class "
+              f"{'root' if finding.scope_id == 'root' else 'package'}); take away the reference "
+              f"material in skill or path-scoped rule", file=sys.stderr)
+
+
+INSTRUCTION_SCOPES_SCHEMA = "urn:swissknifeman:harness:instruction-scopes:v1"
+
+
+def scopes_document() -> dict:
+    """The instruction scopes in catalog order (contract `instruction-scopes/v1`)."""
+    return {"$schema": INSTRUCTION_SCOPES_SCHEMA, "scopes": list(SCOPES),
+            "catalog_version": CATALOG_VERSION, "contract_version": CONTRACT_VERSION}
+
+
+def cmd_instructions(env, argv):
+    """`harness instructions <plan|check|adopt|apply|repair>` — operator surface over
+    the D86 instruction-projection mechanism (see module docstring/contract)."""
+    opts, positional = parse_args(argv, {
+        "--target": "str", "--scope": "str", "--provider": "str",
+        "--authorize": "str", "--owner-decision": "str", "--mapping": "str",
+        "--preimage-dir": "str", "--observed-hash": "str", "--json": "bool",
+    }, max_pos=1)
+    if opts["help"] or not positional:
+        print("harness instructions scopes --json\n"
+              "harness instructions <plan|check|adopt|apply|repair> [--target P] "
+              "[--scope a,b] [--provider a,b] [--authorize a,b] "
+              "[--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] "
+              "[--observed-hash path=hash,...] [--json]")
+        return
+    operation = positional[0]
+    if operation == "scopes":
+        if not opts["json"]:
+            print("harness instructions scopes --json", file=sys.stderr)
+            sys.exit(2)
+        print(json.dumps(scopes_document(), ensure_ascii=False))
+        return
+    handler = _OPERATIONS.get(operation)
+    if handler is None:
+        print(f"harness instructions: unknown operation {operation}", file=sys.stderr)
+        sys.exit(2)
+    root = Path(opts["target"]).resolve() if opts["target"] else repository_root()
+    request = _cli_request(
+        operation, root,
+        scope_ids=tuple(opts["scope"].split(",")) if opts["scope"] else SCOPES,
+        provider_ids=tuple(opts["provider"].split(",")) if opts["provider"] else PROVIDERS,
+        authorized_target_paths=tuple(opts["authorize"].split(",")) if opts["authorize"] else (),
+        observed_hashes=tuple(tuple(item.split("=", 1))
+                              for item in opts["observed_hash"].split(","))
+            if opts["observed_hash"] else (),
+        preimage_destination=opts["preimage_dir"] or None,
+        owner_decision=opts["owner_decision"] or None,
+        mapping_path=opts["mapping"] or None,
+    )
+    result = handler(request)
+    if opts["json"]:
+        print(json.dumps(result.as_dict(), ensure_ascii=False))
+    else:
+        _print_report(result)
+    sys.exit(0 if result.green else 1)
+
+
+def main(argv=None):
+    """`python3 -m harness.instructions --check` — the modular drift-gate entry point
+    for `validate.sh` (P1.5); must agree with `harness instructions check`."""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--check" not in argv:
+        print("usage: python3 -m harness.instructions --check [--json]", file=sys.stderr)
+        return 2
+    result = check_instructions(_cli_request("check", repository_root()))
+    if "--json" in argv:
+        print(json.dumps(result.as_dict(), ensure_ascii=False))
+    else:
+        _print_report(result)
+    return 0 if result.green else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

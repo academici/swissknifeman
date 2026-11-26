@@ -1,0 +1,293 @@
+{
+ "about": "batch::Batcher(max_frames=50,max_age_ms=50,queue_limit=1000); push_n pushes prefix+(start..start+count-1) at time t; poll returns null or a batch summary (count, first, last, dropped = frames dropped since the previous batch)",
+ "limits": {
+  "max_frames": 50,
+  "max_age_ms": 50,
+  "queue_limit": 1000
+ },
+ "cases": [
+  {
+   "name": "below_threshold_and_age",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 49,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 10,
+     "expect": null
+    },
+    {
+     "op": "poll",
+     "t": 49,
+     "expect": null
+    }
+   ]
+  },
+  {
+   "name": "count_threshold_flushes_50",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 50,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f0",
+      "last": "f49",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "age_threshold_flushes_at_50ms",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 1,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 49,
+     "expect": null
+    },
+    {
+     "op": "poll",
+     "t": 50,
+     "expect": {
+      "count": 1,
+      "first": "f0",
+      "last": "f0",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "age_counts_from_oldest_frame",
+   "ops": [
+    {
+     "op": "push",
+     "t": 0,
+     "frame": "a"
+    },
+    {
+     "op": "push",
+     "t": 40,
+     "frame": "b"
+    },
+    {
+     "op": "poll",
+     "t": 49,
+     "expect": null
+    },
+    {
+     "op": "poll",
+     "t": 50,
+     "expect": {
+      "count": 2,
+      "first": "a",
+      "last": "b",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "drain_in_chunks_of_50",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 120,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f0",
+      "last": "f49",
+      "dropped": 0
+     }
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f50",
+      "last": "f99",
+      "dropped": 0
+     }
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": null
+    },
+    {
+     "op": "poll",
+     "t": 50,
+     "expect": {
+      "count": 20,
+      "first": "f100",
+      "last": "f119",
+      "dropped": 0
+     }
+    },
+    {
+     "op": "poll",
+     "t": 100,
+     "expect": null
+    }
+   ]
+  },
+  {
+   "name": "queue_exactly_1000_drops_nothing",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 1000,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f0",
+      "last": "f49",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "overflow_by_one_drops_oldest",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 1001,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f1",
+      "last": "f50",
+      "dropped": 1
+     }
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f51",
+      "last": "f100",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "overflow_reports_dropped_once",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 1200,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f200",
+      "last": "f249",
+      "dropped": 200
+     }
+    },
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": {
+      "count": 50,
+      "first": "f250",
+      "last": "f299",
+      "dropped": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "empty_poll_is_none",
+   "ops": [
+    {
+     "op": "poll",
+     "t": 0,
+     "expect": null
+    },
+    {
+     "op": "poll",
+     "t": 1000,
+     "expect": null
+    }
+   ]
+  },
+  {
+   "name": "drop_then_age_flush",
+   "ops": [
+    {
+     "op": "push_n",
+     "t": 0,
+     "count": 1000,
+     "prefix": "f",
+     "start": 0
+    },
+    {
+     "op": "push_n",
+     "t": 5,
+     "count": 3,
+     "prefix": "g",
+     "start": 0
+    },
+    {
+     "op": "poll",
+     "t": 5,
+     "expect": {
+      "count": 50,
+      "first": "f3",
+      "last": "f52",
+      "dropped": 3
+     }
+    }
+   ]
+  }
+ ]
+}

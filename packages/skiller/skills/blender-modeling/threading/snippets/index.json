@@ -1,0 +1,13 @@
+{
+  "skill": "threading",
+  "snippets": [
+    {
+      "file": "snippets-threading.md",
+      "description": "Threads and screw geometry: clearance distribution by fit type",
+      "tags": [
+        "blender",
+        "threading"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+"""The command line: exit codes, one JSON object per command, errors as CODE: message, the shipped example and unit."""
+import json
+import os
+import subprocess
+import tempfile
+import unittest
+from unittest import mock
+
+from aicore.workspace import bindings_path, read_bindings, write_marker
+
+from tests import BRIDGE_ROOT, MODULE_ROOT, TempCase
+from workspace import __version__
+
+
+class UsageTests(TempCase):
+    def test_help_forms(self):
+        for argv in (["help"], ["-h"], ["--help"]):
+            code, out, _ = self.run_cli(*argv)
+            self.assertEqual(code, 0)
+            self.assertIn("usage: workspace", out)
+
+    def test_no_arguments_and_unknown_commands_are_usage_errors(self):
+        for argv in ([], ["bogus"], ["project"], ["project", "bogus"], ["init", "--nope"], ["project", "rebind", "prj_X"],
+                     ["project", "scan"], ["status", "extra"]):
+            with self.subTest(argv=argv):
+                code, out, err = self.run_cli(*argv)
+                self.assertEqual(code, 2)
+                self.assertEqual(out, "")
+                self.assertIn("usage", err)
+
+    def test_version(self):
+        for argv in (["version"], ["--version"]):
+            code, out, _ = self.run_cli(*argv)
+            self.assertEqual((code, out.strip()), (0, __version__))
+
+
+class CommandTests(TempCase):
+    def test_init_status_doctor_in_json(self):
+        init = self.json_cli("init", "--code", "axioma")
+        self.assertEqual(set(init), {"code", "root", "workspace_id", "device_id", "created", "already_initialized"})
+        self.assertTrue(init["workspace_id"].startswith("ws_"))
+        self.assertEqual(self.json_cli("init", "--code", "axioma")["already_initialized"], True)
+        status = self.json_cli("status")
+        self.assertEqual(set(status), {"code", "root", "workspace_id", "git", "projects", "last_sync"})
+        self.assertEqual(set(status["git"]), {"branch", "dirty", "remote", "ahead", "behind", "diverged", "fetched_at"})
+        doctor = self.json_cli("doctor")
+        self.assertEqual(set(doctor), {"checks"})
+        # outside the hub nothing fills the port workspace:plans-migrator: that one check warns
+        # the snippet in the shell profile and the SKM_* variables belong to the machine, not to the workspace (test_doctor.EnvTests)
+        checks = [item for item in doctor["checks"]
+                  if (BRIDGE_ROOT.is_dir() or item["check_id"] != "workspace.plans-migrator")
+                  and not item["check_id"].startswith(("workspace.env-snippet", "workspace.env-variables"))]
+        self.assertEqual({item["status"] for item in checks}, {"ok"})
+        self.assertEqual({item["check_id"] for item in doctor["checks"]} - {item["check_id"] for item in checks}
+                         - {"workspace.plans-migrator"}, {"workspace.env-snippet", "workspace.env-variables"})
+
+    def test_json_is_one_object_on_stdout(self):
+        code, out, err = self.run_cli("init", "--code", "axioma", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(err, "")
+        json.loads(out)  # the whole stdout is one document
+
+    def test_errors_are_code_and_message_on_stderr_with_exit_one(self):
+        code, out, err = self.run_cli("status")
+        self.assertEqual((code, out), (1, ""))
+        self.assertTrue(err.startswith("WORKSPACE_NOT_INITIALIZED: "), err)
+        self.ws.mkdir()
+        (self.ws / "x").write_text("x", encoding="utf-8")
+        code, _, err = self.run_cli("init", "--code", "axioma", "--json")
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("WORKSPACE_ROOT_NOT_EMPTY: "), err)
+
+    def test_a_relative_workspace_root_is_exit_two(self):
+        with mock.patch.dict(os.environ, {"SKM_WORKSPACES_ROOT": "relative"}):
+            code, _, err = self.run_cli("init", "--code", "axioma")
+        self.assertEqual(code, 2)
+        self.assertIn("SKM_WORKSPACES_ROOT", err)
+
+    def test_doctor_exits_one_only_on_a_failure(self):
+        self.assertEqual(self.run_cli("doctor")[0], 0)  # no workspace: a warning
+        self.run_cli("init", "--code", "axioma")
+        (self.ws / "workspace.json").write_text("{", encoding="utf-8")
+        code, out, _ = self.run_cli("doctor")
+        self.assertEqual(code, 1)
+        self.assertIn("[fail] workspace.layout", out)
+
+    def test_init_with_root_names_the_variable_other_commands_need(self):
+        other = self.root / "elsewhere"
+        code, out, err = self.run_cli("init", "--code", "axioma", "--root", str(other), "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["root"], str(other))
+        self.assertIn("outside", err)
+
+    def test_project_commands(self):
+        self.run_cli("init", "--code", "axioma")
+        root = self.checkout("alpha")
+        attached = self.json_cli("project", "attach", "--project", str(root))
+        self.assertEqual(set(attached), {"workspace", "project_id", "name", "created", "marker_written", "plans_store", "binding", "next"})
+        project_id = attached["project_id"]
+        listed = self.json_cli("project", "list")
+        self.assertEqual([row["project_id"] for row in listed["projects"]], [project_id])
+        shown = self.json_cli("project", "show", project_id)
+        self.assertEqual(shown["project"]["project_id"], project_id)
+        scan = self.json_cli("project", "scan", str(root.parent))
+        self.assertEqual([item["path"] for item in scan["bound"]], [str(root)])
+        moved = self.checkout("moved")
+        code, _, err = self.run_cli("project", "rebind", project_id, "--path", str(moved), "--json")
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("BINDING_MARKER_MISMATCH: "), err)
+        detached = self.json_cli("project", "detach", project_id)
+        self.assertEqual((detached["removed"], detached["binding"]), (True, None))
+
+    def test_preserving_rebind_includes_repeated_paths_and_switches_primary_both_ways(self):
+        self.json_cli("init", "--code", "axioma")
+        first = self.checkout("extra")
+        project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
+        target, live, extra = (self.checkout(name) for name in ("target", "live", "included"))
+        for path in (target, live, extra):
+            write_marker(path, "axioma", project_id, "workspace")
+        stamp = read_bindings()["projects"][project_id]["bound_at"]
+        result = self.json_cli("project", "rebind", project_id, "--path", str(target), "--preserve-paths",
+                               "--include-path", str(live), "--include-path", str(extra), "--include-path", str(live))
+        expected = [str(path) for path in (first, target, live, extra)]
+        self.assertEqual(result, {"project_id": project_id, "binding": {"paths": expected, "primary": str(target)}})
+        result = self.json_cli("project", "rebind", project_id, "--path", str(live), "--preserve-paths",
+                               "--include-path", str(target))
+        self.assertEqual(result["binding"], {"paths": expected, "primary": str(live)})
+        self.assertEqual(read_bindings()["projects"][project_id]["bound_at"], stamp)
+        # Legacy rebind still replaces all paths.
+        self.assertEqual(self.json_cli("project", "rebind", project_id, "--path", str(target))["binding"],
+                         {"paths": [str(target)], "primary": str(target)})
+
+    def test_rebind_rejects_invalid_counterpart_and_include_without_preservation_without_writing(self):
+        self.json_cli("init", "--code", "axioma")
+        first = self.checkout("alpha")
+        project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
+        counterpart = self.checkout("counterpart")
+        before = bindings_path().read_bytes()
+        code, _, err = self.run_cli("project", "rebind", project_id, "--path", str(first),
+                                    "--include-path", str(counterpart))
+        self.assertEqual(code, 2)
+        self.assertIn("--include-path requires --preserve-paths", err)
+        self.assertEqual(bindings_path().read_bytes(), before)
+        for workspace, project, expected in (("axioma", "other-project", "BINDING_MARKER_MISMATCH"),
+                                              ("other-workspace", project_id, "WORKSPACE_MISMATCH")):
+            write_marker(counterpart, workspace, project, "workspace")
+            code, out, err = self.run_cli("project", "rebind", project_id, "--path", str(first), "--preserve-paths",
+                                          "--include-path", str(counterpart), "--json")
+            self.assertEqual(code, 1)
+            self.assertTrue(err.startswith(expected + ": "), err)
+            self.assertEqual(json.loads(out)["error"]["code"], expected)
+            self.assertEqual(bindings_path().read_bytes(), before)
+
+    def test_attach_without_a_project_context_is_refused(self):
+        self.run_cli("init", "--code", "axioma")
+        empty = self.root / "empty"
+        empty.mkdir()
+        cwd = os.getcwd()
+        os.chdir(empty)
+        self.addCleanup(os.chdir, cwd)
+        with mock.patch.dict(os.environ, {"HOME": str(empty)}):
+            code, _, err = self.run_cli("project", "attach")
+        self.assertEqual(code, 1)
+        self.assertIn("PROJECT_CONTEXT_REQUIRED", err)
+
+    def test_attach_without_confirmation_and_without_a_terminal(self):
+        self.run_cli("init", "--code", "axioma")
+        first = self.checkout("alpha", remotes=[("origin", "git@github.com:a/b.git")])
+        project_id = self.json_cli("project", "attach", "--project", str(first))["project_id"]
+        second = self.checkout("beta", remotes=[("origin", "https://github.com/a/b")])
+        code, _, err = self.run_cli("project", "attach", "--project", str(second))
+        self.assertEqual(code, 1)
+        self.assertTrue(err.startswith("ATTACH_CONFIRM_REQUIRED: "), err)
+        self.assertIn(project_id, err)
+        attached = self.json_cli("project", "attach", "--project", str(second), "--yes")
+        self.assertEqual(attached["project_id"], project_id)
+
+    def test_attach_journals_its_event(self):
+        self.run_cli("init", "--code", "axioma")
+        project_id = self.json_cli("project", "attach", "--project", str(self.checkout("alpha")))["project_id"]
+        journal = self.root / "skm" / "state" / "events" / "events.jsonl"
+        events = [json.loads(line) for line in journal.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual([e["type"] for e in events], ["workspace.root.initialized", "workspace.project.attached"])
+        self.assertEqual(events[1]["data"], {"project_id": project_id, "created": True})
+
+    def test_a_failing_journal_does_not_change_the_result(self):
+        with mock.patch("aicore.ext.events.emit", side_effect=RuntimeError("journal down")):
+            code, out, err = self.run_cli("init", "--code", "axioma", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["created"], True)
+        self.assertIn("WORKSPACE_EVENT_NOT_EMITTED", err)
+
+
+class EventDataTests(TempCase):
+    """The data of an event is checked against ``schemas/event-data/v1`` before it is journaled."""
+
+    def journal(self):
+        path = self.root / "skm" / "state" / "events" / "events.jsonl"
+        return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+    def emit(self, data, event_type="workspace.project.attached"):
+        from workspace import events
+        return events.emit(event_type, data, subject="axioma")
+
+    def test_valid_data_is_journaled_with_its_dataschema(self):
+        self.assertIsNotNone(self.emit({"project_id": "alpha", "created": True}))
+        [line] = self.journal()
+        self.assertEqual(json.loads(line)["dataschema"], "urn:swissknifeman:workspace:event-data:workspace-project-attached:v1")
+
+    def test_invalid_data_is_not_journaled_and_is_reported(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), redirect_stderr(err):
+            self.assertIsNone(self.emit({"project_id": "alpha", "created": "yes", "extra": 1}))
+        self.assertEqual(self.journal(), [])
+        self.assertTrue(err.getvalue().startswith("WORKSPACE_EVENT_NOT_EMITTED: workspace.project.attached: "
+                                                  "EVENT_DATA_INVALID: "), err.getvalue())
+
+    def test_strict_mode_raises(self):
+        from aicore.ext.errors import ExtError
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": "1"}):
+            with self.assertRaises(ExtError) as caught:
+                self.emit({"project_id": "alpha"})
+        self.assertEqual(caught.exception.code, "EVENT_DATA_INVALID")
+        self.assertEqual(self.journal(), [])
+
+    def test_strict_mode_is_read_from_the_env_argument_too(self):
+        from aicore.ext.errors import ExtError
+        from workspace import events
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}):
+            with self.assertRaises(ExtError):
+                events.emit("workspace.project.attached", {"project_id": "alpha"}, subject="axioma",
+                            env={**os.environ, "SKM_CONTRACTS_STRICT": "1"})
+
+    def test_the_command_still_succeeds_when_its_event_data_is_refused(self):
+        with mock.patch.dict(os.environ, {"SKM_CONTRACTS_STRICT": ""}), \
+                mock.patch("workspace.events.data_schema", return_value="urn:swissknifeman:workspace:event-data:x:v1"):
+            code, out, err = self.run_cli("init", "--code", "axioma", "--json")
+        self.assertEqual(code, 0)
+        self.assertIn("EVENT_DATA_INVALID", err)
+        self.assertEqual(json.loads(out)["created"], True)
+
+
+class ModuleFilesTests(unittest.TestCase):
+    def test_the_example_matches_the_schema(self):
+        from aicore.config.example import render_unit as render
+        from aicore.config import units
+        info = units.load_unit(MODULE_ROOT)
+        self.assertIsNotNone(info)
+        self.assertEqual((MODULE_ROOT / "config.example.toml").read_text(encoding="utf-8"), render(info))
+
+    def test_the_unit_declares_what_the_code_does(self):
+        unit = json.loads((MODULE_ROOT / "unit.json").read_text(encoding="utf-8"))
+        self.assertEqual((unit["id"], unit["kind"], unit["execution"]["project"]), ("workspace", "capability", "optional"))
+        from workspace import events
+        self.assertEqual(tuple(unit["provides"]["events"]), events.EVENT_TYPES)
+        self.assertEqual({"aicore"}, {item["unit"] for item in unit["requires"]})
+
+    def test_the_launcher_runs_the_module(self):
+        with tempfile.TemporaryDirectory() as home:
+            env = {key: value for key, value in os.environ.items() if not key.startswith(("SKM_", "XDG_"))}
+            env.update(HOME=home, SKM_HOME=home + "/skm", CODEX_HOME=home + "/codex", GROK_HOME=home + "/grok",
+                       GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+            done = subprocess.run([str(MODULE_ROOT / "bin" / "workspace"), "version"], capture_output=True, text=True,
+                                  env=env)
+        self.assertEqual((done.returncode, done.stdout.strip()), (0, __version__), done.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

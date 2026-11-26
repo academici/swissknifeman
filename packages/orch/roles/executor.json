@@ -1,0 +1,50 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:role-manifest:v1",
+  "contract_version": "exec/v1",
+  "role_id": "executor",
+  "title": "Executor",
+  "description": "Read the required `reads` and the files named in `hints`; treat hints as leads, not facts.",
+  "instructions": [
+    {
+      "path": "roles/executor.md",
+      "purpose": "canonical role text",
+      "sha256": "f8237a13df51b233781f38e6fe9fb7691aa524c483231a4881aa79d27d0df4ff"
+    }
+  ],
+  "tools": {
+    "filesystem": "write",
+    "shell": "full",
+    "network": "none",
+    "plan_api": "none"
+  },
+  "write_authority": "code_scope",
+  "result_shape": "stage-report",
+  "model_class_min": "implementation",
+  "forbidden_inputs": [
+    "lifecycle_instructions",
+    "report_api",
+    "plan_write"
+  ],
+  "agent_pack_roles": [
+    {
+      "pack_id": "backend-laravel",
+      "role_id": "slice-builder"
+    },
+    {
+      "pack_id": "dart-flutter",
+      "role_id": "slice-builder"
+    },
+    {
+      "pack_id": "laravel-package",
+      "role_id": "slice-builder"
+    },
+    {
+      "pack_id": "node-frontend",
+      "role_id": "slice-builder"
+    },
+    {
+      "pack_id": "python-backend",
+      "role_id": "slice-builder"
+    }
+  ]
+}

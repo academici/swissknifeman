@@ -1,0 +1,93 @@
+{
+  "changed_paths": [
+    "CHANGELOG.md",
+    "bridges/gui-workspace/README.md",
+    "bridges/gui-workspace/gui.json",
+    "bridges/gui-workspace/run.py",
+    "bridges/gui-workspace/tests/test_commands.py",
+    "bridges/gui-workspace/tests/test_queries.py",
+    "packages/gui/README.md",
+    "packages/gui/frontend/e2e/workspace.spec.ts"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "write_set",
+      "evidence": [
+        "bridges/gui-workspace/gui.json",
+        "bridges/gui-workspace/README.md",
+        "packages/gui/README.md:68",
+        "CHANGELOG.md"
+      ],
+      "impact": "The commit takes these files; they are the docs, tests and changelog the piece needs (deliverables docs, tests, changelog).",
+      "kind": "deviation",
+      "outcome": "accepted",
+      "text": "Edited bridges/gui-workspace/README.md, bridges/gui-workspace/tests/*, packages/gui/README.md and CHANGELOG.md. The write_set is packages/** and the scope is bridges/gui-workspace/** and packages/gui/frontend/**, so bridges/gui-workspace/** is covered by scope but not by write_set, and packages/gui/README.md and CHANGELOG.md are outside scope."
+    },
+    {
+      "impact": "The browser steps of the new scenarios (labels, HTML pattern refusal, confirm dialogs) are unproven until the spec runs outside the sandbox.",
+      "kind": "difficulty",
+      "next": "Run `npx playwright test e2e/workspace.spec.ts` in packages/gui/frontend where requirements.lock is readable.",
+      "text": "The e2e spec packages/gui/frontend/e2e/workspace.spec.ts was not run: the sandbox denies reading packages/gui/requirements.lock, so `gui deps path` in the playwright global setup fails (GUI_DEPS_UNAVAILABLE). tsc --noEmit passes on the spec; eslint could not start (EACCES on node_modules/esquery min.js). I checked the CLI side of the scenarios by hand in a throwaway home (add with name and code, rebind to a copied checkout, remove refused with PROJECT_NOT_EMPTY and then removed)."
+    },
+    {
+      "impact": "A failure of the connect form scenario also fails the push scenario.",
+      "kind": "note",
+      "text": "The existing push scenario no longer runs `ws('a','connect',...)` itself: a new scenario before it binds the remote through the connect form (then a second connect fails with REMOTE_ALREADY_SET), and the push scenario relies on it. Scenarios are serial."
+    },
+    {
+      "impact": "Two forms on the Overview page; the id gui-workspace.init keeps its meaning.",
+      "kind": "assumption",
+      "next": "Owner may ask to merge them into one form (then init must become `always`).",
+      "text": "I split creation into two commands, init (code only, risk-based) and init-remote (code + remote, always, risk high), instead of one init with an optional remote field. Binding a remote is a network action that connect already guards with `always`; one command with an optional field could not have a conditional confirmation."
+    },
+    {
+      "impact": "If the owner meant another command, a form must be added.",
+      "kind": "assumption",
+      "text": "'Bind a checkout' is project-attach (existing marker/new project, binds here) plus project-rebind (replace the binding by another checkout of the project) and project-scan. I added no separate bind command because the workspace CLI has none; the goal text does not name one."
+    },
+    {
+      "impact": "As P2.2 noted; a destructive removal or a detach form is a separate decision.",
+      "kind": "note",
+      "next": "Owner decision on force/archive or a detach form.",
+      "text": "project-remove has no force option, so a project with plans can only be refused (PROJECT_NOT_EMPTY, stderr shows the hint to `project detach`); there is no GUI form for project detach."
+    },
+    {
+      "impact": "None for P2.x; later pieces only need to add commands to gui.json and verbs to run.py's SPEC (test_every_verb_of_run_py_is_declared keeps them in step).",
+      "kind": "note",
+      "text": "The pages stay in the fleet section with orders 110-150 (unchanged). The gui frontend source was not changed: forms are rendered from gui.json command inputs, with the HTML pattern of a code on code fields (workspace code, project code, project id) as a first filter and run.py as the check that counts."
+    },
+    {
+      "class": "write_set",
+      "evidence": [
+        "CHANGELOG.md",
+        "bridges/gui-workspace/README.md",
+        "bridges/gui-workspace/gui.json",
+        "bridges/gui-workspace/run.py",
+        "bridges/gui-workspace/tests/test_commands.py",
+        "bridges/gui-workspace/tests/test_queries.py"
+      ],
+      "impact": "the commit takes these paths with the piece; the reviewer saw them",
+      "kind": "deviation",
+      "next": "widen the write set of later items like this one",
+      "outcome": "accepted",
+      "text": "changed outside the write set: CHANGELOG.md, bridges/gui-workspace/README.md, bridges/gui-workspace/gui.json, bridges/gui-workspace/run.py, bridges/gui-workspace/tests/test_commands.py, bridges/gui-workspace/tests/test_queries.py"
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "bridges/gui-workspace/run.py: value checks and argv of init-remote, project-add, project-remove (remote URL without credentials, name/code checks)",
+      "bridges/gui-workspace/gui.json: confirmation and risk of init-remote and project-remove",
+      "packages/gui/frontend/e2e/workspace.spec.ts: not run in this session"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "security_touched"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "GUI forms for the workspace commands, added as gui.json commands of bridges/gui-workspace, which the host renders from their inputs. New commands: init-remote (create a workspace bound to an empty remote, confirmation always), project-add (path, name?, code?) and project-remove (empty project only, confirmation always). The existing init, connect, project-attach (now titled 'Bind a checkout') and project-rebind stay; routes Overview and Projects list the forms. run.py got three verbs with value checks, with tests in test_commands.py and test_queries.py (a real-CLI scenario). New e2e scenarios in workspace.spec.ts cover connect, create, create-on-remote, add, rebind and remove. Docs and changelog updated. The e2e spec could not be run in the sandbox."
+}

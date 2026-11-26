@@ -1,0 +1,12 @@
+* @academici/maintainers
+
+/packages/skiller/skills/devops/ @academici/devops
+
+# Trust boundaries: the workflows, the release tooling, the installer and the sandbox/scope mechanism of the runs.
+/.github/ @academici/maintainers
+/scripts/verify-tag.py @academici/maintainers
+/scripts/workflow-policy.py @academici/maintainers
+/releases/ @academici/maintainers
+/install.sh @academici/maintainers
+/packages/orch/lib/orch/conductor/options.py @academici/maintainers
+/packages/orch/lib/orch/research/ @academici/maintainers

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:project-sync:v1",
+  "title": "project-sync",
+  "description": "Project sync document.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "description": "Schema identifier.",
+      "const": "urn:swissknifeman:aicore:project-sync:v1"
+    },
+    "root": {
+      "description": "Absolute path of the project root.",
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run": {
+      "description": "True when nothing was written.",
+      "type": "boolean"
+    },
+    "template_sha256": {
+      "description": "Bare SHA-256 hex of the launcher template.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "actions": {
+      "description": "Planned or applied actions.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "One planned or applied change of a managed project file.",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "description": "Project-relative path of the managed file.",
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "description": "What sync does with the file.",
+            "enum": [
+              "create",
+              "update",
+              "unchanged",
+              "refused"
+            ]
+          },
+          "code": {
+            "description": "Stable refusal code.",
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "reason": {
+            "description": "Why the action was refused.",
+            "type": "string"
+          },
+          "backup": {
+            "description": "Whether replacing a foreign launcher keeps a backup.",
+            "type": "boolean"
+          },
+          "backup_path": {
+            "description": "Where the backup was written.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "action"
+        ]
+      },
+      "minItems": 1
+    },
+    "marker": {
+      "type": "object",
+      "description": "Marker written by init.",
+      "additionalProperties": false,
+      "properties": {
+        "workspace": {
+          "description": "Workspace code.",
+          "type": "string",
+          "minLength": 1
+        },
+        "project_id": {
+          "description": "Project code.",
+          "type": "string",
+          "minLength": 1
+        },
+        "plans_store": {
+          "description": "Where plans live.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "workspace",
+        "project_id",
+        "plans_store"
+      ]
+    },
+    "applied": {
+      "description": "True after a sync that wrote files.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "$schema",
+    "root",
+    "dry_run",
+    "template_sha256",
+    "actions"
+  ]
+}

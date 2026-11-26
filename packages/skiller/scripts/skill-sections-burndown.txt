@@ -1,0 +1,20 @@
+# skill-sections-burndown.txt — activation section ratchet CORE-nines (P8.8,
+#)
+#
+# Format: one entry per line - `<bucket>/<name>` (matches core-policy.json::skills).
+# Lines starting with `#`, and empty comments are ignored.
+#
+# Rules (see validate.sh, section «CORE-nine - mandatory body sections»):
+#   - y CORE-skill from core-policy.json::skills no header `##`, match
+#     `(?i)^\s*\d*\.?\s*(when|activate)` (activation section):
+#       * skill IS in this list → warn (legal, inherited debt);
+#       * skill is NOT in the list → error (new debt prohibited - Ratchet).
+#   - rotten recording (skill already carries a section, or the skill is not in CORE-nine) → warn,
+#     remove the line.
+#
+# The debt is closed by EDITING the skill section (not this item'ohm, P8.8 Scope Excluded),
+# entry is removed by the same commit.
+
+general/context-economy
+general/compact-responses
+research/query-craft

@@ -1,0 +1,7 @@
+{
+  "$schema": "urn:swissknifeman:aicore:project-marker:v1",
+  "workspace": "axioma",
+  "project_id": "billium",
+  "plans_store": "workspace",
+  "plans_root": "/home/u/ws"
+}

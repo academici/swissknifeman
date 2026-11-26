@@ -1,0 +1,7 @@
+{
+  "query": "Is there a source for X?",
+  "claims": [],
+  "contradictions": [],
+  "unknowns": ["No configured source answered."],
+  "sources_used": []
+}

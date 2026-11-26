@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:check-result:v1",
+  "title": "check-result",
+  "type": "object",
+  "description": "Result of one diagnostic check, the common output format of module doctors.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:check-result:v1",
+      "description": "Schema identifier."
+    },
+    "check_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9-]+)*$",
+      "description": "Check id, as declared in provides.doctor of the unit manifest."
+    },
+    "status": {
+      "enum": ["ok", "warn", "fail", "skip"],
+      "description": "Outcome: ok passed, warn passed with a remark, fail did not pass, skip not applicable."
+    },
+    "category": {
+      "enum": ["environment", "config", "state", "content", "integration"],
+      "description": "Diagnostic category."
+    },
+    "observed": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What the check observed."
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Facts that support the outcome, such as paths or command output lines.",
+      "items": {
+        "type": "string",
+        "description": "One piece of evidence."
+      }
+    },
+    "remediation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What to do to fix a warn or fail."
+    },
+    "repair": {
+      "type": "object",
+      "description": "Machine-runnable repair, split into a read-only plan and an applying step.",
+      "properties": {
+        "plan": {
+          "$ref": "#/$defs/argv",
+          "description": "Read-only command that shows what the repair would change."
+        },
+        "apply": {
+          "$ref": "#/$defs/argv",
+          "description": "Command that applies the repair."
+        }
+      },
+      "required": ["plan", "apply"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["$schema", "check_id", "status", "category", "observed"],
+  "additionalProperties": false,
+  "$defs": {
+    "argv": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Command as an argument vector.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One argument."
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "plan": "P",
+  "admitted": true,
+  "items": [
+    {
+      "ref": "P1.1",
+      "admitted": true
+    }
+  ],
+  "note": "Missing refusal maps."
+}

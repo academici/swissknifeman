@@ -1,0 +1,9 @@
+{
+  "$schema": "urn:swissknifeman:gui:view-data:v1",
+  "view": "command-form",
+  "command": "gui-planner.run-item",
+  "defaults": {
+    "plan": "PLAN5",
+    "dry": true
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "frontend-nuxt",
+  "version": "0.4.1",
+  "description": "Nuxt 4+: server routes, modules, SEO meta-module",
+  "skills": [
+    "./nuxt",
+    "./nuxt-modules",
+    "./nuxt-seo"
+  ]
+}

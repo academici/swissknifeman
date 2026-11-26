@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:workspace:command:common:v1",
+  "title": "command common",
+  "description": "Shared definitions of the `workspace` command outputs, referenced by the other documents of this contract through $ref; the document itself is not an output.",
+  "$defs": {
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Code of a workspace or of a project: lowercase words of letters and digits joined by single hyphens, starting with a letter, at most 40 characters."
+    },
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^ws_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Workspace id: ws_ and 26 Crockford base32 characters."
+    },
+    "device_id": {
+      "type": "string",
+      "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Device id: dev_ and 26 Crockford base32 characters."
+    },
+    "abs_path": {
+      "type": "string",
+      "pattern": "^(/|[A-Za-z]:[\\\\/]).+$",
+      "description": "Absolute path on this machine."
+    },
+    "binding": {
+      "type": "object",
+      "description": "The checkouts of a project on this machine.",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Absolute real paths of the checkouts.",
+          "items": {
+            "$ref": "#/$defs/abs_path",
+            "description": "One checkout path."
+          }
+        },
+        "primary": {
+          "$ref": "#/$defs/abs_path",
+          "description": "The checkout used first; one of `paths`."
+        }
+      },
+      "required": ["paths", "primary"],
+      "additionalProperties": false
+    },
+    "links_result": {
+      "type": "object",
+      "description": "What `workspace project link|unlink` (or the automatic keeping of the links by attach and sync) did to plans/ and tasks/ of one checkout.",
+      "properties": {
+        "workspace": {
+          "$ref": "#/$defs/code",
+          "description": "Code of the workspace."
+        },
+        "project_id": {
+          "$ref": "#/$defs/code",
+          "description": "Code of the project."
+        },
+        "path": {
+          "$ref": "#/$defs/abs_path",
+          "description": "Real path of the checkout."
+        },
+        "links": {
+          "type": "array",
+          "description": "One row per linkable folder (plans, tasks); empty when the call failed (`problem`).",
+          "items": {
+            "type": "object",
+            "description": "What happened to one folder of the checkout.",
+            "properties": {
+              "name": {
+                "enum": [
+                  "plans",
+                  "tasks"
+                ],
+                "description": "The folder."
+              },
+              "path": {
+                "$ref": "#/$defs/abs_path",
+                "description": "The folder (or link) in the checkout."
+              },
+              "target": {
+                "$ref": "#/$defs/abs_path",
+                "description": "The folder of the project in the workspace the link points to."
+              },
+              "action": {
+                "enum": [
+                  "created",
+                  "kept",
+                  "removed",
+                  "absent",
+                  "refused",
+                  "skipped"
+                ],
+                "description": "`created`: a link was made; `kept`: it was already right; `removed`: unlink took it away; `absent`: unlink found none; `refused`: link found a real folder or a link elsewhere and left it; `skipped`: nothing to do for this folder (see `reason`)."
+              },
+              "reason": {
+                "enum": [
+                  "real-folder",
+                  "link-elsewhere",
+                  "plans-store-legacy"
+                ],
+                "description": "Why a folder was refused or skipped: a real folder or file is there; a link to another place is there; the plans of the project are in the checkout, not in the workspace."
+              }
+            },
+            "required": [
+              "name",
+              "path",
+              "target",
+              "action"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "exclude": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The .git/info/exclude file that lists the links; null when the checkout is not a git working tree."
+        },
+        "enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "The value of workspace.link_folders this call wrote for the project; null when it wrote none."
+        },
+        "problem": {
+          "type": "string",
+          "description": "Error code of a failure that did not stop the command (the setting could not be written; an automatic call failed)."
+        },
+        "message": {
+          "type": "string",
+          "description": "Text of that failure."
+        }
+      },
+      "required": [
+        "path",
+        "links"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "dart-flutter",
+  "description": "Flutter/Dart app (mobile / POS / embedded): widgets, state, FFI",
+  "buckets": ["system", "architect", "mobile", "quality"],
+  "include_meta": false,
+  "agent_pack": ["dart-flutter", "_common"],
+  "harness_presets": ["base"],
+  "mcp": ["context7"],
+  "model_tiers": {
+    "reviewer": "frontier",
+    "ffi-reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "slice-builder": "implementation",
+    "test-writer": "implementation"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "urn:swissknifeman:gui:run-api:v1",
+  "kind": "command_list",
+  "commands": [
+    {
+      "owner": "demo",
+      "id": "demo.greet",
+      "title": "Greet",
+      "scope": "project",
+      "input": [
+        {
+          "name": "name",
+          "title": "Name",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "effects": [
+        "process.spawn"
+      ],
+      "risk": "low",
+      "confirmation": "none",
+      "supports": [
+        "dry-run",
+        "cancel",
+        "stream"
+      ],
+      "timeout_s": 30,
+      "exec_kind": "argv"
+    }
+  ]
+}

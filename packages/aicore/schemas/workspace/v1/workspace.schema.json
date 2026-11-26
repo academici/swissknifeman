@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:aicore:workspace:v1",
+  "title": "workspace",
+  "type": "object",
+  "description": "Root document of the portable workspace (workspace.json in the workspace git root). Portable: it holds no absolute path.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:aicore:workspace:v1",
+      "description": "Schema identifier."
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z]([a-z0-9]|-(?=[a-z0-9])){0,39}$",
+      "description": "Workspace code: the folder name under workspaces/ on every machine."
+    },
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^ws_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Workspace id: ws_ and 26 Crockford base32 characters."
+    },
+    "layout": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 2,
+      "description": "Layout version of the workspace."
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "Creation time, UTC, second precision."
+    },
+    "created_by": {
+      "type": "string",
+      "pattern": "^dev_[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "Id of the device that created the workspace."
+    }
+  },
+  "required": [
+    "$schema",
+    "code",
+    "workspace_id",
+    "layout",
+    "created_at",
+    "created_by"
+  ],
+  "additionalProperties": false
+}

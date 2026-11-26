@@ -1,0 +1,17 @@
+{
+  "name": "python-backend",
+  "description": "Python web backend (FastAPI/Django/Flask): endpoints, typing, tests",
+  "buckets": ["system", "architect", "python", "devops", "quality", "operator"],
+  "include_meta": false,
+  "agent_pack": ["python-backend", "_common"],
+  "harness_presets": ["base", "python"],
+  "mcp": ["context7"],
+  "model_tiers": {
+    "reviewer": "frontier",
+    "spec-writer": "frontier",
+    "orchestrator": "frontier",
+    "slice-builder": "implementation",
+    "test-writer": "implementation",
+    "type-checker": "implementation"
+  }
+}

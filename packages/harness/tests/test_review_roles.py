@@ -1,0 +1,186 @@
+"""Internal documentation."""
+import io
+import json
+import os
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from harness import reviewroles as rr
+
+_CARRIER_TEXT = (
+    "---\nname: demo-reviewer\n---\n\n"
+    "## Criteria\n\n- criterion example\n\n"
+    "## Verdict gates\n\n- gate example\n\n"
+    "## Project overrides\n\nexample\n\n"
+    "## Exit\n\nexample\n"
+)
+
+_REVIEW_ROLE = {
+    "pack_id": "demo-pack",
+    "role_id": "reviewer",
+    "projection": "demo-pack/agents/reviewer.md",
+    "overrides": "demo-pack/rules/reviewer-overrides.md",
+    "required_sections": ["criteria", "verdict_gates", "project_overrides", "output"],
+    "sections": {
+        "criteria": "## Criteria",
+        "verdict_gates": "## Verdict gates",
+        "project_overrides": "## Project overrides",
+        "output": "## Exit",
+    },
+    "dimensions": ["over-engineering", "generated-assets"],
+}
+
+
+class ReviewRolesTestCase(unittest.TestCase):
+    def setUp(self):
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmpdir.cleanup)
+        self.root = Path(self._tmpdir.name)
+
+        self.agent_packs_dir = self.root / "configs" / "claude-code" / "agent-packs"
+        pack = self.agent_packs_dir / "demo-pack"
+        (pack / "agents").mkdir(parents=True)
+        (pack / "rules").mkdir(parents=True)
+        (pack / "agents" / "reviewer.md").write_text(_CARRIER_TEXT, encoding="utf-8")
+        (pack / "rules" / "reviewer-overrides.md").write_text("# overrides\n", encoding="utf-8")
+
+        self.roles_json = self.root / "roles.json"
+        self.roles_json.write_text(json.dumps({
+            "catalog_version": "1.0.0",
+            "roles": [{
+                "pack_id": "demo-pack", "role_id": "reviewer",
+                "content": _CARRIER_TEXT, "skills": ["demo-skill"],
+            }],
+        }), encoding="utf-8")
+
+        self.skills_json = self.root / "skills.json"
+        self.skills_json.write_text(json.dumps({"skills": [{"name": "demo-skill"}]}), encoding="utf-8")
+
+        self._orig_package_root = rr._PACKAGE_ROOT
+        self._orig_roles_json = rr._ROLES_JSON
+        self._orig_skills_index_path = rr.skills_index_path
+        rr._PACKAGE_ROOT = self.root
+        rr._ROLES_JSON = self.roles_json
+        rr.skills_index_path = lambda: self.skills_json
+        self.addCleanup(self._restore_globals)
+
+    def _restore_globals(self):
+        rr._PACKAGE_ROOT = self._orig_package_root
+        rr._ROLES_JSON = self._orig_roles_json
+        rr.skills_index_path = self._orig_skills_index_path
+
+    def _registry(self, role_overrides=None, review_version="1.0.0"):
+        role = dict(_REVIEW_ROLE)
+        if role_overrides:
+            role.update(role_overrides)
+        return {
+            "review_version": review_version,
+            "pack_root": "claude-code/agent-packs",
+            "roles": [role],
+        }
+
+    def _run(self, data):
+        path = self.root / "review-roles.json"
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        fingerprint = rr._composition_fingerprint(data)
+        orig = dict(rr._VERSION_FINGERPRINTS)
+        rr._VERSION_FINGERPRINTS = {data["review_version"]: fingerprint}
+        try:
+            return rr.run_checks(path)
+        finally:
+            rr._VERSION_FINGERPRINTS = orig
+
+    def test_positive_registry_is_clean(self):
+        violations, code = self._run(self._registry())
+        self.assertEqual(violations, [])
+        self.assertEqual(code, 0)
+
+    def test_negative_missing_projection(self):
+        violations, code = self._run(self._registry(
+            {"projection": "demo-pack/agents/does-not-exist.md"}))
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "carrier-paths" for v in violations))
+
+    def test_negative_heading_not_in_canon(self):
+        violations, code = self._run(self._registry({"sections": {
+            "criteria": "## Criteria", "verdict_gates": "## Verdict gates",
+            "project_overrides": "## Project overrides", "output": "## Knownly does not exist",
+        }}))
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "sections-present" for v in violations))
+
+    def test_negative_role_outside_registry(self):
+
+        pack2 = self.agent_packs_dir / "second-pack" / "agents"
+        pack2.mkdir(parents=True)
+        (pack2 / "reviewer.md").write_text(_CARRIER_TEXT, encoding="utf-8")
+        violations, code = self._run(self._registry())
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "default-deny" and "second-pack" in v.message
+                            for v in violations))
+
+    def test_negative_canon_role_outside_registry(self):
+
+        self.roles_json.write_text(json.dumps({
+            "catalog_version": "1.0.0",
+            "roles": [
+                {"pack_id": "demo-pack", "role_id": "reviewer",
+                 "content": _CARRIER_TEXT, "skills": ["demo-skill"]},
+                {"pack_id": "third-pack", "role_id": "reviewer",
+                 "content": _CARRIER_TEXT, "skills": []},
+            ],
+        }), encoding="utf-8")
+        violations, code = self._run(self._registry())
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "default-deny" and "third-pack" in v.message
+                            for v in violations))
+
+    def test_negative_dimension_outside_dictionary(self):
+        violations, code = self._run(self._registry(
+            {"dimensions": ["over-engineering", "made-up-dimension"]}))
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "dimensions" for v in violations))
+
+    def test_negative_review_version_unchanged(self):
+        data = self._registry()
+        path = self.root / "review-roles.json"
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+        orig = dict(rr._VERSION_FINGERPRINTS)
+        rr._VERSION_FINGERPRINTS = {"1.0.0": "0" * 64}
+        try:
+            violations, code = rr.run_checks(path)
+        finally:
+            rr._VERSION_FINGERPRINTS = orig
+        self.assertEqual(code, 1)
+        self.assertTrue(any(v.check == "version-bump" for v in violations))
+
+    def test_missing_registry_file_gives_exit_2(self):
+        violations, code = rr.run_checks(self.root / "nope.json")
+        self.assertEqual(code, 2)
+        self.assertTrue(violations)
+
+    def test_missing_skill_index_skips_the_skills_check_with_a_partner_note(self):
+        rr.skills_index_path = lambda: None
+        with mock.patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            violations, code = self._run(self._registry())
+        self.assertEqual(code, 0)
+        self.assertEqual([v for v in violations if v.check == "skills"], [])
+        self.assertIn("PARTNER_UNAVAILABLE: skiller not found", stderr.getvalue())
+
+    def test_skill_missing_from_the_index_is_a_violation(self):
+        self.skills_json.write_text(json.dumps({"skills": [{"name": "other"}]}), encoding="utf-8")
+        violations, code = self._run(self._registry())
+        self.assertEqual(code, 1)
+        self.assertEqual(len([v for v in violations if v.check == "skills"]), 1)
+
+    def test_skill_index_is_found_through_skm_skiller_root(self):
+        rr.skills_index_path = self._orig_skills_index_path
+        with mock.patch.dict(os.environ, {"SKM_SKILLER_ROOT": str(self.root)}):
+            self.assertEqual(rr.skills_index_path(), self.skills_json)
+
+
+if __name__ == "__main__":
+    unittest.main()

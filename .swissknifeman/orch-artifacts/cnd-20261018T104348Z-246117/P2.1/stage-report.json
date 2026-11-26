@@ -1,0 +1,67 @@
+{
+  "changed_paths": [
+    "packages/workspace/CHANGELOG.md",
+    "packages/workspace/README.md",
+    "packages/workspace/lib/workspace/cli.py",
+    "packages/workspace/schemas/command/v1/common.schema.json",
+    "packages/workspace/schemas/command/v1/connect.schema.json",
+    "packages/workspace/schemas/command/v1/error.schema.json",
+    "packages/workspace/schemas/command/v1/init.schema.json",
+    "packages/workspace/schemas/command/v1/list.schema.json",
+    "packages/workspace/schemas/command/v1/project-attach.schema.json",
+    "packages/workspace/schemas/command/v1/project-list.schema.json",
+    "packages/workspace/tests/test_command_contracts.py",
+    "packages/workspace/unit.json"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "class": "spec_mismatch",
+      "impact": "No contract for project add / project remove yet; the goal text is only partly met.",
+      "kind": "deviation",
+      "next": "P2.2: when adding `project add|remove` (and any create/bind command), add `project-add.schema.json` / `project-remove.schema.json` (and others) to schemas/command/v1 ($id urn:swissknifeman:workspace:command:<kind>:v1, reuse common $defs code/abs_path/binding), extend KINDS in tests/test_command_contracts.py, validate their real --json output there, and list them in the README Typed outputs table. If `project remove` was meant to be today's `detach`, say so and a `project-detach` document is a small addition.",
+      "outcome": "follow_up",
+      "severity": "medium",
+      "text": "The goal names `project add|remove`, but the workspace CLI has no such commands (only attach|list|show|scan|rebind|detach); they belong to P2.2. Contracts were written only for commands that exist so tests validate real output; no shape was invented for add/remove."
+    },
+    {
+      "impact": "Consumers of --json (P2.3 GUI forms, bridges) can read errors as a typed document: {\"error\":{\"code\",\"message\"}}; success documents carry no `error` key, so the key tells them apart.",
+      "kind": "note",
+      "next": "P2.2/P2.3: use `error.code` for form messages; new commands raising WorkspaceError get the document automatically through cli._fail.",
+      "text": "Behaviour change: with --json a refused command now also prints the error document on stdout (before: nothing on stdout). Exit codes and the stderr `CODE: message` line are unchanged; without --json nothing changes. Commands that already print a report on failure (sync, doctor --publish-safety, migrate plan) are not affected."
+    },
+    {
+      "impact": "Decides how P2.3 validates command output.",
+      "kind": "note",
+      "next": "P2.3 decides: go through bridges/workspace CLI output without schema import, or move the set to aicore.",
+      "text": "The contracts live in the workspace module (schemas/command/v1, set loaded with aicore.util.schema.load_contract_set), not in packages/aicore/schemas. A module may not import another; the gui module can only reach them through a bridge or a copy. If the GUI needs them as foundation contracts, they must move to aicore/schemas as per-kind contracts (with examples, unit.json entries and README table rows required by aicore/tests/test_contracts.py)."
+    },
+    {
+      "impact": "Typed coverage is partial.",
+      "kind": "note",
+      "next": "Later piece if D4 'everything typed' is to cover them.",
+      "text": "Commands without a contract yet: status, doctor (check-result/v1 per item), sync, clone, project show|scan|rebind|detach, migrate *. Stated in the README."
+    },
+    {
+      "impact": "The commit must not take them.",
+      "kind": "note",
+      "next": "Coordinator: stage only the changed_paths.",
+      "text": "git status shows modified lock/manifest files (docs/package-lock.json, packages/*/package-lock.json, packages/gui/**/*.lock, packages/skiller/skills.json) that this piece did not touch; they were clean at the start."
+    }
+  ],
+  "review_recommendation": {
+    "focus": [
+      "lib/workspace/cli.py _fail/_error_document: --json refusals now print an error document on stdout",
+      "schemas/command/v1/*.schema.json against the real output shapes (layout.init/list_rows, remote.connect, projects.list_projects/attach)"
+    ],
+    "reason_codes": [
+      "public_api_changed",
+      "schema_changed"
+    ],
+    "recommended": true,
+    "suggested_model_class": "implementation"
+  },
+  "status": "done_with_deviations",
+  "summary": "Added the workspace-owned contract set schemas/command/v1 (urn:swissknifeman:workspace:command): closed schemas for the --json output of init, list, connect, project list, project attach and for the error document, plus shared common definitions; registered in unit.json. cli.py now also prints {\"error\":{\"code\",\"message\"}} on stdout for a refusal (exit 1) or an invalid argument value (exit 2, INVALID_ARGUMENT) when --json is given; stderr line and exit codes are unchanged. New tests/test_command_contracts.py validates the real CLI output of each command against the schemas, checks the error cases, closedness/descriptions, unit.json registration and rejection of broken documents. README (Typed outputs section) and CHANGELOG updated. Module tests: bash packages/workspace/scripts/test.sh, 301 tests OK."
+}

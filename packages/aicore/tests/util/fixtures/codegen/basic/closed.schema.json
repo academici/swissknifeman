@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:fixture:codegen:closed:v1",
+  "title": "Closed",
+  "description": "Fixture: an object closed on top of an open $ref target; the target is no root.",
+  "$defs": {
+    "base": {
+      "description": "Open envelope.", "type": "object", "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["a", "b"]},
+        "note": {"type": ["string", "null"]},
+        "extra": {"type": "integer"}
+      }
+    },
+    "tight": {
+      "description": "The envelope closed, with one more required key and a one-of over its keys.",
+      "$ref": "#/$defs/base",
+      "additionalProperties": false,
+      "required": ["extra"],
+      "properties": {"status": {"description": "See base."}, "added": {"type": "boolean"}},
+      "oneOf": [
+        {"required": ["note"], "properties": {"status": {"const": "a"}}},
+        {"required": ["added"]}
+      ]
+    }
+  }
+}

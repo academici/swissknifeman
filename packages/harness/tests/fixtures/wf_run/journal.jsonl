@@ -1,0 +1,3 @@
+{"type":"started","key":"v2:7639291e221b9efb5ce63d73a250c7c59355547d4d55ac7bb8e30f137e407003","agentId":"a860c084093a072af"}
+{"type":"started","key":"v2:2bc645d0e39995c1647e4e713080214e73647ac423cd713bd6a429b448284a3e","agentId":"a743125bec66a2400"}
+{"type":"result","key":"v2:2bc645d0e39995c1647e4e713080214e73647ac423cd713bd6a429b448284a3e","agentId":"a743125bec66a2400","result":{"summary":"No idempotency/unique key on sessions: same host request creates duplicate outbox events on retry.","verdict":"CONFIRMED"}}

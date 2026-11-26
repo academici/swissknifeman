@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:conductor:review-summary:v1",
+  "title": "review-summary",
+  "description": "Closed compact stdout results; never raw reviewer output.",
+  "oneOf": [
+    {
+      "description": "Compact review-only result; full findings remain in the receipt.",
+      "type": "object",
+      "properties": {
+        "run": {
+          "description": "Run id.",
+          "type": "string"
+        },
+        "receipt": {
+          "description": "Review receipt path.",
+          "type": "string"
+        },
+        "verdict": {
+          "description": "Review verdict.",
+          "type": "string",
+          "enum": [
+            "GREEN",
+            "ATTENTION",
+            "RED"
+          ]
+        },
+        "open": {
+          "description": "Open blocking and major findings.",
+          "type": "object",
+          "properties": {
+            "blocker": {
+              "description": "Finding count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "major": {
+              "description": "Finding count.",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "blocker",
+            "major"
+          ],
+          "additionalProperties": false
+        },
+        "findings": {
+          "description": "Finding identities without streams or long prose.",
+          "type": "array",
+          "items": {
+            "description": "One finding identity.",
+            "type": "object",
+            "properties": {
+              "key": {
+                "description": "Conductor key.",
+                "type": "string",
+                "pattern": "^fk-[a-f0-9]{16}$"
+              },
+              "id": {
+                "description": "Finding id.",
+                "type": "string",
+                "pattern": "^F[0-9]+$"
+              },
+              "severity": {
+                "description": "Severity.",
+                "type": "string",
+                "enum": [
+                  "Blocker",
+                  "Major",
+                  "Minor",
+                  "Nit"
+                ]
+              },
+              "location": {
+                "description": "Location.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "id",
+              "severity",
+              "location"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "run",
+        "receipt",
+        "verdict",
+        "open",
+        "findings"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "description": "Compact batch-review result.",
+      "type": "object",
+      "properties": {
+        "format": {
+          "description": "Parsing result.",
+          "type": "string",
+          "enum": [
+            "findings",
+            "none",
+            "malformed"
+          ]
+        },
+        "counts": {
+          "description": "Counts from validated review findings.",
+          "type": "object",
+          "properties": {
+            "Blocker": {
+              "description": "Finding count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "Major": {
+              "description": "Finding count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "Minor": {
+              "description": "Finding count.",
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "Blocker",
+            "Major",
+            "Minor"
+          ],
+          "additionalProperties": false
+        },
+        "file": {
+          "description": "Full review reply artifact.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "format",
+        "counts",
+        "file"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+exit: 0
+--- stdout ---
+swissknifeman — umbrella over the module CLIs (finds modules by unit.json; holds no module logic).
+
+Usage: swissknifeman <command> [args]
+
+Built-in:
+  units [list|show <id>] [--json]                                                     modules found by unit.json
+  install [--profile P | --units a,b] [--bin-dir DIR] [--force] [--dry-run] [--json]  install modules by profile (configs/install-profiles.json)
+  doctor [--unit ID] [--category C] [--json] [--timeout S]                            read-only checks of the modules (provides.doctor)
+  help, -h, --help                                                                    this text
+  -V, --version, version                                                              umbrella version (git describe)
+
+Aliases (configs/umbrella.json):
+  config         layered config: show, explain, set, unset, init, example, paths
+  conformance    conformance plugin <extension.json> | engine [--binding B]: protocol checks
+  env            environment: permissions, mcp, hooks (full passthrough)
+  hub            same as the maind group
+  project        project-local launcher: init, sync, verify, context [--json], doctor, exec -- <group> ...
+  release        release proposal; release bundle --root R --tag T --out DIR: release files
+  release-fleet  validated local post-tag delivery and fleet sync (never pushes or publishes)
+  setup          setup <project>: full onboarding; setup --machine: deploy a machine with one command
+  skills         skill registry: connect, vendor, registry, ...
+  status         status [<id>]: four-layer project inventory or fleet; bare or a skiller flag: skills of the project
+  wf             detailed background status of a workflow run: wf status
+  other aliases: connect init integrate list lock registry sync topology update vendor
+
+Modules (provides.cli in unit.json):
+  aicore     Shared foundation: contracts and, later, utilities, providers and content delivery
+  analyst    Session and usage analysis
+  brain      Obsidian vault: lookup, document sync and notes from ecosystem events
+  gui        GUI: desktop and browser control plane for Swiss Knife Man
+  harness    Provider environment setup: permissions, MCP, hooks, instructions
+  maind      Project memory and code graph hub
+  orch       Engine-neutral orchestration of agent runs
+  planner    Planner: plans, phases, items and execution commands
+  skiller    Skill registry, delivery and quality gates
+  workspace  Portable workspace: the plans of all projects in one git root
+--- stderr ---
+

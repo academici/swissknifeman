@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+"""Fake swissknifeman: canned answers by argv; /tmp/fleet in paths becomes $HOME/fleet; every call is logged."""
+import json
+import os
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+args = sys.argv[1:]
+home = os.environ.get("HOME", "/tmp")
+with open(os.path.join(home, "umbrella.log"), "a", encoding="utf-8") as log:
+    log.write(json.dumps({"argv": args, "cwd": os.getcwd()}) + "\n")
+files = {("status", "--all", "--json"): "status.json", ("doctor", "--json"): "doctor.json",
+         ("units", "list", "--json"): "units.json"}
+if tuple(args) in files:
+    text = (HERE / files[tuple(args)]).read_text(encoding="utf-8").replace("/tmp/fleet", f"{home}/fleet")
+    print("warning: noise on stderr", file=sys.stderr)
+    sys.stdout.write(text)
+elif args == ["doctor"]:
+    print("doctor: 3 ok, 1 warn")
+elif args[:2] == ["hub", "sync"]:
+    print("synced " + " ".join(args[2:]))
+else:
+    print(f"unknown command {args}", file=sys.stderr)
+    sys.exit(2)

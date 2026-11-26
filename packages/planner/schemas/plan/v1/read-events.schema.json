@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:task:plan:read-events:v1",
+  "title": "Read Events",
+  "type": "array",
+  "description": "Matching journal events in log order; limit selects the latest matching entries.",
+  "items": {
+    "$ref": "urn:swissknifeman:task:plan:log-event:v1"
+  }
+}

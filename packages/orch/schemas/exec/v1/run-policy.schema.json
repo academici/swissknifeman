@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:orch:exec:run-policy:v1",
+  "title": "run-policy",
+  "type": "object",
+  "description": "Engine-neutral run-policy contract.",
+  "properties": {
+    "$schema": {
+      "const": "urn:swissknifeman:orch:exec:run-policy:v1",
+      "description": "Schema identifier."
+    },
+    "contract_version": {
+      "const": "exec/v1",
+      "description": "Execution contract version."
+    },
+    "policy_id": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+      "description": "Policy identifier."
+    },
+    "description": {
+      "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+      "description": "Policy purpose."
+    },
+    "applies_to": {
+      "type": "array",
+      "description": "Applicable task references.",
+      "items": {
+        "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/text",
+        "description": "Applicable task reference pattern."
+      }
+    },
+    "stages": {
+      "type": "array",
+      "description": "Pipeline stages.",
+      "items": {
+        "type": "object",
+        "description": "Pipeline stage.",
+        "properties": {
+          "require_current_input_receipt": {
+            "type": "boolean",
+            "description": "Require a verified current API request input receipt before dependent tool dispatch. Omitted/false preserves existing behavior. Completed usage does not satisfy this requirement; current bindings refuse it before provider spawn."
+          },
+          "id": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Stage identifier."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "context",
+              "scout",
+              "primary",
+              "bounded",
+              "checks",
+              "review",
+              "registrar",
+              "git",
+              "condense"
+            ],
+            "description": "Stage kind."
+          },
+          "role": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+            "description": "Role identifier; deterministic for non-model stages."
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether the stage is mandatory."
+          },
+          "model_class": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+            "description": "Requested semantic model class."
+          },
+          "effort": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/effort",
+            "description": "Requested reasoning effort."
+          },
+          "provider": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+            "description": "Explicit stage provider."
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "Dependencies; omitted means previous stage.",
+            "items": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+              "description": "Dependency stage identifier."
+            }
+          },
+          "retries": {
+            "type": "object",
+            "description": "Stage retry budget.",
+            "properties": {
+              "max": {
+                "type": "integer",
+                "description": "Maximum stage retries."
+              }
+            },
+            "required": [
+              "max"
+            ],
+            "additionalProperties": false
+          },
+          "timeouts": {
+            "type": "object",
+            "description": "Stage timeouts.",
+            "properties": {
+              "stage_s": {
+                "type": "integer",
+                "description": "Overall stage timeout in seconds."
+              },
+              "silence_s": {
+                "type": "integer",
+                "description": "Output silence timeout in seconds."
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "on_unavailable": {
+            "type": "string",
+            "enum": [
+              "refuse",
+              "skip"
+            ],
+            "description": "Action when capability is unavailable."
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "input_tokens_max": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Maximum input tokens of the stage."
+              },
+              "output_tokens_max": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Maximum output tokens of the stage."
+              }
+            },
+            "required": [],
+            "additionalProperties": false,
+            "description": "Token limits of the stage."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "role",
+          "required",
+          "on_unavailable"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "review": {
+      "type": "object",
+      "description": "Review policy.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether a separate review stage is enabled."
+        },
+        "independent_provider": {
+          "type": "boolean",
+          "description": "Whether reviewer provider must differ."
+        },
+        "max_rounds": {
+          "type": "integer",
+          "description": "Maximum review rounds; at most two."
+        },
+        "max_corrections": {
+          "type": "integer",
+          "description": "Maximum owning corrections; at most one."
+        },
+        "triage": {
+          "type": "object",
+          "description": "Triage of review findings before a correction: a role reproduces every finding and passes on only the confirmed ones.",
+          "properties": {
+            "role": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/roleId",
+              "description": "Role of the triage."
+            },
+            "model_class": {
+              "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+              "description": "Requested semantic model class of the triage."
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "enabled",
+        "independent_provider",
+        "max_rounds",
+        "max_corrections"
+      ],
+      "additionalProperties": false
+    },
+    "retries_budget": {
+      "type": "object",
+      "description": "Total retry budget.",
+      "properties": {
+        "total_max": {
+          "type": "integer",
+          "description": "Maximum retries across all stages."
+        }
+      },
+      "required": [
+        "total_max"
+      ],
+      "additionalProperties": false
+    },
+    "git_action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "commit"
+      ],
+      "description": "Requested Git action."
+    },
+    "finalize": {
+      "type": "object",
+      "description": "Finalization policy.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "deterministic",
+            "none"
+          ],
+          "description": "Finalization kind."
+        },
+        "register": {
+          "type": "boolean",
+          "description": "Whether deterministic registration is required."
+        }
+      },
+      "required": [
+        "kind",
+        "register"
+      ],
+      "additionalProperties": false
+    },
+    "commit": {
+      "type": "object",
+      "description": "Optional scoped commit policy.",
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "item",
+            "unit"
+          ],
+          "description": "Operation scope to commit."
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/commitRole",
+            "description": "Operation role to commit."
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Distinct operation roles requiring commits."
+        },
+        "message_convention": {
+          "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/id",
+          "description": "Commit message convention identifier."
+        }
+      },
+      "required": [
+        "scope",
+        "roles",
+        "message_convention"
+      ],
+      "additionalProperties": false
+    },
+    "isolation": {
+      "type": "object",
+      "description": "Optional run isolation and integration policy.",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "worktree",
+            "shared"
+          ],
+          "description": "Isolation mode: own branch and working tree per run, or shared working tree."
+        },
+        "integration": {
+          "type": "string",
+          "enum": [
+            "sequential"
+          ],
+          "description": "Integration order of isolated runs."
+        },
+        "recheck": {
+          "type": "string",
+          "enum": [
+            "item",
+            "all",
+            "none"
+          ],
+          "description": "Acceptance recheck scope after each integration."
+        }
+      },
+      "required": [
+        "mode",
+        "integration",
+        "recheck"
+      ],
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Version of this policy."
+    },
+    "sandbox": {
+      "$ref": "urn:swissknifeman:aicore:permissions:v1#/$defs/permissions",
+      "description": "Permissions of the stages: what a stage may write, reach and run."
+    },
+    "on_error": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "authentication",
+          "authorization",
+          "quota",
+          "rate_limit",
+          "invalid_request",
+          "model_unavailable",
+          "content_policy",
+          "transport",
+          "provider_internal",
+          "timeout",
+          "context_limit",
+          "unknown",
+          "unknown_outcome"
+        ],
+        "description": "Failure class of error/v1, or unknown_outcome."
+      },
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": [
+                "stop",
+                "retry",
+                "retry_after",
+                "fallback_route",
+                "replan",
+                "reconcile"
+              ],
+              "description": "What to do after a failure of the class."
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Maximum number of times the action may be taken."
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "description": "Action for a failure class."
+        }
+      },
+      "description": "Action by failure class; a class that is not listed has the default action of the engine."
+    },
+    "fallback_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/provider",
+            "description": "Fallback provider."
+          },
+          "model_class": {
+            "$ref": "urn:swissknifeman:orch:exec:defs:v1#/$defs/modelClass",
+            "description": "Minimum model class on the fallback provider."
+          }
+        },
+        "required": [
+          "provider",
+          "model_class"
+        ],
+        "additionalProperties": false,
+        "description": "Fallback route."
+      },
+      "description": "Routes that the action fallback_route may switch to, in order of preference."
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "brief_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum size of the brief in bytes."
+        },
+        "packer_input_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum size of the input of the brief packer in bytes. Not enforced by the conductor: there is no packer."
+        },
+        "stage_tokens_max": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum tokens of one stage."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Size and token budgets."
+    }
+  },
+  "required": [
+    "$schema",
+    "contract_version",
+    "policy_id",
+    "description",
+    "stages",
+    "review",
+    "retries_budget",
+    "git_action",
+    "finalize"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,17 @@
+{
+  "name": "pm",
+  "version": "0.4.1",
+  "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
+  "skills": [
+    "./brd",
+    "./business-process",
+    "./go-to-market",
+    "./monetization-design",
+    "./pmf-diagnostics",
+    "./prd-from-brd",
+    "./product",
+    "./product-roadmap",
+    "./requirement-critic",
+    "./unit-economics"
+  ]
+}

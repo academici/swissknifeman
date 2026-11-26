@@ -1,0 +1,61 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'                      # general umbrella + .vitepress config
+      - 'packages/*/docs/**'           # per-package docks (source of truth)
+      - 'packages/harness/configs/**'  # inlines/presets, which the docs refer to
+      - 'docs/package.json'
+      - 'docs/package-lock.json'
+      - 'scripts/docs-sync.sh'
+      - 'scripts/docs-mermaid-check.mjs'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      # The site belongs to the hub: vitepress lives in docs/package.json.
+      # docs:build = docs:sync (aggregates packages/<pkg>/docs → docs/<pkg>)
+      # + vitepress build . → artifact in docs/.vitepress/dist.
+      - run: npm ci
+        working-directory: docs
+      # The site renders diagrams in the browser: a broken one would deploy as an error box.
+      - name: Mermaid diagrams parse
+        run: node scripts/docs-mermaid-check.mjs
+      - run: npm run docs:build
+        working-directory: docs
+      - uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d  # v4.0.0
+        with:
+          enablement: true   # auto-turn on Pages, if not configured (otherwise «Get Pages site failed: Not Found»)
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa  # v3.0.1
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e  # v4.0.5

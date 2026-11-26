@@ -1,0 +1,357 @@
+{
+  "ai": {
+    "description": "AI agent building: design, tools, evaluation",
+    "category": "engineering",
+    "tags": [
+      "ai",
+      "agents"
+    ]
+  },
+  "voice-ai": {
+    "description": "Realtime voice AI agents: WebRTC+WebSocket transport, VAD + semantic turn detection, sub-500ms barge-in, sub-800ms latency budget, STT→LLM→TTS orchestration, session state-machine, RU stack (Yandex SpeechKit / SaluteSpeech / GigaChat) + offline fallback",
+    "category": "engineering",
+    "tags": [
+      "voice",
+      "realtime",
+      "webrtc",
+      "stt",
+      "tts",
+      "vad",
+      "barge-in",
+      "latency"
+    ]
+  },
+  "architect": {
+    "description": "Architecture, API and data design, security, observability, tech stack selection",
+    "category": "engineering",
+    "tags": [
+      "architecture",
+      "api",
+      "security",
+      "data"
+    ]
+  },
+  "blender": {
+    "description": "Universal Blender bpy+MCP tooling: MCP workflow primitives, viewport modes, camera helper, version gotchas",
+    "category": "engineering",
+    "tags": [
+      "blender",
+      "3d",
+      "bpy",
+      "mcp"
+    ]
+  },
+  "blender-modeling": {
+    "description": "Parametric CAD modeling in Blender for FDM/SLA: config-driven dataclasses, profile/revolve geometry, threading clearances, config & scene conventions, model-rules template, generic build loop",
+    "category": "engineering",
+    "tags": [
+      "blender",
+      "cad",
+      "parametric",
+      "fdm",
+      "sla",
+      "bpy"
+    ]
+  },
+  "creative": {
+    "description": "Creative studio: video, design, content production",
+    "category": "business",
+    "tags": [
+      "creative",
+      "content"
+    ]
+  },
+  "devops": {
+    "description": "Docker environments, CI/CD pipelines, GitOps",
+    "category": "infrastructure",
+    "tags": [
+      "docker",
+      "ci-cd",
+      "gitops"
+    ]
+  },
+  "finance": {
+    "description": "Finance and accounting: bookkeeping, reporting, FP&A",
+    "category": "business",
+    "tags": [
+      "finance",
+      "accounting"
+    ]
+  },
+  "founder": {
+    "description": "Idea discovery, competitive analysis, risk assessment, pitch decks",
+    "category": "business",
+    "tags": [
+      "startup",
+      "ideas",
+      "pitch"
+    ]
+  },
+  "frontend": {
+    "description": "Frontend core: general front skills (web design guidelines, document writer, file upload)",
+    "category": "engineering",
+    "tags": ["frontend", "core"]
+  },
+  "frontend-vue": {
+    "description": "Vue 3 ecosystem: Composition API, best practices, router, VueUse, Pinia state, Vitest testing",
+    "category": "engineering",
+    "tags": ["vue", "pinia", "vitest"]
+  },
+  "frontend-nuxt": {
+    "description": "Nuxt 4+: server routes, modules, SEO meta-module",
+    "category": "engineering",
+    "tags": ["nuxt", "vue", "ssr"]
+  },
+  "frontend-tailwind": {
+    "description": "Tailwind CSS v4 conventions and dark-mode theming",
+    "category": "engineering",
+    "tags": ["tailwind", "css", "dark-mode"]
+  },
+  "frontend-naive-ui": {
+    "description": "Naive UI component library theming (GlobalThemeOverrides)",
+    "category": "engineering",
+    "tags": ["naive-ui", "vue", "theming"]
+  },
+  "frontend-reka": {
+    "description": "Reka UI headless primitives + CVA variants",
+    "category": "engineering",
+    "tags": ["reka-ui", "vue", "cva"]
+  },
+  "frontend-vite": {
+    "description": "Vite build tooling: config/plugins/SSR, project module loader, multi-build, VitePress",
+    "category": "engineering",
+    "tags": ["vite", "build", "vitepress"]
+  },
+  "frontend-linting": {
+    "description": "JS/TS tooling and style: antfu config, ESLint flat config, Spatie JS style, TS library authoring",
+    "category": "engineering",
+    "tags": ["eslint", "typescript", "tooling"]
+  },
+  "frontend-animations": {
+    "description": "Animations with Motion Vue (motion-v)",
+    "category": "engineering",
+    "tags": ["animations", "motion", "vue"]
+  },
+  "frontend-figma": {
+    "description": "Figma Dev Mode MCP → Vue mapping (uses architect/figma-mcp-core)",
+    "category": "engineering",
+    "tags": ["figma", "vue", "design"]
+  },
+  "frontend-wayfinder": {
+    "description": "Laravel Wayfinder: type-safe routes/controller actions in the frontend",
+    "category": "engineering",
+    "tags": ["wayfinder", "laravel", "routes"]
+  },
+  "frontend-backend": {
+    "description": "Backend integration layer: Inertia+Vue, Laravel Echo realtime client, backend→frontend type sync",
+    "category": "engineering",
+    "tags": ["inertia", "echo", "type-sync"]
+  },
+  "general": {
+    "description": "General agent workflow conventions: git commits, task briefs, project maps, cross-layer checklists",
+    "category": "workflow",
+    "tags": [
+      "workflow",
+      "conventions",
+      "git"
+    ]
+  },
+  "legal": {
+    "description": "Legal operations: contracts, compliance, risk",
+    "category": "business",
+    "tags": [
+      "legal",
+      "compliance"
+    ]
+  },
+  "marketing": {
+    "description": "Marketing: strategy, campaigns, content, growth",
+    "category": "business",
+    "tags": [
+      "marketing",
+      "growth"
+    ]
+  },
+  "mobile": {
+    "description": "Mobile development: Flutter — design-to-code, theming, layout mapping from Figma",
+    "category": "engineering",
+    "tags": [
+      "flutter",
+      "mobile",
+      "dart",
+      "figma"
+    ]
+  },
+  "dart": {
+    "description": "Dart package and SDK development: public API, pubspec, null safety, testing and compatibility",
+    "category": "engineering",
+    "tags": ["dart", "pub", "package", "sdk"]
+  },
+  "operator": {
+    "description": "Incident response, runbooks, postmortems, on-call and capacity planning",
+    "category": "operations",
+    "tags": [
+      "incidents",
+      "runbooks",
+      "sre"
+    ]
+  },
+  "oss-dev": {
+    "description": "Open-source development: releases, governance, DX, dependency audits + language references",
+    "category": "engineering",
+    "tags": [
+      "open-source",
+      "releases",
+      "dx"
+    ]
+  },
+  "php": {
+    "description": "PHP and Laravel core: architecture, structure, conventions, DI, database, repositories, patterns, static analysis",
+    "category": "engineering",
+    "tags": [
+      "php",
+      "laravel",
+      "core"
+    ]
+  },
+  "laravel-testing": {
+    "description": "Laravel testing: Pest feature/unit, DB isolation guard, Dusk browser tests, health checks",
+    "category": "engineering",
+    "tags": ["laravel", "testing", "pest"]
+  },
+  "laravel-filament": {
+    "description": "Filament admin panels: resources, schemas, tables, widgets, actions, tenancy",
+    "category": "engineering",
+    "tags": ["laravel", "filament", "admin"]
+  },
+  "laravel-livewire": {
+    "description": "Livewire 3 UI: dynamic Blade attributes (ComponentAttributeBag)",
+    "category": "engineering",
+    "tags": ["laravel", "livewire", "blade"]
+  },
+  "laravel-data-layer": {
+    "description": "Typed data + realtime: spatie/laravel-data DTOs (TS export), Echo/Reverb broadcasting",
+    "category": "engineering",
+    "tags": ["laravel", "data", "broadcasting"]
+  },
+  "laravel-auth": {
+    "description": "Authorization & security: permissions/RBAC, attribute-based gates, security audit",
+    "category": "engineering",
+    "tags": ["laravel", "auth", "security"]
+  },
+  "laravel-architecture": {
+    "description": "Scaling architecture: modular monolith/DDD, enum state machines, enum attributes, subagent orchestration",
+    "category": "engineering",
+    "tags": ["laravel", "architecture", "ddd"]
+  },
+  "laravel-extras": {
+    "description": "Optional Laravel runtime packages: media library, typed settings, Pennant feature flags",
+    "category": "engineering",
+    "tags": ["laravel", "spatie", "packages"]
+  },
+  "axioma": {
+    "description": "Axioma ecosystem doctrine & reuse: dev philosophy, tech-radar binding, vendor-vs-build discipline (project-scoped bucket)",
+    "category": "engineering",
+    "tags": [
+      "axioma",
+      "ecosystem",
+      "doctrine"
+    ]
+  },
+  "azguard": {
+    "description": "azguard package usage: code-first RBAC, panels, scoped roles, abilities (academici package — skill will relocate into the package repo)",
+    "category": "engineering",
+    "tags": [
+      "php",
+      "laravel",
+      "rbac"
+    ]
+  },
+  "botkit": {
+    "description": "botkit package usage: bot framework patterns — BotDefinition, service provider, webhooks (academici package — skill will relocate into the package repo)",
+    "category": "engineering",
+    "tags": [
+      "php",
+      "laravel",
+      "bot"
+    ]
+  },
+  "php-packages": {
+    "description": "Laravel package development: scaffold, service provider, testing, compatibility, docs, releases",
+    "category": "engineering",
+    "tags": [
+      "php",
+      "laravel",
+      "packages"
+    ]
+  },
+  "pm": {
+    "description": "Product management: BRD, PRD, roadmap, monetization, unit economics",
+    "category": "product",
+    "tags": [
+      "brd",
+      "prd",
+      "roadmap"
+    ]
+  },
+  "python": {
+    "description": "Python: ML project structure, virtualenv and dependency management",
+    "category": "engineering",
+    "tags": [
+      "python",
+      "ml",
+      "venv"
+    ]
+  },
+  "quality": {
+    "description": "Code review, refactoring plans, tech debt audits, test strategy",
+    "category": "engineering",
+    "tags": [
+      "code-review",
+      "refactoring",
+      "tech-debt"
+    ]
+  },
+  "research": {
+    "description": "Research and knowledge management",
+    "category": "business",
+    "tags": [
+      "research",
+      "knowledge"
+    ]
+  },
+  "roles": {
+    "description": "Personas: tech lead, startup CTO, solo founder, open-source maintainer",
+    "category": "personas",
+    "tags": [
+      "tech-lead",
+      "cto",
+      "maintainer"
+    ]
+  },
+  "sales": {
+    "description": "Sales: pipeline, outreach, CRM, negotiation",
+    "category": "business",
+    "tags": [
+      "sales"
+    ]
+  },
+  "security": {
+    "description": "AI agent security: prompt injection defense, hardening",
+    "category": "engineering",
+    "tags": [
+      "security"
+    ]
+  },
+  "system": {
+    "description": "Ecosystem environment skills provided by the host modules: topology and navigation, shared memory, agent packs, session observation, vault lookup",
+    "provided_by": "host",
+    "category": "meta",
+    "tags": [
+      "topology",
+      "architecture",
+      "navigation",
+      "meta"
+    ]
+  }
+}

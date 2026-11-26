@@ -1,0 +1,21 @@
+{
+  "_comment": "Copy to the root of the target project as .swissknife.json — install.sh will read it automatically. All keys are optional. Priority: flags CLI > this file > autodetection.",
+  "_comment_project_type": "obsidian-vault | laravel-project | php-package | standalone — is mapped to profiles/<type>.json",
+  "project_type": "laravel-project",
+  "_comment_buckets": "explicit list bucket-ov; if specified - project_type ignored",
+  "buckets": ["architect", "php", "quality"],
+  "_comment_exclude": "names of skills, folders or bucket-relative paths; merges with --exclude",
+  "exclude": ["botkit", "devops/gitops"],
+  "_comment_skills_path": "where to put relative to the project root; default depends on agent",
+  "skills_path": ".claude/skills",
+  "_comment_agent": "claude | cursor | generic; claude = flat layout",
+  "agent": "claude",
+  "_comment_providers": "Optional: the absence of a block saves legacy Claude Code-only behavior and nothing migrates.",
+  "providers": {
+    "contract_version": "1.0.0",
+    "selection": {
+      "claude-code": {"enabled": true},
+      "codex": {"enabled": false}
+    }
+  }
+}

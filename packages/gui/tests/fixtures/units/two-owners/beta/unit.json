@@ -1,0 +1,18 @@
+{
+  "$schema": "urn:swissknifeman:aicore:unit:v1",
+  "id": "beta",
+  "title": "Fixture unit beta",
+  "kind": "capability",
+  "version": "0.1.0",
+  "stability": "development",
+  "destination": "hub",
+  "requires": [
+    {
+      "unit": "aicore",
+      "range": "^0.1"
+    }
+  ],
+  "provides": {
+    "gui": "gui.json"
+  }
+}

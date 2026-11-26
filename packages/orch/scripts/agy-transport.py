@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Bridge the conductor's one plain-text stdin prompt to AGY's stream-json protocol.
+
+AGY runs as a distinct provider. This bridge does not assert sandboxing, infer backend
+model identity, or fabricate a terminal result when the CLI disconnects.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+
+# Session-local, documented CLI settings; never change the owner's persistent settings.
+# SKM still supplies role-specific filesystem guards and verifies the resulting evidence.
+SESSION_SETTINGS = {
+    "agentMode": "accept-edits",
+    "enableTerminalSandbox": False,
+    "allowNonWorkspaceAccess": True,
+    "toolPermission": "always-proceed",
+    "artifactReviewPolicy": "always-proceed",
+    "disableSlashCommands": True,
+}
+
+
+def event(doc: object, expected_model: str, state: dict) -> dict | None:
+    if not isinstance(doc, dict):
+        state["invalid"] = True
+        return None
+    if state.get("terminal"):
+        state["invalid"] = True
+        return None
+    kind = doc.get("event")
+    if kind == "init":
+        init = doc.get("init")
+        if not isinstance(init, dict):
+            state["invalid"] = True
+            return None
+        session, model = doc.get("conversation_id"), init.get("model")
+        if not isinstance(session, str) or not session or model != expected_model or state.get("session"):
+            state["invalid"] = True
+            return None
+        state["session"] = session
+        return {"type": "system", "subtype": "init", "session_id": session, "model": model,
+                "tools": init.get("tools", [])}
+    if kind == "step_update":
+        step = doc.get("step_update")
+        if not isinstance(step, dict) or not state.get("session") or step.get("conversation_id") != state["session"]:
+            state["invalid"] = True
+            return None
+        index = step.get("step_index")
+        if step.get("state") == "DONE" and step.get("step_type") == "error_message" and isinstance(index, int):
+            errors = state.setdefault("consecutive_errors", set())
+            errors.add(index)  # duplicate progress updates are not distinct failures
+        elif step.get("step_type") not in ("user_input", "error_message"):
+            state.pop("consecutive_errors", None)  # actual new activity breaks the streak
+            if step.get("step_type") == "agent_response" and step.get("state") == "DONE":
+                state["completed_response"] = True
+            elif step.get("step_type") != "agent_response":
+                state.pop("completed_response", None)
+        return None
+    if kind != "result":
+        state["invalid"] = True
+        return None
+    result = doc.get("result")
+    if not isinstance(result, dict):
+        state["invalid"] = True
+        return None
+    session, status, response = result.get("conversation_id"), result.get("status"), result.get("response")
+    valid = (not state.get("invalid") and bool(state.get("session")) and session == state["session"]
+             and not state.get("terminal") and isinstance(response, str) and status in ("SUCCESS", "ERROR"))
+    if not valid:
+        state["invalid"] = True
+        return None
+    state["terminal"] = True
+    state["error"] = status == "ERROR"
+    usage = result.get("usage")
+    usage = usage if isinstance(usage, dict) else {}
+    reported = {key: value for key, value in usage.items()
+                if key in ("input_tokens", "output_tokens", "cache_read_tokens", "total_tokens", "thinking_tokens")
+                and isinstance(value, int) and not isinstance(value, bool) and value >= 0}
+    # Explicit zero cache makes inclusion irrelevant; a missing or nonzero cache
+    # counter does not establish the native input counter's semantics.
+    known_input = reported.get("cache_read_tokens") == 0 and "input_tokens" in reported
+    accounting = {"basis": "agy-native", "reported": reported}
+    if not known_input:
+        accounting["unavailable"] = "AGY input/cache inclusion contract unavailable; input is not measured"
+    return {"type": "result", "session_id": session, "is_error": status != "SUCCESS",
+            "result": (result.get("error") or response) if status == "ERROR" else response,
+            # Only the CLI's terminal error attests authentication failure, never model/tool text.
+            **({"api_error_status": 401} if status == "ERROR" and isinstance(result.get("error"), str)
+               and result["error"].startswith("UNAUTHENTICATED (code 401):") else {}),
+            # Native AGY does not declare whether input already excludes cache. Preserve
+            # reported counters, rather than applying Codex's subtraction and inventing zero.
+            "usage": {"input_tokens": reported.get("input_tokens") if known_input else None,
+                      "output_tokens": usage.get("output_tokens"),
+                      "cache_read_input_tokens": usage.get("cache_read_tokens")},
+            "usage_accounting": accounting}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--effort", required=True, choices=("low", "medium", "high"))
+    args = parser.parse_args()
+    prompt = sys.stdin.read()
+    argv = ["agy", "--dangerously-skip-permissions", "--model", args.model, "--effort", args.effort,
+            "--settings", json.dumps(SESSION_SETTINGS, sort_keys=True),
+            "--input-format", "stream-json", "--output-format", "stream-json", "--print", ""]
+    try:
+        proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    except OSError as exc:
+        print(f"AGY_START_FAILED: {exc}", file=sys.stderr)
+        return 1
+    assert proc.stdin is not None and proc.stdout is not None
+    proc.stdin.write(json.dumps({"event": "user", "message": {"role": "user", "content": prompt}}) + "\n")
+    proc.stdin.close()
+    state: dict = {}
+    terminal = None
+    for line in proc.stdout:
+        # Namespace raw evidence: provider fields must never enter the conductor protocol.
+        print(json.dumps({"type": "agy.raw", "line": line}), flush=True)
+        try:
+            doc = json.loads(line)
+        except ValueError:
+            state["invalid"] = True
+            continue
+        mapped = event(doc, args.model, state)
+        if len(state.get("consecutive_errors", ())) >= 3 and not state.get("completed_response"):
+            print("AGY_REPEATED_ERROR_STEPS: three distinct AGY error steps without intervening activity", file=sys.stderr)
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+            break
+        if mapped is not None:
+            if mapped["type"] == "result":
+                terminal = mapped
+            else:
+                print(json.dumps(mapped), flush=True)
+    rc = proc.wait()
+    if rc or not state.get("terminal") or state.get("invalid"):
+        print("AGY_STREAM_INCOMPLETE: missing or inconsistent terminal evidence", file=sys.stderr)
+        return rc or 1
+    # A terminal result is authoritative only after EOF and successful CLI exit.
+    # Publishing it earlier lets the conductor accept a lingering process as success.
+    if terminal is not None:
+        print(json.dumps(terminal), flush=True)
+    return 1 if state.get("error") else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

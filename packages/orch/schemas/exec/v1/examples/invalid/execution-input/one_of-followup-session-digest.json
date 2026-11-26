@@ -1,0 +1,58 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:execution-input:v1",
+  "contract_version": "exec/v1",
+  "input_id": "adhoc@15f45b7508c7",
+  "digest": "15f45b7508c79e99d6e6aa8f600d0fdf1081956140a2d0a86f2bd3a4675df6f2",
+  "provenance": {
+    "kind": "review_followup",
+    "fix_briefs": [
+      {
+        "path": ".swissknifeman/state/group-review-1.fix-brief.2.json",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "session_ref": {
+      "run": "cnd-20261023T100000Z-1",
+      "item": "W2",
+      "session": "sess-2",
+      "provider": "claude-code",
+      "fingerprint_digest": "invalid",
+      "items": [
+        "W1",
+        "W2"
+      ]
+    }
+  },
+  "goal": "Correct the first bounded group-review assignment.",
+  "scope": {
+    "include": [
+      "src/a.py"
+    ],
+    "exclude": []
+  },
+  "acceptance": {
+    "checks": [
+      {
+        "id": "V1",
+        "procedure": "The assigned findings are corrected.",
+        "expect": "observed",
+        "kind": "acceptance"
+      }
+    ]
+  },
+  "route": {
+    "minimum": {
+      "class": "implementation",
+      "effort": "high"
+    }
+  },
+  "result_contract": {
+    "report": [
+      "summary",
+      "changed_paths"
+    ],
+    "write_authority": "code_scope",
+    "commit_owner": "coordinator",
+    "plan_mutation": "forbidden"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "schema": "prompt-diff/v1",
+  "base": {"step": "executor.1", "prompt_sha256": null},
+  "target": {"step": "executor.2", "prompt_sha256": null},
+  "blocks": [],
+  "tokens": {"from": 0, "to": 0, "delta": 0}
+}

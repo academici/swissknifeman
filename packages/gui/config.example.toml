@@ -1,0 +1,97 @@
+# gui configuration, generated from configs/config.schema.json; do not edit by hand.
+# Copy into ~/.local/share/swissknifeman/config/config.toml or <project>/.swissknifeman/config.toml
+# (swissknifeman config init does it) and uncomment the keys you change.
+schema_version = 1
+
+[gui]
+# TCP port of the loopback backend; 0 picks a free port at every start. Machine-wide: one backend serves every project. Integer >= 0 and <= 65535.
+# Allowed in layers: defaults, machine, env, invocation, flags.
+# port = 0
+
+# Whether gui open starts the default browser with the session URL (the URL is printed either way). Boolean.
+# open_browser = true
+
+[gui.runs]
+# Runs active at the same time on the machine; a new run beyond it is refused with CONCURRENCY_LIMIT. Integer >= 1 and <= 64.
+# max_global = 4
+
+# Runs active at the same time in one project. Integer >= 1 and <= 64.
+# max_per_project = 2
+
+# Runs active at the same time of one contribution owner. Integer >= 1 and <= 64.
+# max_per_owner = 2
+
+# Largest log chunk of one stream frame in bytes. Integer >= 1024 and <= 1048576.
+# chunk_bytes = 16384
+
+# Largest stored log of one output stream (stdout or stderr) of a run in bytes; the rest is dropped and marked. Integer >= 65536.
+# log_max_bytes = 52428800
+
+# A run without output for this many seconds is stopped as timed_out; 0 never stops it. Integer >= 0.
+# idle_timeout_s = 600
+
+# Seconds between SIGTERM and SIGKILL of the process group when a run is cancelled. Integer >= 0 and <= 300.
+# cancel_grace_s = 5
+
+[gui.events]
+# Frames kept in memory for resume after a reconnect. Integer >= 100.
+# ring_frames = 10000
+
+# Frames queued per subscription before the subscriber is told to resync. Integer >= 10.
+# queue_frames = 1000
+
+# Seconds between heartbeat frames of an idle subscription. Integer >= 1 and <= 3600.
+# heartbeat_s = 15
+
+# Seconds between reads of the project event journal. Integer >= 1 and <= 3600.
+# journal_poll_s = 1
+
+[gui.retention]
+# Run logs older than this many days are removed; 0 keeps them. Integer >= 0.
+# log_days = 30
+
+# Run logs are removed oldest first above this total size in MiB; 0 has no ceiling. Integer >= 0.
+# log_total_mb = 1024
+
+[gui.config]
+# Seconds a commit waits for the lock of a layer file held by another writer before it answers CONFIG_LOCKED. Number >= 0.1 and <= 60.
+# lock_timeout_s = 5
+
+# Seconds a preview can be committed after it was made; the store keeps at most 64 previews in memory. Integer >= 10 and <= 86400.
+# preview_ttl_s = 600
+
+[gui.plugins]
+# Seconds Disable waits for the calls and runs of a plugin to finish before it cancels the runs. Integer >= 0 and <= 300.
+# drain_timeout_s = 10
+
+# Plugin failures inside the window that put the plugin in quarantine. Integer >= 1 and <= 20.
+# quarantine_failures = 3
+
+# Length in seconds of the window in which plugin failures are counted. Integer >= 10 and <= 86400.
+# quarantine_window_s = 300
+
+# History entries kept per plugin; older ones are removed when a new one is written. Integer >= 10 and <= 2000.
+# history_limit = 200
+
+[gui.query]
+# Largest canonical JSON output of one query handler in bytes; a larger one is OUTPUT_INVALID. Integer >= 1024.
+# max_output_bytes = 1048576
+
+[gui.terminal]
+# Whether sessions may start. Off: POST /v1/terminal/sessions is PERMISSION_DENIED and the feature terminal is absent. Boolean.
+# enabled = false
+
+# Sessions that run at the same time; a new one beyond it is TERMINAL_LIMIT. Integer >= 1 and <= 8.
+# max_sessions = 2
+
+# A session without input and output for this many seconds is closed. Integer >= 30 and <= 86400.
+# idle_timeout_s = 900
+
+# Longest life of one session in seconds. Integer >= 60 and <= 86400.
+# max_session_s = 14400
+
+# Output bytes a client pays in one credit; the unpaid credit of a client stays at most four times this. Integer >= 4096 and <= 1048576.
+# credit_bytes = 65536
+
+# Largest output frame in bytes; also the most the server holds unsent per session. Integer >= 1024 and <= 65536.
+# output_chunk_bytes = 16384

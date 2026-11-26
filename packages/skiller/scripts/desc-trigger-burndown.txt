@@ -1,0 +1,78 @@
+# desc-trigger-burndown.txt — quality ratchet frontmatter `description` as TRIGGER
+# (P3.5).
+#
+# Format: one entry per line - `<bucket>/<name>` (matches frontmatter bucket:name).
+# Lines starting with `#`, and empty comments are ignored.
+#
+# Rules (see validate.sh, section description-trigger gate):
+#   - description WITHOUT trigger phrase (regex: use when|activate|use for|use to|when you|
+#     whenever|trigger|use this, case-insensitive) — legal, ONLY as long as you have the skill in this
+#     list (inherited debt). Skill is NOT on the list → error (new debt prohibited).
+#   - Record «rotten» (skill removed/renamed OR it description already carries a trigger) →
+#     validate.sh prints warn «rotten recording, remove it» — deleted the line when fixing.
+#
+# One-way: the list JUST gets smaller. Adding new rows outside bootstrap this item —
+# conscious decision of an individual item'and with justification in it Completion Notes, not a silent edit.
+#
+# Bootstrap (2026-07-30, P3.5): inherited remainder without trigger AFTER repair
+# measured blocker-set (39 records < 100 char, P3.5 Scope Included) — 69 records on
+# 8e16a811 (findings/04 was rated 86 at the time of measurement on 2026-07-29; divergence - part
+# skills from the set «< 100 character without trigger, upstream or previously edited» has already left
+# samples by the time bootstrap, number is fixed by a live run, not by a document).
+
+architect/security-design
+axioma/axioma-doctrine
+axioma/axioma-glossary
+axioma/axioma-stack
+axioma/ecosystem-map
+azguard/azguard
+devops/ci-cd
+devops/docker-dev-prod
+devops/docker-php
+devops/docker-postgres
+devops/docker-services
+devops/docker-vite
+devops/makefile
+devops/node-pnpm-preflight
+founder/adversarial-check
+founder/customer-discovery
+founder/defensibility
+founder/idea-audit
+founder/idea-discovery
+founder/startup-lifecycle
+frontend-backend/inertia-vue
+frontend-vite/vite-multi-build
+frontend-vue/vitest
+frontend-vue/vue-composition-api
+frontend-wayfinder/wayfinder
+laravel-architecture/laravel-subagents
+laravel-architecture/modular-architecture
+laravel-auth/laravel-permissions
+laravel-auth/laravel-security-audit
+laravel-testing/laravel-dusk
+laravel-testing/laravel-testing
+operator/capacity-planning
+operator/incident-response
+operator/oncall-rotation
+operator/postmortem
+operator/runbook
+oss-dev/github-flow
+oss-dev/oss-development
+oss-dev/release-engineering
+php/dependency-injection
+php/laravel-structure
+php/pao
+php/static-analysis
+pm/monetization-design
+pm/pmf-diagnostics
+pm/prd-from-brd
+pm/product-roadmap
+pm/requirement-critic
+quality/code-review
+quality/code-simplifier
+quality/tech-debt-audit
+quality/test-strategy
+quality/testing-safety-report
+repository-bootstrap/docs-maintenance
+repository-bootstrap/ecosystem-mcp
+repository-bootstrap/field-feedback-loop

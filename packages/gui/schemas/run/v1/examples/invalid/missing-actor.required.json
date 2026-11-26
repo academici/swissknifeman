@@ -1,0 +1,53 @@
+{
+  "$schema": "urn:swissknifeman:gui:run:v1",
+  "run_id": "run-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "command": "gui-planner.run-item",
+  "owner": "gui-planner",
+  "state": "running",
+  "dry_run": false,
+  "context": {
+    "project_id": "swissknifeman",
+    "plan_id": "PLAN5",
+    "item_id": "P1.3"
+  },
+  "input": {
+    "plan": "PLAN5",
+    "item": "P1.3",
+    "dry": false
+  },
+  "created_at": "2026-10-16T15:00:00Z",
+  "started_at": "2026-10-16T15:00:01.250Z",
+  "executable": {
+    "path": "/opt/skm/bridges/gui-planner/bin/plan-adapter",
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "argv_redacted": [
+    "/opt/skm/bridges/gui-planner/bin/plan-adapter",
+    "run-item",
+    "PLAN5",
+    "P1.3"
+  ],
+  "cwd": "/home/user/projects/swissknifeman",
+  "permission": {
+    "decision": "confirmed",
+    "effects": [
+      {
+        "effect": "plan.write",
+        "enforcement": "advisory"
+      },
+      {
+        "effect": "process.spawn",
+        "enforcement": "enforced"
+      }
+    ],
+    "grants": [
+      "grant-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ]
+  },
+  "log": {
+    "stdout_bytes": 2048,
+    "stderr_bytes": 0,
+    "truncated": false
+  },
+  "correlation_id": "req-00000010"
+}

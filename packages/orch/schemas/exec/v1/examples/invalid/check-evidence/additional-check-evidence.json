@@ -1,0 +1,17 @@
+{
+  "$schema": "urn:swissknifeman:orch:exec:check-evidence:v1",
+  "contract_version": "exec/v1",
+  "evidence_id": "a",
+  "check_id": "V1",
+  "subject": "a",
+  "procedure": {},
+  "candidate": {
+    "head": "0123456789abcdef"
+  },
+  "started_at": "2026-01-02T03:04:05Z",
+  "finished_at": "2026-01-02T03:04:05Z",
+  "producer": {
+    "kind": "engine"
+  },
+  "not-a-field": 1
+}

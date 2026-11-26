@@ -1,0 +1,31 @@
+{
+  "changed_paths": [
+    "packages/aicore/lib/aicore/project/migrate.py",
+    "packages/aicore/lib/aicore/workspace/links.py",
+    "packages/workspace/lib/workspace/links.py"
+  ],
+  "checks_run": [],
+  "evidence": [],
+  "open_issues": [
+    {
+      "impact": "public error codes and the apply() result; docs/CHANGELOG may need a line",
+      "kind": "note",
+      "next": "coordinator decides on docs",
+      "text": "New error codes PROJECT_MIGRATE_LOCKED, PROJECT_MIGRATE_PATH and LINKS_EXCLUDE_INEFFECTIVE; the plan-time conflict reason for a folder place changed to 'local/ holds a link or a file in the place of a folder'. apply() now returns items with the action actually done (move/drop/conflict). No docs or error-code registries were updated (outside scope)."
+    },
+    {
+      "impact": "the new behaviors have no committed test",
+      "kind": "pending",
+      "next": "follow-up piece to add tests in packages/aicore/tests/test_project_cli.py and packages/workspace/tests/test_links.py",
+      "text": "No regression tests were added for the four fixes (tests are outside the three scope files); verified only by ad hoc script."
+    },
+    {
+      "impact": "small extra latency per call",
+      "kind": "note",
+      "next": "none",
+      "text": "write_exclude now runs `git check-ignore` once per listed name, so it adds a git subprocess per name on every link/unlink/sync that has names to list."
+    }
+  ],
+  "summary": "migrate.py: a symlinked destination folder is now a conflict at plan time, and apply opens local/ and each parent without following links (O_NOFOLLOW dir fds). Apply holds flock on local/ and rechecks each item just before doing it; files are placed with an exclusive hard link (or O_EXCL copy across devices), so nothing is overwritten. A taken name or a changed destination becomes a conflict, and an identical file is dropped. workspace/links.py: link() removes the symlinks it created when the exclude sync or a later symlink fails. aicore/workspace/links.py: write_exclude now verifies with `git check-ignore --no-index` and raises LINKS_EXCLUDE_INEFFECTIVE when git does not ignore a listed name or cannot answer. Ran the aicore and workspace tests for the touched modules (all OK) and an ad hoc scenario for symlinked destination, late-created file and a negating .gitignore.",
+  "status": "done"
+}

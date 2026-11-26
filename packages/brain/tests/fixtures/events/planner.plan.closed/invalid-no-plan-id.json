@@ -1,0 +1,12 @@
+{
+  "specversion": "1.0",
+  "id": "11223344556677889900aabbccddeeff",
+  "source": "urn:swissknifeman:module:planner",
+  "type": "planner.plan.closed",
+  "time": "2026-10-09T12:10:00.000Z",
+  "subject": "2026.01.15-DEMO-PLAN",
+  "datacontenttype": "application/json",
+  "data": {
+    "title": "No plan id"
+  }
+}

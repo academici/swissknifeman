@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "maind": {
+      "command": "maind",
+      "args": [
+        "mcp",
+        "--scope",
+        "project:swissknifeman"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena@949a27ef1e5fda1a6e7b561e777bcece345c6ffd",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "<ABS_PATH_TO_PROJECT>",
+        "--enable-web-dashboard",
+        "false"
+      ]
+    },
+    "perplexity-web": {
+      "command": "${PERPLEXITY_WEB_MCP_BIN:-<HOME>/projects/packages/perplexity-web-mcp/start.sh}",
+      "args": [
+        "--pool=default"
+      ]
+    }
+  }
+}

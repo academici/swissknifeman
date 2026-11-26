@@ -1,0 +1,56 @@
+name: Scanner PR
+
+# The snippet scanner reads local projects (packages/skiller/.skills-scanner.json scan_paths); a hosted runner has
+# none of them, so here a clean run reports that and finds nothing. A failure of the scanner fails the job: it used
+# to end in `|| true` and read candidates from the wrong folder, so every outcome looked like "0 candidates".
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      OUTPUT: packages/skiller/.scanner-output
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Run scanner (extract only in CI)
+        run: ./packages/skiller/scripts/scan-skills.sh --extract
+
+      - name: Check for candidates
+        id: check
+        run: |
+          if [ -f "$OUTPUT/candidates.json" ]; then
+            count=$(python3 -c "import json, sys; print(len(json.load(open(sys.argv[1]))))" "$OUTPUT/candidates.json")
+            echo "count=$count" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create PR with extracted snippets
+        if: steps.check.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./packages/skiller/scripts/scan-and-pr.sh --no-pr
+
+      - name: Push branch and open PR
+        if: steps.check.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The branch name comes from the repository: scan-and-pr.sh already made it with `git checkout -b`.
+          BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "feat(scanner): extracted snippets" \
+            --body "Auto-generated scanner PR. Review before merge." \
+            || echo "PR may already exist"

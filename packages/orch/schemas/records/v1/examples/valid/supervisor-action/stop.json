@@ -1,0 +1,11 @@
+{
+  "$schema": "urn:swissknifeman:orch:records:supervisor-action:v1",
+  "at": "2026-10-24T10:00:00Z",
+  "run_id": "cnd-20261024T095000Z-abc123",
+  "health": "hung",
+  "reason_code": "HEARTBEAT_STALE",
+  "action": "stop",
+  "detail": "the conductor did not answer SIGINT or SIGTERM within 60 s and was killed",
+  "pid": 4242,
+  "signal": "SIGKILL"
+}

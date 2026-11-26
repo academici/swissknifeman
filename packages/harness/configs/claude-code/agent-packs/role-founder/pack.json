@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "pack": "role-founder",
+  "version": "0.1.3",
+  "description": "Solo founder persona pack: three subagent consultants - idea-validator (hypothesis validation before code: JTBD/discovery/competitors/moat/pre-mortem), mvp-scoper (narrowing to MVP, roadmap, brd→prd) and founder-cadence (weekly rhythm + decision-log, monetization/unit-economics). Role pack: not tied to the stack, not auto-detected - selected explicitly and installed with any stack pack (PACK_PREFIX matches).",
+  "stack": {
+    "shape": "role"
+  },
+  "requires": {
+    "skills": [
+      "founder/idea-discovery",
+      "founder/customer-discovery",
+      "founder/competitive-analysis",
+      "founder/defensibility",
+      "founder/new-project",
+      "founder/startup-lifecycle",
+      "founder/risk-assessment",
+      "pm/product-roadmap",
+      "pm/brd",
+      "pm/prd-from-brd",
+      "pm/monetization-design",
+      "pm/unit-economics",
+      "pm/go-to-market",
+      "pm/pmf-diagnostics",
+      "roles/startup-cto"
+    ],
+    "harness_presets": [
+      "base"
+    ]
+  },
+  "interview": [
+    {
+      "id": "PACK_PREFIX",
+      "q": "Project agent name prefix (like a stack pack)?",
+      "default": "{project_dirname}",
+      "kind": "slug"
+    }
+  ],
+  "files": [
+    {
+      "src": "agents/idea-validator.md",
+      "target": ".claude/agents/{PACK_PREFIX}-idea-validator.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/mvp-scoper.md",
+      "target": ".claude/agents/{PACK_PREFIX}-mvp-scoper.md",
+      "kind": "template",
+      "role": "agent"
+    },
+    {
+      "src": "agents/founder-cadence.md",
+      "target": ".claude/agents/{PACK_PREFIX}-founder-cadence.md",
+      "kind": "template",
+      "role": "agent"
+    }
+  ],
+  "notes": {
+    "prerequisite": "Persona pack: placed on top of any stack pack. {PACK_PREFIX} must match the stackpack prefix in order for @<prefix>-<role> resolved to play his role (for example, founder-cadence takes the technical stens into @<prefix>-startup-cto / stack roles).",
+    "verify_workflow": "These are subagents (.md), not a work flow - node --check does not apply."
+  }
+}

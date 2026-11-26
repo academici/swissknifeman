@@ -1,0 +1,15 @@
+{
+  "$schema": "urn:swissknifeman:skiller:swissknifeman-config:v1",
+  "_comment": "Config vendor-mode (physical transfer of skills to the repo). Copy to the target project as .swissknifeman/config.json. Source of truth: the rules below unfold into a flat set, sync copies skills from the library swissknifeman in skills_path and writes skills-lock.json (managed). Command: skiller sync [--dry-run]. $schema gives autocompletion in the editor.",
+  "version": 1,
+  "_comment_mode": "only for now vendor (physical transfer + lock)",
+  "mode": "vendor",
+  "_comment_skills_path": "where to copy; default .claude/skills (Claude finds automatically)",
+  "skills_path": ".claude/skills",
+  "_comment_include": "specific skills from any area: 'bucket/rel' or simply 'name'",
+  "include": ["php/eloquent-performance", "architect/api-design"],
+  "_comment_buckets": "entire buckets (are combined with include)",
+  "buckets": ["quality"],
+  "_comment_exclude": "subtraction from (buckets ∪ include): skill name or 'bucket/rel'",
+  "exclude": ["quality/mutation-testing"]
+}

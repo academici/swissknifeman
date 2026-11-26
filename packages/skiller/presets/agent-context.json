@@ -1,0 +1,5 @@
+{
+  "name": "agent-context",
+  "description": "Agent context discipline: now held by the orchestration contracts (selection replaced_by of the former members); the preset stays empty for projects that still name it",
+  "include": []
+}

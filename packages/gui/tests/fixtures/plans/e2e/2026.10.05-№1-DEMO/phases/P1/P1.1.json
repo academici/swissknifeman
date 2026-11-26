@@ -1,0 +1,54 @@
+{
+  "$schema": "urn:swissknifeman:task:plan:item:v1",
+  "id": "P1.1",
+  "title": "Edit me",
+  "status": "todo",
+  "summary": "An item whose reviewer model the E2E changes.",
+  "why": "The E2E needs an editable todo item.",
+  "scope": {
+    "include": [
+      "demo"
+    ],
+    "exclude": []
+  },
+  "task_files": [
+    {
+      "path": "demo.txt",
+      "change": "any"
+    }
+  ],
+  "validation": [
+    {
+      "id": "V1",
+      "cmd": "true",
+      "expect": "exit 0",
+      "kind": "acceptance",
+      "cwd": "."
+    }
+  ],
+  "deliverables": [
+    "a changed reviewer model"
+  ],
+  "route": {
+    "class": "implementation",
+    "effort": "high"
+  },
+  "review": {
+    "mode": "requested",
+    "reviewer": {
+      "class": "frontier",
+      "model": "gpt-6.1-sol",
+      "provider": "codex",
+      "effort": "high"
+    }
+  },
+  "authority": {
+    "kind": "routine"
+  },
+  "rag": {
+    "need": "none",
+    "status": "not_needed"
+  },
+  "result": null,
+  "updated_at": "2026-10-17T00:51:35Z"
+}

@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# harness — CLI environment settings Claude Code (permissions, MCP, hooks).
+# Thin launcher: checks the environment and transfers control to the package lib/harness
+# (python3 -m harness). All logic is in lib/ (importable and testable: see tests/).
+#
+# Commands (run from the consuming project / with --target):
+#   permissions  pour in permissions-presets in .claude/settings*.json (alias: apply)
+#                [--target P] [--preset a,b] [--file F] [--dry-run] [--list] [--global]
+#   mcp          pour in MCP-presets in .mcp.json, merge-only [--target P] [--mcp a,b] [--list] [--dry-run]
+#                catalog --json [--provider ID]: catalog, bindings and lock sources for a consumer
+#   hooks        enable project hooks / install hook files globally
+#                [--target P] [--auto-approve MODE] [--memory BRAIN:MODE] [--router MODE] [--run-report on|off] [--output-style lean|off] [--file F] [--global] [--dry-run]
+#   router       generate feature catalog intent-router in .claude/agent-router.config.json
+#                --generate --target P [--dry-run]
+#   agent-packs  deterministic render/upgrade of a pack of subagents to the project (without agent)
+#                <list|render|upgrade|doctor> [--pack P] [--target P] [--auto] [--answer K=V] [--dry-run]
+#   safe-dirs    allowlist trusted directories for rm/rmdir (machine-owned)
+#                <init|list|add|remove|prune-ask> [PATH] [--exclude] [--global] [--target P] [--all-projects] [--dry-run]
+#   wf           background status workflow-run Claude Code (deterministic pars)
+#                status [--run WF_ID] [--project PATH] [--json] [--last N] [--watch] [--interval S]
+#   run          exec-plan wave (driver P4.2-P4.6): queue → worker → verdict → log
+#                <PLAN-ID> <Pn> [--dry-run] [--limit N] [--timeout S] [--plans-root PATH] [--json]
+#   instructions root ownership/batch CLAUDE.md/AGENTS.md (provider parity,
+#                owner-gated adoption, drift gate): <plan|check|adopt|apply|repair>
+#                [--target P] [--scope a,b] [--provider a,b] [--authorize a,b]
+#                [--owner-decision D#] [--mapping FILE] [--preimage-dir DIR] [--json]
+#   profiles     resolve --provider ID --profile ID --target-scope S [--trusted] --json
+#   doctor       environment diagnostics (presets, script, hook files in ~/.claude)
+#   version      version (git SHA) and package path
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: harness requires python3 (apt install python3 / brew install python3)" >&2
+  exit 1
+fi
+if [[ ! -d "$REPO_ROOT/lib/harness" || ! -d "$REPO_ROOT/configs/claude-code" ]]; then
+  echo "ERROR: package harness damaged (no lib/harness or configs/claude-code) in $REPO_ROOT" >&2
+  echo "If the repository has moved, restart install.sh from the new location." >&2
+  exit 1
+fi
+
+usage() { grep '^#' "$SELF" | sed 's/^# \{0,1\}//' | sed -n '2,29p'; }
+
+CMD="${1:-help}"
+[[ $# -gt 0 ]] && shift
+
+case "$CMD" in
+  -h|--help|help) usage; exit 0 ;;
+  version)
+    sha="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    echo "harness $sha ($REPO_ROOT)"
+    exit 0 ;;
+  permissions|apply|mcp|hooks|router|agent-packs|safe-dirs|wf|run|instructions|profiles|doctor) ;;
+  *) echo "Unknown command: $CMD" >&2; usage >&2; exit 1 ;;
+esac
+
+# --- aicore locator ---
+# Finds the aicore foundation: $AICORE_ROOT, then <module>/_vendor/aicore, then the sibling <module>/../aicore.
+# Canonical copy: packages/aicore/scripts/aicore-locator.sh; copies must stay identical.
+_aicore_ok() { [ -f "$1/unit.json" ] && grep -q '"id": *"aicore"' "$1/unit.json"; }
+if [ -n "${AICORE_ROOT:-}" ]; then
+  _aicore_ok "$AICORE_ROOT" || { echo "AICORE_NOT_FOUND: AICORE_ROOT=$AICORE_ROOT is not an aicore checkout" >&2; exit 2; }
+elif _aicore_ok "$REPO_ROOT/_vendor/aicore"; then
+  AICORE_ROOT="$REPO_ROOT/_vendor/aicore"
+elif _aicore_ok "$REPO_ROOT/../aicore"; then
+  AICORE_ROOT="$(cd "$REPO_ROOT/../aicore" && pwd)"
+else
+  echo "AICORE_NOT_FOUND: no aicore in \$AICORE_ROOT, $REPO_ROOT/_vendor/aicore or $REPO_ROOT/../aicore; set AICORE_ROOT" >&2
+  exit 2
+fi
+export AICORE_ROOT
+AICORE_LIB="$AICORE_ROOT/lib"
+unset -f _aicore_ok
+# --- end aicore locator ---
+
+exec env PYTHONPATH="$REPO_ROOT/lib:$AICORE_LIB${PYTHONPATH:+:$PYTHONPATH}" \
+  python3 -m harness "$REPO_ROOT" "$CMD" "$@"

@@ -1,0 +1,17 @@
+{
+  "name": "oss-dev",
+  "version": "0.4.2",
+  "description": "Open-source development: releases, governance, DX, dependency audits + language references",
+  "skills": [
+    "./dependency-audit",
+    "./dx-design",
+    "./gh-review",
+    "./github-flow",
+    "./issue-triage",
+    "./oss-development",
+    "./oss-governance",
+    "./release-engineering",
+    "./resolving-merge-conflicts",
+    "./to-issues"
+  ]
+}

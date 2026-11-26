@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:swissknifeman:hub:umbrella-config:v1",
+  "title": "umbrella-config",
+  "description": "Aliases of the swissknifeman umbrella CLI (configs/umbrella.json).",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "umbrella-config/v1", "description": "Format identifier."},
+    "_doc": {"type": "string", "description": "Free-form note."},
+    "version": {
+      "type": "object",
+      "description": "Where the umbrella version comes from when git describe fails.",
+      "properties": {
+        "fallback_file": {"type": "string", "minLength": 1, "description": "JSON file relative to the hub root."},
+        "fallback_key": {"type": "string", "minLength": 1, "description": "Top-level key of that file."}
+      },
+      "required": ["fallback_file", "fallback_key"],
+      "additionalProperties": false
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Plugins the hub root ships itself (the umbrella face); aicore.content.marketplace reads them like the provides.plugins of a module, package `root`.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Plugin name."},
+          "manifest": {"type": "string", "minLength": 1, "description": "Its .claude-plugin/plugin.json, relative to the hub root."},
+          "source": {"type": "string", "minLength": 1, "description": "Its folder, relative to the hub root."}
+        },
+        "required": ["name"],
+        "oneOf": [{"required": ["manifest"]}, {"required": ["source"]}],
+        "additionalProperties": false
+      }
+    },
+    "partner_env": {
+      "type": "object",
+      "description": "Environment names under which the partners of a module look up its install root, by module id: each variable maps to a path relative to the module root ('.' is the root). A routed module gets them for every discovered module; a module not listed is SKM_<ID>_ROOT; a variable already set wins.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "Environment variable to a path relative to that module root.",
+          "minProperties": 1,
+          "patternProperties": {
+            "^[A-Z][A-Z0-9_]*$": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Path relative to the module root; '.' is the root."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "aliases": {
+      "type": "object",
+      "description": "Alias name to its routes.",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "description": "One umbrella alias.",
+          "properties": {
+            "description": {"type": "string", "description": "One line for the help."},
+            "routes": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Routes tried in order; the first whose when matches wins.",
+              "items": {"$ref": "#/$defs/route"}
+            }
+          },
+          "required": ["routes"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["schema", "aliases"],
+  "additionalProperties": false,
+  "$defs": {
+    "route": {
+      "type": "object",
+      "description": "One route: a module or a hub script, with a fixed argument prefix.",
+      "properties": {
+        "when": {
+          "type": "object",
+          "description": "Condition on the first argument after the alias; absent means always.",
+          "properties": {
+            "first_in": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "description": "The first argument is one of these."},
+            "first_empty_or_flag": {"const": true, "description": "There is no first argument or it starts with a dash."}
+          },
+          "additionalProperties": false
+        },
+        "unit": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$", "description": "Module id whose first provides.cli entry runs."},
+        "script": {"type": "string", "minLength": 1, "description": "Script path relative to the hub root."},
+        "argv_prefix": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "Arguments put before the user arguments."},
+        "drop_first": {"type": "boolean", "description": "Remove the first user argument (the one that matched when)."}
+      },
+      "oneOf": [{"required": ["unit"]}, {"required": ["script"]}],
+      "additionalProperties": false
+    }
+  }
+}

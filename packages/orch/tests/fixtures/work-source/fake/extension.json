@@ -1,0 +1,12 @@
+{
+  "$schema": "urn:swissknifeman:aicore:extension:v1",
+  "id": "fake-source",
+  "kind": "command",
+  "version": "0.1.0",
+  "description": "Test work source: canned answers to claim, brief and register; FAKE_WS_MODE picks a failure.",
+  "protocol": {"min": "1", "max": "1"},
+  "entrypoint": ["python3", "plugin.py"],
+  "provides": {"points": ["orch:work-source"]},
+  "permissions": {"env": ["FAKE_WS_MODE", "FAKE_WS_INPUT", "FAKE_WS_MARKS", "FAKE_WS_READINESS"]},
+  "timeout_seconds": 30
+}

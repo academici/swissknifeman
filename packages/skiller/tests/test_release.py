@@ -1,0 +1,288 @@
+"""Tests for monorepo release proposal assembly.
+
+Unit tests use synthetic data without Git. Integration tests run against a
+synthetic temporary Git repository and never modify the root CHANGELOG.md.
+"""
+import json
+import os
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from skiller.common import Env
+from skiller.release import cmd_release
+from aicore.release.changelog import read_unreleased_section, unreleased_is_empty
+from aicore.release.version import bump_version, classify_bump
+
+from skiller.host import clear_host_cache
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]  # the Skiller package
+HOST_ROOT = PACKAGE_ROOT.parents[1]                 # host repository root, when nested
+SKILLER_BIN = PACKAGE_ROOT / "bin" / "skiller"
+SWISSKNIFEMAN_BIN = HOST_ROOT / "bin" / "swissknifeman"
+
+
+class ClassifyBumpCase(unittest.TestCase):
+    def test_feat_gives_minor(self):
+        bump, reason = classify_bump([("feat: new command", ""),
+                                      ("fix: minor bug", "")])
+        self.assertEqual(bump, "minor")
+        self.assertIsNone(reason)
+
+    def test_only_fix_gives_patch(self):
+        bump, reason = classify_bump([("fix: bug", ""), ("perf: acceleration", "")])
+        self.assertEqual(bump, "patch")
+        self.assertIsNone(reason)
+
+    def test_bang_marker_is_breaking(self):
+        bump, reason = classify_bump([("feat!: change of contract", "")])
+        self.assertEqual(bump, "breaking")
+        self.assertEqual(reason, "feat!: change of contract")
+
+    def test_breaking_change_in_body_is_breaking(self):
+        commits = [("feat: X", "BREAKING CHANGE: contract has changed")]
+        bump, reason = classify_bump(commits)
+        self.assertEqual(bump, "breaking")
+
+    def test_breaking_short_circuits_even_with_earlier_feat(self):
+        # A breaking change wins regardless of commit order.
+        commits = [("feat: A", ""), ("fix!: B", "")]
+        bump, _ = classify_bump(commits)
+        self.assertEqual(bump, "breaking")
+
+    def test_no_conventional_commits_gives_none(self):
+        bump, reason = classify_bump([("random commit without type", "")])
+        self.assertIsNone(bump)
+        self.assertIsNone(reason)
+
+    def test_docs_and_chore_do_not_trigger_bump(self):
+        commits = [("docs: edit", ""), ("chore: cleaning", "")]
+        bump, _ = classify_bump(commits)
+        self.assertIsNone(bump)
+
+    def test_empty_range_gives_none(self):
+        bump, reason = classify_bump([])
+        self.assertIsNone(bump)
+        self.assertIsNone(reason)
+
+
+class BumpVersionCase(unittest.TestCase):
+    def test_minor_bump_from_tag(self):
+        self.assertEqual(bump_version("v0.7.1", "minor"), "v0.8.0")
+
+    def test_patch_bump_from_tag(self):
+        self.assertEqual(bump_version("v0.7.1", "patch"), "v0.7.2")
+
+    def test_no_tag_minor_is_first_release(self):
+        self.assertEqual(bump_version(None, "minor"), "v0.1.0")
+
+    def test_no_tag_patch_is_first_release(self):
+        self.assertEqual(bump_version(None, "patch"), "v0.0.1")
+
+    def test_unparseable_tag_returns_none(self):
+        self.assertIsNone(bump_version("not-a-tag", "minor"))
+
+
+class UnreleasedSectionCase(unittest.TestCase):
+    def test_reads_body_between_headings(self):
+        text = ("# Changelog\n\n## [Unreleased]\n### Added\n- new thing\n\n"
+                "## [0.7.1] - 2026-06-28\n### Fixed\n- old\n")
+        lines, start, end, body = read_unreleased_section(text)
+        self.assertIn("- new thing", body)
+        self.assertNotIn("- old", body)
+
+    def test_missing_section_returns_none(self):
+        self.assertIsNone(read_unreleased_section("# Changelog\n\nnothing here\n"))
+
+    def test_empty_section_detected(self):
+        text = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-01-01\n- x\n"
+        _, _, _, body = read_unreleased_section(text)
+        self.assertTrue(unreleased_is_empty(body))
+
+    def test_section_with_only_group_headers_is_empty(self):
+        text = "# Changelog\n\n## [Unreleased]\n### Added\n### Fixed\n\n## [0.1.0]\n"
+        _, _, _, body = read_unreleased_section(text)
+        self.assertTrue(unreleased_is_empty(body))
+
+    def test_section_with_entry_is_not_empty(self):
+        text = "# Changelog\n\n## [Unreleased]\n### Added\n- entry\n\n## [0.1.0]\n"
+        _, _, _, body = read_unreleased_section(text)
+        self.assertFalse(unreleased_is_empty(body))
+
+
+def _init_repo(root):
+    """Create a local Git repository with a populated Unreleased section."""
+    for cmd in (["git", "init", "-q"],
+                ["git", "config", "user.email", "test@example.com"],
+                ["git", "config", "user.name", "Test"]):
+        subprocess.run(cmd, cwd=root, check=True, capture_output=True)
+    (root / "CHANGELOG.md").write_text(
+        "# Changelog\n\n## [Unreleased]\n### Added\n- stub\n\n"
+        "## [0.7.1] - 2026-06-28\n### Fixed\n- old\n", encoding="utf-8")
+    subprocess.run(["git", "add", "CHANGELOG.md"], cwd=root, check=True,
+                   capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", "chore: init"], cwd=root,
+                   check=True, capture_output=True)
+    subprocess.run(["git", "tag", "v0.7.1"], cwd=root, check=True,
+                   capture_output=True)
+
+
+def _commit(root, message):
+    (root / f"file-{message[:8].replace(':', '')}.txt").write_text(message,
+                                                                    encoding="utf-8")
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=root, check=True,
+                   capture_output=True)
+
+
+def _run_cli(fn, env, argv):
+    import contextlib
+    import io
+    buf = io.StringIO()
+    exc = None
+    with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+        try:
+            fn(env, argv)
+        except SystemExit as e:
+            exc = e
+    return exc, buf.getvalue()
+
+
+@unittest.skipIf(subprocess.run(["git", "--version"], capture_output=True).returncode != 0,
+                 "Git is unavailable in this environment")
+class CmdReleaseCase(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        _init_repo(self.root)
+        # Mirror `skiller <package-root> release`: the release root is the Git
+        # root above the package; here it is the temporary repository itself.
+        self.env = Env(self.root, home=self.root / "home")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_feat_commit_proposes_minor_dry_run_does_not_write(self):
+        _commit(self.root, "feat: new feature")
+        exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
+        self.assertIsNone(exc)
+        self.assertIn("v0.7.1 -> v0.8.0", out)
+        self.assertIn("[dry-run]", out)
+        # The CHANGELOG remains unchanged.
+        text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [Unreleased]\n### Added\n- stub", text)
+
+    def test_only_fix_commits_propose_patch(self):
+        _commit(self.root, "fix: bug times")
+        exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
+        self.assertIsNone(exc)
+        self.assertIn("v0.7.1 -> v0.7.2", out)
+
+    def test_parallel_tag_advances_to_next_free_patch(self):
+        subprocess.run(["git", "checkout", "-q", "-b", "parallel"], cwd=self.root,
+                       check=True, capture_output=True)
+        _commit(self.root, "fix: parallel bug")
+        subprocess.run(["git", "tag", "v0.7.2"], cwd=self.root, check=True,
+                       capture_output=True)
+        subprocess.run(["git", "checkout", "-q", "master"], cwd=self.root,
+                       check=True, capture_output=True)
+        _commit(self.root, "fix: branch bug")
+        exc, out = _run_cli(cmd_release, self.env, ["--dry-run"])
+        self.assertIsNone(exc)
+        self.assertIn("v0.7.1 -> v0.7.3", out)
+
+    def test_breaking_marker_refuses_with_nonzero_exit(self):
+        _commit(self.root, "feat!: change of contract")
+        exc, out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNotNone(exc)
+        self.assertNotEqual(exc.code, 0)
+        self.assertIn("MAJOR", out)
+
+    def test_empty_range_says_nothing_to_release(self):
+        _commit(self.root, "docs: edit")
+        exc, out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertIn("nothing to release", out)
+
+    def test_without_dry_run_moves_unreleased_section(self):
+        _commit(self.root, "feat: new feature")
+        exc, out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        text = (self.root / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## [0.8.0] -", text)
+        self.assertIn("- stub", text)
+        # The old Unreleased section is now empty.
+        section = text.split("## [Unreleased]", 1)[1].split("## [0.8.0]", 1)[0]
+        self.assertNotIn("- stub", section)
+
+    def _with_host(self, config):
+        path = self.root / "host.json"
+        path.write_text(json.dumps(config), encoding="utf-8")
+        clear_host_cache()
+        self.addCleanup(clear_host_cache)
+        patcher = mock.patch.dict(os.environ, {"SKILLER_HOST_CONFIG": str(path)})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_without_dry_run_updates_host_version_files_when_present(self):
+        self._with_host({"schema_version": 1, "version_files": [
+            {"path": "vendor/plugin-a/configs/routing.json", "key": "plugin_version"},
+            {"path": "vendor/plugin-b/missing.json", "key": "version"}]})
+        routing = self.root / "vendor/plugin-a/configs/routing.json"
+        routing.parent.mkdir(parents=True)
+        routing.write_text('{\n  "plugin_version": "0.7.1",\n  "other": 1\n}\n', encoding="utf-8")
+        _commit(self.root, "fix: plugin release")
+        exc, _out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertEqual({"plugin_version": "0.7.2", "other": 1}, json.loads(routing.read_text()))
+        self.assertFalse((self.root / "vendor/plugin-b/missing.json").exists())
+
+    def test_without_host_no_version_file_is_written(self):
+        self._with_host({"schema_version": 1})
+        routing = self.root / "vendor/plugin-a/configs/routing.json"
+        routing.parent.mkdir(parents=True)
+        routing.write_text('{"plugin_version": "0.7.1"}', encoding="utf-8")
+        _commit(self.root, "fix: plugin release")
+        exc, _out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertEqual('{"plugin_version": "0.7.1"}', routing.read_text())
+
+    def test_git_tag_command_is_only_printed_never_executed(self):
+        _commit(self.root, "feat: new feature")
+        exc, out = _run_cli(cmd_release, self.env, [])
+        self.assertIsNone(exc)
+        self.assertIn("git tag -a v0.8.0", out)
+        tags = subprocess.run(["git", "tag", "-l"], cwd=self.root, check=True,
+                              capture_output=True, text=True).stdout
+        self.assertNotIn("v0.8.0", tags)  # Tags are never created automatically.
+
+
+@unittest.skipUnless(SWISSKNIFEMAN_BIN.is_file(), "no host router (standalone)")
+class SwissknifemanReleaseFacadeCase(unittest.TestCase):
+    """Root `bin/swissknifeman release` facade delegates to skiller read-only."""
+
+    def test_help_mentions_release(self):
+        proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "--help"],
+                              capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("release", proc.stdout)
+
+    def test_dry_run_reaches_skiller_without_error(self):
+        proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "release", "--dry-run"],
+                              capture_output=True, text=True)
+        if proc.returncode != 0:
+            self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+            self.assertIn("suspicion of breaking-change", proc.stdout)
+        self.assertNotIn("Traceback", proc.stdout + proc.stderr)
+
+    def test_env_doctor_still_works(self):
+        # Adding release must not regress sibling root groups.
+        proc = subprocess.run([str(SWISSKNIFEMAN_BIN), "env", "doctor"],
+                              capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

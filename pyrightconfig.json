@@ -1,0 +1,39 @@
+{
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "include": [
+    "packages/aicore/lib",
+    "packages/analyst/lib",
+    "packages/brain/lib",
+    "packages/gui/lib",
+    "packages/harness/lib",
+    "packages/maind/lib",
+    "packages/orch/lib",
+    "packages/planner/lib",
+    "packages/skiller/lib",
+    "packages/workspace/lib"
+  ],
+  "exclude": ["**/_vendor", "**/__pycache__", "packages/gui/lib/gui/http"],
+  "strict": [
+    "packages/orch/lib/orch/_types",
+    "packages/planner/lib/planner/plan/_types.py",
+    "packages/aicore/lib/aicore/util/lock.py",
+    "packages/aicore/lib/aicore/util/timefmt.py",
+    "packages/aicore/lib/aicore/util/docio.py",
+    "packages/aicore/lib/aicore/util/schemacodegen.py",
+    "packages/aicore/lib/aicore/util/schemacli.py"
+  ],
+  "extraPaths": [
+    "packages/aicore/lib",
+    "packages/planner/lib",
+    "packages/orch/lib",
+    "packages/gui/lib",
+    "packages/workspace/lib",
+    "packages/brain/lib",
+    "packages/skiller/lib",
+    "packages/harness/lib",
+    "packages/maind/lib",
+    "packages/analyst/lib"
+  ],
+  "reportMissingModuleSource": false
+}

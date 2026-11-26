@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:query:list-hosts:v1",
+  "title": "ListHosts",
+  "description": "workspace query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "retired"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.queries",
+      "class": "ListHosts",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "ListHosts"
+    }
+  }
+}

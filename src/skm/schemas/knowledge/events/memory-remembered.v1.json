@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:event:memory-remembered:v1",
+  "title": "MemoryRemembered",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "entry_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["project", "namespace", "global"], "type": "string"},
+        "scope_id": {
+          "anyOf": [{"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"}, {"type": "null"}]
+        },
+        "namespace": {
+          "anyOf": [{"type": "string"}, {"type": "null"}]
+        },
+        "workspace_id": {
+          "anyOf": [{"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"}, {"type": "null"}]
+        }
+      },
+      "required": ["kind", "scope_id", "namespace", "workspace_id"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["context", "fact", "blocker", "coordination", "active_handoff", "health_probe"]
+    },
+    "expires_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "entry_id",
+    "scope",
+    "kind",
+    "expires_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.events",
+      "class": "MemoryRemembered",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "MemoryRemembered"
+    }
+  },
+  "x-skm-hookable": false
+}

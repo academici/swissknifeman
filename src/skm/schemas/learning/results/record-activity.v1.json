@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:result:record-activity:v1",
+  "title": "RecordActivityResult",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "activity_record_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observations": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "activity_record_id",
+    "observations"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.results",
+      "class": "RecordActivityResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "RecordActivityResult"
+    }
+  }
+}

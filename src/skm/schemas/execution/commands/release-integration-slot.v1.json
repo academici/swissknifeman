@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:release-integration-slot:v1",
+  "title": "ReleaseIntegrationSlot",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "slot_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "claim",
+    "slot_id",
+    "fencing_token"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "ReleaseIntegrationSlot",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ReleaseIntegrationSlot"
+    }
+  }
+}

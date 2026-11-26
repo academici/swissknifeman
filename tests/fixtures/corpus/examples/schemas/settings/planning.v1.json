@@ -1,0 +1,582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:planning:v1",
+  "title": "Planning settings",
+  "description": "Settings section 'planning' owned by planning. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "planning",
+    "owner": "planning",
+    "title": "Planning",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.settings",
+      "class": "PlanningSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "PlanningSettings"
+    }
+  },
+  "properties": {
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "require_acceptance_links": {
+          "type": "boolean",
+          "default": true,
+          "description": "Every acceptance criterion must be bound to a check or to review; otherwise an error finding.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "warn_unknown_skills": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report skills that the extensions registry does not know as warnings.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        },
+        "warn_unknown_models": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report route models unknown to the runtime catalog as warnings.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        },
+        "external_checks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run trusted validator plugins registered for planning validation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        },
+        "external_failure": {
+          "type": "string",
+          "enum": [
+            "warn",
+            "error"
+          ],
+          "default": "warn",
+          "description": "What a failing or invalid validator plugin counts as.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 50,
+              "widget": "select"
+            }
+          }
+        },
+        "code_suffixes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\.[A-Za-z0-9]+$"
+          },
+          "uniqueItems": true,
+          "maxItems": 50,
+          "default": [
+            ".py",
+            ".php",
+            ".ts",
+            ".tsx",
+            ".js",
+            ".jsx",
+            ".go",
+            ".rs",
+            ".java",
+            ".kt",
+            ".rb",
+            ".cs"
+          ],
+          "description": "File suffixes that count as code for the write_scope_no_tests finding.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 60,
+              "widget": "tags"
+            }
+          }
+        },
+        "heavy_check_markers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "maxItems": 50,
+          "default": [],
+          "description": "Substrings marking a heavy check command for the check_cadence finding (repository-specific; empty by default).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 70,
+              "widget": "tags"
+            }
+          }
+        },
+        "heavy_text_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 16384,
+          "description": "UTF-8 bytes of a text field above which validation warns about heavy context.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Validation",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "references": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_supersede_chain": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 8,
+          "description": "Longest chain of superseding decisions followed while resolving a cross-plan reference.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "References",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "design_audit": {
+      "type": "string",
+      "enum": [
+        "none",
+        "required"
+      ],
+      "default": "none",
+      "description": "Required: a run starts only with a readiness report that includes the semantic audit step.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan"
+        ],
+        "merge": "replace",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Plans",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "route_class": {
+          "type": "string",
+          "enum": [
+            "economy",
+            "implementation",
+            "frontier"
+          ],
+          "default": "implementation",
+          "description": "route.class written into a new item by templates and the structured editor.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Defaults",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "route_effort": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "default": "high",
+          "description": "route.effort written into a new item.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Defaults",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "review_mode": {
+          "type": "string",
+          "enum": [
+            "required",
+            "self",
+            "waived"
+          ],
+          "default": "required",
+          "description": "review.mode written into a new item (waived needs a reason in the item).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Defaults",
+              "order": 30,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "drafts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_document_bytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 67108864,
+          "default": 8388608,
+          "description": "Largest specification document a draft may hold.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Plans",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_open": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20,
+          "description": "Open drafts per plan; opening one more fails with ALREADY_EXISTS (details open_drafts, limit).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Plans",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "aliases": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "pattern": "^(?!AC$)[A-Z]{2,8}$",
+          "default": "PLAN",
+          "description": "Prefix of plan aliases allocated per project (PLAN7).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Plans",
+              "order": 40,
+              "widget": "text"
+            }
+          }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tree_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3,
+          "default": 3,
+          "description": "Levels printed by `skm plan show --tree`: 1 phases, 2 with items, 3 with units.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Plans",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

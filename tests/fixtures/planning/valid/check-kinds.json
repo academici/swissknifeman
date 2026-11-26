@@ -1,0 +1,114 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "key": "V1",
+      "owner": "P1.1",
+      "category": "acceptance",
+      "kind": "command",
+      "definition": {
+        "argv": [
+          "pytest",
+          "-q"
+        ],
+        "cwd": {
+          "mount": "api"
+        },
+        "timeout_seconds": 600,
+        "env_allow": [
+          "CI"
+        ],
+        "expect": "exit 0"
+      }
+    },
+    {
+      "key": "V2",
+      "owner": "P1.1",
+      "category": "impact",
+      "kind": "shell",
+      "required": false,
+      "definition": {
+        "script": "make test",
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        },
+        "risk_ack": "Disposable database only."
+      }
+    },
+    {
+      "key": "V3",
+      "owner": "P1.1",
+      "category": "live",
+      "kind": "manual",
+      "evidence": {
+        "stdout": false,
+        "stderr": false,
+        "report_files": [
+          "report.md"
+        ]
+      },
+      "definition": {
+        "instructions_md": "Open the page.",
+        "actor_role": "owner",
+        "allowed_verdicts": [
+          "pass",
+          "fail"
+        ]
+      }
+    },
+    {
+      "key": "V4",
+      "owner": "P1.1",
+      "category": "impact",
+      "kind": "external",
+      "rerun_after_integration": true,
+      "definition": {
+        "provider": "semgrep",
+        "ref": "p/ci",
+        "params": {
+          "severity": "ERROR",
+          "max": 3,
+          "strict": true
+        }
+      }
+    },
+    {
+      "key": "V1",
+      "owner": "P1",
+      "category": "acceptance",
+      "kind": "command",
+      "definition": {
+        "argv": [
+          "true"
+        ],
+        "cwd": {
+          "mount": "api"
+        }
+      }
+    }
+  ]
+}

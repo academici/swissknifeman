@@ -1,0 +1,50 @@
+# urn:skm:runtimes:error-rules:v1 for built-in cursor runtime adapter (P08.05).
+# Headless execution is unverified in v1; baseline rules classify generic provider signals only.
+
+[[rules]]
+runtime_id = "cursor"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = { http_status = [401] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Cursor authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "cursor"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = { http_status = [403] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Cursor access denied by provider authorization policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "cursor"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = { http_status = [429] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Cursor provider rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "cursor"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = { http_status = [529, 500, 502, 503, 504] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Cursor provider is temporarily overloaded or unavailable"
+retry_after_from = "limit_resets_at"

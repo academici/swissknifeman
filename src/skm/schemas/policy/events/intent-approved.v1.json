@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:event:intent-approved:v1",
+  "title": "IntentApproved",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "approval_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "approver_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "auto": {
+      "type": "boolean"
+    },
+    "expires_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "intent_id",
+    "approval_id",
+    "approver_id",
+    "auto",
+    "expires_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.events",
+      "class": "IntentApproved",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentApproved"
+    }
+  },
+  "x-skm-hookable": true
+}

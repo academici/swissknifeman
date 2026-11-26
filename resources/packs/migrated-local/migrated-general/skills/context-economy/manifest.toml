@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "context-economy"
+version = "1.3.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor", "reviewer", "registrar"]
+replaced_by = "orch/lib/orch/conductor/prompts"
+
+[provenance]
+source = "local"

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:project:v1",
+  "title": "ProjectView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "slug": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/slug"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mount_name": {
+            "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "docs",
+              "infra"
+            ]
+          },
+          "repository_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "canonical_remote": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mount_name",
+          "role",
+          "repository_id",
+          "canonical_remote"
+        ]
+      }
+    }
+  },
+  "required": [
+    "project_id",
+    "workspace_id",
+    "slug",
+    "title",
+    "description",
+    "state",
+    "row_version",
+    "mounts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "ProjectView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "ProjectView"
+    }
+  }
+}

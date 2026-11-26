@@ -1,0 +1,55 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "researcher"
+version = "2.0.0"
+role = "researcher"
+title = "Researcher"
+description = "Turns the documents SKM retrieved from the configured research sources into claims with citations, contradictions, unknowns and follow-up queries."
+result_schema = "urn:skm:execution:role-result:researcher:v1"
+llm = true
+
+[routing]
+model_class = "implementation"
+effort = "medium"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read"]
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["researcher/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["researcher/result_contract"]
+research = ["shared/raw_block"]
+
+[context]
+include = ["materials", "research", "skills"]
+inherit_user_global = false
+repo_instructions = "none"
+repo_instruction_sections = []
+skills_mode = "allowlist"
+skills_include = ["research-method"]
+skills_exclude = []
+skills_budget_tokens = 4000
+history_max_steps = 0
+memory_top_k = 0
+include_optional_materials = true
+
+[context.budgets]
+retrieval = 60000
+
+[limits]
+timeout_seconds = 1800
+idle_timeout_seconds = 600
+max_turns = 60
+max_output_tokens = 16000
+max_result_retries = 2

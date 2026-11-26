@@ -1,0 +1,387 @@
+{
+  "schema": "urn:skm:execution:blocking-reason-catalog:v1",
+  "description": "Closed catalog of BlockingCode (execution.md §4.19, G9). Not error codes: the value of task.blocking_reason.code. Fields: since, next_check_at, resolver_role, allowed_actions, deadline_at.",
+  "allowed_actions": {
+    "wait": null,
+    "answer_question": "execution.answer_decision_request",
+    "record_verdict": "execution.record_manual_verdict",
+    "approve_intent": "policy.approve_intent",
+    "decide_escalation": "execution.answer_decision_request",
+    "raise_budget": "execution.answer_decision_request (raise_budget) or execution.reconfigure_run",
+    "restart_task": "execution.restart_task",
+    "skip_task": "execution.skip_task",
+    "start_worker": "external: skm worker start --label ...",
+    "resume_run": "execution.resume_run",
+    "cancel_run": "execution.cancel_run",
+    "retry_now": "execution.reconfigure_run / execution.restart_task",
+    "provide_material": "artifacts.add_file (new version)",
+    "accept_deviation": "execution.accept_deviation"
+  },
+  "codes": [
+    {
+      "code": "WAITING_OWNER",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "decision_request_id",
+        "stop_code"
+      ],
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "decide_escalation",
+        "skip_task",
+        "cancel_run"
+      ],
+      "next_check_at": null,
+      "deadline_at": "decision_request.deadline_at",
+      "message_template": "{task} needs the owner's decision: {stop_code}",
+      "replaces_legacy_codes": [
+        "WAITING_ESCALATION",
+        "REWORK_LIMIT_REACHED"
+      ]
+    },
+    {
+      "code": "WAITING_ANSWER",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "decision_request_id",
+        "question_key"
+      ],
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "answer_question",
+        "skip_task"
+      ],
+      "next_check_at": null,
+      "deadline_at": "decision_request.deadline_at",
+      "message_template": "{task} asks: {question_text}",
+      "replaces_legacy_codes": [
+        "WAITING_ANSWER"
+      ]
+    },
+    {
+      "code": "WAITING_ADVISOR",
+      "task_status": "executing|checking|reviewing",
+      "refs": [
+        "decision_request_id",
+        "stage_record_id"
+      ],
+      "resolver_role": "advisor",
+      "allowed_actions": [
+        "wait",
+        "cancel_run"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "{task} waits for the advisor",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "WAITING_MANUAL_CHECK",
+      "task_status": "manual_pending",
+      "refs": [
+        "check_execution_id",
+        "check_key"
+      ],
+      "resolver_role": "check_spec.actor_role (default member)",
+      "allowed_actions": [
+        "record_verdict"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "{task} needs a manual verdict for {check_key}",
+      "replaces_legacy_codes": [
+        "WAITING_MANUAL_CHECK"
+      ]
+    },
+    {
+      "code": "WAITING_APPROVAL",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "intent_id",
+        "decision_request_id"
+      ],
+      "resolver_role": "maintainer",
+      "allowed_actions": [
+        "approve_intent",
+        "cancel_run"
+      ],
+      "next_check_at": null,
+      "deadline_at": "intent expiry",
+      "message_template": "{task} waits for approval of {intent_kind}",
+      "replaces_legacy_codes": [
+        "WAITING_APPROVAL"
+      ]
+    },
+    {
+      "code": "WAITING_PROVIDER",
+      "task_status": "executing|checking|reviewing|integrating",
+      "refs": [
+        "stage_record_id",
+        "error_class",
+        "route"
+      ],
+      "resolver_role": "system",
+      "allowed_actions": [
+        "wait",
+        "retry_now"
+      ],
+      "next_check_at": "not_before",
+      "deadline_at": "now + execution.retry.provider_wait_max_seconds",
+      "message_template": "{task} waits for {runtime} ({error_class}) until {next_check_at}",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "WAITING_BUDGET_RESET",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "stop_code",
+        "reset_at"
+      ],
+      "resolver_role": "system",
+      "allowed_actions": [
+        "wait",
+        "raise_budget",
+        "cancel_run"
+      ],
+      "next_check_at": "reset_at",
+      "deadline_at": "now + execution.autopilot.quota_wait_max_seconds",
+      "message_template": "Provider quota resets at {reset_at}",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "BLOCKED_BY_DEPENDENCY",
+      "task_status": "blocked",
+      "refs": [
+        "prerequisite_task_ids",
+        "failed_task_ids"
+      ],
+      "resolver_role": "none, or owner when failed_task_ids is not empty",
+      "allowed_actions": [
+        "wait",
+        "restart_task",
+        "skip_task"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "{task} waits for {prerequisites}",
+      "replaces_legacy_codes": [
+        "WAITING_DEPENDENCIES",
+        "PREREQUISITE_FAILED",
+        "WAITING_GROUP_REVIEW"
+      ]
+    },
+    {
+      "code": "BLOCKED_BY_MATERIAL",
+      "task_status": "blocked",
+      "refs": [
+        "material_ids",
+        "file_version_ids",
+        "required_for"
+      ],
+      "resolver_role": "member",
+      "allowed_actions": [
+        "provide_material",
+        "skip_task"
+      ],
+      "next_check_at": "now + execution.materials.recheck_seconds",
+      "deadline_at": null,
+      "message_template": "{task} needs material {material} ({reason})",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "BLOCKED_BY_BUDGET",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "decision_request_id",
+        "dimension",
+        "scope",
+        "limit",
+        "spent"
+      ],
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "raise_budget",
+        "cancel_run"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "Budget {dimension} exhausted: {spent} of {limit}",
+      "replaces_legacy_codes": [
+        "BUDGET_EXHAUSTED"
+      ]
+    },
+    {
+      "code": "BLOCKED_BY_CAPABILITY",
+      "task_status": "ready",
+      "refs": [
+        "capabilities",
+        "required_host_id",
+        "required_labels",
+        "environment_kind",
+        "isolation_profiles"
+      ],
+      "resolver_role": "maintainer",
+      "allowed_actions": [
+        "start_worker",
+        "cancel_run"
+      ],
+      "next_check_at": "now + execution.scheduler.capability_wait_seconds",
+      "deadline_at": null,
+      "message_template": "No online worker matches {requirements}",
+      "replaces_legacy_codes": [
+        "WAITING_HOST",
+        "WAITING_CAPABILITY"
+      ]
+    },
+    {
+      "code": "BLOCKED_BY_POLICY",
+      "task_status": "awaiting_decision",
+      "refs": [
+        "reason",
+        "decision_request_id"
+      ],
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "resume_run",
+        "cancel_run"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "Execution is stopped by policy: {reason}",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "BLOCKED_BY_INTEGRATION",
+      "task_status": "integrating",
+      "refs": [
+        "integration_task_id"
+      ],
+      "resolver_role": null,
+      "allowed_actions": [
+        "wait"
+      ],
+      "next_check_at": null,
+      "deadline_at": null,
+      "message_template": "{task} waits for integration task {integration_task}",
+      "replaces_legacy_codes": [
+        "WAITING_INTEGRATION_TASK"
+      ]
+    },
+    {
+      "code": "SUSPECTED_STALL",
+      "task_status": "executing|checking|reviewing|integrating",
+      "refs": [
+        "stage_record_id",
+        "step_id",
+        "silent_seconds",
+        "health_reason"
+      ],
+      "resolver_role": "system",
+      "allowed_actions": [
+        "wait",
+        "restart_task"
+      ],
+      "next_check_at": "now + execution.supervisor.grace_seconds",
+      "deadline_at": null,
+      "message_template": "{task}: no runtime progress for {silent_seconds} s",
+      "replaces_legacy_codes": []
+    },
+    {
+      "code": "RECOVERING",
+      "task_status": "executing|checking|reviewing|integrating",
+      "refs": [
+        "stage_record_id",
+        "recovery_record_id",
+        "recovery_step"
+      ],
+      "resolver_role": "system",
+      "allowed_actions": [
+        "wait"
+      ],
+      "next_check_at": "now + execution.supervisor.grace_seconds",
+      "deadline_at": null,
+      "message_template": "{task} is being recovered ({recovery_step})",
+      "replaces_legacy_codes": []
+    }
+  ],
+  "examples": [
+    {
+      "code": "WAITING_MANUAL_CHECK",
+      "task_id": "0193a000-0000-7000-8000-000000000023",
+      "refs": {
+        "check_execution_id": "0193a000-0000-7000-8000-000000160023",
+        "check_key": "P2.3:V1"
+      },
+      "since": "2026-10-25T14:02:11Z",
+      "next_check_at": null,
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "record_verdict"
+      ],
+      "deadline_at": null,
+      "message": "P2.3 needs a manual verdict for P2.3:V1 (log in, refresh twice, replay the first cookie)"
+    },
+    {
+      "code": "WAITING_PROVIDER",
+      "task_id": "0193a000-0000-7000-8000-000000000012",
+      "refs": {
+        "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+        "error_class": "rate_limit",
+        "route": "claude_code/claude-implementation-class"
+      },
+      "since": "2026-10-25T12:03:40Z",
+      "next_check_at": "2026-10-25T12:04:10Z",
+      "resolver_role": "system",
+      "allowed_actions": [
+        "wait",
+        "retry_now"
+      ],
+      "deadline_at": "2026-10-25T18:03:40Z",
+      "message": "P1.2 waits for claude_code (rate_limit) until 12:04:10Z"
+    },
+    {
+      "code": "BLOCKED_BY_CAPABILITY",
+      "task_id": "0193a000-0000-7000-8000-000000000032",
+      "refs": {
+        "capabilities": [
+          "runtime:claude_code"
+        ],
+        "required_labels": [
+          "linux",
+          "web"
+        ],
+        "environment_kind": "git_worktree",
+        "isolation_profiles": [
+          "worktree"
+        ]
+      },
+      "since": "2026-10-25T13:10:00Z",
+      "next_check_at": "2026-10-25T13:12:00Z",
+      "resolver_role": "maintainer",
+      "allowed_actions": [
+        "start_worker",
+        "cancel_run"
+      ],
+      "deadline_at": null,
+      "message": "No online worker matches labels [linux, web]; start one with: skm worker start --label web"
+    },
+    {
+      "code": "WAITING_OWNER",
+      "task_id": "0193a000-0000-7000-8000-000000000021",
+      "refs": {
+        "decision_request_id": "0193a000-0000-7000-8000-000000130021",
+        "stop_code": "REWORK_LIMIT_REACHED"
+      },
+      "since": "2026-10-25T15:20:05Z",
+      "next_check_at": null,
+      "resolver_role": "owner",
+      "allowed_actions": [
+        "decide_escalation",
+        "skip_task",
+        "cancel_run"
+      ],
+      "deadline_at": null,
+      "message": "P2.1/U1 needs the owner's decision: REWORK_LIMIT_REACHED (2 of 2 review rounds, blocker F3 open)"
+    }
+  ]
+}

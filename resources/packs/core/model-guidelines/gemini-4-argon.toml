@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gemini-4-argon"
+version = "2.0.6"
+model_family = "gemini"
+model_id = "gemini-4-argon"
+display_name = "Gemini 4 Argon"
+runtime_ids = ["antigravity"]
+classes = ["implementation"]
+suited_roles = ["reviewer", "researcher", "advisor"]
+notes = "2026 Gemini review-oriented family."
+strengths = ["careful review", "citation", "long documents"]
+delegation_notes = ["Prefer for review and research over first-pass coding.", "Cite paths already in context."]
+forbidden_params = ["candidate_count"]
+
+[prompt_style]
+shape = "prefix_stable"
+instructions = ["Ask for findings with file paths.", "Keep shared rules in the prefix."]
+
+[cache_capabilities]
+prompt_cache = "native"
+cache_read = true
+cache_write = true
+min_cacheable_tokens = 2048
+
+[compaction_threshold]
+input_tokens = 400000
+reserve_output_tokens = 12000

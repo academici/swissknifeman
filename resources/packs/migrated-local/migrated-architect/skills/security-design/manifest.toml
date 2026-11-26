@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "security-design"
+version = "0.3.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor", "reviewer"]
+
+[provenance]
+source = "local"

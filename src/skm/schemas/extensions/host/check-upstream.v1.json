@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:host:check-upstream:v1",
+  "title": "CheckUpstreamRequest",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pack": {
+      "type": "string",
+      "minLength": 0
+    },
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.host",
+      "class": "CheckUpstreamRequest",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "CheckUpstreamRequest"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:command:test-hook-subscription:v1",
+  "title": "TestHookSubscription",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subscription_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "subscription_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.commands",
+      "class": "TestHookSubscription",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "TestHookSubscription"
+    }
+  }
+}

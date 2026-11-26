@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-upstream-ai"
+version = "1.0.1"
+title = "Migrated Upstream Skills: AI & Voice Agents"
+description = "Reproducibly migrated upstream-mirrored third-party skills for AI & Voice Agents (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

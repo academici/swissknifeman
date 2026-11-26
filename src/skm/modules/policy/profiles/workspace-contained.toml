@@ -1,0 +1,87 @@
+# Built-in policy profile (urn:skm:policy:profile:v1).
+# Copy of src/skm/modules/policy/profiles/workspace-contained.toml; spec: working/spec/modules/policy.md §4.5.
+# Default profile of agent roles: the agent works inside its attempt worktree, edits the files of its task,
+# runs build and test commands, never touches .git internals, foreign untracked files, secrets, the docker
+# socket or external services; pushes, pull requests and releases go through tool intents.
+schema = "urn:skm:policy:profile:v1"
+id = "workspace-contained"
+version = "1.0.0"
+description = "Edits and commands inside the attempt worktree; external effects only through tool intents."
+requires_host_flag = false
+allowed_isolation = ["worktree", "landlock", "container"]
+
+[fs.read]
+allow = [
+  { scope = "worktree", pattern = "**" },
+  { scope = "materials", pattern = "**" },
+  { scope = "tmp", pattern = "**" },
+  { scope = "safe_dir", pattern = "**" },
+]
+deny = []
+
+[fs.write]
+allow = [
+  { scope = "worktree", pattern = "**" },
+  { scope = "tmp", pattern = "**" },
+]
+deny = []
+
+[commands]
+mode = "denylist"
+programs = []
+inline_interpreters = ["python", "python3", "node", "deno", "ruby", "perl", "php"]
+trust_inline_interpreters = false
+# legacy deny_hard (auto-approve/config.json) without rm|rmdir|shred: deletions are judged by the operations below
+deny_patterns = [
+  '(^|[^0-9A-Za-z_/.-])(sudo|doas|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])(telinit|init)\s+[0-6sS](\s|$)',
+  '(^|[^0-9A-Za-z_/.-])dd\s+[^|;&]*(of=|if=/dev/)',
+  ':\s*\(\)\s*\{[^}]*:[^}]*\|',
+  '\|\s*(ba|z|k)?sh(\s|$)',
+  '>\s*/dev/(sd|nvme|disk|mmcblk)',
+]
+# system state outside the worktree; unattended agents get Deny, interactive sessions get a prompt
+ask_patterns = [
+  '(^|[^0-9A-Za-z_/.-])(crontab|systemctl|service|launchctl|iptables|nft|ufw|mount|umount|kill|pkill|killall|setfacl)(\s|$)',
+  'gh\s+(auth|config|alias|extension|codespace)(\s|$)',
+]
+
+[commands.subcommands]
+
+[network]
+mode = "allowlist"
+hosts = [
+  "pypi.org", "files.pythonhosted.org",
+  "registry.npmjs.org",
+  "packagist.org", "repo.packagist.org",
+  "crates.io", "index.crates.io", "static.crates.io",
+  "proxy.golang.org", "sum.golang.org",
+  "rubygems.org", "index.rubygems.org",
+  "formulae.brew.sh", "ghcr.io",
+  "pub.dev",
+  "repo.maven.apache.org", "plugins.gradle.org",
+]
+
+[tools]
+allow = ["fs.read", "fs.write", "fs.edit", "fs.delete", "shell.run", "web.fetch", "web.search", "mcp:skm/*"]
+
+[effects]
+allow = ["git_commit", "git_push", "pr_create", "fs_write_external"]
+need_approval = ["git_push", "pr_create", "fs_write_external"]
+
+# G14: default operation table. Every key is required (a missing key is SCHEMA_INVALID, never "allow").
+[operations]
+modify_write_set         = { decision = "allow" }
+modify_outside_write_set = { decision = "warn" }
+delete_tracked           = { decision = "task_authority" }
+delete_own_untracked     = { decision = "allow" }
+delete_foreign_untracked = { decision = "deny" }
+modify_git_dir           = { decision = "deny" }
+git_discard              = { decision = "task_authority" }
+git_push                 = { decision = "intent" }
+git_force_push           = { decision = "deny" }
+forge_write              = { decision = "intent" }
+release_publish          = { decision = "intent" }
+secrets_access           = { decision = "capability", capability = "secrets", risk = "high" }
+docker_socket            = { decision = "capability", capability = "docker_socket", risk = "high" }
+external_services        = { decision = "capability", capability = "external_services", risk = "high" }

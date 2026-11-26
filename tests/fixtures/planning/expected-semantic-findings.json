@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "consumer": "P05.03.a",
+  "description": "Schema-valid but semantically invalid documents. Each file differs from valid/auth-refresh.specification.json at `locus`; the validator must report `code` (the filename prefix) for `entity_key`. Codes outside `allowed_companion_codes` are unexpected. Schema-level rejection (SCHEMA_INVALID--*) is not listed here.",
+  "base": "valid/auth-refresh.specification.json",
+  "fixtures": [
+    {
+      "file": "invalid/batch_multiple--item-in-two-batches.json",
+      "code": "batch_multiple",
+      "severity": "error",
+      "entity_key": "P2.1",
+      "locus": "/phases/1/batches/1/items/1",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/batch_order_conflict--earlier-batch-waits-later.json",
+      "code": "batch_order_conflict",
+      "severity": "error",
+      "entity_key": "P2.1",
+      "locus": "/items/2/depends_on",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/criterion_unlinked--check-mode-without-checks.json",
+      "code": "criterion_unlinked",
+      "severity": "error",
+      "entity_key": "AC1",
+      "locus": "/criteria/0/checks",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/decision_fields--accepted-without-rationale.json",
+      "code": "decision_fields",
+      "severity": "error",
+      "entity_key": "D1",
+      "locus": "/decisions/0/rationale",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/dependency_cycle--items.json",
+      "code": "dependency_cycle",
+      "severity": "error",
+      "entity_key": "P1.1",
+      "locus": "/items/0/depends_on",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/dependency_cycle--through-phase.json",
+      "code": "dependency_cycle",
+      "severity": "error",
+      "entity_key": "P1.1",
+      "locus": "/items/0/depends_on",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/duplicate_key--two-checks-v1-same-owner.json",
+      "code": "duplicate_key",
+      "severity": "error",
+      "entity_key": "P1.1:V1",
+      "locus": "/checks/1/key",
+      "allowed_companion_codes": [
+        "ref_unknown"
+      ],
+      "note": "unit P1.1/U1 still lists check V2, which no longer exists"
+    },
+    {
+      "file": "invalid/key_prefix_mismatch--item-in-other-phase.json",
+      "code": "key_prefix_mismatch",
+      "severity": "error",
+      "entity_key": "P2.3",
+      "locus": "/items/4/phase",
+      "allowed_companion_codes": [
+        "batch_foreign",
+        "batch_unassigned"
+      ],
+      "note": "batch B2 of phase P2 lists an item whose phase is P1; phase P1 has batches that omit it"
+    },
+    {
+      "file": "invalid/mount_unknown--check-cwd.json",
+      "code": "mount_unknown",
+      "severity": "error",
+      "entity_key": "P2.2:V1",
+      "locus": "/checks/5/definition/cwd/mount",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/ref_unknown--depends-on-missing-item.json",
+      "code": "ref_unknown",
+      "severity": "error",
+      "entity_key": "P1.2",
+      "locus": "/items/1/depends_on/0",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/scope_ambiguous--global-and-applies-to.json",
+      "code": "scope_ambiguous",
+      "severity": "error",
+      "entity_key": "material/storage-design",
+      "locus": "/materials/0/global",
+      "allowed_companion_codes": []
+    },
+    {
+      "file": "invalid/write_scope_overlap--independent-units.json",
+      "code": "write_scope_overlap",
+      "severity": "error",
+      "entity_key": "P2.2/U2",
+      "locus": "/units/5/write_scope/0/pattern",
+      "allowed_companion_codes": [
+        "write_scope_no_tests"
+      ],
+      "note": "overlaps P2.2/U1; the depends_on edge between them was removed"
+    }
+  ]
+}

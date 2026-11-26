@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:host:push-vault-docs:v1",
+  "title": "PushVaultDocsRequest",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name",
+      "default": "main"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      },
+      "description": "Checkout-relative globs. Omit to use project settings or pass an empty array to select nothing."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false
+    },
+    "force": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.host",
+      "class": "PushVaultDocsRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "PushVaultDocsRequest"
+    }
+  }
+}

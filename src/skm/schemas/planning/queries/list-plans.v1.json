@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:query:list-plans:v1",
+  "title": "ListPlans",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived",
+        "all"
+      ],
+      "default": "active"
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "review_requests",
+        "all"
+      ],
+      "default": "standard"
+    },
+    "after": {
+      "type": "string",
+      "minLength": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "ListPlans",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ListPlans"
+    }
+  }
+}

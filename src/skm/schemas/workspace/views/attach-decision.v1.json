@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:attach-decision:v1",
+  "title": "AttachDecisionView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "use_marker",
+        "use_existing_repository",
+        "create_repository",
+        "refuse"
+      ]
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "repository_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mount_name": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "needs_confirmation": {
+      "type": "boolean"
+    },
+    "canonical_remote": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "refuse_code": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/error-code"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "refuse_details": {
+      "anyOf": [
+        {
+          "type": "object",
+          "description": "JsonObject: owner does not specify its internal shape."
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "JsonObject: owner does not specify its internal shape."
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "project_id",
+    "repository_id",
+    "mount_name",
+    "needs_confirmation",
+    "canonical_remote",
+    "refuse_code",
+    "refuse_details",
+    "diagnostics"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "AttachDecisionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "AttachDecisionView"
+    }
+  }
+}

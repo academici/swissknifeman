@@ -1,0 +1,1 @@
+"""context module contract skeleton."""

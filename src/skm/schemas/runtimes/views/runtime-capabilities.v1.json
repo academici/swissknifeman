@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:view:runtime-capabilities:v1",
+  "title": "RuntimeCapabilitiesView",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 0
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "capability": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "native",
+              "adapted",
+              "unsupported",
+              "unknown"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 0
+          },
+          "tested_runtime_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limitations": {
+            "type": "string",
+            "minLength": 0
+          },
+          "last_verified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_context": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "host_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "binary_sha256": {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+                  },
+                  "os": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kernel": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "adapter_version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "isolation_profile": {
+                    "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+                  },
+                  "launch_config_digest": {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+                  }
+                },
+                "required": [
+                  "host_id",
+                  "binary_sha256",
+                  "os",
+                  "kernel",
+                  "adapter_version",
+                  "isolation_profile",
+                  "launch_config_digest"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "static",
+              "verified"
+            ]
+          }
+        },
+        "required": [
+          "capability",
+          "status",
+          "evidence",
+          "tested_runtime_version",
+          "limitations",
+          "last_verified_at",
+          "source"
+        ]
+      }
+    }
+  },
+  "required": [
+    "runtime_id",
+    "adapter_version",
+    "records"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.views",
+      "class": "RuntimeCapabilitiesView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RuntimeCapabilitiesView"
+    }
+  }
+}

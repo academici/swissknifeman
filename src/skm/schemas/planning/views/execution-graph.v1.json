@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:execution-graph:v1",
+  "title": "ExecutionGraphView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "compiler_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task_key": {
+            "type": "string"
+          },
+          "task_kind": {
+            "enum": [
+              "unit",
+              "item",
+              "item_gate",
+              "phase_gate"
+            ]
+          },
+          "entity_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "entity_kind": {
+            "enum": [
+              "phase",
+              "item",
+              "unit",
+              "requirement",
+              "criterion",
+              "check",
+              "decision",
+              "material"
+            ]
+          },
+          "phase_key": {
+            "type": "string"
+          },
+          "item_key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "check_key": {
+                  "type": "string"
+                },
+                "check_id": {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                }
+              },
+              "required": [
+                "check_key",
+                "check_id"
+              ]
+            }
+          },
+          "review": {
+            "enum": [
+              "required",
+              "self",
+              "waived",
+              null
+            ]
+          },
+          "criteria": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:planning:specification:v1#/$defs/route"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "item_work_policy": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:planning:specification:v1#/$defs/work_policy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit_work_policy": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:planning:specification:v1#/$defs/work_policy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "write_scope": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:skm:planning:specification:v1#/$defs/write_scope_entry"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "authority": {
+            "enum": [
+              "routine",
+              "owner_gate",
+              "external_gate"
+            ]
+          },
+          "materials": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            }
+          }
+        },
+        "required": [
+          "task_key",
+          "task_kind",
+          "entity_id",
+          "entity_kind",
+          "phase_key",
+          "item_key",
+          "checks",
+          "review",
+          "criteria",
+          "route",
+          "item_work_policy",
+          "unit_work_policy",
+          "write_scope",
+          "authority",
+          "materials"
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "dependent": {
+            "type": "string",
+            "minLength": 0
+          },
+          "prerequisite": {
+            "type": "string",
+            "minLength": 0
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "dependent",
+          "prerequisite",
+          "reasons"
+        ]
+      }
+    },
+    "batch_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "phase_key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "batch_key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "recommended",
+              "required"
+            ]
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "phase_key",
+          "batch_key",
+          "mode",
+          "tasks"
+        ]
+      }
+    },
+    "topological_order": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    }
+  },
+  "required": [
+    "compiler_version",
+    "revision_id",
+    "tasks",
+    "edges",
+    "batch_groups",
+    "topological_order"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "ExecutionGraphView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ExecutionGraphView"
+    }
+  }
+}

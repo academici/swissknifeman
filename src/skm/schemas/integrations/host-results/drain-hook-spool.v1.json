@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:drain-hook-spool:v1",
+  "title": "DrainHookSpoolResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$ref": "urn:skm:integrations:defs:v1#/$defs/SpoolReport",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "DrainHookSpoolResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "DrainHookSpoolResult"
+    }
+  }
+}

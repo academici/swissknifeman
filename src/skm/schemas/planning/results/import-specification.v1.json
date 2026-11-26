@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:result:import-specification:v1",
+  "title": "ImportSpecificationResult",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string",
+      "minLength": 0
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "base_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "id_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entity_kind": {
+            "type": "string",
+            "enum": [
+              "phase",
+              "item",
+              "unit",
+              "requirement",
+              "criterion",
+              "check",
+              "decision",
+              "material"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "old_id": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "required": [
+          "entity_kind",
+          "key",
+          "old_id",
+          "new_id"
+        ]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ]
+    }
+  },
+  "required": [
+    "plan_id",
+    "alias",
+    "draft_id",
+    "edit_version",
+    "base_revision_id",
+    "stale",
+    "id_map",
+    "counts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.results",
+      "class": "ImportSpecificationResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ImportSpecificationResult"
+    }
+  }
+}

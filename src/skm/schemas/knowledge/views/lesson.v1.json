@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:view:lesson:v1",
+  "title": "LessonView",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonView",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.views",
+      "class": "LessonView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "LessonView"
+    }
+  }
+}

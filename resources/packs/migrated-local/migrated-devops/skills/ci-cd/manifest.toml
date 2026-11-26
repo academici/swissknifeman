@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "ci-cd"
+version = "0.4.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

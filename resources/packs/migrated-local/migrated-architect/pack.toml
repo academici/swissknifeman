@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-architect"
+version = "1.0.1"
+title = "Migrated Neutral Skills: Architecture & System Design"
+description = "Reproducibly migrated neutral authored skills for Architecture & System Design (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "architect-stage"
+max = 1
+description = "One architect skill per stage: terms and invariants, system boundaries, module design, technology choice; never attached together automatically."

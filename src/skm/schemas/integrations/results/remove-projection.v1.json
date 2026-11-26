@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:result:remove-projection:v1",
+  "title": "RemoveProjectionResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "projection_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionState"
+    }
+  },
+  "required": [
+    "projection_id",
+    "state"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.results",
+      "class": "RemoveProjectionResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RemoveProjectionResult"
+    }
+  }
+}

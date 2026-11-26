@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:query:list-tokens:v1",
+  "title": "ListTokens",
+  "description": "access query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/token_kind"
+    },
+    "include_inactive": {
+      "type": "boolean",
+      "default": false
+    },
+    "after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.queries",
+      "class": "ListTokens",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "ListTokens"
+    }
+  }
+}

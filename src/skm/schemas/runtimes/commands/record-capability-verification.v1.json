@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:command:record-capability-verification:v1",
+  "title": "CommandRecordCapabilityVerification",
+  "description": "Exact installed-binary and launch evidence for security routing; spec/modules/runtimes.md §4.3/7.2. Null context is historical/functional evidence only.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runtime_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$"
+    },
+    "runtime_version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "capability": {
+      "enum": [
+        "headless_execution",
+        "structured_result",
+        "stream_events",
+        "session_resume",
+        "tool_interception",
+        "reliable_cancellation",
+        "usage_reporting",
+        "workspace_binding",
+        "native_subagents",
+        "mcp_support",
+        "permission_flags",
+        "sandbox_native",
+        "effort_control",
+        "model_selection",
+        "config_isolation"
+      ]
+    },
+    "status": {
+      "enum": [
+        "native",
+        "adapted",
+        "unsupported",
+        "unknown"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "limitations": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "verification_context": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "host_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "binary_sha256": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            "os": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "kernel": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "adapter_version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "isolation_profile": {
+              "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+            },
+            "launch_config_digest": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            }
+          },
+          "required": [
+            "host_id",
+            "binary_sha256",
+            "os",
+            "kernel",
+            "adapter_version",
+            "isolation_profile",
+            "launch_config_digest"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "runtime_id",
+    "runtime_version",
+    "capability",
+    "status",
+    "evidence",
+    "limitations",
+    "verified_at",
+    "verification_context"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.documents",
+      "class": "CommandRecordCapabilityVerification",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "CommandRecordCapabilityVerification"
+    }
+  }
+}

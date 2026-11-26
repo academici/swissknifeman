@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:schedule-ready-tasks:v1",
+  "title": "ScheduleReadyTasks",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "limit": {
+      "type": "integer"
+    },
+    "run_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      }
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "ScheduleReadyTasks",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ScheduleReadyTasks"
+    }
+  }
+}

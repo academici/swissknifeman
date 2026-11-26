@@ -1,0 +1,202 @@
+{
+  "command": "execution.begin_stage",
+  "http": "POST /api/v1/worker/assignments/0193a000-0000-7000-8000-0000000b0012/stages",
+  "idempotency_key": "0193a000-0000-7000-8000-0000000b0012:begin_stage:2",
+  "request": {
+    "claim": {
+      "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+      "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+      "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+      "fencing_token": 1
+    },
+    "stage_id": "execute",
+    "round_no": 1,
+    "input_digest": "sha256:9d1c3e5a7b9f0d2c4e6a8b0d1f3e5c7a9b1d3f5e7c9a0b2d4f6e8a0c1e3b5d7f",
+    "runtime_token_secret": "skm_abcd2345_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+  },
+  "response": {
+    "outcome": "ready",
+    "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+    "already_completed": false,
+    "step": {
+      "step_id": "0193a000-0000-7000-8000-0000000d0001",
+      "role": "executor",
+      "purpose": "primary",
+      "operation": "new_implementation",
+      "admission": {
+        "requested": "new_implementation",
+        "operation": "new_implementation",
+        "min_class": "implementation",
+        "resume": "never",
+        "notes": []
+      },
+      "route": {
+        "runtime_id": "claude_code",
+        "model": "claude-implementation-class",
+        "effort": "medium",
+        "source": "role_routing",
+        "reason": "ROUTE_DEFAULT"
+      },
+      "context": {
+        "manifest_id": "0193a000-0000-7000-8000-000000120001",
+        "draft": {
+          "draft_digest": "sha256:0c4f7a1e3d5b7c9e1a3c5e7a9c1e3a5c7e9a1c3e5a7c9e1a3c5e7a9c1e3a5c7e",
+          "blocks": [
+            {
+              "ref": "system_constraints",
+              "block_type": "system_constraints",
+              "tokens_estimate": 610,
+              "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            {
+              "ref": "role_contract",
+              "block_type": "role_contract",
+              "tokens_estimate": 920,
+              "digest": "sha256:1212121212121212121212121212121212121212121212121212121212121212"
+            },
+            {
+              "ref": "task_contract:P1.2",
+              "block_type": "task_contract",
+              "tokens_estimate": 1480,
+              "digest": "sha256:1313131313131313131313131313131313131313131313131313131313131313"
+            },
+            {
+              "ref": "requirements:R1",
+              "block_type": "requirements",
+              "tokens_estimate": 140,
+              "digest": "sha256:1414141414141414141414141414141414141414141414141414141414141414"
+            },
+            {
+              "ref": "decisions:D1",
+              "block_type": "decisions",
+              "tokens_estimate": 260,
+              "digest": "sha256:1515151515151515151515151515151515151515151515151515151515151515"
+            },
+            {
+              "ref": "context_map:0193a000-0000-7000-8000-0000000d0000",
+              "block_type": "context_map",
+              "tokens_estimate": 540,
+              "digest": "sha256:1616161616161616161616161616161616161616161616161616161616161616"
+            },
+            {
+              "ref": "result_contract",
+              "block_type": "result_contract",
+              "tokens_estimate": 700,
+              "digest": "sha256:1717171717171717171717171717171717171717171717171717171717171717"
+            }
+          ],
+          "budget": {
+            "total_limit": 120000,
+            "reserved_output_tokens": 16000
+          }
+        },
+        "host_inputs": [
+          {
+            "request_id": "h1",
+            "kind": "repo_instructions",
+            "mount": "api",
+            "path": "",
+            "max_bytes": 65536,
+            "required": false
+          },
+          {
+            "request_id": "h2",
+            "kind": "repository_path",
+            "mount": "api",
+            "path": "src/auth/token_repository.py",
+            "max_bytes": 262144,
+            "required": true
+          }
+        ],
+        "budget_policy": "classes_v1",
+        "estimator_id": "heuristic:v1"
+      },
+      "result_schema_urn": "urn:skm:execution:role-result:executor:v1",
+      "session": {
+        "mode": "new",
+        "fresh_reason": "NO_PREVIOUS_SESSION",
+        "handoff": false
+      },
+      "session_fingerprint_digest": "sha256:5e1d3c9a7b5f3d1e9c7a5b3d1f9e7c5a3b1d9f7e5c3a1b9d7f5e3c1a9b7d5f3e",
+      "limits": {
+        "timeout_seconds": 14400,
+        "idle_timeout_seconds": 5400,
+        "max_output_tokens": 16000,
+        "max_turns": 80
+      },
+      "permissions": {
+        "profile": "workspace-contained",
+        "write_scope": [
+          "api:src/auth/rotation.py",
+          "api:tests/auth/test_rotation.py"
+        ],
+        "commands_allowed": [
+          "python",
+          "pytest",
+          "git status",
+          "git diff"
+        ],
+        "network": "none",
+        "external_effects": []
+      },
+      "isolation_profile": "worktree",
+      "budget_reservation_id": "0193a000-0000-7000-8000-000000180001",
+      "runtime_token": {
+        "token_id": "0193a000-0000-7000-8000-000000af0001",
+        "prefix": "abcd2345",
+        "expires_at": "2026-10-25T12:01:42Z"
+      }
+    }
+  },
+  "notes": [
+    "Before the runtime starts the worker completes phase B (collect_host_blocks -> finalize -> upload prompt -> context.finalize_manifest), then separately sends renew_lease with stage_record_id, step_id and phase=runtime_started. Refusal or cancel_requested prevents spawn; handoff refusal returns next and has already closed the draft reservation.",
+    "A repeated begin_stage with the same (stage_id, round_no, input_digest) returns the same stage_record_id; for a completed stage already_completed = true and prior_outcome is filled.",
+    "Expected admission/budget refusal is a successful HTTP/bus result with outcome=refused and next: StageInstruction. Its failed stage, closed reservations and advance effects commit atomically; the worker follows next and never starts a runtime or submits RecordStageResult for the refusal."
+  ],
+  "errors": [
+    {
+      "code": "LEASE_LOST"
+    },
+    {
+      "code": "CONTEXT_OVER_BUDGET",
+      "when": "required control-plane blocks exceed the total limit"
+    },
+    {
+      "code": "SANDBOX_UNAVAILABLE",
+      "when": "the profile isolation is not in worker.isolation.available of this host"
+    }
+  ],
+  "refusal_responses": [
+    {
+      "outcome": "refused",
+      "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+      "already_completed": false,
+      "refusal": {
+        "code": "BUDGET_EXHAUSTED",
+        "details": {
+          "dimension": "tokens",
+          "reason": "reservation_exceeds_limit"
+        }
+      },
+      "next": {
+        "kind": "release",
+        "release_reason": "waiting"
+      }
+    },
+    {
+      "outcome": "refused",
+      "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+      "already_completed": false,
+      "refusal": {
+        "code": "ADMISSION_REFUSED",
+        "details": {
+          "reason": "review_requires_output"
+        }
+      },
+      "next": {
+        "kind": "release",
+        "release_reason": "waiting"
+      }
+    }
+  ]
+}

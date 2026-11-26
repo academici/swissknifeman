@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:query:render-run-report:v1",
+  "title": "RenderRunReport",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "full",
+        "summary"
+      ],
+      "default": "full"
+    }
+  },
+  "required": [
+    "run_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.queries",
+      "class": "RenderRunReport",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "RenderRunReport"
+    }
+  }
+}

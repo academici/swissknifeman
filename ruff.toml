@@ -1,0 +1,43 @@
+target-version = "py312"
+line-length = 110
+src = ["src", "tests", "tools"]
+extend-exclude = ["src/skm/**/generated/**", "web/**", "tests/architecture/fixtures/**", "tests/fixtures/plugins/**"]
+
+[lint]
+select = [
+  "E", "F", "W",
+  "I", "B", "UP", "SIM", "RUF", "PT", "TID", "ARG", "PERF",
+  "PLE", "PLW", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  "S101", "S102", "S103", "S108", "S110", "S112", "S113", "S301", "S307", "S324", "S506",
+  "S602", "S604", "S605", "S607", "S608",
+  "BLE", "T20", "DTZ", "C4", "RET", "TRY002", "TRY003", "TRY300", "TRY400", "PGH",
+]
+ignore = ["TRY003", "RET504"]
+
+[lint.pylint]
+max-args = 8
+max-branches = 14
+max-returns = 8
+max-statements = 60
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[lint.flake8-tidy-imports.banned-api]
+"datetime.datetime.utcnow".msg = "use Clock.now() (tz-aware UTC)"
+"datetime.datetime.now".msg = "use Clock.now(); only platform/system_clock.py may call it"
+"subprocess.call".msg = "use skm.platform.process.run"
+"subprocess.Popen".msg = "use skm.platform.process.spawn"
+"os.system".msg = "use skm.platform.process.run"
+
+[lint.per-file-ignores]
+"tests/**" = ["S101", "ARG", "PLR0913", "PLR2004", "T20"]
+"tools/**" = ["T20"]
+"src/skm/platform/system_clock.py" = ["TID251"]
+"src/skm/platform/process/**" = ["TID251", "S603", "S607"]
+"src/skm/entrypoints/cli/**" = ["T20"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

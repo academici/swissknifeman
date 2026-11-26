@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:host:research-query:v1",
+  "title": "ResearchQueryRequest",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "spec": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mounts": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    }
+  },
+  "required": [
+    "spec",
+    "workspace_id",
+    "project_id",
+    "step_ref",
+    "mounts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.host",
+      "class": "ResearchQueryRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ResearchQueryRequest"
+    }
+  }
+}

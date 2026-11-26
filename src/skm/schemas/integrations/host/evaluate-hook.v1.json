@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:evaluate-hook:v1",
+  "title": "EvaluateHookRequest",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "surface": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookSurfaceId"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "event_name": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "class": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+    }
+  },
+  "required": [
+    "target",
+    "surface",
+    "project_id",
+    "event_name",
+    "payload"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "EvaluateHookRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "EvaluateHookRequest"
+    }
+  }
+}

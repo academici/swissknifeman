@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:command:add-file-version:v1",
+  "title": "AddFileVersion",
+  "description": "artifacts command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "blob": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+    },
+    "original_filename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "declared_media_type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "default": ""
+    },
+    "source": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/version_source"
+    },
+    "acknowledge": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:artifacts:defs:v1#/$defs/safety_rule"
+      },
+      "uniqueItems": true,
+      "default": []
+    }
+  },
+  "required": [
+    "file_id",
+    "expected_row_version",
+    "blob",
+    "original_filename",
+    "declared_media_type",
+    "source"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.commands",
+      "class": "AddFileVersion",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "AddFileVersion"
+    }
+  }
+}

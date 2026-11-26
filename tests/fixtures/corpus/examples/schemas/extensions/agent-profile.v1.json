@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:agent-profile:v1",
+  "title": "AgentProfile",
+  "description": "agent-profiles/<key>.toml after TOML -> JSON (spec/modules/extensions.md §4.6; context policy: context.md §4.4; routing: runtimes.md §4.10-4.11). Examples: examples/agent-profiles/*.toml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "key",
+    "version",
+    "role",
+    "title",
+    "description",
+    "result_schema",
+    "routing",
+    "isolation",
+    "permissions",
+    "prompt",
+    "context",
+    "limits"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:extensions:agent-profile:v1"
+    },
+    "key": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "role": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "result_schema": {
+      "type": "string",
+      "pattern": "^(urn:skm:[a-z][a-z0-9-]*:[a-z0-9-]+(:[a-z0-9-]+)*:v[0-9]+|@target)$",
+      "description": "Registered concrete result schema URN of one of seven roles; deterministic heal and result_retry use the same role schema."
+    },
+    "llm": {
+      "type": "boolean",
+      "default": true
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_class",
+        "effort"
+      ],
+      "properties": {
+        "model_class": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+        },
+        "effort": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+        },
+        "required_capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "optional_capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+          },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile"
+      ],
+      "properties": {
+        "profile": {
+          "description": "Policy trusted-full-access is allowed only in operator packs and requires the host flag; isolation uses kernel profiles.",
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "none",
+                "worktree",
+                "landlock",
+                "container"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+            }
+          ]
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_profile"
+      ],
+      "properties": {
+        "policy_profile": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}$",
+          "description": "Policy profile id (policy.md §4.5)."
+        },
+        "layer": {
+          "$ref": "urn:skm:policy:permission-layer:v1",
+          "description": "Role layer: narrows the policy profile only."
+        }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/block_type"
+      },
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/prompt_block_key"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "system_constraints",
+        "role_contract",
+        "result_contract"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "include",
+        "inherit_user_global",
+        "repo_instructions",
+        "repo_instruction_sections",
+        "skills_mode",
+        "skills_include",
+        "skills_exclude",
+        "history_max_steps",
+        "memory_top_k",
+        "include_optional_materials"
+      ],
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/block_type"
+          },
+          "uniqueItems": true
+        },
+        "max_total_tokens": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "inherit_user_global": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: the runtime CLI loads the user's own client configuration (config_mode inherit); allowed only in builtin/operator packs; effective only when the config key context.inherit_user_global is true in the scope (narrow-and)."
+        },
+        "repo_instructions": {
+          "type": "string",
+          "enum": [
+            "none",
+            "constraints",
+            "full"
+          ]
+        },
+        "repo_instruction_sections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "not": {
+              "const": "*"
+            }
+          },
+          "uniqueItems": true
+        },
+        "skills_mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowlist",
+            "auto"
+          ]
+        },
+        "skills_include": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+          },
+          "uniqueItems": true
+        },
+        "skills_exclude": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+          },
+          "uniqueItems": true
+        },
+        "skills_budget_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "history_max_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "memory_top_k": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "include_optional_materials": {
+          "type": "boolean"
+        },
+        "budgets": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "core": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "supporting": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "retrieval": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "repo_instructions": {
+                "const": "constraints"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "repo_instruction_sections": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeout_seconds",
+        "idle_timeout_seconds",
+        "max_result_retries"
+      ],
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 14400
+        },
+        "idle_timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600
+        },
+        "max_turns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 256
+        },
+        "max_result_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.agent_profile",
+      "class": "AgentProfileDoc",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "AgentProfile"
+    }
+  }
+}

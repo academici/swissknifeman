@@ -1,0 +1,1707 @@
+{
+  "urn:skm:kernel:error-catalog:v1": {
+    "schema": "urn:skm:kernel:error-catalog:v1",
+    "version": 1,
+    "categories": [
+      {
+        "category": "not_found",
+        "http_status": 404,
+        "cli_exit": 1
+      },
+      {
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1
+      },
+      {
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6
+      },
+      {
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6
+      },
+      {
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5
+      },
+      {
+        "category": "unauthenticated",
+        "http_status": 401,
+        "cli_exit": 5
+      },
+      {
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6
+      },
+      {
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3
+      },
+      {
+        "category": "outcome_unknown",
+        "http_status": 500,
+        "cli_exit": 6
+      },
+      {
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4
+      },
+      {
+        "category": "internal",
+        "http_status": 500,
+        "cli_exit": 70
+      }
+    ],
+    "codes": [
+      {
+        "code": "NOT_FOUND",
+        "category": "not_found",
+        "http_status": 404,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "любая сущность не найдена (details.kind, details.ref)"
+      },
+      {
+        "code": "AMBIGUOUS_REFERENCE",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "ссылка (alias/slug) соответствует нескольким"
+      },
+      {
+        "code": "SCHEMA_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "DTO/документ не прошёл схему (details.issues)"
+      },
+      {
+        "code": "INVALID_REFERENCE",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "строка не разбирается как ссылка нужного вида"
+      },
+      {
+        "code": "UNAUTHENTICATED",
+        "category": "unauthenticated",
+        "http_status": 401,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "нет/неверный/истёкший токен"
+      },
+      {
+        "code": "FORBIDDEN",
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "нет права (details.permission, details.scope)"
+      },
+      {
+        "code": "VERSION_CONFLICT",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "expected_version ≠ actual"
+      },
+      {
+        "code": "IDEMPOTENCY_KEY_REUSED",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "тот же ключ с другим телом"
+      },
+      {
+        "code": "ALREADY_EXISTS",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "уникальность (slug, alias, digest версии)"
+      },
+      {
+        "code": "ID_CONFLICT",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "импорт с keep_ids и занятым id"
+      },
+      {
+        "code": "MODULE_DISABLED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "команда опционального выключенного модуля"
+      },
+      {
+        "code": "CONFIG_UNKNOWN_KEY",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "ключа нет в реестре"
+      },
+      {
+        "code": "CONFIG_SCOPE_NOT_ALLOWED",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "уровень не разрешён для ключа"
+      },
+      {
+        "code": "CONFIG_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "значение/итог не проходит схему ключа"
+      },
+      {
+        "code": "CONFIG_LOCKED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "дальний уровень заблокировал ключ"
+      },
+      {
+        "code": "CONFIG_NARROWING_VIOLATION",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "narrow-ключ шире дальнего уровня"
+      },
+      {
+        "code": "CONFIG_REGISTRY_INVALID",
+        "category": "internal",
+        "http_status": 500,
+        "cli_exit": 70,
+        "retryable": false,
+        "description": "реестр не собрался (ошибка сборки)"
+      },
+      {
+        "code": "BOOTSTRAP_MISSING",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "нет bootstrap-конфига (подсказка skm init)"
+      },
+      {
+        "code": "SCHEMA_TOO_NEW",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "БД новее кода"
+      },
+      {
+        "code": "MIGRATION_CHECKSUM_MISMATCH",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "изменён применённый файл миграции"
+      },
+      {
+        "code": "PROJECT_ARCHIVED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "операция над архивной/приостановленной областью (workspace или project; details.kind)"
+      },
+      {
+        "code": "CHECKOUT_UNBOUND",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "нет привязки checkout для (project, mount, host)"
+      },
+      {
+        "code": "CHECKOUT_MISMATCH",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "remotes checkout не соответствуют репозиторию"
+      },
+      {
+        "code": "REPOSITORY_UNSAFE",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "правила safety репозитория нарушены"
+      },
+      {
+        "code": "BLOB_DIGEST_MISMATCH",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "байты не совпали с заявленным digest"
+      },
+      {
+        "code": "FILE_TRASHED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "версия к удалённому файлу"
+      },
+      {
+        "code": "FILE_VERSION_NOT_READY",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "материал не готов/недоступен"
+      },
+      {
+        "code": "EXTENSION_WIDENS_PERMISSIONS",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "ресурс пытается расширить права"
+      },
+      {
+        "code": "EXTENSION_DIGEST_CONFLICT",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "та же версия ресурса с другим digest"
+      },
+      {
+        "code": "RESOURCE_QUARANTINED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "ресурс в карантине"
+      },
+      {
+        "code": "DEPENDENCY_CYCLE",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "цикл в графе (details.cycle)"
+      },
+      {
+        "code": "PLAN_NOT_READY",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "валидация с ошибками (details.findings)"
+      },
+      {
+        "code": "PLAN_ARCHIVED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "изменения архивного плана"
+      },
+      {
+        "code": "DRAFT_NOT_OPEN",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "draft опубликован/брошен"
+      },
+      {
+        "code": "BASE_REVISION_CHANGED",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "draft основан на устаревшей ревизии"
+      },
+      {
+        "code": "NO_CHANGES",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "публикация без изменений спецификации"
+      },
+      {
+        "code": "READINESS_REQUIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "старт без свежего readiness report"
+      },
+      {
+        "code": "RUN_NOT_ACTIVE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "команда к терминальному/неактивному run"
+      },
+      {
+        "code": "INVALID_TRANSITION",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "недопустимый переход состояния (details.from, to)"
+      },
+      {
+        "code": "LEASE_LOST",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "неверный fencing token/lease истёк"
+      },
+      {
+        "code": "NOTHING_TO_CLAIM",
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4,
+        "retryable": true,
+        "description": "нет доступной работы (исход для worker)"
+      },
+      {
+        "code": "MANUAL_PENDING",
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4,
+        "retryable": false,
+        "description": "ждёт verdict человека"
+      },
+      {
+        "code": "APPROVAL_REQUIRED",
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4,
+        "retryable": false,
+        "description": "нужен approval intent"
+      },
+      {
+        "code": "WAITING_FOR_ANSWER",
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4,
+        "retryable": false,
+        "description": "открыт decision request"
+      },
+      {
+        "code": "APPROVAL_MISMATCH",
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "approval к другим аргументам/истёк/использован"
+      },
+      {
+        "code": "BUDGET_EXHAUSTED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "лимит бюджета"
+      },
+      {
+        "code": "REWORK_LIMIT_REACHED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "исчерпаны rework rounds"
+      },
+      {
+        "code": "NOT_ACCEPTABLE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "инвариант приёмки не выполнен (details.reasons)"
+      },
+      {
+        "code": "WRITE_SCOPE_VIOLATION",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "изменения вне declared write scope"
+      },
+      {
+        "code": "RESULT_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "результат роли не прошёл схему после heal формы (повтор той же роли — result_retry; details.schema_errors)"
+      },
+      {
+        "code": "REPAIR_SEMANTIC_DRIFT",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "repair изменил смысл"
+      },
+      {
+        "code": "CONTEXT_OVER_BUDGET",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "обязательные блоки не влезают"
+      },
+      {
+        "code": "CAPABILITY_UNAVAILABLE",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "runtime/цель/плагин не имеет capability или компонент не загружен (details.capability, details.reason_code)"
+      },
+      {
+        "code": "SANDBOX_UNAVAILABLE",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "профиль изоляции недоступен на хосте (details.profile)"
+      },
+      {
+        "code": "RUNTIME_NOT_INSTALLED",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "бинарь runtime не найден на хосте"
+      },
+      {
+        "code": "RUNTIME_AUTH_EXPIRED",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "runtime не аутентифицирован"
+      },
+      {
+        "code": "RATE_LIMITED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "провайдер ограничил частоту (retryable)"
+      },
+      {
+        "code": "QUOTA_EXHAUSTED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "квота провайдера"
+      },
+      {
+        "code": "RUNTIME_CRASHED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "процесс runtime упал"
+      },
+      {
+        "code": "RUNTIME_TIMEOUT",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "таймаут сессии"
+      },
+      {
+        "code": "CANCEL_IGNORED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "runtime проигнорировал отмену"
+      },
+      {
+        "code": "INTEGRATION_CONFLICT",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "конфликт при интеграции в ветку"
+      },
+      {
+        "code": "INTEGRATION_RECHECK_FAILED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "checks rerun_after_integration красные после интеграции; задача не accepted (K3)"
+      },
+      {
+        "code": "INTEGRATION_HOST_MISMATCH",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "интеграция пары (run, repository) закреплена за другим хостом (K6)"
+      },
+      {
+        "code": "OUTCOME_UNKNOWN",
+        "category": "outcome_unknown",
+        "http_status": 500,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "внешний эффект без receipt"
+      },
+      {
+        "code": "PROJECTION_CONFLICT",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "managed-файл изменён пользователем"
+      },
+      {
+        "code": "HOOK_BACKEND_UNAVAILABLE",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "hook не смог связаться с конфигом (enforcement → deny)"
+      },
+      {
+        "code": "MEMORY_LIMIT_REACHED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "лимит записей памяти в scope"
+      },
+      {
+        "code": "BACKEND_UNAVAILABLE",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "БД/API недоступны (retryable)"
+      },
+      {
+        "code": "SERIALIZATION_FAILURE",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": true,
+        "description": "40001/40P01 после исчерпания ретраев (retryable)"
+      },
+      {
+        "code": "INTERNAL_ERROR",
+        "category": "internal",
+        "http_status": 500,
+        "cli_exit": 70,
+        "retryable": false,
+        "description": "непредвиденная ошибка (details.request_id)"
+      },
+      {
+        "code": "SCHEMA_NOT_MIGRATED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "БД старее кода: миграции не применены (подсказка skm db migrate; SQLSTATE 42P01/42703/3F000)"
+      },
+      {
+        "code": "CLIENT_TOO_OLD",
+        "category": "precondition",
+        "http_status": 426,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "версия клиента/worker ниже api.min_client_version / execution.worker.min_version"
+      },
+      {
+        "code": "SECRET_UNAVAILABLE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "SecretRef не разрешился (details.ref без значения)"
+      },
+      {
+        "code": "SECRET_PERMISSIONS",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "файл секрета доступен группе/другим"
+      },
+      {
+        "code": "HOST_REJECTED",
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "заголовок Host не входит в api.allowed_hosts"
+      },
+      {
+        "code": "ORIGIN_REJECTED",
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "Origin не входит в api.cors.origins"
+      },
+      {
+        "code": "PAYLOAD_TOO_LARGE",
+        "category": "validation",
+        "http_status": 413,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "тело запроса больше api.limits.max_body_bytes"
+      },
+      {
+        "code": "UNSUPPORTED_MEDIA_TYPE",
+        "category": "validation",
+        "http_status": 415,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "неподдерживаемый Content-Type"
+      },
+      {
+        "code": "LENGTH_REQUIRED",
+        "category": "validation",
+        "http_status": 411,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "загрузка байтов без Content-Length"
+      },
+      {
+        "code": "PRECONDITION_REQUIRED",
+        "category": "precondition",
+        "http_status": 428,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "изменяющий запрос без обязательного If-Match / Idempotency-Key"
+      },
+      {
+        "code": "TOO_MANY_STREAMS",
+        "category": "precondition",
+        "http_status": 429,
+        "cli_exit": 6,
+        "retryable": true,
+        "description": "превышен api.sse.max_streams_per_token"
+      },
+      {
+        "code": "INSTANCE_UNKNOWN",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "профиль инстанса не найден в bootstrap (--instance, SKM_INSTANCE, skm use)"
+      },
+      {
+        "code": "NO_PROJECT_SCOPE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "MCP-сервер запущен без привязки к проекту"
+      },
+      {
+        "code": "CONFIG_OP_NOT_ALLOWED",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "операция записи недопустима стратегией ключа (например append к не-массиву)"
+      },
+      {
+        "code": "CONFIRMATION_REQUIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "запись ключа с x-skm.confirm без confirmed=true"
+      },
+      {
+        "code": "LAST_OWNER_REQUIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "нельзя убрать/отключить последнего owner инстанса"
+      },
+      {
+        "code": "CONTENT_UNSAFE",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "правило безопасности содержимого CS-* с действием block (details.findings)"
+      },
+      {
+        "code": "BLOB_TOO_LARGE",
+        "category": "validation",
+        "http_status": 413,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "превышен artifacts.upload.max_bytes"
+      },
+      {
+        "code": "STAGED_BLOB_CONSUMED",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "staged blob уже связан другой командой"
+      },
+      {
+        "code": "STAGED_BLOB_EXPIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "staged blob истёк и удалён janitor-ом"
+      },
+      {
+        "code": "EXTENSION_OVERRIDE_NOT_DECLARED",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "ресурс перекрывает чужой ключ без объявления override"
+      },
+      {
+        "code": "EXTENSION_INCOMPATIBLE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "requires_skm не выполнен или недопустимое поле для trust пакета"
+      },
+      {
+        "code": "EXTENSION_PROFILE_ROLE_MISMATCH",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "выбранный профиль агента объявлен для другой роли"
+      },
+      {
+        "code": "FIELD_OWNED",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "изменение владеемого поля (id, key, item.phase, check.owner)"
+      },
+      {
+        "code": "REBASE_CONFLICTS",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "rebase черновика нашёл пересекающиеся изменения (details.conflicts)"
+      },
+      {
+        "code": "CONTEXT_INPUT_MISSING",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "обязательный host input не прочитан фазой B"
+      },
+      {
+        "code": "CONTEXT_MANIFEST_TAMPERED",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "финализация не совпала с пересчётом сервера (digest/бюджет)"
+      },
+      {
+        "code": "CONTEXT_CONFLICT",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "несовместимые skills/блоки выбраны одновременно (conflicts_with)"
+      },
+      {
+        "code": "CONTEXT_MATERIAL_UNAVAILABLE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "обязательный материал недоступен для сборки"
+      },
+      {
+        "code": "CONTEXT_TEMPLATE_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "prompt block не рендерится (неизвестная переменная/синтаксис)"
+      },
+      {
+        "code": "CONTEXT_NOT_FINALIZED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "manifest шага ещё draft: runtime не стартует, результат не принимается"
+      },
+      {
+        "code": "RESEARCH_SOURCE_UNAVAILABLE",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "research-источник недоступен"
+      },
+      {
+        "code": "RESEARCH_SOURCE_TIMEOUT",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "research-источник не ответил вовремя"
+      },
+      {
+        "code": "RESEARCH_SOURCE_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "ответ research-источника не прошёл контракт"
+      },
+      {
+        "code": "RUNTIME_FORBIDDEN",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "провайдер отказал в доступе (класс authorization)"
+      },
+      {
+        "code": "RUNTIME_INVALID_REQUEST",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "провайдер отверг запрос (класс invalid_request)"
+      },
+      {
+        "code": "MODEL_UNAVAILABLE",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "модель недоступна у провайдера/аккаунта (fallback маршрута решает execution)"
+      },
+      {
+        "code": "CONTENT_REFUSED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "провайдер отказал по content policy"
+      },
+      {
+        "code": "RUNTIME_TRANSPORT",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "сетевой/транспортный сбой провайдера"
+      },
+      {
+        "code": "RUNTIME_STREAM_INCOMPLETE",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "процесс runtime завершился без нативного терминального события (в т.ч. exit 0); результат не принимается"
+      },
+      {
+        "code": "RUNTIME_OVERLOADED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": true,
+        "description": "провайдер перегружен (provider_internal)"
+      },
+      {
+        "code": "CONTEXT_OVERFLOW",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "вход не помещается в окно контекста модели"
+      },
+      {
+        "code": "RUNTIME_FAILURE_UNCLASSIFIED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "отказ runtime не распознан правилами классификации"
+      },
+      {
+        "code": "SESSION_CANCELLED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "сессия runtime отменена по запросу (не авария)"
+      },
+      {
+        "code": "ROUTE_UNDERSHOOT",
+        "category": "capability",
+        "http_status": 422,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "доступный маршрут ниже минимального класса/effort пункта"
+      },
+      {
+        "code": "ADMISSION_REFUSED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "операция не допущена (нет output для review/final_close, resume невозможен)"
+      },
+      {
+        "code": "CHECKS_MUTATED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "проверки изменили worktree после seal output"
+      },
+      {
+        "code": "DISK_LOW",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "мало места на хосте для среды попытки"
+      },
+      {
+        "code": "SLOT_BUSY",
+        "category": "waiting",
+        "http_status": 200,
+        "cli_exit": 4,
+        "retryable": false,
+        "description": "integration slot занят (исход для worker)"
+      },
+      {
+        "code": "NO_TASKS",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "ревизия не даёт исполняемых задач"
+      },
+      {
+        "code": "EMERGENCY_STOPPED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "проект в emergency stop (start_run, request_review, resume_run)"
+      },
+      {
+        "code": "AUTOPILOT_NOT_ENABLED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "execution.autopilot.enabled = false в scope"
+      },
+      {
+        "code": "RECOVERY_CIRCUIT_OPEN",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "превышен лимит восстановлений в окне (stop_code run)"
+      },
+      {
+        "code": "RUNTIME_ARTIFACT_IN_COMMIT",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "в коммит интеграции попал runtime-артефакт"
+      },
+      {
+        "code": "DECISION_REQUIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "skip задачи без принятого решения ревизии"
+      },
+      {
+        "code": "INTEGRATION_BRANCH_BUSY",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "ветка интеграции выведена в другом worktree"
+      },
+      {
+        "code": "CHECKOUT_BUSY",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "checkout занят другой попыткой (existing_checkout)"
+      },
+      {
+        "code": "CHECK_TIMEOUT",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "команда проверки превысила таймаут (state error)"
+      },
+      {
+        "code": "CHECK_COMMAND_NOT_FOUND",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "команда проверки не найдена"
+      },
+      {
+        "code": "CHECK_KILLED",
+        "category": "backend",
+        "http_status": 503,
+        "cli_exit": 3,
+        "retryable": false,
+        "description": "процесс проверки убит сигналом"
+      },
+      {
+        "code": "CHECK_MISCONFIGURED",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "неизвестный mount, shell не разрешён"
+      },
+      {
+        "code": "INTEGRATION_UNSAFE_TARGET",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "путь цели вне checkout/домашнего каталога или symlink-выход"
+      },
+      {
+        "code": "INTEGRATION_BOUNDARY_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "managed-границы файла не извлекаются"
+      },
+      {
+        "code": "INTEGRATION_PATH_COLLISION",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "два источника пишут один путь"
+      },
+      {
+        "code": "INTEGRATION_DESIRED_TOO_LARGE",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "desired проекции больше integrations.desired.max_bytes"
+      },
+      {
+        "code": "INTEGRATION_TRUSTED_REFUSED",
+        "category": "forbidden",
+        "http_status": 403,
+        "cli_exit": 5,
+        "retryable": false,
+        "description": "trusted-full-access проекция запрещена в scope"
+      },
+      {
+        "code": "HOOK_PAYLOAD_INVALID",
+        "category": "validation",
+        "http_status": 422,
+        "cli_exit": 1,
+        "retryable": false,
+        "description": "payload hook-события клиента не прошёл схему"
+      },
+      {
+        "code": "HOOK_SUBSCRIPTION_LOCATION",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "операция недоступна для подписки с этим execution_location (host-подписки проверяет host op)"
+      },
+      {
+        "code": "MEMORY_SCOPE_REQUIRED",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "операция памяти без проекта/scope"
+      },
+      {
+        "code": "EXPORT_VAULT_NOT_FOUND",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "хранилище vault не найдено по лестнице поиска"
+      },
+      {
+        "code": "EXPORT_VAULT_MISSING",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "путь vault задан, но каталога нет"
+      },
+      {
+        "code": "EXPORT_VAULT_PROJECT_UNKNOWN",
+        "category": "precondition",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "папка проекта в vault не определена"
+      },
+      {
+        "code": "EXPORT_NOTE_NO_FREE_NAME",
+        "category": "conflict",
+        "http_status": 409,
+        "cli_exit": 6,
+        "retryable": false,
+        "description": "нет свободного имени файла заметки"
+      }
+    ]
+  },
+  "urn:skm:planning:finding-catalog:v1": {
+    "$schema": "urn:skm:planning:finding-catalog:v1",
+    "version": 1,
+    "severities": {
+      "error": "blocks publication (PLAN_NOT_READY)",
+      "warning": "reported, never blocks",
+      "info": "reported, never blocks"
+    },
+    "dropped_legacy_codes": {
+      "json": "no plan files; malformed input is SCHEMA_INVALID of the command DTO",
+      "schema": "the document must be schema-valid to be saved at all (SCHEMA_INVALID)",
+      "plan_state": "pause is run state (execution), not specification",
+      "phase_list": "no denormalized lists: the phases array is the list",
+      "ref_kind": "field patterns in the schema allow only the right kinds",
+      "reads_ref": "qualified refs are rejected by the schema pattern; material sections are resolved at context assembly",
+      "validation_id_clash": "check keys are scoped by owner (P1:V1 vs P1.2:V1); results are stored per check id",
+      "authority_identity": "schema oneOf: exactly one of gate or label",
+      "authority_scope": "schema: scope required for gates",
+      "path": "schema patterns forbid '..', absolute, '~' and drive paths",
+      "human_view": "there are no plan Markdown views that could be read as inputs",
+      "result_status": "lifecycle status is execution state",
+      "phase_unclosed": "phase closure is execution state",
+      "phase_closure_stale": "phase closure is execution state",
+      "orchestration": "schema bounds max_parallel_units",
+      "route": "schema dependentRequired model -> runtime; unknown names: route_unknown_*",
+      "unit_parent": "self_reference / ref_unknown and the unit_specs parent FK",
+      "log_target": "there is no plan log; events live in skm_core.domain_events",
+      "modify_missing": "existence needs a checkout: execution readiness rule change_hint_missing",
+      "readiness_stale": "readiness is an execution report (execution.validate_for_execution)",
+      "execution_rules_conflict": "language-specific regex heuristics: overlay plugin candidate",
+      "execution_commit_instruction": "language-specific regex heuristics: overlay plugin candidate",
+      "context_legacy": "legacy projection sections do not exist in v2",
+      "source_unbound": "planning never checks repository paths",
+      "read_missing": "existence of repository paths needs a checkout: execution readiness rule required_read_missing"
+    },
+    "codes": [
+      {
+        "code": "duplicate_id",
+        "severity": "error",
+        "category": "structure",
+        "rule_module": "skm.modules.planning.domain.validation.rules_structure",
+        "description": "The same entity id appears on two entities of the document.",
+        "legacy_codes": [
+          "ID_DUPLICATE"
+        ]
+      },
+      {
+        "code": "duplicate_key",
+        "severity": "error",
+        "category": "structure",
+        "rule_module": "skm.modules.planning.domain.validation.rules_structure",
+        "description": "A key is repeated in its scope: entity keys in the plan, check keys per owner, batch keys per phase, section ids per entity, option keys per decision, material keys.",
+        "legacy_codes": [
+          "batch_id",
+          "sections"
+        ]
+      },
+      {
+        "code": "key_prefix_mismatch",
+        "severity": "error",
+        "category": "structure",
+        "rule_module": "skm.modules.planning.domain.validation.rules_structure",
+        "description": "An item key does not start with its phase key, or a unit key does not start with the key of an existing item.",
+        "legacy_codes": [
+          "id_mismatch",
+          "phase_items",
+          "units_list"
+        ]
+      },
+      {
+        "code": "entity_kind_changed",
+        "severity": "error",
+        "category": "structure",
+        "rule_module": "skm.modules.planning.domain.validation.rules_structure",
+        "description": "An entity id was published before with another kind (plan_entity_identities).",
+        "legacy_codes": []
+      },
+      {
+        "code": "self_reference",
+        "severity": "error",
+        "category": "structure",
+        "rule_module": "skm.modules.planning.domain.validation.rules_references",
+        "description": "An entity depends on, relates to, supersedes or parents itself.",
+        "legacy_codes": [
+          "UNIT_SELF",
+          "DECISION_SELF_SUPERSEDE"
+        ]
+      },
+      {
+        "code": "ref_unknown",
+        "severity": "error",
+        "category": "references",
+        "rule_module": "skm.modules.planning.domain.validation.rules_references",
+        "description": "A reference names a key that does not exist in the document (depends_on, relations, decisions, implements, owners, applies_to, supersedes, batch items, unit checks, criterion checks, unit parent, read refs to entities/materials/artifacts, review.covers).",
+        "legacy_codes": [
+          "ref_unknown",
+          "REF_UNKNOWN",
+          "LINK_INVALID",
+          "UNIT_DEPENDENCY"
+        ]
+      },
+      {
+        "code": "artifact_duplicate",
+        "severity": "error",
+        "category": "references",
+        "rule_module": "skm.modules.planning.domain.validation.rules_references",
+        "description": "An output artifact key is declared by more than one item.",
+        "legacy_codes": [
+          "artifact_duplicate"
+        ]
+      },
+      {
+        "code": "artifact_path_mismatch",
+        "severity": "error",
+        "category": "references",
+        "rule_module": "skm.modules.planning.domain.validation.rules_references",
+        "description": "An input artifact cites an output key but names another mount or path.",
+        "legacy_codes": [
+          "artifact_path"
+        ]
+      },
+      {
+        "code": "plan_relation_unresolved",
+        "severity": "warning",
+        "category": "references",
+        "rule_module": "skm.modules.planning.domain.validation.rules_references",
+        "description": "A plan relation target is not a plan of this project; it is kept unresolved.",
+        "legacy_codes": []
+      },
+      {
+        "code": "dependency_cycle",
+        "severity": "error",
+        "category": "dependencies",
+        "rule_module": "skm.modules.planning.domain.validation.rules_dependencies",
+        "description": "The compiled execution graph has a cycle (items, phases, units, batches or a mix); details.cycle lists the task keys.",
+        "legacy_codes": [
+          "cycle",
+          "dependency_deadlock"
+        ]
+      },
+      {
+        "code": "batch_foreign",
+        "severity": "error",
+        "category": "dependencies",
+        "rule_module": "skm.modules.planning.domain.validation.rules_dependencies",
+        "description": "A batch lists an item of another phase.",
+        "legacy_codes": [
+          "batch_foreign"
+        ]
+      },
+      {
+        "code": "batch_multiple",
+        "severity": "error",
+        "category": "dependencies",
+        "rule_module": "skm.modules.planning.domain.validation.rules_dependencies",
+        "description": "An item is listed in more than one batch.",
+        "legacy_codes": [
+          "batch_coverage"
+        ]
+      },
+      {
+        "code": "batch_unassigned",
+        "severity": "info",
+        "category": "dependencies",
+        "rule_module": "skm.modules.planning.domain.validation.rules_dependencies",
+        "description": "A phase has batches but the item is in none; it is scheduled without a batch barrier.",
+        "legacy_codes": [
+          "batch_coverage"
+        ]
+      },
+      {
+        "code": "batch_order_conflict",
+        "severity": "error",
+        "category": "dependencies",
+        "rule_module": "skm.modules.planning.domain.validation.rules_dependencies",
+        "description": "An item depends (directly or transitively) on an item of a later batch of the same phase; batches run in order, so it would never start.",
+        "legacy_codes": []
+      },
+      {
+        "code": "mount_unknown",
+        "severity": "error",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "A mount name is not a repository mount of the project (paths, reads, check cwd, artifacts, materials, forbidden paths).",
+        "legacy_codes": []
+      },
+      {
+        "code": "write_scope_overlap",
+        "severity": "error",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "Two units of the same item without a dependency path between them declare overlapping write scopes.",
+        "legacy_codes": [
+          "unit_overlap"
+        ]
+      },
+      {
+        "code": "write_scope_overlap_cross_item",
+        "severity": "info",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "Tasks of different items without a dependency path have overlapping footprints; the scheduler will not run them in parallel.",
+        "legacy_codes": []
+      },
+      {
+        "code": "write_scope_uncovered",
+        "severity": "warning",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "A unit write-scope entry is not covered by the change hints of its item.",
+        "legacy_codes": [
+          "unit_files_uncovered"
+        ]
+      },
+      {
+        "code": "write_scope_empty",
+        "severity": "warning",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "An item of work kind code, config, test or docs declares no change hints and none of its units declares a write scope.",
+        "legacy_codes": [
+          "execution_write_set_empty"
+        ]
+      },
+      {
+        "code": "write_scope_no_tests",
+        "severity": "warning",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "Change hints or write scopes change code files (planning.validation.code_suffixes) but name no test path.",
+        "legacy_codes": [
+          "write_set_no_tests"
+        ],
+        "configurable_by": "planning.validation.code_suffixes"
+      },
+      {
+        "code": "forbidden_path_conflict",
+        "severity": "error",
+        "category": "scope",
+        "rule_module": "skm.modules.planning.domain.validation.rules_scope",
+        "description": "A change hint or write scope intersects execution_constraints.forbidden_paths.",
+        "legacy_codes": []
+      },
+      {
+        "code": "incomplete",
+        "severity": "error",
+        "category": "completeness",
+        "rule_module": "skm.modules.planning.domain.validation.rules_readiness",
+        "description": "A detailed phase has no items, or an item of a detailed phase lacks scope.include, an acceptance check (own or via its units) together with any criterion (their links are checked by criterion_unlinked), a deliverable, or any of reads/change_hints/guidance_md/sections.",
+        "legacy_codes": [
+          "incomplete"
+        ]
+      },
+      {
+        "code": "phase_skeleton",
+        "severity": "info",
+        "category": "completeness",
+        "rule_module": "skm.modules.planning.domain.validation.rules_readiness",
+        "description": "The phase is a skeleton: publication is allowed, execution readiness will refuse its tasks.",
+        "legacy_codes": [
+          "PHASE_NOT_DETAILED",
+          "DESIGN_INCOMPLETE"
+        ]
+      },
+      {
+        "code": "context_default",
+        "severity": "warning",
+        "category": "completeness",
+        "rule_module": "skm.modules.planning.domain.validation.rules_readiness",
+        "description": "The plan goal or context still equals the title.",
+        "legacy_codes": [
+          "context_default"
+        ]
+      },
+      {
+        "code": "research_question_missing",
+        "severity": "warning",
+        "category": "completeness",
+        "rule_module": "skm.modules.planning.domain.validation.rules_readiness",
+        "description": "research.need is required but no question is written.",
+        "legacy_codes": []
+      },
+      {
+        "code": "criterion_unlinked",
+        "severity": "error",
+        "category": "acceptance",
+        "rule_module": "skm.modules.planning.domain.validation.rules_acceptance",
+        "description": "A criterion cannot be verified: mode check without checks, mode manual without a manual check, or mode review while the item review is waived.",
+        "legacy_codes": [],
+        "configurable_by": "planning.validation.require_acceptance_links"
+      },
+      {
+        "code": "criterion_check_mismatch",
+        "severity": "error",
+        "category": "acceptance",
+        "rule_module": "skm.modules.planning.domain.validation.rules_acceptance",
+        "description": "A criterion check is not owned by the criterion owner, its item or its phase, or its kind does not match the mode (manual check for mode manual, non-manual for mode check).",
+        "legacy_codes": []
+      },
+      {
+        "code": "requirement_unimplemented",
+        "severity": "warning",
+        "category": "acceptance",
+        "rule_module": "skm.modules.planning.domain.validation.rules_acceptance",
+        "description": "A must requirement has no implements or owns link.",
+        "legacy_codes": []
+      },
+      {
+        "code": "criterion_missing",
+        "severity": "info",
+        "category": "acceptance",
+        "rule_module": "skm.modules.planning.domain.validation.rules_acceptance",
+        "description": "An item of a detailed phase has no acceptance criteria; acceptance relies on its checks only.",
+        "legacy_codes": []
+      },
+      {
+        "code": "review_reviewer_unset",
+        "severity": "info",
+        "category": "acceptance",
+        "rule_module": "skm.modules.planning.domain.validation.rules_review",
+        "description": "A required review declares neither reviewer nor max_rounds; the run defaults apply.",
+        "legacy_codes": [
+          "review_strategy"
+        ]
+      },
+      {
+        "code": "unit_command_missing",
+        "severity": "error",
+        "category": "checks",
+        "rule_module": "skm.modules.planning.domain.validation.rules_checks",
+        "description": "A unit of kind command has no command, or a command is set on a unit of another kind.",
+        "legacy_codes": [
+          "unit_command",
+          "validation_carrier"
+        ]
+      },
+      {
+        "code": "check_cadence",
+        "severity": "warning",
+        "category": "checks",
+        "rule_module": "skm.modules.planning.domain.validation.rules_checks",
+        "description": "An item check runs a repository-wide command (planning.validation.heavy_check_markers); move it to the phase.",
+        "legacy_codes": [
+          "check_cadence"
+        ],
+        "configurable_by": "planning.validation.heavy_check_markers"
+      },
+      {
+        "code": "check_duplicate_command",
+        "severity": "warning",
+        "category": "checks",
+        "rule_module": "skm.modules.planning.domain.validation.rules_checks",
+        "description": "An item check runs the same argv or script as a check of its phase.",
+        "legacy_codes": [
+          "check_overlap"
+        ]
+      },
+      {
+        "code": "check_manual_rerun_after_integration",
+        "severity": "error",
+        "category": "checks",
+        "rule_module": "skm.modules.planning.domain.validation.rules_checks",
+        "description": "A manual check sets rerun_after_integration; a human verdict after integration has no path in the task state machine.",
+        "legacy_codes": []
+      },
+      {
+        "code": "decision_fields",
+        "severity": "error",
+        "category": "decisions",
+        "rule_module": "skm.modules.planning.domain.validation.rules_decisions",
+        "description": "An open decision lacks a question; a proposed or accepted decision lacks decision or rationale; decision names an option key that does not exist.",
+        "legacy_codes": [
+          "decision_fields",
+          "RATIONALE_REQUIRED",
+          "OPTION_UNKNOWN"
+        ]
+      },
+      {
+        "code": "decision_superseded_orphan",
+        "severity": "warning",
+        "category": "decisions",
+        "rule_module": "skm.modules.planning.domain.validation.rules_decisions",
+        "description": "Supersession is inconsistent: a decision is superseded but nothing supersedes it; a decision supersedes one whose state is not superseded; a decision is superseded by more than one decision; or a decision that supersedes others is not accepted.",
+        "legacy_codes": [
+          "backlink_mismatch",
+          "DECISION_SUPERSEDED"
+        ]
+      },
+      {
+        "code": "scope_ambiguous",
+        "severity": "error",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "A decision or material is both global and bound with applies_to.",
+        "legacy_codes": [
+          "scope_ambiguous"
+        ]
+      },
+      {
+        "code": "context_unbound",
+        "severity": "warning",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "An accepted decision or a material is not global, has no applies_to and is read by no entity: it reaches no context.",
+        "legacy_codes": [
+          "context_unbound"
+        ]
+      },
+      {
+        "code": "brief_duplicate",
+        "severity": "warning",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "Two brief messages carry the same text.",
+        "legacy_codes": [
+          "brief_duplicate"
+        ]
+      },
+      {
+        "code": "context_heavy",
+        "severity": "warning",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "A text field (plan context, brief message, section) exceeds planning.validation.heavy_text_kb and enters many contexts.",
+        "legacy_codes": [
+          "context_heavy"
+        ],
+        "configurable_by": "planning.validation.heavy_text_kb"
+      },
+      {
+        "code": "execution_prompt_heavy",
+        "severity": "warning",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "Rules, pitfalls and guidance of an item exceed planning.validation.heavy_text_kb.",
+        "legacy_codes": [
+          "execution_prompt_heavy"
+        ],
+        "configurable_by": "planning.validation.heavy_text_kb"
+      },
+      {
+        "code": "material_unavailable",
+        "severity": "error",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "A file_version material does not exist, belongs to another workspace or its bytes are not available.",
+        "legacy_codes": []
+      },
+      {
+        "code": "material_stale",
+        "severity": "warning",
+        "category": "context",
+        "rule_module": "skm.modules.planning.domain.validation.rules_context",
+        "description": "A must_refresh material is already older than its freshness.max_age_seconds at validation time (file version created_at or retrieved_at; an external source without retrieved_at counts as stale): execution will wait with BLOCKED_BY_MATERIAL at every stage listed in required_for.",
+        "legacy_codes": []
+      },
+      {
+        "code": "route_unknown_runtime",
+        "severity": "warning",
+        "category": "routing",
+        "rule_module": "skm.modules.planning.domain.validation.rules_routing",
+        "description": "A route names a runtime that is not in the runtime catalog.",
+        "legacy_codes": [
+          "ROUTE_MODEL_UNKNOWN"
+        ],
+        "configurable_by": "planning.validation.warn_unknown_models"
+      },
+      {
+        "code": "route_unknown_model",
+        "severity": "warning",
+        "category": "routing",
+        "rule_module": "skm.modules.planning.domain.validation.rules_routing",
+        "description": "A route names a model that is not in the catalog of its runtime.",
+        "legacy_codes": [
+          "ROUTE_MODEL_UNKNOWN",
+          "ROUTING_UNAVAILABLE"
+        ],
+        "configurable_by": "planning.validation.warn_unknown_models"
+      },
+      {
+        "code": "skill_unknown",
+        "severity": "warning",
+        "category": "routing",
+        "rule_module": "skm.modules.planning.domain.validation.rules_routing",
+        "description": "A skill key is not known to the extensions registry for this scope.",
+        "legacy_codes": [],
+        "configurable_by": "planning.validation.warn_unknown_skills"
+      }
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:command:propose-intent:v1",
+  "title": "ProposeIntent",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "profile_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 0
+    },
+    "role_layer": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:policy:permission-layer:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "task_layer": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:policy:permission-layer:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subject_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "kind": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+    },
+    "args": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "scope_id",
+    "subject_ref",
+    "kind",
+    "args",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.commands",
+      "class": "ProposeIntent",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ProposeIntent"
+    }
+  }
+}

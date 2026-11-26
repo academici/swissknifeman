@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:renew-lease:v1",
+  "title": "RenewLeaseResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "lease_expires_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "cancel_requested": {
+      "type": "boolean"
+    },
+    "snapshot_requested": {
+      "type": "boolean"
+    },
+    "refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "details"
+      ]
+    },
+    "next": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/stage-instruction"
+    }
+  },
+  "required": [
+    "lease_expires_at",
+    "cancel_requested",
+    "snapshot_requested"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "RenewLeaseResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RenewLeaseResult"
+    }
+  }
+}

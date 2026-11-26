@@ -1,0 +1,19 @@
+{
+  "skill": "startup-cto",
+  "snippets": [
+    {
+      "file": "tech-radar.md",
+      "description": "Tech radar",
+      "tags": [
+        "role"
+      ]
+    },
+    {
+      "file": "hiring-rubric.md",
+      "description": "Hiring rubric",
+      "tags": [
+        "role"
+      ]
+    }
+  ]
+}

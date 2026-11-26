@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:result:start-intent-execution:v1",
+  "title": "StartIntentExecutionResult",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "approved",
+        "denied",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "outcome_unknown"
+      ]
+    },
+    "approval_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "intent_id",
+    "state",
+    "approval_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.results",
+      "class": "StartIntentExecutionResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "StartIntentExecutionResult"
+    }
+  }
+}

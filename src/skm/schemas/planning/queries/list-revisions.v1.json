@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:query:list-revisions:v1",
+  "title": "ListRevisions",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "before": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [
+    "plan_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "ListRevisions",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ListRevisions"
+    }
+  }
+}

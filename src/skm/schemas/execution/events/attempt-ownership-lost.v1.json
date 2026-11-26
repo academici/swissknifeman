@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:attempt-ownership-lost:v1",
+  "title": "AttemptOwnershipLost",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stage_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "attempt_id",
+    "task_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "AttemptOwnershipLost",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "AttemptOwnershipLost"
+    }
+  }
+}

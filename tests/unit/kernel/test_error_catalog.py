@@ -1,0 +1,127 @@
+"""The error catalog is one JSON document; ``ErrorCode`` exists only as its generated image."""
+
+import ast
+import json
+from pathlib import Path
+from typing import Any
+
+import jsonschema
+import pytest
+
+from skm.kernel import error_codes
+from skm.kernel.error_codes import CATALOG, ErrorCategory, ErrorCode, ErrorCodeInfo
+from skm.kernel.generated import error_codes as generated
+
+ROOT = Path(__file__).resolve().parents[3]
+SCHEMA_DIR = ROOT / "src" / "skm" / "schemas" / "kernel"
+KERNEL_DIR = ROOT / "src" / "skm" / "kernel"
+WAITING_CODES = {"NOTHING_TO_CLAIM", "MANUAL_PENDING", "APPROVAL_REQUIRED", "WAITING_FOR_ANSWER", "SLOT_BUSY"}
+
+
+@pytest.fixture(scope="module")
+def document() -> dict[str, Any]:
+    return json.loads((SCHEMA_DIR / "data" / "error-codes.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def schema() -> dict[str, Any]:
+    return json.loads((SCHEMA_DIR / "error-catalog.v1.json").read_text(encoding="utf-8"))
+
+
+def test_document_is_valid_against_the_catalog_schema(
+    document: dict[str, Any], schema: dict[str, Any]
+) -> None:
+    jsonschema.Draft202012Validator.check_schema(schema)
+    jsonschema.Draft202012Validator(schema).validate(document)
+
+
+def test_codes_are_unique_and_the_schema_rejects_dupes(
+    document: dict[str, Any], schema: dict[str, Any]
+) -> None:
+    codes = [row["code"] for row in document["codes"]]
+    assert len(codes) == len(set(codes))
+    broken = {**document, "codes": [*document["codes"], document["codes"][0]]}
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.Draft202012Validator(schema).validate(broken)
+
+
+def test_category_enum_matches_the_schema(document: dict[str, Any], schema: dict[str, Any]) -> None:
+    assert {member.value for member in ErrorCategory} == set(schema["$defs"]["category"]["enum"])
+    assert [row["category"] for row in document["categories"]] == [member.value for member in ErrorCategory]
+
+
+def test_every_error_code_has_a_catalog_mapping(document: dict[str, Any]) -> None:
+    assert set(CATALOG) == set(ErrorCode)
+    assert [member.value for member in ErrorCode] == [row["code"] for row in document["codes"]]
+    for code, info in CATALOG.items():
+        assert isinstance(info, ErrorCodeInfo)
+        assert info.code is code
+        assert 200 <= info.http_status <= 599
+        assert 0 <= info.cli_exit <= 255
+        assert info.description
+
+
+def test_cli_exit_follows_the_category_default(document: dict[str, Any]) -> None:
+    defaults = {row["category"]: row for row in document["categories"]}
+    for info in CATALOG.values():
+        assert info.cli_exit == defaults[info.category.value]["cli_exit"], info.code
+
+
+def test_http_status_follows_the_category_unless_overridden(document: dict[str, Any]) -> None:
+    defaults = {row["category"]: row["http_status"] for row in document["categories"]}
+    overrides = {
+        info.code.value: info.http_status
+        for info in CATALOG.values()
+        if info.http_status != defaults[info.category.value]
+    }
+    assert overrides == {
+        "CLIENT_TOO_OLD": 426,
+        "PAYLOAD_TOO_LARGE": 413,
+        "UNSUPPORTED_MEDIA_TYPE": 415,
+        "LENGTH_REQUIRED": 411,
+        "PRECONDITION_REQUIRED": 428,
+        "AUTH_RATE_LIMITED": 429,
+        "TOO_MANY_STREAMS": 429,
+        "BLOB_TOO_LARGE": 413,
+    }
+
+
+def test_waiting_codes_are_exactly_the_documented_outcomes() -> None:
+    waiting = {code.value for code, info in CATALOG.items() if info.category is ErrorCategory.WAITING}
+    assert waiting == WAITING_CODES
+    assert all(
+        CATALOG[code].http_status == 200 and CATALOG[code].cli_exit == 4 for code in map(ErrorCode, waiting)
+    )
+
+
+def test_catalog_is_read_only() -> None:
+    mapping: Any = CATALOG
+    with pytest.raises(TypeError):
+        mapping[ErrorCode.NOT_FOUND] = CATALOG[ErrorCode.FORBIDDEN]
+    info: Any = CATALOG[ErrorCode.NOT_FOUND]
+    with pytest.raises(AttributeError):
+        info.retryable = True
+
+
+def test_error_codes_module_only_reexports_the_generated_names() -> None:
+    assert error_codes.CATALOG is generated.CATALOG
+    assert error_codes.ErrorCode is generated.ErrorCode
+    assert error_codes.ErrorCategory is generated.ErrorCategory
+    assert error_codes.ErrorCodeInfo is generated.ErrorCodeInfo
+    tree = ast.parse((KERNEL_DIR / "error_codes.py").read_text(encoding="utf-8"))
+    assert not [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef | ast.FunctionDef)]
+    assigned = [
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    ]
+    assert assigned == ["__all__"], "no hand-written duplicate catalog"
+
+
+def test_generated_header_marks_the_file_as_generated() -> None:
+    text = (KERNEL_DIR / "generated" / "error_codes.py").read_text(encoding="utf-8")
+    assert text.startswith("# generated by tools/codegen/error_catalog.py; do not edit\n")
+    assert '"""Error catalog (generated; do not edit).' in text
+    assert "tools/codegen/error_catalog.py" in text

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:worker:v1",
+  "title": "WorkerView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "online",
+        "draining",
+        "offline",
+        "retired"
+      ]
+    },
+    "capabilities": {
+      "$ref": "urn:skm:workspace:worker-capabilities:v1"
+    },
+    "last_heartbeat_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "worker_id",
+    "workspace_id",
+    "host_id",
+    "display_name",
+    "state",
+    "capabilities",
+    "last_heartbeat_at",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "WorkerView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "WorkerView"
+    }
+  }
+}

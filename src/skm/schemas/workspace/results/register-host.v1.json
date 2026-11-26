@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:result:register-host:v1",
+  "title": "RegisterHostResult",
+  "description": "workspace result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_name"
+    }
+  },
+  "required": [
+    "host_id",
+    "name"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.results",
+      "class": "RegisterHostResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RegisterHostResult"
+    }
+  }
+}

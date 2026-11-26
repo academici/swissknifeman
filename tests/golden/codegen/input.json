@@ -1,0 +1,397 @@
+{
+  "urn:skm:demo:Priority:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:Priority:v1",
+    "description": "Golden Priority",
+    "type": "string",
+    "enum": [
+      "low",
+      "high-priority",
+      "x.y"
+    ],
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "Priority",
+        "kind": "enum"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "Priority"
+      }
+    }
+  },
+  "urn:skm:demo:Labels:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:Labels:v1",
+    "description": "Golden Labels",
+    "type": "object",
+    "additionalProperties": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "Labels",
+        "kind": "alias"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "Labels"
+      }
+    }
+  },
+  "urn:skm:demo:Document:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:Document:v1",
+    "description": "Golden Document",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "data": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "note": {
+        "type": "string"
+      },
+      "$schema": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "data"
+    ],
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "Document",
+        "kind": "typeddict"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "Document"
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "note": {
+              "const": "strict"
+            }
+          },
+          "required": [
+            "note"
+          ]
+        },
+        "then": {
+          "properties": {
+            "data": {
+              "minItems": 1
+            }
+          }
+        }
+      }
+    ],
+    "anyOf": [
+      {
+        "required": [
+          "id"
+        ]
+      },
+      {
+        "required": [
+          "note"
+        ]
+      }
+    ]
+  },
+  "urn:skm:demo:Check:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:Check:v1",
+    "description": "Golden Check",
+    "x-skm-discriminator": "kind",
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "command"
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "argv"
+        ]
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "manual"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "instructions"
+        ]
+      }
+    ],
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "Check",
+        "kind": "union"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "Check"
+      }
+    }
+  },
+  "urn:skm:demo:DemoSettings:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:DemoSettings:v1",
+    "description": "Golden DemoSettings",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "retry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "type": "integer",
+            "x-skm": {
+              "nullable": false
+            }
+          }
+        },
+        "required": []
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "safe",
+          "fast"
+        ],
+        "x-skm": {
+          "nullable": false
+        }
+      },
+      "rows": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "x-skm": {
+          "nullable": false
+        }
+      },
+      "token": {
+        "$ref": "urn:skm:config:secret-ref:v1",
+        "x-skm": {
+          "nullable": false
+        }
+      },
+      "label": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "x-skm": {
+          "nullable": true
+        }
+      }
+    },
+    "required": [],
+    "x-skm-section": {
+      "id": "demo"
+    },
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "DemoSettings",
+        "kind": "settings_view"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "DemoSettings"
+      }
+    }
+  },
+  "urn:skm:demo:Envelope:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:demo:Envelope:v1",
+    "description": "Golden Envelope",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "optional_first": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "day": {
+        "type": "string",
+        "format": "date"
+      },
+      "priority": {
+        "$ref": "urn:skm:demo:Priority:v1"
+      },
+      "document": {
+        "$ref": "urn:skm:demo:Document:v1"
+      },
+      "check": {
+        "$ref": "urn:skm:demo:Check:v1"
+      },
+      "labels": {
+        "$ref": "urn:skm:demo:Labels:v1"
+      },
+      "nullable": {
+        "oneOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "scope": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        },
+        "required": []
+      },
+      "node": {
+        "$ref": "#/$defs/node"
+      },
+      "tuple": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "SKM_TOKEN": {
+        "type": "string",
+        "default": ""
+      },
+      "from": {
+        "type": "string",
+        "default": "owner"
+      }
+    },
+    "required": [
+      "id",
+      "at",
+      "day",
+      "priority",
+      "document",
+      "check",
+      "labels",
+      "nullable"
+    ],
+    "$defs": {
+      "node": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "integer"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/node"
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+    },
+    "x-skm-codegen": {
+      "python": {
+        "module": "skm.kernel.generated.codegen_fixture",
+        "class": "Envelope",
+        "kind": "dataclass"
+      },
+      "typescript": {
+        "file": "demo.ts",
+        "name": "Envelope"
+      }
+    }
+  },
+  "urn:skm:config:secret-ref:v1": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:skm:config:secret-ref:v1",
+    "type": "string",
+    "pattern": "^secret://(env|file|keyring)/.+$"
+  }
+}

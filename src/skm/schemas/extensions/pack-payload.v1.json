@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:pack-payload:v1",
+  "title": "PackPayload",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_text": {
+      "type": "string",
+      "minLength": 0
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content_b64": {
+            "type": "string",
+            "contentEncoding": "base64"
+          }
+        },
+        "required": [
+          "path",
+          "content_b64"
+        ]
+      }
+    }
+  },
+  "required": [
+    "manifest_text",
+    "files"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.documents",
+      "class": "PackPayload",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PackPayload"
+    }
+  }
+}

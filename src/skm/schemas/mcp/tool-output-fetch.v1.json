@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:fetch:v1",
+  "title": "skm_fetch output",
+  "description": "A continuation of the entities page or text fragment, including any truncation or authoring receipt.",
+  "type": "object",
+  "anyOf": [
+    {
+      "$ref": "urn:skm:mcp:tool-output:plan-entities:v1"
+    },
+    {
+      "$ref": "urn:skm:mcp:tool-output:plan-read-text:v1"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:mount:v1",
+  "title": "MountView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "mount_name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "secondary",
+        "docs",
+        "infra"
+      ]
+    },
+    "repository": {
+      "$ref": "urn:skm:workspace:view:repository:v1"
+    },
+    "binding": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "binding_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "active",
+                "missing",
+                "mismatched",
+                "removed"
+              ]
+            },
+            "is_stale": {
+              "type": "boolean"
+            },
+            "local_locator": {
+              "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+            },
+            "row_version": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "binding_id",
+            "state",
+            "is_stale",
+            "row_version"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "mount_name",
+    "role",
+    "repository",
+    "binding"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "MountView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "MountView"
+    }
+  }
+}

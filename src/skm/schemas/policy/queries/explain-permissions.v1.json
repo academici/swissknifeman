@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:query:explain-permissions:v1",
+  "title": "ExplainPermissions",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 0
+    },
+    "role_layer": {
+      "$ref": "urn:skm:policy:permission-layer:v1"
+    },
+    "task_layer": {
+      "$ref": "urn:skm:policy:permission-layer:v1"
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "scope_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.queries",
+      "class": "ExplainPermissions",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ExplainPermissions"
+    }
+  }
+}

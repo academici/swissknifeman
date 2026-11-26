@@ -1,0 +1,51 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "triager"
+version = "2.0.0"
+role = "triager"
+title = "Triager"
+description = "Sorts review findings into fix_now, defer and reject with reasons; a rejected major finding needs a read-only reproduction."
+result_schema = "urn:skm:execution:role-result:triager:v1"
+llm = true
+
+[routing]
+model_class = "implementation"
+effort = "medium"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read", "shell.run"]
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["triager/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["triager/result_contract"]
+
+[context]
+include = []
+inherit_user_global = false
+repo_instructions = "none"
+repo_instruction_sections = []
+skills_mode = "allowlist"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 2000
+history_max_steps = 0
+memory_top_k = 0
+include_optional_materials = false
+
+[limits]
+timeout_seconds = 900
+idle_timeout_seconds = 300
+max_turns = 60
+max_output_tokens = 8000
+max_result_retries = 2

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:result:exchange-pairing-token:v1",
+  "title": "ExchangePairingTokenResult",
+  "description": "The committed exchange identifiers and the bearer secret on the first successful response.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pairing_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "worker_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "exchanged"
+      ]
+    },
+    "token_secret": {
+      "anyOf": [
+        {
+          "type": "string",
+          "x-skm-secret": true
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "pairing_id",
+    "worker_id",
+    "principal_id",
+    "token_id",
+    "status"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.results",
+      "class": "ExchangePairingTokenResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "ExchangePairingTokenResult"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:query:resolve-resource:v1",
+  "title": "ResolveResource",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "scope": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/scope-ref"
+    }
+  },
+  "required": [
+    "kind",
+    "key",
+    "scope"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.queries",
+      "class": "ResolveResource",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ResolveResource"
+    }
+  }
+}

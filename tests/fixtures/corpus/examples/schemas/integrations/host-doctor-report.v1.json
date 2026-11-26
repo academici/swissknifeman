@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:doctor-report:v1",
+  "title": "HostDoctorReport",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host:doctor-report:v1"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "claude_code",
+          "codex",
+          "cursor",
+          "grok"
+        ]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info",
+        "ok"
+      ]
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "check_id": {
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "claude_code",
+                  "codex",
+                  "cursor",
+                  "grok"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info",
+              "ok"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "check_id",
+          "level",
+          "title",
+          "detail"
+        ]
+      }
+    },
+    "checked_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "targets",
+    "status",
+    "checks"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "HostDoctorReport",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostDoctorReport"
+    }
+  }
+}

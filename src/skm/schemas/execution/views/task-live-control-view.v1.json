@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:view:task-live-control-view:v1",
+  "title": "TaskLiveControlView",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "row_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "assignment_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fencing_token": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "active_step_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cancellation_requested": {
+      "type": "boolean"
+    },
+    "pending_controls": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "reroute_task",
+          "override_actor",
+          "steer_task"
+        ]
+      }
+    },
+    "steps": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "coverage": {
+            "enum": [
+              "complete",
+              "partial",
+              "unavailable"
+            ]
+          }
+        },
+        "required": [
+          "step_id",
+          "role",
+          "state",
+          "coverage"
+        ]
+      }
+    },
+    "selected_step_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tool_calls": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "pattern": "^[^\\u0000]+$"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300,
+                "pattern": "^[^\\u0000]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9223372036854775807
+          },
+          "coverage": {
+            "enum": [
+              "complete",
+              "partial"
+            ]
+          }
+        },
+        "required": [
+          "call_id",
+          "tool",
+          "duration_ms",
+          "coverage"
+        ]
+      }
+    },
+    "next_call_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "^[^\\u0000]+$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "incidents": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gate_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "branch": {
+            "enum": [
+              "A",
+              "B",
+              "C"
+            ]
+          },
+          "authority": {
+            "enum": [
+              "owner",
+              "coordinator"
+            ]
+          },
+          "action_digest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stop_after": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "gate_id",
+          "branch",
+          "authority",
+          "action_digest",
+          "stop_after"
+        ]
+      }
+    }
+  },
+  "required": [
+    "row_version",
+    "assignment_id",
+    "fencing_token",
+    "active_step_id",
+    "cancellation_requested",
+    "pending_controls",
+    "steps",
+    "selected_step_id",
+    "tool_calls",
+    "next_call_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.views",
+      "class": "TaskLiveControlView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution-live-control.ts",
+      "name": "TaskLiveControlView"
+    }
+  }
+}

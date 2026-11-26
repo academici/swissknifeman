@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:background:v1",
+  "title": "Background services settings",
+  "description": "Settings section 'background' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "background",
+    "owner": "platform",
+    "title": "Background services",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "BackgroundSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "BackgroundSettings"
+    }
+  },
+  "properties": {
+    "outbox_relay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 500,
+          "description": "Idle interval of the outbox_relay service between passes that found no work. Delivers committed outbox messages to subscribers and hook destinations.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100,
+          "description": "Outbox rows claimed by one relay pass.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_lag_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 60,
+          "description": "Readiness warns when the oldest undelivered outbox row is older than this.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "janitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 3600000,
+          "description": "Runs the janitor tasks idempotency_gc, staging_gc, intent_expiry, outbox_gc and exports_purge.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "scheduler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 1000,
+          "description": "Idle interval of the scheduler service between passes that found no work. Dispatches ScheduleReadyTasks.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "lease_sweeper": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 5000,
+          "description": "Idle interval of the lease_sweeper service between passes that found no work. Dispatches ExpireLeases and marks silent workers offline.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "timeout_enforcer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 10000,
+          "description": "Idle interval of the timeout_enforcer service between passes that found no work. Dispatches EnforceTimeouts.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "stall_detector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 15000,
+          "description": "Idle interval of the stall_detector service between passes that found no work. Dispatches DetectStalls.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "autopilot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 30000,
+          "description": "Idle interval of the autopilot service between passes that found no work. Dispatches AutopilotTick for projects with the autopilot enabled.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 90,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "memory_expirer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "default": 600000,
+          "description": "Idle interval of the memory_expirer service between passes that found no work. Dispatches ExpireMemory (module knowledge).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Services",
+              "order": 100,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "task-brief-template"
+version = "0.5.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["executor"]
+replaced_by = "orch/schemas/exec/v1/execution-input.schema.json"
+
+[provenance]
+source = "local"

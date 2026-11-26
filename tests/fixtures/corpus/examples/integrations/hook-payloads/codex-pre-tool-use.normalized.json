@@ -1,0 +1,15 @@
+{
+  "schema": "urn:skm:integrations:defs:v1#/$defs/hook_event",
+  "target": "codex",
+  "kind": "pre_tool",
+  "session_id": "019a3b2c-4d5e-7f60-8a9b-0c1d2e3f4a5b",
+  "cwd": "/home/dev/demo",
+  "tool_name": "apply_patch",
+  "command": null,
+  "paths": [
+    ".claude/skills/skm-memory/SKILL.md"
+  ],
+  "prompt": null,
+  "stop_status": null,
+  "raw_event_name": "PreToolUse"
+}

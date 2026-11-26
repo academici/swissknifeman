@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:explain-permissions:v1",
+  "title": "ExplainPermissionsView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "field": {
+        "type": "string",
+        "minLength": 0
+      },
+      "value": {},
+      "contributed_by": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 0
+        }
+      }
+    },
+    "required": [
+      "field",
+      "value",
+      "contributed_by"
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.views",
+      "class": "ExplainPermissionsView",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ExplainPermissionsView"
+    }
+  }
+}

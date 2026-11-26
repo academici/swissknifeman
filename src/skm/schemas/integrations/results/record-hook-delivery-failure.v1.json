@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:result:record-hook-delivery-failure:v1",
+  "title": "RecordHookDeliveryFailureResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recorded": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "recorded"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.results",
+      "class": "RecordHookDeliveryFailureResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RecordHookDeliveryFailureResult"
+    }
+  }
+}

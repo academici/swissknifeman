@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:record-manual-verdict:v1",
+  "title": "RecordManualVerdict",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "check_execution_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "comment": {
+      "type": "string"
+    },
+    "supersedes_verdict_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "check_execution_id",
+    "verdict",
+    "comment"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "RecordManualVerdict",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RecordManualVerdict"
+    }
+  }
+}

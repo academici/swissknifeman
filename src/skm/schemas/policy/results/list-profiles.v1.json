@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:result:list-profiles:v1",
+  "title": "ListProfilesResult",
+  "description": "policy owner contract; see the policy module. The bus carries objects only: the array of ProfileView of policy.list_profiles is the profiles member.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:view:profile:v1"
+      }
+    }
+  },
+  "required": [
+    "profiles"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.results",
+      "class": "ListProfilesResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ListProfilesResult"
+    }
+  }
+}

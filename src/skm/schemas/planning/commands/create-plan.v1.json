@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:command:create-plan:v1",
+  "title": "CreatePlan",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "template_key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "template_inputs": {
+      "type": "object",
+      "maxProperties": 50,
+      "additionalProperties": {
+        "type": [
+          "string",
+          "integer",
+          "boolean"
+        ]
+      }
+    }
+  },
+  "required": [
+    "project_id",
+    "title"
+  ],
+  "dependentRequired": {
+    "template_inputs": [
+      "template_key"
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.commands",
+      "class": "CreatePlan",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "CreatePlan"
+    }
+  }
+}

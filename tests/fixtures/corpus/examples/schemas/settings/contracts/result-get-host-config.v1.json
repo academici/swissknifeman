@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:result:get-host-config:v1",
+  "title": "GetHostConfigResult",
+  "description": "Effective host chain (instance -> host) without the invocation layer of the API process, plus plugins.allowed/plugins.required of the instance work chain. Secret keys carry their SecretRef, never the value. The step config of a run is not here: it comes with claim_assignment/begin_stage. The worker caches the result per process and re-reads it when generation or pack_generation changes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host_id",
+    "generation",
+    "pack_generation",
+    "digest",
+    "values",
+    "invalid",
+    "plugins"
+  ],
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pack_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest",
+      "description": "Digest of the canonical values object."
+    },
+    "values": {
+      "type": "object",
+      "description": "Effective value per dotted key of the host chain; secret keys hold a SecretRef string.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+      },
+      "additionalProperties": true
+    },
+    "invalid": {
+      "type": "array",
+      "description": "Keys of the host chain that resolved invalid (EffectiveConfig.invalid, settings §B.6 step 6).",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "plugins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "required"
+      ],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.results",
+      "class": "GetHostConfigResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetHostConfigResult"
+    }
+  }
+}

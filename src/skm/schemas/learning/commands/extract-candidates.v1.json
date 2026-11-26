@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:command:extract-candidates:v1",
+  "title": "ExtractCandidates",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "summary": {
+      "$ref": "urn:skm:learning:activity-summary:v1"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "summary",
+    "project_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.commands",
+      "class": "ExtractCandidates",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "ExtractCandidates"
+    }
+  }
+}

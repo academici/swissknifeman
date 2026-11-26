@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:workspace-created:v1",
+  "title": "WorkspaceCreated",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "slug": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/slug"
+    },
+    "title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "slug",
+    "title"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "WorkspaceCreated",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "WorkspaceCreated"
+    }
+  }
+}

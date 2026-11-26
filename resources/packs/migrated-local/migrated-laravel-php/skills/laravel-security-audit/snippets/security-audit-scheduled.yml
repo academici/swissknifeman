@@ -1,0 +1,45 @@
+# Template for target project: .github/workflows/security-audit.yml
+# Background security-audit Laravel scheduled: agent passes the table
+# «sharp edges» from skill laravel-security-audit and opens Issue
+# with categorization of finds by severity. Doesn't change anything in the code.
+#
+# Requirements:
+# - secret ANTHROPIC_API_KEY (paid tokens - see. docs/workflows/background-agents)
+# - installed skill laravel-security-audit (install.sh or plugin marketplace)
+name: Laravel Security Audit
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # weekly, Monday 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: security-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security audit
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Conduct a security audit based on the skill laravel-security-audit:
+            complete all five «sharp edges» (raw-requests, mass assignment,
+            XSS in Blade, CSRF/redirect, serialization/authorization).
+
+            Rules:
+            - Each grep-verify the match by context - report
+              from confirmed finds only.
+            - Find format: file:string, chain from input to vulnerable
+              call, severity (critical/high/medium/low), recommendation.
+            - Do not edit the code. Present the result as GitHub Issue
+              with title "Security audit YYYY-MM-DD" and tags severity.
+            - If there are no finds - Issue do not create.

@@ -1,0 +1,1020 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:manifest:v1",
+  "title": "ContextManifest",
+  "description": "Immutable record of the input of one agent step (spec/modules/context.md §5.13): every block with source, version, digest, tokens, trust and the reason of its inclusion or exclusion; route passport with what the runtime loads by itself (G13). state draft is written in phase A; final after context.finalize_manifest. Example: examples/context/context-manifest.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "state",
+    "workspace_id",
+    "project_id",
+    "plan_id",
+    "revision_id",
+    "entity_id",
+    "purpose",
+    "agent_profile_version_id",
+    "runtime_id",
+    "model",
+    "route",
+    "draft_digest",
+    "mode",
+    "task_digest",
+    "prompt_digest",
+    "prompt_file_version_id",
+    "total_tokens_estimate",
+    "total_limit",
+    "budgets",
+    "blocks",
+    "host_facts",
+    "skills_trace",
+    "diagnostics",
+    "estimator_id",
+    "assembler_version",
+    "created_at",
+    "finalized_at"
+  ],
+  "$defs": {
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ordinal",
+        "block_ref",
+        "position",
+        "block_type",
+        "budget_class",
+        "mandatory",
+        "source_kind",
+        "source_ref",
+        "source_version",
+        "trust",
+        "tokens_estimate",
+        "content_digest",
+        "included",
+        "reason",
+        "detail",
+        "content_stored"
+      ],
+      "properties": {
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "block_ref": {
+          "type": "string",
+          "pattern": "^(d:\\d+|c:\\d+|x:\\d+|h:hi:\\d+)$",
+          "description": "d: control-plane block of the draft, c: conditional skill, x: excluded in phase A, h: host block (h:<request_id>)."
+        },
+        "position": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "block_type": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/block_type"
+        },
+        "budget_class": {
+          "type": "string",
+          "enum": [
+            "core",
+            "task",
+            "supporting",
+            "retrieval"
+          ]
+        },
+        "mandatory": {
+          "type": "boolean"
+        },
+        "source_kind": {
+          "type": "string",
+          "enum": [
+            "spec",
+            "resource",
+            "file_version",
+            "execution",
+            "memory",
+            "core",
+            "external",
+            "repository_path"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "source_version": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trust": {
+          "type": "string",
+          "enum": [
+            "system",
+            "operator",
+            "project",
+            "repository",
+            "model",
+            "external",
+            "third_party",
+            "memory"
+          ]
+        },
+        "tokens_estimate": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_digest": {
+          "oneOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "included": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "mandatory",
+            "explicit_plan",
+            "explicit_profile",
+            "trigger_path",
+            "trigger_dep",
+            "required",
+            "scope_global",
+            "scope_match",
+            "carrier_for_write_scope",
+            "required_material",
+            "optional_material",
+            "binary_reference",
+            "recent_history",
+            "memory_match",
+            "execution_input",
+            "discoverable_index",
+            "research_result",
+            "external_material",
+            "external_reference",
+            "not_found",
+            "too_large",
+            "binary_content",
+            "encoding_invalid",
+            "path_invalid",
+            "classification_forbidden",
+            "file_version_not_ready",
+            "quarantined",
+            "trust_forbidden",
+            "unknown_skill",
+            "version_unavailable",
+            "excluded",
+            "role_not_allowed",
+            "tool_missing",
+            "kind_not_preloaded",
+            "duplicated_by_role_contract",
+            "adapter_not_supported",
+            "capability_missing",
+            "exclusive_group",
+            "over_skill_budget",
+            "trigger_not_met",
+            "role_not_applicable",
+            "scope_mismatch",
+            "conflict_lower_priority",
+            "no_matching_sections",
+            "host_budget_exceeded",
+            "optional_disabled",
+            "history_window",
+            "type_not_in_policy",
+            "full_prompt",
+            "over_budget_core",
+            "over_budget_supporting",
+            "over_budget_retrieval",
+            "over_total_budget",
+            "skills_disabled",
+            "symlink_refused",
+            "repo_instructions_max_files",
+            "runtime_self_loaded",
+            "in_resumed_session"
+          ]
+        },
+        "detail": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_stored": {
+          "type": "boolean"
+        },
+        "research_query_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "atomic_group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200,
+          "description": "Server-owned conflict group: all members are included or excluded together; absent means no group."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "included": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "position": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "reason": {
+                "enum": [
+                  "mandatory",
+                  "explicit_plan",
+                  "explicit_profile",
+                  "trigger_path",
+                  "trigger_dep",
+                  "required",
+                  "scope_global",
+                  "scope_match",
+                  "carrier_for_write_scope",
+                  "required_material",
+                  "optional_material",
+                  "binary_reference",
+                  "recent_history",
+                  "memory_match",
+                  "execution_input",
+                  "discoverable_index",
+                  "research_result",
+                  "external_material",
+                  "external_reference"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "included": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "position": {
+                "type": "null"
+              },
+              "reason": {
+                "enum": [
+                  "not_found",
+                  "too_large",
+                  "binary_content",
+                  "encoding_invalid",
+                  "path_invalid",
+                  "classification_forbidden",
+                  "file_version_not_ready",
+                  "quarantined",
+                  "trust_forbidden",
+                  "unknown_skill",
+                  "version_unavailable",
+                  "excluded",
+                  "role_not_allowed",
+                  "tool_missing",
+                  "kind_not_preloaded",
+                  "duplicated_by_role_contract",
+                  "adapter_not_supported",
+                  "capability_missing",
+                  "exclusive_group",
+                  "over_skill_budget",
+                  "trigger_not_met",
+                  "role_not_applicable",
+                  "scope_mismatch",
+                  "conflict_lower_priority",
+                  "no_matching_sections",
+                  "host_budget_exceeded",
+                  "optional_disabled",
+                  "history_window",
+                  "type_not_in_policy",
+                  "full_prompt",
+                  "over_budget_core",
+                  "over_budget_supporting",
+                  "over_budget_retrieval",
+                  "over_total_budget",
+                  "skills_disabled",
+                  "symlink_refused",
+                  "repo_instructions_max_files",
+                  "runtime_self_loaded",
+                  "in_resumed_session"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "self_load_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "locator",
+        "when",
+        "active",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "user_config",
+            "plugins",
+            "skills",
+            "project_instructions",
+            "project_settings"
+          ]
+        },
+        "locator": {
+          "type": "string"
+        },
+        "when": {
+          "type": "string",
+          "enum": [
+            "start",
+            "on_access"
+          ]
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "isolated",
+            "inherited",
+            "cannot_suppress"
+          ]
+        }
+      }
+    },
+    "self_load_observed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "locator",
+        "files",
+        "when"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "user_config",
+            "plugins",
+            "skills",
+            "project_instructions",
+            "project_settings"
+          ]
+        },
+        "locator": {
+          "type": "string"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "when": {
+          "type": "string",
+          "enum": [
+            "start",
+            "on_access"
+          ]
+        }
+      }
+    },
+    "class_usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokens",
+        "limit"
+      ],
+      "properties": {
+        "tokens": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema": {
+      "const": "urn:skm:context:manifest:v1"
+    },
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "final"
+      ]
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "entity_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "purpose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "stage_id",
+        "step_ref",
+        "attempt_no",
+        "round_no"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+        },
+        "stage_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+        },
+        "step_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attempt_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "round_no": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "agent_profile_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_source",
+        "operation",
+        "config_mode",
+        "degraded",
+        "self_loads",
+        "self_loads_observed"
+      ],
+      "properties": {
+        "route_source": {
+          "type": "string",
+          "enum": [
+            "previous_route",
+            "plan_route",
+            "role_routing",
+            "role_fallback",
+            "preference"
+          ]
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "new_implementation",
+            "continuation",
+            "bounded_fix",
+            "scope_change",
+            "review",
+            "final_close",
+            "research",
+            "advice",
+            "auxiliary"
+          ]
+        },
+        "config_mode": {
+          "type": "string",
+          "enum": [
+            "isolated",
+            "inherit"
+          ]
+        },
+        "degraded": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,60}$"
+          },
+          "uniqueItems": true,
+          "description": "RouteDecision.degraded: capabilities the step runs without (runtimes.degraded.allow), e.g. config_isolation."
+        },
+        "self_loads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/self_load_view"
+          }
+        },
+        "self_loads_observed": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/self_load_observed"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "draft_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "mode": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "full",
+            "delta"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "task_digest": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "prompt_digest": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "prompt_file_version_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "total_tokens_estimate": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "total_limit": {
+      "type": "integer",
+      "minimum": 1000
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core",
+        "task",
+        "supporting",
+        "retrieval"
+      ],
+      "properties": {
+        "core": {
+          "$ref": "#/$defs/class_usage"
+        },
+        "task": {
+          "$ref": "#/$defs/class_usage"
+        },
+        "supporting": {
+          "$ref": "#/$defs/class_usage"
+        },
+        "retrieval": {
+          "$ref": "#/$defs/class_usage"
+        }
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    },
+    "host_facts": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deps",
+            "work_paths_count",
+            "work_paths_truncated"
+          ],
+          "properties": {
+            "deps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^(pip|npm|composer|cargo|go):.+$"
+              },
+              "uniqueItems": true
+            },
+            "work_paths_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "work_paths_truncated": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "skills_trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "budget",
+        "used",
+        "included",
+        "conditional",
+        "excluded",
+        "discoverable"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowlist",
+            "auto"
+          ]
+        },
+        "budget": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "included": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "reason"
+            ],
+            "properties": {
+              "key": {
+                "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+              },
+              "reason": {
+                "enum": [
+                  "mandatory",
+                  "explicit_plan",
+                  "explicit_profile",
+                  "trigger_path",
+                  "trigger_dep",
+                  "required",
+                  "scope_global",
+                  "scope_match",
+                  "carrier_for_write_scope",
+                  "required_material",
+                  "optional_material",
+                  "binary_reference",
+                  "recent_history",
+                  "memory_match",
+                  "execution_input",
+                  "discoverable_index",
+                  "research_result",
+                  "external_material",
+                  "external_reference"
+                ]
+              }
+            }
+          }
+        },
+        "conditional": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "deps_any",
+              "decided"
+            ],
+            "properties": {
+              "key": {
+                "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+              },
+              "deps_any": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "decided": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "trigger_dep",
+                      "trigger_not_met",
+                      "over_skill_budget"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "reason"
+            ],
+            "properties": {
+              "key": {
+                "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+              },
+              "reason": {
+                "enum": [
+                  "not_found",
+                  "too_large",
+                  "binary_content",
+                  "encoding_invalid",
+                  "path_invalid",
+                  "classification_forbidden",
+                  "file_version_not_ready",
+                  "quarantined",
+                  "trust_forbidden",
+                  "unknown_skill",
+                  "version_unavailable",
+                  "excluded",
+                  "role_not_allowed",
+                  "tool_missing",
+                  "kind_not_preloaded",
+                  "duplicated_by_role_contract",
+                  "adapter_not_supported",
+                  "capability_missing",
+                  "exclusive_group",
+                  "over_skill_budget",
+                  "trigger_not_met",
+                  "role_not_applicable",
+                  "scope_mismatch",
+                  "conflict_lower_priority",
+                  "no_matching_sections",
+                  "host_budget_exceeded",
+                  "optional_disabled",
+                  "history_window",
+                  "type_not_in_policy",
+                  "full_prompt",
+                  "over_budget_core",
+                  "over_budget_supporting",
+                  "over_budget_retrieval",
+                  "over_total_budget",
+                  "skills_disabled",
+                  "symlink_refused",
+                  "repo_instructions_max_files",
+                  "runtime_self_loaded",
+                  "in_resumed_session"
+                ]
+              }
+            }
+          }
+        },
+        "discoverable": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/error-code"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "estimator_id": {
+      "const": "heuristic-v1"
+    },
+    "assembler_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "finalized_at": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "final"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "mode": {
+            "type": "string"
+          },
+          "task_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "prompt_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "prompt_file_version_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "finalized_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          },
+          "blocks": {
+            "items": {
+              "properties": {
+                "included": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.manifest",
+      "class": "ContextManifestDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ContextManifest"
+    }
+  }
+}

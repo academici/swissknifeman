@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:memory-forget:v1",
+  "title": "skm_memory_forget output",
+  "description": "Output for the skm_memory_forget MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "forgotten": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "forgotten"
+  ]
+}

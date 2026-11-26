@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:result:trash-file:v1",
+  "title": "TrashFileResult",
+  "description": "artifacts result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trashed"
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "file_id",
+    "state",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.results",
+      "class": "TrashFileResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "TrashFileResult"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:local-memory-record:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {"$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryKind"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "ttl_seconds": {"type": "integer", "minimum": 1, "maximum": 2592000}
+  },
+  "required": ["kind", "text"]
+}

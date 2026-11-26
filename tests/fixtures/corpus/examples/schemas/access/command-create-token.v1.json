@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:command:create-token:v1",
+  "title": "CreateToken",
+  "description": "Issue an API token for the actor (principal_id null) or for another principal. Not idempotent: the secret is returned once and is never stored.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "principal_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 ._-]{1,100}$"
+    },
+    "scope_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "permissions": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:access:defs:v1#/$defs/permission"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "expires_at": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.commands",
+      "class": "CreateToken",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "CreateToken"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:view:get-research-query:v1",
+  "title": "ResearchResultView",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "result": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    }
+  },
+  "required": [
+    "result"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.views",
+      "class": "ResearchResultView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ResearchResultView"
+    }
+  }
+}

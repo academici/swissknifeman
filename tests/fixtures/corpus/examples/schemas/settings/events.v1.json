@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:events:v1",
+  "title": "Events settings",
+  "description": "Settings section 'events' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "events",
+    "owner": "platform",
+    "title": "Events",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "EventsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "EventsSettings"
+    }
+  },
+  "properties": {
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10,
+          "description": "Delivery attempts of one outbox message to one destination before it becomes dead.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 30,
+          "description": "Deadline of one subscriber or hook delivery.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "backoff_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 2,
+          "description": "Back-off base: attempt n waits min(backoff_seconds * 2^(n-1), backoff_max_seconds).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "backoff_max_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 3600,
+          "description": "Upper bound of the delivery back-off.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "visibility_timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 86400,
+          "default": 300,
+          "description": "A claimed outbox row not acknowledged within this time is claimable again (crashed relay).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "outbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "delivered_retention_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8760,
+          "default": 168,
+          "description": "Delivered outbox rows and their consumer receipts older than this are purged by the janitor task outbox_gc; pending, failed and dead rows are never purged automatically.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Events",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

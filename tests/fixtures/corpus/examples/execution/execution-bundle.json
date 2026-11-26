@@ -1,0 +1,1180 @@
+{
+  "schema": "urn:skm:execution:execution-bundle:v1",
+  "run_id": "0193a000-0000-7000-8000-000000000001",
+  "config_snapshot": {
+    "schema": "urn:skm:config:frozen:v1",
+    "registry_digest": "sha256:65a65d26400f2c219bb5fbd0d93d727ecb8b02635f0803cfa07de2aedbcc5a68",
+    "values": {
+      "execution.workflow.profile": "reviewed-development",
+      "execution.workflow.profile_by_work_kind": {
+        "research": "research-only"
+      },
+      "execution.rework.max_rounds": 2,
+      "execution.review.max_rounds": 2,
+      "execution.review.final_correction": true,
+      "execution.review.accept_findings_only": true,
+      "execution.review.attention_policy": "triage",
+      "execution.review.strategy": "risk_scored",
+      "execution.review.risk.threshold": 60,
+      "execution.review.risk.critical": [
+        "security"
+      ],
+      "execution.review.risk.diff_lines": 400,
+      "execution.review.grouping": "none",
+      "execution.review.profile": "reviewer",
+      "execution.review.security_on_risk": true,
+      "execution.handoff.max_findings": 12,
+      "execution.handoff.max_finding_chars": 3000,
+      "execution.handoff.max_inline_evidence_bytes": 4000,
+      "execution.handoff.max_total_bytes": 24000,
+      "execution.gates.phase_review": "off",
+      "execution.step.max_result_retries": 1,
+      "execution.step.max_infra_retries": 1,
+      "execution.checks.error_retries": 1,
+      "execution.triage.reverify": true,
+      "execution.scope.outside_policy": "deviation",
+      "execution.evidence.required": true,
+      "execution.autonomy.question_policy": "advisor",
+      "execution.autonomy.max_questions_per_task": 5,
+      "execution.advisor.enabled": true,
+      "execution.advisor.max_rounds": 2,
+      "execution.advisor.human_gate": [
+        "security",
+        "destructive",
+        "public_api",
+        "scope_expansion"
+      ],
+      "execution.advisor.min_confidence": "medium",
+      "execution.consilium.members": [],
+      "execution.session.max_resume_context_tokens": 120000,
+      "execution.integration.branch": "skm/integration/{run}",
+      "execution.integration.strategy": "squash",
+      "execution.integration.commit_mode": "final_only",
+      "execution.integration.exclude_paths": [
+        ".skm/**"
+      ],
+      "execution.environment.kind": "git_worktree",
+      "execution.workers.selector": {
+        "labels": [
+          "linux"
+        ]
+      },
+      "execution.run.on_task_failed": "continue",
+      "execution.timeouts.role_wall_seconds": {
+        "executor": 14400,
+        "reviewer": 1800,
+        "triager": 1800,
+        "scout": 1800,
+        "advisor": 1800
+      },
+      "budgets.run.max_usd": 20.0,
+      "budgets.run.max_tokens": 0,
+      "budgets.task.max_attempts": 3,
+      "budgets.unknown_usage_policy": "charge_estimate",
+      "budgets.unknown_usage_charge_tokens": 50000,
+      "budgets.estimate.output_tokens": 16000,
+      "runtimes.role_routing": {
+        "executor": {
+          "runtime": "claude_code",
+          "model_class": "implementation"
+        },
+        "reviewer": {
+          "runtime": "codex",
+          "model_class": "frontier"
+        }
+      },
+      "execution.work_policy.role_intensity": {
+        "scout": "medium",
+        "executor": "medium",
+        "reviewer": "medium",
+        "triager": "medium",
+        "advisor": "medium",
+        "researcher": "medium",
+        "registrar": "medium"
+      },
+      "execution.work_policy.verification_intensity": "medium",
+      "execution.work_policy.role_warn_seconds": {
+        "scout": {
+          "light": 300,
+          "medium": 600,
+          "heavy": 900
+        },
+        "executor": {
+          "light": 900,
+          "medium": 1800,
+          "heavy": 3600
+        },
+        "reviewer": {
+          "light": 180,
+          "medium": 300,
+          "heavy": 600
+        },
+        "triager": {
+          "light": 90,
+          "medium": 180,
+          "heavy": 300
+        },
+        "advisor": {
+          "light": 180,
+          "medium": 300,
+          "heavy": 600
+        },
+        "researcher": {
+          "light": 300,
+          "medium": 900,
+          "heavy": 1800
+        },
+        "registrar": {
+          "light": 30,
+          "medium": 60,
+          "heavy": 90
+        }
+      },
+      "execution.work_policy.repro_warn_seconds": {
+        "light": 30,
+        "medium": 60,
+        "heavy": 90
+      },
+      "budgets.task.warn_tokens": 100000,
+      "budgets.task.max_tokens": 0
+    },
+    "run_scope_id": "0193a000-0000-7000-8000-000000000001",
+    "generation": 7,
+    "pack_generation": 2,
+    "digest": "sha256:a3d87c18d588c0ccd2f29cde5a315bb9853b23a6964868a726a1b0ae055062ba",
+    "provenance": {
+      "execution.workflow.profile": "fixture:run-bundle",
+      "execution.workflow.profile_by_work_kind": "fixture:run-bundle",
+      "execution.rework.max_rounds": "fixture:run-bundle",
+      "execution.review.max_rounds": "fixture:run-bundle",
+      "execution.review.final_correction": "fixture:run-bundle",
+      "execution.review.accept_findings_only": "fixture:run-bundle",
+      "execution.review.attention_policy": "fixture:run-bundle",
+      "execution.review.strategy": "fixture:run-bundle",
+      "execution.review.risk.threshold": "fixture:run-bundle",
+      "execution.review.risk.critical": "fixture:run-bundle",
+      "execution.review.risk.diff_lines": "fixture:run-bundle",
+      "execution.review.grouping": "fixture:run-bundle",
+      "execution.review.profile": "fixture:run-bundle",
+      "execution.review.security_on_risk": "fixture:run-bundle",
+      "execution.handoff.max_findings": "fixture:run-bundle",
+      "execution.handoff.max_finding_chars": "fixture:run-bundle",
+      "execution.handoff.max_inline_evidence_bytes": "fixture:run-bundle",
+      "execution.handoff.max_total_bytes": "fixture:run-bundle",
+      "execution.gates.phase_review": "fixture:run-bundle",
+      "execution.step.max_result_retries": "fixture:run-bundle",
+      "execution.step.max_infra_retries": "fixture:run-bundle",
+      "execution.checks.error_retries": "fixture:run-bundle",
+      "execution.triage.reverify": "fixture:run-bundle",
+      "execution.scope.outside_policy": "fixture:run-bundle",
+      "execution.evidence.required": "fixture:run-bundle",
+      "execution.autonomy.question_policy": "fixture:run-bundle",
+      "execution.autonomy.max_questions_per_task": "fixture:run-bundle",
+      "execution.advisor.enabled": "fixture:run-bundle",
+      "execution.advisor.max_rounds": "fixture:run-bundle",
+      "execution.advisor.human_gate": "fixture:run-bundle",
+      "execution.advisor.min_confidence": "fixture:run-bundle",
+      "execution.consilium.members": "fixture:run-bundle",
+      "execution.session.max_resume_context_tokens": "fixture:run-bundle",
+      "execution.integration.branch": "fixture:run-bundle",
+      "execution.integration.strategy": "fixture:run-bundle",
+      "execution.integration.commit_mode": "fixture:run-bundle",
+      "execution.integration.exclude_paths": "fixture:run-bundle",
+      "execution.environment.kind": "fixture:run-bundle",
+      "execution.workers.selector": "fixture:run-bundle",
+      "execution.run.on_task_failed": "fixture:run-bundle",
+      "execution.timeouts.role_wall_seconds": "fixture:run-bundle",
+      "budgets.run.max_usd": "fixture:run-bundle",
+      "budgets.run.max_tokens": "fixture:run-bundle",
+      "budgets.task.max_attempts": "fixture:run-bundle",
+      "budgets.unknown_usage_policy": "fixture:run-bundle",
+      "budgets.unknown_usage_charge_tokens": "fixture:run-bundle",
+      "budgets.estimate.output_tokens": "fixture:run-bundle",
+      "runtimes.role_routing": "fixture:run-bundle"
+    }
+  },
+  "config_digest": "sha256:a3d87c18d588c0ccd2f29cde5a315bb9853b23a6964868a726a1b0ae055062ba",
+  "policy_digest": "sha256:f77fe5311bbdc8a58d52a3b50ba9ab94bcdec226818187acfcf54cfd57c5c37a",
+  "resource_pins": {
+    "resources": [
+      {
+        "kind": "workflow",
+        "key": "reviewed-development",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000001",
+        "digest": "sha256:f73b2a93272f1237d97fbab5b16cd41ff401780e745351a7920fb92bf594ea70"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "scout",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000002",
+        "digest": "sha256:41955cdf3f845b5c8d3bc3d7797ec60a315deabe40a4eff052d02eb89c1d7643"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "executor",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000003",
+        "digest": "sha256:11e166860f3f15449a6e5e04083232b8cf3915cc539191e53961a235d70a3851"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "reviewer",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000004",
+        "digest": "sha256:a26623c4bc82a625c42ccdd4e6efecf4528bfadf1e37b51b1dd35ff83064cf29"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "security",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000005",
+        "digest": "sha256:a69d49d77d6972e30c4a309bbb3d95e23bb4b492dc3c1d0da690bd0893284e33"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "triager",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000006",
+        "digest": "sha256:bed2057fff9fa7a3d1ca4327c74d0716b965d66c02465a06c89eef4b56fb31d4"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "advisor",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000007",
+        "digest": "sha256:65f038f32534f046cceaaffcf109f91ac1725b01e9d7d19b54da935375d218c5"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "advisor-critic",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000008",
+        "digest": "sha256:56533f7bdc0a5ee01567aec3234ae958e80c2d25b8904ff635e883d544cad3ea"
+      },
+      {
+        "kind": "agent_profile",
+        "key": "registrar",
+        "resource_version_id": "0193a001-0000-7000-8000-000000000009",
+        "digest": "sha256:d0b20b6b0106967a08f5edc472a52185e7a006d28903c502d27316f0025f51de"
+      },
+      {
+        "kind": "prompt_block",
+        "key": "result-contract-executor",
+        "resource_version_id": "0193a001-0000-7000-8000-00000000000a",
+        "digest": "sha256:3fdcd64eb7b47dc6e7425f0e03edf68b12735e6f8f4213fdf57d7c4c928f913c"
+      },
+      {
+        "kind": "skill",
+        "key": "python-testing",
+        "resource_version_id": "0193a001-0000-7000-8000-00000000000b",
+        "digest": "sha256:4cb4ddb53d312d0624f30e98b50b7ea763a216fc8cacd02226eec002161ef777"
+      },
+      {
+        "kind": "prompt_block",
+        "key": "shared/work_policy",
+        "resource_version_id": "0193a001-0000-7000-8000-00000000000c",
+        "digest": "sha256:7cd3880d28ee526259554bd2140cc45316901799515570b1419f1c03c3dd18a2"
+      }
+    ],
+    "packs": {
+      "core": "0193a002-0000-7000-8000-000000000001",
+      "team-overlay": "0193a002-0000-7000-8000-000000000002"
+    }
+  },
+  "selection": null,
+  "context_policy": {
+    "context.max_total_tokens": 120000,
+    "context.repo_instructions.include": true,
+    "context.skills.selection_policy": "explicit",
+    "context.skills.max_count": 8,
+    "context.history.max_steps": 6
+  },
+  "review_grouping": {
+    "mode": "none",
+    "groups": [],
+    "reviewer_effort": "high",
+    "reason": "grouping none; effort high: path markers auth"
+  },
+  "created_at": "2026-10-25T11:40:02Z",
+  "work_policies": {
+    "@default": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.3": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "PLAN#accept": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    }
+  }
+}

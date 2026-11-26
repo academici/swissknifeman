@@ -1,0 +1,158 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "vue-best-practices"
+version = "0.1.1"
+kind = "domain"
+risk = "low"
+license = "MIT"
+roles = ["executor"]
+exclusive_group = "vue-core"
+
+[triggers]
+paths = ["**/*.vue"]
+
+[provenance]
+source = "upstream"
+repo = "antfu/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "d23c6d14e1099ffdcea81158ba5a9e2faf327aaaec2950cc9df008bb2df61d70"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/SKILL.md"
+sha256 = "42466063eb5ba6dd71a146ee726f187d7b0fb252e3f8c4bcbf01a04799c9166b"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/animation-class-based-technique.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/animation-class-based-technique.md"
+sha256 = "d37e4ae4f124454fc5dfa54d23816edb16d337228641a77ec04c8ee9fe5a32fe"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/animation-state-driven-technique.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/animation-state-driven-technique.md"
+sha256 = "9a17a15356b32c8cd8669c3ede28dd890e9a48c03101047738a5c6dec7c716d6"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-async.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-async.md"
+sha256 = "e20036c6622a1647d9e1c23f1fe871b2465cf4bab434422e17eb05710c8878f3"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-data-flow.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-data-flow.md"
+sha256 = "81277341d7dfe240721c2324548b9d404354d3ce270515acb130e8ac0c7396aa"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-fallthrough-attrs.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-fallthrough-attrs.md"
+sha256 = "62d291508df9997d3b6c5adfde251d6c722926ecf5f7168dea0272564f119919"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-keep-alive.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-keep-alive.md"
+sha256 = "8738608665ad42baa6d2d7548d46b3ecd318a85f4ec3a0afac5f728948ade3ca"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-slots.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-slots.md"
+sha256 = "726fdac036fcdb6071e669f1ed90af5b3bdc5fc150ad82ff41afa0af5e39f481"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-suspense.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-suspense.md"
+sha256 = "6a5a98dcc6a2093f038f877eb6fefeedb199aba058a5dea71b139017c557bdd1"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-teleport.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-teleport.md"
+sha256 = "4e48748842262df50c293ab23857c22c107e3e8360c87da482d23f0eb88b2c3f"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-transition-group.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-transition-group.md"
+sha256 = "cfdd76e2466a8c0ef8a965674a74924e5cf25e538e75ce97d02213472442ccb2"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/component-transition.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/component-transition.md"
+sha256 = "bc59a19f2e8eed7a228bdb6383d423a57c6dd75704ae11c9596018c9fb1cac42"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/composables.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/composables.md"
+sha256 = "8fcb3ede4ecb13f8dc7e4c7db07561652f6d306c85a91bc6736fda4fae2b624d"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/directives.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/directives.md"
+sha256 = "70d4c68ea15a961eec6471c42b4c44d37adfeb094f694b6811fb718eab7b2cf7"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/perf-avoid-component-abstraction-in-lists.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/perf-avoid-component-abstraction-in-lists.md"
+sha256 = "a5fb787065cbaa4731a12d3ab2f40284d058a4d6a45972b48b3052931e4f80da"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/perf-v-once-v-memo-directives.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/perf-v-once-v-memo-directives.md"
+sha256 = "066a45e60f6faa702cb75b76724c391d7e560aa6805c9bc379c06f2c64d97677"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/perf-virtualize-large-lists.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/perf-virtualize-large-lists.md"
+sha256 = "69712f1f296cf03401c47f936e1a9c32481bfd82623f536b1fe08d05c846bada"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/plugins.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/plugins.md"
+sha256 = "b1583522aca059c4295708517ba987530dd6a13134f6046aed9fd7327fb9c936"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/reactivity.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/reactivity.md"
+sha256 = "48c97831e72f0b82bfae0344cf02a181c7723e1ee4a29a58a85009aab7d60a4b"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/render-functions.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/render-functions.md"
+sha256 = "01b35e671f7890939fa5acda52c5cf0a50b398e153d80cc9fc9f74c19e460357"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/sfc.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/sfc.md"
+sha256 = "dfe09f28869a2bc44e618068c3b6269f55d925d096714df25e253d2bbb58c28f"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/state-management.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/state-management.md"
+sha256 = "9e98a1c6d9009c0c8ef7228b6b3bcf10d30be6b713ffcef448ab7db3b419a851"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/updated-hook-performance.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue-best-practices/references/updated-hook-performance.md"
+sha256 = "ded08ce93f9b23082538846f84e8d159d84af757c27b2c6b43a9283df803a32b"
+fetched_at = "2026-06-17"

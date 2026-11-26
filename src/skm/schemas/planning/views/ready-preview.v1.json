@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:ready-preview:v1",
+  "title": "ReadyPreviewView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    },
+    "assume_done": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "assume_granted": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "lanes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "task",
+              "gate",
+              "batch"
+            ]
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "route": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:planning:specification:v1#/$defs/route"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "batch_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "tasks",
+          "route",
+          "batch_key"
+        ]
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task": {
+            "type": "string",
+            "minLength": 0
+          },
+          "with_task": {
+            "type": "string",
+            "minLength": 0
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "write_scope_overlap",
+              "footprint_unknown"
+            ]
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "task",
+          "with_task",
+          "reason",
+          "paths"
+        ]
+      }
+    },
+    "waiting": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "task": {
+            "type": "string",
+            "minLength": 0
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "dependencies",
+              "design_required",
+              "owner_gate",
+              "external_gate",
+              "batch_incomplete"
+            ]
+          },
+          "detail": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "task",
+          "reason",
+          "detail"
+        ]
+      }
+    },
+    "deferred": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "route_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "route": {
+            "$ref": "urn:skm:planning:specification:v1#/$defs/route"
+          },
+          "lanes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "route",
+          "lanes"
+        ]
+      }
+    },
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    }
+  },
+  "required": [
+    "limit",
+    "assume_done",
+    "assume_granted",
+    "lanes",
+    "conflicts",
+    "waiting",
+    "deferred",
+    "route_groups",
+    "source"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "ReadyPreviewView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ReadyPreviewView"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:query:list-pending-notes:v1",
+  "title": "ListPendingNotes",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "vault_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "after": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 100
+    }
+  },
+  "required": [
+    "workspace_id",
+    "host_id",
+    "vault_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.queries",
+      "class": "ListPendingNotes",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "ListPendingNotes"
+    }
+  }
+}

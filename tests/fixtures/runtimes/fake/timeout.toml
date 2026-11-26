@@ -1,0 +1,10 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "timeout"
+hang = true
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }

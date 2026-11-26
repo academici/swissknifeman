@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:result:list-dead-outbox:v1",
+  "title": "ListDeadOutboxResult",
+  "description": "platform result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "outbox_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "event_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "outbox_id",
+          "event_id",
+          "destination",
+          "attempts",
+          "last_error",
+          "created_at"
+        ]
+      }
+    },
+    "next": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "items",
+    "next"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.results",
+      "class": "ListDeadOutboxResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "ListDeadOutboxResult"
+    }
+  }
+}

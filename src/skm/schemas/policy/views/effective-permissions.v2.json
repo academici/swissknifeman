@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:effective-permissions:v2",
+  "title": "EffectivePermissionsView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "permissions": {
+      "$ref": "urn:skm:policy:view:permission-set:v2"
+    },
+    "authority": {
+      "$ref": "urn:skm:policy:task-authority:v1"
+    }
+  },
+  "required": [
+    "permissions",
+    "authority"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.views",
+      "class": "EffectivePermissionsView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "EffectivePermissionsView"
+    }
+  }
+}

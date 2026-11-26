@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:event:file-version-added:v1",
+  "title": "FileVersionAdded",
+  "description": "artifacts event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "file_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "version_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "safety_verdict": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "warn",
+        "block"
+      ]
+    }
+  },
+  "required": [
+    "file_id",
+    "file_version_id",
+    "version_no",
+    "size_bytes",
+    "digest",
+    "safety_verdict"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.events",
+      "class": "FileVersionAdded",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "FileVersionAdded"
+    }
+  }
+}

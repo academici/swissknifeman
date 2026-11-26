@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:inbox-list:v1",
+  "title": "skm_inbox_list output",
+  "description": "Output for the skm_inbox_list MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "asked_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "request_id",
+          "kind",
+          "run_id",
+          "task_key",
+          "summary",
+          "asked_at"
+        ]
+      }
+    },
+    "next": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "items_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "items",
+    "next"
+  ]
+}

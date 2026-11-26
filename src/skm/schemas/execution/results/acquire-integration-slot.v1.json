@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:acquire-integration-slot:v1",
+  "title": "AcquireIntegrationSlotResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "slot_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expires_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "outcome": {
+      "const": "waiting"
+    },
+    "code": {
+      "const": "SLOT_BUSY"
+    },
+    "retry_after_seconds": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "AcquireIntegrationSlotResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "AcquireIntegrationSlotResult"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "slot_id",
+        "fencing_token",
+        "expires_at"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "outcome"
+            ]
+          },
+          {
+            "required": [
+              "code"
+            ]
+          },
+          {
+            "required": [
+              "retry_after_seconds"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "outcome",
+        "code",
+        "retry_after_seconds"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "slot_id"
+            ]
+          },
+          {
+            "required": [
+              "fencing_token"
+            ]
+          },
+          {
+            "required": [
+              "expires_at"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

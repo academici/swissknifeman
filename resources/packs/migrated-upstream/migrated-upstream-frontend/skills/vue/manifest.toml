@@ -1,0 +1,41 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "vue"
+version = "0.1.1"
+kind = "reference"
+risk = "low"
+license = "MIT"
+roles = ["executor"]
+exclusive_group = "vue-core"
+
+[provenance]
+source = "upstream"
+repo = "antfu/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "f9eed49447c7ed920bacd01f9a8416ac45129253c5137a502564be42a093e524"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/SKILL.md"
+sha256 = "f6c27e0f1cf037b26ded2a0b3c6a6bb537d7a8fb7cd7745448aa85bc01fc3a76"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/advanced-patterns.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/advanced-patterns.md"
+sha256 = "f6b9e26e3ae582dca1dfe01261c9800cd8f8dec511384d6bc816848209d2bc51"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/core-new-apis.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/core-new-apis.md"
+sha256 = "4afa9fdcdf62d2300d86686f890e4a52cbbed48e4c13a3e15f3e4572185c90ed"
+fetched_at = "2026-06-17"
+
+[[provenance.files]]
+path = "references/script-setup-macros.md"
+url = "https://raw.githubusercontent.com/antfu/skills/main/skills/vue/references/script-setup-macros.md"
+sha256 = "ad47db85f8fbda6c055cedcc1d4175cd79d414e9be3ebf1e631d0e493eb4480a"
+fetched_at = "2026-06-17"

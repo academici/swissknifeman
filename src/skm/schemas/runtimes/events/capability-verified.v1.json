@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:event:capability-verified:v1",
+  "title": "CapabilityVerified",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "runtime_version": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "capability": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "native",
+        "adapted",
+        "unsupported",
+        "unknown"
+      ]
+    }
+  },
+  "required": [
+    "runtime_id",
+    "runtime_version",
+    "capability",
+    "status"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.events",
+      "class": "CapabilityVerified",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "CapabilityVerified"
+    }
+  }
+}

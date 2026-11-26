@@ -1,0 +1,12 @@
+# urn:skm:runtimes:error-rules:v1 of the fixture runtime.
+[[rules]]
+runtime_id = "fixture_rt"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["slow down"]
+retryable = true
+safe_message = "the fixture runtime is rate limited"
+retry_after_from = "limit_resets_at"

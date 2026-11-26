@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:plan-stats:v1",
+  "title": "PlanStatsView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "counts": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "items_per_phase": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "units_per_item": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "criteria_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "with_check_or_manual": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "with_review": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unlinked": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "total",
+        "with_check_or_manual",
+        "with_review",
+        "unlinked"
+      ]
+    },
+    "requirements_coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "must_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "must_implemented": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "must_total",
+        "must_implemented"
+      ]
+    },
+    "write_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "units_with_scope": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items_without_hints": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "units_with_scope",
+        "items_without_hints"
+      ]
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_width": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "tasks",
+        "edges",
+        "max_width"
+      ]
+    },
+    "skeleton_phases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "materials_required": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "execution": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acceptance": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "execution",
+        "review",
+        "acceptance"
+      ]
+    },
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    }
+  },
+  "required": [
+    "counts",
+    "items_per_phase",
+    "units_per_item",
+    "criteria_coverage",
+    "requirements_coverage",
+    "write_scope",
+    "graph",
+    "skeleton_phases",
+    "materials_required",
+    "source"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "PlanStatsView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanStatsView"
+    }
+  }
+}

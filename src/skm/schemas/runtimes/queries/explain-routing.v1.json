@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:query:explain-routing:v1",
+  "title": "ExplainRouting",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+    },
+    "scope": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/scope-ref"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "new_implementation",
+        "continuation",
+        "bounded_fix",
+        "scope_change",
+        "review",
+        "final_close",
+        "research",
+        "advice",
+        "auxiliary"
+      ]
+    },
+    "profile_key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "model_class": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+    },
+    "effort": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+    },
+    "explicit_runtime": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "explicit_model": {
+      "type": "string",
+      "minLength": 0
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+      }
+    },
+    "task_min_class": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+    }
+  },
+  "required": [
+    "role",
+    "scope"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.queries",
+      "class": "ExplainRouting",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ExplainRouting"
+    }
+  }
+}

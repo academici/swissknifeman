@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:view:candidate:v1",
+  "title": "CandidateView",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "display_key": {
+      "type": "string"
+    },
+    "detector": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/Detector"
+    },
+    "pathology_code": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+    },
+    "trigger": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "review_hint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+      }
+    },
+    "fingerprint": {
+      "type": "string"
+    },
+    "state": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateState"
+    },
+    "s_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "n_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "known_outcome_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unknown_outcome_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "independent_known_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "independent_success_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exposed_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exposure_unknown_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tests_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tests_passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "days_since": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "support_score": {
+      "type": "number"
+    },
+    "freshness": {
+      "type": "number"
+    },
+    "stale": {
+      "type": "boolean"
+    },
+    "review_status": {
+      "enum": [
+        "unreviewed",
+        "approved",
+        "edited",
+        "rejected"
+      ]
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "confidence_tier": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/ConfidenceTier"
+    },
+    "curated_ready": {
+      "type": "boolean"
+    },
+    "conflicts_with_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "proposed_update": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lesson_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recomputed_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateReview"
+      }
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateProposal"
+      }
+    },
+    "proposals_next": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "similar": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "candidate_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "tsim": {
+            "type": "number"
+          },
+          "asim": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "candidate_id",
+          "tsim",
+          "asim"
+        ]
+      }
+    },
+    "lesson_ref": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "workspace_id",
+    "project_id",
+    "scope_id",
+    "display_key",
+    "detector",
+    "pathology_code",
+    "kind",
+    "trigger",
+    "action",
+    "review_hint",
+    "meta",
+    "evidence",
+    "fingerprint",
+    "state",
+    "s_total",
+    "n_total",
+    "known_outcome_total",
+    "unknown_outcome_total",
+    "independent_known_total",
+    "independent_success_total",
+    "exposed_total",
+    "exposure_unknown_total",
+    "tests_total",
+    "tests_passed",
+    "days_since",
+    "support_score",
+    "freshness",
+    "stale",
+    "review_status",
+    "confidence",
+    "confidence_tier",
+    "curated_ready",
+    "conflicts_with_id",
+    "proposed_update",
+    "lesson_id",
+    "recomputed_at",
+    "row_version",
+    "gates",
+    "reviews",
+    "proposals",
+    "similar"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.views",
+      "class": "CandidateView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "CandidateView"
+    }
+  }
+}

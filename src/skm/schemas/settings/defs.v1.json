@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:defs:v1",
+  "title": "Settings definitions",
+  "description": "Shared contracts of settings administration.",
+  "$defs": {
+    "scope_ref": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "entry_view": {
+      "$ref": "urn:skm:config:entry:v1"
+    },
+    "effective_key_view": {
+      "$ref": "urn:skm:settings:view:effective-key:v1"
+    },
+    "history_view": {
+      "$ref": "urn:skm:settings:view:history:v1"
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+        },
+        "change": {
+          "type": "string",
+          "enum": [
+            "added",
+            "updated",
+            "removed",
+            "unchanged",
+            "lock_changed"
+          ]
+        },
+        "before": {
+          "description": "JSON value; value-specific validation belongs to the owner."
+        },
+        "after": {
+          "description": "JSON value; value-specific validation belongs to the owner."
+        }
+      },
+      "required": [
+        "key",
+        "change"
+      ]
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+        },
+        "code": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/error-code"
+        },
+        "message": {
+          "type": "string"
+        },
+        "pointer": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/json-pointer"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ]
+    }
+  }
+}

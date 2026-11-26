@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:worker-registered:v1",
+  "title": "WorkerRegistered",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "capabilities": {
+      "$ref": "urn:skm:workspace:worker-capabilities:v1"
+    }
+  },
+  "required": [
+    "worker_id",
+    "workspace_id",
+    "host_id",
+    "principal_id",
+    "capabilities"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "WorkerRegistered",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "WorkerRegistered"
+    }
+  }
+}

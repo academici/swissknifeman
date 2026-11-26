@@ -1,0 +1,22 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "ai-agents"
+version = "0.2.0"
+kind = "router"
+risk = "low"
+license = "MIT"
+roles = ["executor"]
+
+[provenance]
+source = "upstream"
+repo = "get-zeked/ai-agent-super-skill"
+strategy = "fork"
+license = "MIT"
+upstream_sha = "bb30f388386f647ddfd3e8e7cf8c69826ac59bbefe6b11403e5a498c09f1d2d7"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "references/source.md"
+url = "https://raw.githubusercontent.com/get-zeked/ai-agent-super-skill/main/SKILL.md"
+sha256 = "cfd45bc6f0e05cd905072fd5b2826e8a76b5915800ac143990cd1e2976406911"
+fetched_at = "2026-06-25"

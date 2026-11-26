@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:command:record-note-written:v1",
+  "title": "RecordNoteWritten",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "vault_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "created",
+        "verified_existing",
+        "modified_existing"
+      ]
+    },
+    "expected_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "observed_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "project_id",
+    "note_id",
+    "vault_id",
+    "relative_path",
+    "generation",
+    "outcome",
+    "expected_digest",
+    "observed_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.commands",
+      "class": "RecordNoteWritten",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "RecordNoteWritten"
+    }
+  }
+}

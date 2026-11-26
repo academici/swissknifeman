@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:event:lesson-deprecated:v1",
+  "title": "LessonDeprecated",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "lesson_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "lesson_id",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.events",
+      "class": "LessonDeprecated",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "LessonDeprecated"
+    }
+  },
+  "x-skm-hookable": false
+}

@@ -1,0 +1,12 @@
+{
+  "autoRun": {
+    "block_instructions": "Do not execute destructive git commands or write outside the checkout."
+  },
+  "mcpAllowlist": [],
+  "terminalAllowlist": [
+    "uv run pytest",
+    "uv run ruff",
+    "git status",
+    "git diff"
+  ]
+}

@@ -1,0 +1,1519 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:runtimes:v1",
+  "title": "Runtimes settings",
+  "description": "Settings section 'runtimes' owned by runtimes. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "runtimes",
+    "owner": "runtimes",
+    "title": "Runtimes",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.settings",
+      "class": "RuntimesSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "RuntimesSettings"
+    }
+  },
+  "properties": {
+    "allowed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+      },
+      "uniqueItems": true,
+      "default": [
+        "claude_code",
+        "codex",
+        "grok",
+        "cursor"
+      ],
+      "description": "Runtime ids role routing may select in this scope; fake is only for tests (--set or test build).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Routing",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "preference": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{1,31}$"
+      },
+      "uniqueItems": true,
+      "default": [
+        "claude_code",
+        "codex"
+      ],
+      "description": "Runtime order used when a route names only a model class.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "replace",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Routing",
+          "order": 20,
+          "widget": "tags"
+        }
+      }
+    },
+    "role_routing": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "model_class": {
+            "type": "string",
+            "enum": [
+              "economy",
+              "implementation",
+              "frontier"
+            ]
+          },
+          "effort": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max"
+            ]
+          },
+          "fallback": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxItems": 5
+          }
+        }
+      },
+      "default": {},
+      "description": "Route per role: runtime, model or model_class, effort, fallback; empty: choice by class from the model catalog (overlays set personal model pools at the pack level).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "deep_merge",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Routing",
+          "order": 30,
+          "widget": "json"
+        }
+      }
+    },
+    "role_min_class": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "economy",
+          "implementation",
+          "frontier"
+        ]
+      },
+      "default": {
+        "reviewer": "implementation"
+      },
+      "description": "Lowest model class a role may be routed to.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "deep_merge",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Routing",
+          "order": 40,
+          "widget": "map"
+        }
+      }
+    },
+    "binaries": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      },
+      "default": {},
+      "description": "Executable per runtime id on this host; a missing entry looks up the adapter's default name in PATH.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "deep_merge",
+        "reload": "live",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "path": true,
+        "ui": {
+          "group": "Host",
+          "order": 10,
+          "widget": "map"
+        }
+      }
+    },
+    "extra_env_allow": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[A-Z_][A-Z0-9_]*$"
+        },
+        "uniqueItems": true
+      },
+      "default": {},
+      "description": "Environment variable names passed through to the runtime process per runtime id.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "deep_merge",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Host",
+          "order": 20,
+          "widget": "json"
+        }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "new_implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation new_implementation (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 10,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "continuation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation continuation (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 20,
+                  "widget": "select"
+                }
+              }
+            },
+            "resume": {
+              "type": "string",
+              "enum": [
+                "never",
+                "preferred",
+                "required"
+              ],
+              "default": "preferred",
+              "description": "Session resume policy of a continuation.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "replace",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Admission",
+                  "order": 30,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "bounded_fix": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation bounded_fix (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 40,
+                  "widget": "select"
+                }
+              }
+            },
+            "resume": {
+              "type": "string",
+              "enum": [
+                "never",
+                "preferred",
+                "required"
+              ],
+              "default": "preferred",
+              "description": "Session resume policy of a bounded fix.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "replace",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Admission",
+                  "order": 50,
+                  "widget": "select"
+                }
+              }
+            },
+            "below_task_class": {
+              "type": "boolean",
+              "default": false,
+              "description": "A bounded fix may run below the task's model class.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "direction": "and"
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 60,
+                  "widget": "toggle"
+                }
+              }
+            },
+            "allowed_extra_paths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "uniqueItems": true,
+              "default": [
+                "CHANGELOG.md",
+                "docs/**"
+              ],
+              "description": "Paths a bounded fix may touch besides the finding paths without leaving the operation.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "append_unique",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Admission",
+                  "order": 70,
+                  "widget": "tags"
+                }
+              }
+            },
+            "test_globs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "uniqueItems": true,
+              "default": [
+                "**/tests/**",
+                "**/test_*.py"
+              ],
+              "description": "Test paths a bounded fix may add or change.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "append_unique",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Admission",
+                  "order": 80,
+                  "widget": "tags"
+                }
+              }
+            }
+          }
+        },
+        "scope_change": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation scope_change (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 90,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation review (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 100,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "final_close": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation final_close (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 110,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "research": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "economy",
+              "description": "Lowest model class for the route operation research (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 120,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "advice": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "implementation",
+              "description": "Lowest model class for the route operation advice (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 130,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        },
+        "auxiliary": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_class": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ],
+              "default": "economy",
+              "description": "Lowest model class for the route operation auxiliary (nearer levels can only raise it).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "narrow",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "narrow": {
+                  "order": [
+                    "economy",
+                    "implementation",
+                    "frontier"
+                  ]
+                },
+                "ui": {
+                  "group": "Admission",
+                  "order": 140,
+                  "widget": "select"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "degraded": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,60}$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Capabilities a step may run without (recorded as degraded); empty: none; list of capability ids; never weakens isolation profiles.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Routing",
+              "order": 50,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "credentials": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "copy": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]{1,31}$"
+          },
+          "additionalProperties": {
+            "type": "boolean"
+          },
+          "default": {
+            "claude_code": true,
+            "codex": true
+          },
+          "description": "Copy the client's credential files (0600) into the isolated client home of an attempt.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 30,
+              "widget": "map"
+            }
+          }
+        }
+      }
+    },
+    "config_isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Steps must run with the client's user configuration isolated (hooks, plugins, global instructions).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Isolation",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "claude_code": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow_skip_permissions": {
+          "type": "boolean",
+          "default": false,
+          "description": "This host may start Claude Code with --dangerously-skip-permissions (only under an isolation profile).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "ui": {
+              "group": "Host",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "codex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow_full_access": {
+          "type": "boolean",
+          "default": false,
+          "description": "This host may start Codex with sandbox danger-full-access.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "ui": {
+              "group": "Host",
+              "order": 50,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "fake": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Script of the fake runtime (tests and demos).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": true,
+            "pack": false,
+            "confirm": false,
+            "path": true,
+            "ui": {
+              "group": "Host",
+              "order": 60,
+              "widget": "path"
+            }
+          }
+        }
+      }
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_age_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "default": 60,
+          "description": "Age of the model catalog resource after which doctor reports it stale.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Catalog",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "transcript": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keep_reasoning": {
+          "type": "boolean",
+          "default": false,
+          "description": "Keep reasoning blocks of the runtime stream in stored transcripts.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "detect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_worker_start": {
+          "type": "boolean",
+          "default": true,
+          "description": "Detect installed runtimes and versions when the worker starts.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": true,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 70,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unknown_model": {
+          "type": "string",
+          "enum": [
+            "warn",
+            "refuse"
+          ],
+          "default": "warn",
+          "description": "What routing does with a model id that the catalog does not know.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "warn",
+                "refuse"
+              ]
+            },
+            "ui": {
+              "group": "Routing",
+              "order": 60,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stale_policy": {
+          "type": "string",
+          "enum": [
+            "warn",
+            "refuse"
+          ],
+          "default": "warn",
+          "description": "What routing does with a capability verification older than stale_after_days.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Capabilities",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "stale_after_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "default": 30,
+          "description": "Age after which a capability verification counts as stale.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Capabilities",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "overrides": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9_.:/-]{1,120}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "input_usd_per_mtok": {
+                "type": "number",
+                "minimum": 0
+              },
+              "output_usd_per_mtok": {
+                "type": "number",
+                "minimum": 0
+              },
+              "cache_read_usd_per_mtok": {
+                "type": "number",
+                "minimum": 0
+              },
+              "context_window": {
+                "type": "integer",
+                "minimum": 1024
+              },
+              "tier": {
+                "type": "string",
+                "enum": [
+                  "economy",
+                  "implementation",
+                  "frontier"
+                ]
+              },
+              "disabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "default": {},
+          "description": "Per model id overrides of catalog data (prices, window, tier) or disabling a model.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Catalog",
+              "order": 20,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resume": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "never"
+          ],
+          "default": "auto",
+          "description": "Allow session resume for operations whose admission policy permits it; never forces fresh sessions and ephemeral clients.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "idle_timeout_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 900,
+          "description": "Output/CPU-progress silence threshold for suspected_stall or unknown progress; 0 disables suspicion. Silence alone never authorizes cancellation or proves process death; independent deadline, authorized cancellation or verified lease-recovery checks still apply.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "result_grace_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600,
+          "default": 30,
+          "description": "Time a runtime process may live after its final result before it is stopped.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "poll_interval_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000,
+          "default": 2000,
+          "description": "Poll interval of a session for output, CPU progress and cancellation.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "max_stream_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 17179869184,
+          "default": 268435456,
+          "description": "Combined hard byte ceiling for stdout, stderr, transcript and sidecars of one runtime step; bounded readers stop the step before exceeding it (stream_too_large).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Sessions",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

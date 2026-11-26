@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:task-accepted:v1",
+  "title": "TaskAccepted",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "output_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "clearance": {
+      "$ref": "#/$defs/json-value"
+    },
+    "carried_forward": {
+      "$ref": "#/$defs/json-value"
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "carry_forward_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "task_id",
+    "clearance",
+    "carried_forward"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "TaskAccepted",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "TaskAccepted"
+    }
+  },
+  "$defs": {
+    "json-value": {
+      "description": "JSON metadata local to this event; no runtime request or secret-bearing schema closure.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  }
+}

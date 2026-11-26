@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:pack:v1",
+  "title": "PackManifest",
+  "description": "pack.toml of a resource pack after TOML -> JSON (spec/modules/extensions.md §4.3). Example: examples/packs/core/pack.toml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "slug",
+    "version",
+    "title",
+    "description",
+    "publisher",
+    "trust",
+    "license",
+    "requires_skm"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:extensions:pack:v1"
+    },
+    "slug": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/pack_slug"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "publisher": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,62}$"
+    },
+    "trust": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/pack_trust"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": -1000,
+      "maximum": 1000,
+      "description": "Default by trust: builtin 0, operator 100, third_party -100. Higher wins on declared overrides."
+    },
+    "license": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/spdx"
+    },
+    "requires_skm": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/version_constraint"
+    },
+    "config": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_<>*-]+)+$"
+      },
+      "description": "Config fragment applied as a layer of level pack; only keys whose x-skm.levels contain pack (otherwise CONFIG_SCOPE_NOT_ALLOWED). extensions.packs.* is never allowed here."
+    },
+    "exclusive_groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "max",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+          },
+          "max": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "default": []
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "key",
+          "reason"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      },
+      "default": [],
+      "description": "Declared overrides of resources of other packs; an undeclared override is EXTENSION_OVERRIDE_NOT_DECLARED."
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.pack",
+      "class": "PackManifestDoc",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PackManifest"
+    }
+  }
+}

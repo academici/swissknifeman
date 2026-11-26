@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-draft-open:v1",
+  "title": "skm_plan_draft_open input",
+  "description": "Input for the skm_plan_draft_open MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base": {
+      "type": "string",
+      "enum": [
+        "current",
+        "empty"
+      ],
+      "default": "current"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "plan",
+    "idempotency_key"
+  ]
+}

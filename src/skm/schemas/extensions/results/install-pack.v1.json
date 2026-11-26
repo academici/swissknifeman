@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:result:install-pack:v1",
+  "title": "InstallPackResult",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pack_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "pack_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "slug": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/pack_slug"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "installed",
+        "already_installed",
+        "dry_run"
+      ]
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "version": {
+            "type": "string",
+            "minLength": 0
+          },
+          "digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "clean",
+              "quarantine"
+            ]
+          },
+          "overrides": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "key",
+          "version",
+          "digest",
+          "verdict",
+          "overrides"
+        ]
+      }
+    },
+    "quarantined": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "key",
+          "reasons"
+        ]
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "required": [
+    "pack_id",
+    "pack_version_id",
+    "slug",
+    "version",
+    "digest",
+    "status",
+    "resources",
+    "quarantined",
+    "diagnostics"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.results",
+      "class": "InstallPackResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "InstallPackResult"
+    }
+  }
+}

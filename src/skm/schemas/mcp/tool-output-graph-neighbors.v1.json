@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:graph-neighbors:v1",
+  "title": "skm_graph_neighbors output",
+  "description": "Graph answer with optional MCP response truncation receipts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/schema"
+    },
+    "query": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/query"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/repository_id"
+    },
+    "revision": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/revision"
+    },
+    "index_generation": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/index_generation"
+    },
+    "sources": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/sources"
+    },
+    "languages": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/languages"
+    },
+    "relation_kind": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/relation_kind"
+    },
+    "completeness": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/completeness"
+    },
+    "limitations": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/limitations"
+    },
+    "freshness": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/freshness"
+    },
+    "basis": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/basis"
+    },
+    "nodes": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/nodes"
+    },
+    "edges": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/edges"
+    },
+    "path": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/path"
+    },
+    "stats": {
+      "$ref": "urn:skm:knowledge:graph-answer:v1#/properties/stats"
+    },
+    "sources_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "languages_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "limitations_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "nodes_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "edges_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "path_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "schema",
+    "query",
+    "repository_id",
+    "revision",
+    "index_generation",
+    "sources",
+    "languages",
+    "relation_kind",
+    "completeness",
+    "limitations",
+    "freshness",
+    "basis",
+    "nodes",
+    "edges",
+    "path",
+    "stats"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:command:expire-memory:v1",
+  "title": "ExpireMemory",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "batch": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 500
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.commands",
+      "class": "ExpireMemory",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ExpireMemory"
+    }
+  }
+}

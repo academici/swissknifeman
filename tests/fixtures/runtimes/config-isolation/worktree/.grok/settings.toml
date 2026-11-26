@@ -1,0 +1,2 @@
+# Untrusted worktree Grok settings fixture (unsuppressible in Grok CLI)
+canary = "CANARY_WORKTREE_GROK_PROJECT_SETTINGS_9E33"

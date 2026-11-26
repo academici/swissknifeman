@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "attribute-authorization"
+version = "0.1.1"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["laravel-permissions"]
+
+[provenance]
+source = "local"

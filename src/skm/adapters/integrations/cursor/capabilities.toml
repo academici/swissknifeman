@@ -1,0 +1,63 @@
+target = "cursor"
+tested_client_version = "2026.09.15-d2fe57e"
+verified_at = "2026-10-26"
+
+[surfaces]
+instructions = "native"
+skills = "native"
+permissions = "native"
+hooks = "native"
+mcp = "native"
+agents = "native"
+
+[hook_surfaces."lifecycle.git_guardrails"]
+class = "enforcement"
+bindings = [{ event = "beforeShellExecution", matcher = "\\bgit\\b" }]
+
+[hook_surfaces."security.safe_dirs"]
+class = "enforcement"
+bindings = [{ event = "beforeShellExecution" }]
+
+[hook_surfaces."lifecycle.plan_guard"]
+class = "enforcement"
+bindings = [{ event = "preToolUse", matcher = "^(Write|Delete)$" }]
+
+[hook_surfaces."lifecycle.pack_guard"]
+class = "enforcement"
+bindings = [{ event = "preToolUse", matcher = "^(Write|Delete|Task|MCP:.*)$" }]
+
+[hook_surfaces."lifecycle.changelog_gate"]
+class = "enforcement"
+bindings = [{ event = "beforeShellExecution", matcher = "git.*commit" }]
+
+[hook_surfaces."lifecycle.review_gate"]
+class = "workflow"
+bindings = [
+  { event = "beforeShellExecution", matcher = "git.*commit" },
+  { event = "subagentStop", loop_limit = 3 },
+]
+
+[hook_surfaces."lifecycle.command_log"]
+class = "observation"
+bindings = [{ event = "afterShellExecution" }]
+
+[hook_surfaces."context.session_start"]
+class = "workflow"
+bindings = [{ event = "sessionStart" }]
+
+[hook_surfaces."lifecycle.run_report"]
+class = "observation"
+bindings = [{ event = "sessionEnd" }]
+
+[hook_event_kinds]
+session_start = { event = "sessionStart" }
+session_end = { event = "sessionEnd" }
+pre_shell = { event = "beforeShellExecution" }
+post_shell = { event = "afterShellExecution" }
+pre_tool = { event = "preToolUse", matcher = "^(Write|Delete|Task|MCP:.*)$" }
+subagent_stop = { event = "subagentStop", loop_limit = 3 }
+stop = { event = "stop", loop_limit = 3 }
+
+[budget]
+skill_listing_max_chars = 8000
+skill_listing_fraction = 0.02

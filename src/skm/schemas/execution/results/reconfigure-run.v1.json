@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:reconfigure-run:v1",
+  "title": "ReconfigureRunResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "applied_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reconfiguration_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "effective_config_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "row_version": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "run_id",
+    "applied_keys",
+    "reconfiguration_id",
+    "effective_config_digest",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "ReconfigureRunResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ReconfigureRunResult"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:demo:query:get-echo:v1",
+  "title": "GetEcho",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_id"],
+  "properties": {
+    "workspace_id": {"type": "string", "format": "uuid"}
+  }
+}

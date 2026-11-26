@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:text-fragment:v1",
+  "title": "TextFragmentView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    },
+    "target_entity_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pointer": {
+      "type": "string",
+      "minLength": 0
+    },
+    "text_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "total_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "offset_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end_offset_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "text": {
+      "type": "string",
+      "minLength": 0
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "omitted_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "next_offset_bytes": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "source",
+    "target_entity_id",
+    "pointer",
+    "text_digest",
+    "total_bytes",
+    "offset_bytes",
+    "end_offset_bytes",
+    "text",
+    "truncated",
+    "omitted_bytes",
+    "next_offset_bytes"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "TextFragmentView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "TextFragmentView"
+    }
+  }
+}

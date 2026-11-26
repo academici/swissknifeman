@@ -1,0 +1,43 @@
+{
+  "contract": "urn:skm:execution:pending-continuation:v1",
+  "value": {
+    "schema_version": 1,
+    "continuation_id": "01928f61-0000-7000-8000-000000000091",
+    "kind": "advance",
+    "triggers": [
+      {
+        "source_event_id": "01928f61-0000-7000-8000-000000000081",
+        "cause": {
+          "trigger_kind": "stage_outcome",
+          "advance_rule": null,
+          "reason_codes": [],
+          "refs": [
+            {
+              "kind": "stage",
+              "id": "01928f61-0000-7000-8000-000000000004"
+            }
+          ],
+          "source_event_id": "01928f61-0000-7000-8000-000000000081"
+        }
+      },
+      {
+        "source_event_id": "01928f61-0000-7000-8000-000000000082",
+        "cause": {
+          "trigger_kind": "manual_verdict",
+          "advance_rule": null,
+          "reason_codes": [
+            "MANUAL_FAILED"
+          ],
+          "refs": [
+            {
+              "kind": "check",
+              "id": "01928f61-0000-7000-8000-000000000006"
+            }
+          ],
+          "command_id": "manual-verdict-while-paused",
+          "source_event_id": "01928f61-0000-7000-8000-000000000082"
+        }
+      }
+    ]
+  }
+}

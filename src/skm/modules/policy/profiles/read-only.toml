@@ -1,0 +1,108 @@
+# Built-in policy profile (urn:skm:policy:profile:v1).
+# Copy of src/skm/modules/policy/profiles/read-only.toml; spec: working/spec/modules/policy.md §4.5.
+# Reviewers, scouts and advisors: read the worktree and materials, run read-only commands, no writes, no network.
+# Command lists are the data of the legacy auto-approve hook (packages/harness/configs/claude-code/hooks/
+# auto-approve/config.json): allow, subcommand_read.git, gh read verbs, deny_hard, deny_block_approve,
+# inline_interpreters. POSIX ERE classes are rewritten to Python re. Dropped: subcommand_read.docker
+# (the docker socket is a capability), rm|rmdir|shred in deny_hard (deletions are operations).
+# Also the data for Allow.allowlisted of interactive hooks (policy.auto_approve.mode = strict).
+schema = "urn:skm:policy:profile:v1"
+id = "read-only"
+version = "1.0.0"
+description = "Read the worktree and materials, run read-only commands; no writes, no network, no external effects."
+requires_host_flag = false
+allowed_isolation = ["worktree", "landlock", "container"]
+
+[fs.read]
+allow = [
+  { scope = "worktree", pattern = "**" },
+  { scope = "materials", pattern = "**" },
+  { scope = "tmp", pattern = "**" },
+  { scope = "safe_dir", pattern = "**" },
+]
+deny = []
+
+[fs.write]
+allow = []
+deny = []
+
+[commands]
+mode = "allowlist"
+programs = [
+  "ls", "cat", "head", "tail", "wc", "stat", "file", "find", "grep", "egrep",
+  "fgrep", "rg", "ag", "tree", "which", "type", "whereis", "pwd", "basename",
+  "dirname", "realpath", "readlink", "date", "sleep", "test", "true", "false",
+  "sort", "uniq", "cut", "tr", "comm", "diff", "cmp", "od", "xxd", "hexdump",
+  "nl", "tac", "column", "fold", "fmt", "expand", "unexpand", "paste", "join",
+  "seq", "printf", "echo", "jq", "yq", "cd", "pushd",
+  "popd", "dirs", "env", "printenv", "id", "whoami", "hostname", "uname",
+  "uptime", "df", "du", "free", "ps",
+]
+inline_interpreters = ["python", "python3", "node", "deno", "ruby", "perl", "php"]
+trust_inline_interpreters = false
+deny_patterns = [
+  '(^|[^0-9A-Za-z_/.-])(sudo|doas|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])(telinit|init)\s+[0-6sS](\s|$)',
+  '(^|[^0-9A-Za-z_/.-])dd\s+[^|;&]*(of=|if=/dev/)',
+  ':\s*\(\)\s*\{[^}]*:[^}]*\|',
+  '\|\s*(ba|z|k)?sh(\s|$)',
+  '>\s*/dev/(sd|nvme|disk|mmcblk)',
+]
+ask_patterns = [
+  '>>|[^0-9&]>\s*[^&\s]|>\s*[^&\s/]',
+  '(^|[^0-9A-Za-z_/.-])(mv|cp|ln|tee|truncate|unlink|chmod|chown|chgrp|setfacl|eval|exec|source|kill|pkill|killall|nc|ncat|netcat|telnet|ssh|scp|rsync|sftp|mount|umount|crontab|at|systemctl|service|launchctl|iptables|nft|ufw)(\s|$)',
+  'git\s+(push|reset|clean|rebase|filter-branch|filter-repo|commit|add|stash|merge|cherry-pick|am|apply|revert|gc|prune|tag|update-ref|config|remote|fetch|pull|init|rm|mv|checkout|restore|switch|symbolic-ref|worktree|submodule|notes|replace|bundle|sparse-checkout|maintenance|repack)',
+  'git\s+branch\s+([^|;&]*\s)?(-[a-zA-Z]*[dDmMcCfutU]|--(delete|move|copy|force|set-upstream|unset-upstream|track|edit-description))([\s=]|$)',
+  'git\s+reflog\s+(expire|delete)',
+  '(^|/)\.skm/',
+  'gh\s+(auth|config|alias|extension|gist|codespace|secret|ssh-key|gpg-key|release|workflow)',
+  'gh\s+(pr|issue)\s+(merge|close|create|edit|comment|review|ready|reopen|delete|lock|unlock)',
+  'gh\s+repo\s+(create|delete|fork|edit|rename|archive|sync|clone)',
+  'gh\s+api\s+[^|;&]*(-X|--method)[\s=]*[PpDd]|(^|\s)(-[fF]|--field|--raw-field|--input)',
+  'docker\s+(rm|rmi|prune|kill|stop|start|restart|exec|run|build|push|pull|tag|commit|login|volume|network|system|compose)',
+  'compose\s+(up|down|build|run|exec|restart|stop|start)',
+  '(npm|pnpm)\s+(install|i|ci|add|update|publish|uninstall|remove|run|exec|dlx)',
+  'yarn\s+(add|remove|install|up|upgrade|dlx)',
+  'pip[0-9]?\s+(install|uninstall)',
+  'composer\s+(install|i|update|u|upgrade|require|reinstall|remove|dump|dump-autoload|create-project|global|publish)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])((dart|flutter)\s+)?pub\s+(get|upgrade|downgrade|add|remove|global|publish)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])(mvn|mvnw|gradle|gradlew|dotnet)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])(apt|apt-get|dpkg|yum|dnf|zypper|pacman|apk|brew|snap|gem|cargo|go|make|kubectl|helm|terraform|aws|gcloud|az)(\s|$)',
+  'sed\s+[^|;&]*-i',
+]
+
+[commands.subcommands]
+git = [
+  "log", "diff", "status", "show", "branch", "ls-files", "rev-parse",
+  "describe", "blame", "cat-file", "for-each-ref", "shortlog", "ls-remote",
+  "reflog", "whatchanged", "name-rev", "count-objects", "rev-list",
+  "symbolic-ref", "version", "help",
+]
+gh = ["api", "search", "*:view", "*:list", "*:checks", "*:diff", "*:status", "*:get"]
+
+[network]
+mode = "none"
+hosts = []
+
+[tools]
+allow = ["fs.read", "shell.run", "mcp:skm/*"]
+
+[effects]
+allow = []
+need_approval = []
+
+[operations]
+modify_write_set         = { decision = "deny" }
+modify_outside_write_set = { decision = "deny" }
+delete_tracked           = { decision = "deny" }
+delete_own_untracked     = { decision = "deny" }
+delete_foreign_untracked = { decision = "deny" }
+modify_git_dir           = { decision = "deny" }
+git_discard              = { decision = "deny" }
+git_push                 = { decision = "deny" }
+git_force_push           = { decision = "deny" }
+forge_write              = { decision = "deny" }
+release_publish          = { decision = "deny" }
+secrets_access           = { decision = "deny" }
+docker_socket            = { decision = "deny" }
+external_services        = { decision = "deny" }

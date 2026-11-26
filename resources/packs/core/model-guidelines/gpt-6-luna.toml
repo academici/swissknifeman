@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gpt-6-luna"
+version = "2.0.6"
+model_family = "gpt"
+model_id = "gpt-6-luna"
+display_name = "GPT-6 Luna"
+runtime_ids = ["codex"]
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+notes = "2026 Codex economy selector."
+strengths = ["fast lookup", "summaries", "classification"]
+delegation_notes = ["Use for scouting and registration.", "Do not assign frontier implementation."]
+forbidden_params = ["temperature", "top_p"]
+
+[prompt_style]
+shape = "structured"
+instructions = ["Ask for a short structured answer.", "Keep the prefix cacheable."]
+
+[cache_capabilities]
+prompt_cache = "native"
+cache_read = true
+cache_write = false
+min_cacheable_tokens = 1024
+
+[compaction_threshold]
+input_tokens = 96000
+reserve_output_tokens = 8000

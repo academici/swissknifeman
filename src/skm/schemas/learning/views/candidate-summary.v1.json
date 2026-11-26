@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:view:candidate-summary:v1",
+  "title": "CandidateSummaryView",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "display_key": {
+      "type": "string"
+    },
+    "detector": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/Detector"
+    },
+    "pathology_code": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+    },
+    "trigger": {
+      "type": "string"
+    },
+    "state": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateState"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "confidence_tier": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/ConfidenceTier"
+    },
+    "n_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "curated_ready": {
+      "type": "boolean"
+    },
+    "conflicts_with": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "updated_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "display_key",
+    "detector",
+    "pathology_code",
+    "kind",
+    "trigger",
+    "state",
+    "confidence",
+    "confidence_tier",
+    "n_total",
+    "curated_ready",
+    "conflicts_with",
+    "updated_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.views",
+      "class": "CandidateSummaryView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "CandidateSummaryView"
+    }
+  }
+}

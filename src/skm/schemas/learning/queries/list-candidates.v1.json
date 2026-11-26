@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:query:list-candidates:v1",
+  "title": "ListCandidates",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateState"
+      },
+      "default": [
+        "candidate"
+      ]
+    },
+    "detector": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/Detector"
+    },
+    "min_tier": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/ConfidenceTier"
+    },
+    "after": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200
+    }
+  },
+  "required": [
+    "workspace_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.queries",
+      "class": "ListCandidates",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "ListCandidates"
+    }
+  }
+}

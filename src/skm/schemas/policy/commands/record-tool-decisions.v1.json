@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:command:record-tool-decisions:v1",
+  "title": "RecordToolDecisions",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          },
+          "tool": {
+            "type": "string",
+            "minLength": 0
+          },
+          "call_summary": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 500
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "allow",
+              "ask",
+              "deny",
+              "warn"
+            ]
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "hook",
+              "worker"
+            ]
+          }
+        },
+        "required": [
+          "at",
+          "tool",
+          "call_summary",
+          "outcome",
+          "code",
+          "rule",
+          "operation",
+          "source"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 200
+    }
+  },
+  "required": [
+    "scope_id",
+    "records"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.commands",
+      "class": "RecordToolDecisions",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "RecordToolDecisions"
+    }
+  }
+}

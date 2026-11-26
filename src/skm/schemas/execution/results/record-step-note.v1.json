@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:record-step-note:v1",
+  "title": "RecordStepNoteResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "recorded_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "note_id",
+    "recorded_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "RecordStepNoteResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RecordStepNoteResult"
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:runtime-start-admitted:v1",
+  "title": "RuntimeStartAdmitted",
+  "description": "Trusted execution emitter records closed domain fields and cause in the transition UoW. The history builder derives nodes/edges; no independently emitted generic facts snapshot. Observation is metadata, never lifecycle authority. Payload <=256KiB. See execution-history.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stage_record_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      },
+      "maxItems": 8
+    },
+    "fencing_token": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "assignment_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_bindings": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "context_manifest_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "effective_config_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "route_snapshot_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          }
+        },
+        "required": [
+          "step_id",
+          "context_manifest_id",
+          "effective_config_digest",
+          "route_snapshot_digest"
+        ]
+      }
+    }
+  },
+  "required": [
+    "task_id",
+    "attempt_id",
+    "stage_record_id",
+    "step_ids",
+    "fencing_token",
+    "cause",
+    "run_id",
+    "workspace_id",
+    "project_id",
+    "assignment_id",
+    "step_bindings"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "RuntimeStartAdmitted",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RuntimeStartAdmitted"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "cause": {
+          "properties": {
+            "trigger_kind": {
+              "not": {
+                "const": "observation"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

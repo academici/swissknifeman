@@ -1,0 +1,1028 @@
+{
+  "schema": "urn:skm:execution:readiness-report:v1",
+  "id": "0193a000-0000-7000-8000-000000140001",
+  "workspace_id": "01928f50-aaaa-7bbb-8ccc-1d2e3f4a5b6c",
+  "project_id": "01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+  "plan_id": "0192f5c4-0000-7000-8000-000000000c00",
+  "revision_id": "0192f5c5-0000-7000-8000-000000000101",
+  "revision_digest": "sha256:bbda08a3c5cee31882b10893ceb6983c0fe068f147d2ce10c4189bb588e89f59",
+  "status": "ready_with_advisories",
+  "scope": {
+    "kind": "plan",
+    "phase_keys": []
+  },
+  "inputs": {
+    "requirements": "sha256:9a17c734afc921530fda304b3ddd9ea8fbed526bf693ac2a797422fecf8d6fa6",
+    "dependencies": "sha256:faf84f9ee8639f5f499dce104a6ff3435ff392d275e64221898fc022edce1f01",
+    "write_scopes": "sha256:291db11159e8452b0057b259555db417b868dcd18423bb17f8c6e8d336d778c3",
+    "criteria": "sha256:8df27035b9cd2697c223e0c7b4522d03cc2cbfe4c858f3753dc3b5d141cc4fb2",
+    "capability_requirements": "sha256:94f37a156334c184c71b928606f4d9b284be96dfb7209faeb6198e89839953b2",
+    "policy": "sha256:3bf3e327e49d149b5ae5fb88044a08645e6cb633b171caa8b7456c540adda651",
+    "config": "sha256:8128e25a6efd9b60018f19acf83c3d370fcda775d82e16090733e1e0fc5320b8",
+    "resources": "sha256:4fc4544a57656fda6c63406447b617f74dfcebf53ff5cf29198e25c4a4d1164d",
+    "materials": "sha256:dce1ead632257a23f82486ecaf15f2d69f8af0e73f013265698cdf3309037abd"
+  },
+  "inputs_digest": "sha256:b5abe8fde22a415e103b50d958e6ac3ac972be9da95131fd964b0ce83a5ceb78",
+  "policy_digest": "sha256:3c63588e2aa747ba661c2adb695a7cbba9447a5d78eac4db8fdfa72a5dff6c4f",
+  "results": [
+    {
+      "rule_id": "R01_graph",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R02_detail",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R03_criteria_linked",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R04_requirements_covered",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R05_checkouts",
+      "outcome": "advisory",
+      "findings_count": 1
+    },
+    {
+      "rule_id": "R06_materials",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R07_capabilities",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R08_write_scopes",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R09_budget",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R10_verifiers",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R11_policy",
+      "outcome": "passed",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R12_semantic",
+      "outcome": "skipped",
+      "findings_count": 0
+    },
+    {
+      "rule_id": "R13_gates",
+      "outcome": "passed",
+      "findings_count": 0
+    }
+  ],
+  "findings": [
+    {
+      "code": "CHECKOUT_UNBOUND",
+      "severity": "advisory",
+      "entity_id": "0192f5c4-0000-7000-8000-00000000002d",
+      "rule_id": "R05_checkouts",
+      "message": "Check P2.2:V1 runs in mount web; no registered host has a checkout binding for it yet."
+    }
+  ],
+  "assumptions": [
+    "Host for mount web is unknown: the checkout check of P2.2:V1 is deferred to claim time.",
+    "Runtime availability (installed CLIs, quotas, online workers) is not part of readiness and does not make it stale."
+  ],
+  "structural_counts": {
+    "tasks": 14,
+    "edges": 22,
+    "checks": 8,
+    "manual_checks": 1,
+    "roles": 6,
+    "gates": 6
+  },
+  "estimate": {
+    "tokens": {
+      "low": 1180000,
+      "high": 1960000
+    },
+    "usd": {
+      "low": 7.1,
+      "high": 11.8
+    },
+    "by_task": [
+      {
+        "display_key": "P1.2",
+        "tokens": 152000,
+        "usd": 0.92
+      }
+    ]
+  },
+  "audit": null,
+  "supersedes_report_id": null,
+  "validator_version": 1,
+  "created_by": "0192f5b0-0000-7000-8000-000000000001",
+  "created_at": "2026-10-25T11:39:40Z",
+  "work_policies": {
+    "@default": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2/U1": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2/U2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1.2": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.2#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2.3": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P1#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "P2#gate": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    },
+    "PLAN#accept": {
+      "requested": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "effective": {
+        "role_intensity": {
+          "scout": "medium",
+          "executor": "medium",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "medium"
+      },
+      "provenance": [
+        {
+          "field": "role_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.role_intensity"
+        },
+        {
+          "field": "verification_intensity",
+          "source": "default",
+          "ref": "execution.work_policy.verification_intensity"
+        }
+      ],
+      "clamps": [],
+      "digest": "sha256:92aa1b5a99924b9a17694b8862fae3513439a7bd40be92abbe3e396da0804a10",
+      "role_warn_seconds": {
+        "scout": 600,
+        "executor": 1800,
+        "reviewer": 300,
+        "triager": 180,
+        "advisor": 300,
+        "researcher": 900,
+        "registrar": 60
+      },
+      "triage_repro_warn_seconds": 60,
+      "emergency_role_seconds": {
+        "scout": 900,
+        "executor": 3600,
+        "reviewer": 1800,
+        "triager": 900,
+        "advisor": 1800,
+        "researcher": 1800,
+        "registrar": 300
+      }
+    }
+  },
+  "start_request": {
+    "overrides": {},
+    "selection": null
+  }
+}

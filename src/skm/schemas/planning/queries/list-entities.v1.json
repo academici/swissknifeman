@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:query:list-entities:v1",
+  "title": "ListEntities",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "revision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "draft_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kinds": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "phase",
+          "item",
+          "unit",
+          "requirement",
+          "criterion",
+          "check",
+          "decision",
+          "material"
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "after": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [
+    "plan_id"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "draft_id",
+        "expected_edit_version"
+      ],
+      "not": {
+        "required": [
+          "revision_id"
+        ]
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "ListEntities",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ListEntities"
+    }
+  },
+  "description": "planning owner schema: ListEntities."
+}

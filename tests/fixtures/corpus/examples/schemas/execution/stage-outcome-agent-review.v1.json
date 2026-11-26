@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:stage-outcome-agent-review:v1",
+  "title": "StageOutcomeAgentReview",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "green",
+        "attention",
+        "red"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "residual_risk": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "freshness": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "findings_only",
+        "stale"
+      ]
+    },
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "role_result": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_read_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_write_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cost_usd_micros": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "reported",
+            "estimated",
+            "unknown"
+          ]
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "status",
+        "source"
+      ]
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "error_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "detail": {
+      "type": "string"
+    },
+    "error_class": {
+      "type": "string"
+    },
+    "worktree_dirty": {
+      "type": "boolean"
+    },
+    "retry_after_seconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [],
+  "anyOf": [
+    {
+      "required": [
+        "review_id",
+        "verdict",
+        "findings"
+      ]
+    },
+    {
+      "required": [
+        "error_code"
+      ]
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "StageOutcomeAgentReview",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StageOutcomeAgentReview"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:event:token-revoked:v1",
+  "title": "TokenRevoked",
+  "description": "access event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revoked_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "token_id",
+    "principal_id",
+    "revoked_by"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.events",
+      "class": "TokenRevoked",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "TokenRevoked"
+    }
+  }
+}

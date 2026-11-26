@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:command:prune-orphan-objects:v1",
+  "title": "PruneOrphanObjects",
+  "description": "artifacts command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "backend_id": {
+      "type": "string",
+      "default": "local-primary"
+    },
+    "workspace_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "report_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "confirm": {
+      "type": "boolean",
+      "const": true
+    }
+  },
+  "required": [
+    "report_digest",
+    "confirm"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.commands",
+      "class": "PruneOrphanObjects",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "PruneOrphanObjects"
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:external-effect-recorded:v1",
+  "title": "ExternalEffectRecorded",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "effect_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "#/$defs/json-value"
+    },
+    "state": {
+      "$ref": "#/$defs/json-value"
+    },
+    "ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stage_record_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "output_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      }
+    },
+    "intent_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "request_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "receipt_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "#/$defs/json-value"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "effect_id",
+    "kind",
+    "state",
+    "attempt_id",
+    "output_ids",
+    "request_digest",
+    "cause"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "ExternalEffectRecorded",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ExternalEffectRecorded"
+    }
+  },
+  "$defs": {
+    "json-value": {
+      "description": "JSON metadata local to this event; no runtime request or secret-bearing schema closure.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  }
+}

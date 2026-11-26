@@ -1,0 +1,11 @@
+{
+  "hook_event_name": "beforeShellExecution",
+  "conversation_id": "c-7b1e",
+  "generation_id": "g-42",
+  "session_id": "s-91aa",
+  "command": "rm -rf ../shared-cache",
+  "cwd": "/home/dev/demo",
+  "workspace_roots": [
+    "/home/dev/demo"
+  ]
+}

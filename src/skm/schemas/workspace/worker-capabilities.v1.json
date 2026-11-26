@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:worker-capabilities:v1",
+  "title": "WorkerCapabilities",
+  "description": "What a worker can execute; used by execution.claim_assignment to match required_capabilities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runtimes",
+    "isolation_profiles",
+    "max_concurrency",
+    "labels",
+    "platform",
+    "skm_version"
+  ],
+  "properties": {
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]{1,31}$"
+      },
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "isolation_profiles": {
+      "type": "array",
+      "items": {
+        "x-skm-enum-name": "IsolationProfile",
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "none",
+              "worktree",
+              "landlock",
+              "container"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+          }
+        ]
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 4,
+      "description": "How processes may be started on this host (isolation profiles, C7). 'none' only when the host sets policy.host.allow_unconfined = true. Not policy profiles."
+    },
+    "max_concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9:._-]{0,63}$"
+      },
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "platform": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_platform"
+    },
+    "skm_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+.][0-9A-Za-z.-]+)?$"
+    }
+  },
+  "examples": [
+    {
+      "runtimes": [
+        "claude_code",
+        "codex"
+      ],
+      "isolation_profiles": [
+        "worktree",
+        "landlock"
+      ],
+      "max_concurrency": 2,
+      "labels": [
+        "gpu:none",
+        "net:egress"
+      ],
+      "platform": {
+        "os": "linux",
+        "arch": "x86_64"
+      },
+      "skm_version": "0.1.0"
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.documents",
+      "class": "WorkerCapabilities",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "WorkerCapabilities"
+    }
+  }
+}

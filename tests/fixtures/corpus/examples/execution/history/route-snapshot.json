@@ -1,0 +1,27 @@
+{
+  "contract": "urn:skm:execution:route-snapshot:v1",
+  "value": {
+    "requested": {
+      "runtime_id": null,
+      "model": null,
+      "model_class": "implementation",
+      "effort": "high"
+    },
+    "resolved": {
+      "runtime_id": "fake",
+      "model": "fake-implementation",
+      "effort": "high"
+    },
+    "route_source": "role_routing",
+    "host_id": "01928f61-0000-7000-8000-000000000020",
+    "executable_sha256": null,
+    "verification_key": null,
+    "effective_config_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "reconfiguration_ids": [],
+    "route_reason": "ROUTE_DEFAULT",
+    "runtime_version": null,
+    "adapter_version": null,
+    "catalog_digest": null,
+    "profile_version_id": null
+  }
+}

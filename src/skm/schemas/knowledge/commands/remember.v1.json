@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:command:remember:v1",
+  "title": "Remember",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryScopeKind"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "default": {
+        "kind": "project"
+      }
+    },
+    "kind": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryKind"
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "ttl_hours": {
+      "anyOf": [
+        {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 72
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "cli",
+        "mcp",
+        "hook",
+        "api",
+        "internal"
+      ]
+    },
+    "expected_handoff_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "project_id",
+    "kind",
+    "body",
+    "ttl_hours",
+    "source"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.commands",
+      "class": "Remember",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "Remember"
+    }
+  }
+}

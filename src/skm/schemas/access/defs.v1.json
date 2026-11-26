@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:defs:v1",
+  "title": "Access definitions",
+  "$defs": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "maintainer",
+        "member",
+        "viewer",
+        "worker"
+      ],
+      "x-skm-enum-name": "Role"
+    },
+    "principal_kind": {
+      "type": "string",
+      "enum": [
+        "human",
+        "service",
+        "worker"
+      ],
+      "x-skm-enum-name": "PrincipalKind"
+    },
+    "permission": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z_]+$",
+      "description": "One entry of the permission catalog (spec/00-conventions.md §5); membership in the catalog is checked by the domain, not by the schema."
+    },
+    "token_kind": {
+      "type": "string",
+      "enum": [
+        "personal",
+        "worker",
+        "assignment"
+      ],
+      "x-skm-enum-name": "TokenKind",
+      "description": "personal: human/service token; worker: token of a worker process (TTL access.tokens.worker_ttl_hours, rotated); assignment: runtime/MCP token of one assignment step (scope = run; .read permissions also cover the ancestors of the run, writes only the run and below; never worker.claim; carries assignment_id and step_id; expires with the lease)."
+    }
+  }
+}

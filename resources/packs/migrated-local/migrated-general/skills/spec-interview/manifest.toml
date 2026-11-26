@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "spec-interview"
+version = "0.2.0"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+replaced_by = "planner/commands/plan-design.md"
+
+[provenance]
+source = "local"

@@ -1,0 +1,48 @@
+name: Release tag
+
+# The only release tag is v0.1.0 and it must point at main; any other tag push fails here.
+on:
+  push:
+    tags: ['**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release-tag:
+    name: Release tag
+    # A deleted tag also sends a push event; there is nothing to verify then.
+    if: ${{ !github.event.deleted }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify the sole release tag points to main
+        run: |
+          expected_tag=refs/tags/v0.1.0
+          tags=$(git for-each-ref --format='%(refname)' refs/tags/)
+          if [[ "$GITHUB_REF" != "$expected_tag" || "$tags" != "$expected_tag" ]]; then
+            printf 'Expected only %s, found:\n%s\n' "$expected_tag" "$tags" >&2
+            exit 1
+          fi
+
+          tagged_commit=$(git rev-parse "${expected_tag}^{commit}")
+          main_commit=$(git rev-parse refs/remotes/origin/main)
+          checkout_commit=$(git rev-parse HEAD)
+          if ! [[ "$tagged_commit" == "$main_commit" && "$tagged_commit" == "$checkout_commit" ]]; then
+            printf '%s must point to the checked-out commit at origin/main (%s)\n' \
+              "$expected_tag" "$main_commit" >&2
+            exit 1
+          fi
+

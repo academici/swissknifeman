@@ -1,0 +1,16 @@
+# Synthetic fixture; visible tools do not imply complete native tool visibility.
+scenario = "tool_request"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "tool_requested", call_id = "read-1", tool = "Read", args_preview = "file.txt" }
+
+[[step]]
+action = "emit"
+event = { type = "tool_completed", call_id = "read-1", status = "ok" }
+
+[result]
+text = "Synthetic tool flow completed."

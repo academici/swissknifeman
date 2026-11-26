@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:query:get-readiness-report:v1",
+  "title": "GetReadinessReport",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "report_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.queries",
+      "class": "GetReadinessReport",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "GetReadinessReport"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "report_id"
+      ],
+      "not": {
+        "required": [
+          "revision_id"
+        ]
+      }
+    },
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "required": [
+          "report_id"
+        ]
+      }
+    }
+  ]
+}

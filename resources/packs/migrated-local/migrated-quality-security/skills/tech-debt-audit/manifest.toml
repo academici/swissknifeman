@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "tech-debt-audit"
+version = "0.1.1"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["reviewer"]
+
+[provenance]
+source = "local"

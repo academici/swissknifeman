@@ -1,0 +1,363 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:artifacts:v1",
+  "title": "Artifacts settings",
+  "description": "Settings section 'artifacts' owned by artifacts. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "artifacts",
+    "owner": "artifacts",
+    "title": "Artifacts",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.settings",
+      "class": "ArtifactsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ArtifactsSettings"
+    }
+  },
+  "properties": {
+    "upload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 68719476736,
+          "default": 104857600,
+          "description": "Largest byte upload (staged blob) and file version accepted; the API checks Content-Length against it.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Files",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_free_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 17592186044416,
+          "default": 5368709120,
+          "description": "Free space kept on each blob/staging filesystem after outstanding write reservations; admission fails below it. Not a workspace quota.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Storage",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "staging": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ttl_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 720,
+          "default": 24,
+          "description": "An uploaded blob not consumed by a command within this time is purged by the janitor.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Files",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "consumed_retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "default": 7,
+          "description": "Days consumed staged-blob rows are kept for idempotent replays before purge (objects stay).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Files",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "default_classification": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "default": "internal",
+      "description": "Classification of a new file when the request names none.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Files",
+          "order": 40,
+          "widget": "select"
+        }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "acknowledge_min_classification": {
+          "type": "string",
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ],
+          "default": "confidential",
+          "description": "Uploads acknowledging content-safety findings must carry at least this classification.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Safety",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "secret_name_globs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [
+            ".env",
+            ".env.*",
+            "*.pem",
+            "*.key",
+            "*.p12",
+            "*.pfx",
+            "credentials.*",
+            "secrets.*"
+          ],
+          "description": "File name globs (lower case) that block an upload as a probable secret.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Safety",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "max_text_scan_bytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 1073741824,
+          "default": 5242880,
+          "description": "Bytes scanned as text for secrets; larger content gets the info finding CS-NOT-SCANNED.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Safety",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "grants": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_ttl_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 10080,
+          "default": 240,
+          "description": "Lifetime of an access grant to file versions issued for a step or a review.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Access",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "blobs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,40}$",
+          "default": "local-primary",
+          "description": "Storage backend id (skm_artifacts.storage_backends) new blobs are written to.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Storage",
+              "order": 20,
+              "widget": "text"
+            }
+          }
+        }
+      }
+    }
+  }
+}

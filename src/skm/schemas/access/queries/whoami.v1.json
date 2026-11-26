@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:query:whoami:v1",
+  "title": "WhoAmI",
+  "description": "access query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.queries",
+      "class": "WhoAmI",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "WhoAmI"
+    }
+  }
+}

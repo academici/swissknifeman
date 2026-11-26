@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:project-repositories:v1",
+  "title": "ProjectRepositoriesView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "array",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "ProjectRepositoriesView",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "ProjectRepositoriesView"
+    }
+  },
+  "items": {
+    "$ref": "urn:skm:workspace:view:mount:v1"
+  }
+}

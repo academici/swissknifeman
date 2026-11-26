@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:query:list-graph-indexes:v1",
+  "title": "ListGraphIndexes",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "source": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.queries",
+      "class": "ListGraphIndexes",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ListGraphIndexes"
+    }
+  }
+}

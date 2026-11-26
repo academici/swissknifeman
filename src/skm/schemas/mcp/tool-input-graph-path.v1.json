@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:graph-path:v1",
+  "title": "skm_graph_path input",
+  "description": "Project-scoped input for skm_graph_path.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "edge_types": {
+      "$ref": "urn:skm:knowledge:query:graph-path:v1#/properties/edge_types"
+    },
+    "at_revision": {
+      "$ref": "urn:skm:knowledge:query:graph-path:v1#/properties/at_revision"
+    },
+    "src_key": {
+      "$ref": "urn:skm:knowledge:query:graph-path:v1#/properties/src_key"
+    },
+    "dst_key": {
+      "$ref": "urn:skm:knowledge:query:graph-path:v1#/properties/dst_key"
+    },
+    "direction": {
+      "$ref": "urn:skm:knowledge:query:graph-path:v1#/properties/direction"
+    }
+  },
+  "required": [
+    "src_key",
+    "dst_key"
+  ]
+}

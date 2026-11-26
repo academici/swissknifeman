@@ -1,0 +1,130 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    }
+  ],
+  "context_md": "Context.",
+  "non_goals": [
+    "Not this."
+  ],
+  "rules": [
+    "Rule."
+  ],
+  "requirements": [
+    {
+      "key": "R1",
+      "statement": "Must work.",
+      "priority": "must",
+      "source": {
+        "kind": "owner"
+      },
+      "owners": [
+        "P1.1"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "key": "D1",
+      "title": "Open",
+      "state": "open",
+      "question": "Which?",
+      "options": [
+        {
+          "key": "A",
+          "text": "One"
+        },
+        {
+          "key": "B",
+          "text": "Two"
+        }
+      ]
+    },
+    {
+      "key": "D2",
+      "title": "Accepted",
+      "state": "accepted",
+      "date": "2026-10-21",
+      "decision": "A",
+      "rationale": "Because.",
+      "applies_to": [
+        "P1.1"
+      ],
+      "origin": {
+        "kind": "agent"
+      },
+      "answered_by": "agent",
+      "supersedes": [
+        "D1"
+      ],
+      "evidence": [
+        {
+          "kind": "note",
+          "ref": "n1",
+          "note": "Chat."
+        }
+      ],
+      "global": false
+    }
+  ],
+  "plan_relations": [
+    {
+      "kind": "predecessor",
+      "target": "PLAN3"
+    },
+    {
+      "kind": "related",
+      "target": "plan:0192f5c4-0000-7000-8000-00000000000a",
+      "note": "Context."
+    }
+  ],
+  "sections": [
+    {
+      "id": "notes",
+      "title": "Notes",
+      "text": "Free text."
+    }
+  ],
+  "extensions": {
+    "acme/audit": {
+      "schema_version": 1,
+      "value": {
+        "any": [
+          "shape",
+          1
+        ]
+      }
+    }
+  },
+  "execution_constraints": {
+    "strategy": "sequential",
+    "forbidden_paths": [
+      {
+        "mount": "api",
+        "pattern": "config/**"
+      }
+    ],
+    "required_isolation": "container",
+    "max_parallel_units": 4
+  }
+}

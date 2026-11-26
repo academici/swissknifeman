@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "startup-lifecycle"
+version = "0.1.0"
+kind = "router"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+exclusive_group = "pm-pipeline"
+
+[provenance]
+source = "local"

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:register-worker:v1",
+  "title": "RegisterWorker",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "capabilities": {
+      "$ref": "urn:skm:workspace:worker-capabilities:v1"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "host_id",
+    "display_name",
+    "capabilities"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "RegisterWorker",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RegisterWorker"
+    }
+  }
+}

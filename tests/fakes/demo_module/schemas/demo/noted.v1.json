@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:demo:event:noted:v1",
+  "title": "Noted",
+  "description": "Test-only instance-level event of the demo module (no workspace, so it lands on the instance feed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text"],
+  "properties": {
+    "text": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

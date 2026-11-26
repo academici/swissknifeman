@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:query:list-memberships:v1",
+  "title": "ListMemberships",
+  "description": "access query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.queries",
+      "class": "ListMemberships",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "ListMemberships"
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "scope_id"
+      ]
+    },
+    {
+      "required": [
+        "principal_id"
+      ]
+    }
+  ]
+}

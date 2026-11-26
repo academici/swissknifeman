@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"0199aa00-thread-crash"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"First turn completed."}}
+{"type":"turn.completed","usage":{"input_tokens":2400,"cached_input_tokens":2000,"output_tokens":75}}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"pytest -q","status":"in_progress"}}

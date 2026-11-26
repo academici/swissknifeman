@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:intent:v2",
+  "title": "IntentApprovalView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+    },
+    "risk": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/risk_class"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "approved",
+        "denied",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "outcome_unknown"
+      ]
+    },
+    "subject_ref": {
+      "type": "string",
+      "minLength": 0
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "expires_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "actor_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "normalized_args": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "args_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 0
+    },
+    "denied_reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "intent_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "approver_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "deny"
+            ]
+          },
+          "args_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "single_use": {
+            "type": "boolean"
+          },
+          "expires_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          },
+          "used_at": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 0
+          },
+          "created_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "intent_id",
+          "approver_id",
+          "decision",
+          "args_digest",
+          "single_use",
+          "expires_at",
+          "used_at",
+          "reason",
+          "created_at"
+        ]
+      }
+    },
+    "effect_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid",
+      "description": "The policy intent's identity as a proposed effect. Execution decisions also carry their own linked effect ID."
+    },
+    "single_use": {
+      "type": "boolean",
+      "description": "Effective single-use default for approval of a proposed intent."
+    }
+  },
+  "required": [
+    "intent_id",
+    "kind",
+    "risk",
+    "state",
+    "subject_ref",
+    "created_at",
+    "expires_at",
+    "scope_id",
+    "workspace_id",
+    "actor_id",
+    "normalized_args",
+    "args_digest",
+    "reason",
+    "denied_reason",
+    "row_version",
+    "approvals"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.intent_approval",
+      "class": "IntentApprovalView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentApprovalView"
+    }
+  }
+}

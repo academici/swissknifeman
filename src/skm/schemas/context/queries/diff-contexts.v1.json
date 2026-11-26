@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:query:diff-contexts:v1",
+  "title": "DiffContexts",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "base_manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target_manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid",
+      "description": "Choose a step or manifest identifier."
+    }
+  },
+  "required": [
+    "project_id",
+    "base_manifest_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.queries",
+      "class": "DiffContexts",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "DiffContexts"
+    }
+  }
+}

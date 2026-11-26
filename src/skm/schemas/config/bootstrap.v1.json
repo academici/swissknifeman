@@ -1,0 +1,471 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:config:bootstrap:v1",
+  "title": "Bootstrap configuration",
+  "description": "Minimal configuration read before the database: how to reach the state, which instance and host this process is, where local state lives. Everything else lives in the settings levels. Two shapes: a single instance (instance_id, access, database|api at the top) or named instance profiles ([instances.<name>] + default_instance, G17).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:config:bootstrap:v1"
+    },
+    "instance_id": {
+      "$ref": "#/$defs/uuid"
+    },
+    "installation_id": {
+      "$ref": "#/$defs/uuid",
+      "description": "Identity of the local installation shared by all named profiles."
+    },
+    "machine_database": {
+      "type": "object",
+      "description": "Installation-level database connection references, shared by all profiles.",
+      "additionalProperties": false,
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "$ref": "urn:skm:config:secret-ref:v1",
+          "description": "DSN for the local machine application role."
+        },
+        "migrator_url": {
+          "$ref": "urn:skm:config:secret-ref:v1",
+          "description": "Separate DSN used by local machine schema initialization."
+        }
+      }
+    },
+    "access": {
+      "$ref": "#/$defs/access"
+    },
+    "database": {
+      "$ref": "#/$defs/database"
+    },
+    "api": {
+      "$ref": "#/$defs/api"
+    },
+    "secrets": {
+      "$ref": "#/$defs/secrets"
+    },
+    "web_auth": {
+      "$ref": "#/$defs/web_auth"
+    },
+    "default_instance": {
+      "$ref": "#/$defs/profile_name",
+      "description": "Profile used when neither --instance, SKM_INSTANCE nor the CLI context of the directory names one."
+    },
+    "instances": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 32,
+      "propertyNames": {
+        "$ref": "#/$defs/profile_name"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/instance_profile"
+      }
+    },
+    "paths": {
+      "$ref": "#/$defs/paths"
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/host_id",
+          "description": "Single-instance shape only; with profiles every profile has its own host id (a host is registered per instance)."
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]{0,62}$",
+          "description": "Defaults to the lower-cased hostname."
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "title": "single instance",
+      "required": [
+        "instance_id",
+        "access"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "instances"
+            ]
+          },
+          {
+            "required": [
+              "default_instance"
+            ]
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/access_rules"
+        }
+      ]
+    },
+    {
+      "title": "instance profiles",
+      "required": [
+        "instances",
+        "default_instance"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "instance_id"
+            ]
+          },
+          {
+            "required": [
+              "access"
+            ]
+          },
+          {
+            "required": [
+              "database"
+            ]
+          },
+          {
+            "required": [
+              "api"
+            ]
+          },
+          {
+            "required": [
+              "secrets"
+            ]
+          },
+          {
+            "properties": {
+              "host": {
+                "required": [
+                  "id"
+                ]
+              }
+            },
+            "required": [
+              "host"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "host_id": {
+      "anyOf": [
+        {
+          "const": "auto"
+        },
+        {
+          "$ref": "#/$defs/uuid"
+        }
+      ],
+      "default": "auto"
+    },
+    "profile_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
+    "access": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "embedded",
+            "http"
+          ]
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "$ref": "urn:skm:config:secret-ref:v1"
+        },
+        "migrate_on_start": {
+          "type": "boolean",
+          "default": false,
+          "description": "Local profile only (access.mode = embedded): skm serve applies pending migrations before the schema check; a server profile must keep false (K21)."
+        },
+        "migrator_url": {
+          "$ref": "urn:skm:config:secret-ref:v1",
+          "description": "Optional DSN of the migrator role (skm_migrator) for the local `skm db migrate`; absent → database.url. Never used by skm serve, workers or the API (migrations are not applied over HTTP)."
+        },
+        "application_name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,40}$",
+          "default": "skm"
+        },
+        "pool_min_size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "default": 1,
+          "description": "Connections the process pool keeps open."
+        },
+        "pool_max_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Upper bound of the process connection pool. Absent: the default of the surface (skm serve: api.threadpool.size + enabled background services + 3; skm worker: 2 * worker.capacity + 2; CLI/hook/MCP: 2), computed after the start-up connection read the process config (kernel-platform §5.3 step 6b). A value below that minimum refuses the start with CONFIG_INVALID."
+        },
+        "pool_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 10,
+          "description": "Wait for a free pool connection before a request fails with BACKEND_UNAVAILABLE (retryable)."
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "endpoint",
+        "credential"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://.+/api/v1$"
+        },
+        "credential": {
+          "$ref": "urn:skm:config:secret-ref:v1"
+        },
+        "ca_bundle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path of a PEM bundle used to verify the server certificate."
+        },
+        "timeout_seconds": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 600,
+          "default": 30
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "token_pepper": {
+          "$ref": "urn:skm:config:secret-ref:v1",
+          "description": "Pepper of API token hashes (created by skm init). Required on the control plane."
+        }
+      }
+    },
+    "web_auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pre-database HTTP web authentication configuration (ADR 0010 addendum).",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "admin_login",
+            "none"
+          ],
+          "default": "admin_login",
+          "description": "HTTP web admission mode: 'admin_login' requires Bearer or session cookie; 'none' permits loopback-only local owner access with proxy headers disabled."
+        },
+        "forwarded_allow_ips": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Trusted reverse-proxy peer IP addresses or CIDRs passed to Uvicorn forwarded_allow_ips in admin_login mode; ignored when mode is none."
+        },
+        "session_ttl_seconds": {
+          "type": "integer",
+          "minimum": 300,
+          "maximum": 2592000,
+          "default": 43200,
+          "description": "Lifetime of a web session cookie in seconds."
+        },
+        "cookie_samesite": {
+          "type": "string",
+          "enum": [
+            "lax",
+            "strict"
+          ],
+          "default": "lax",
+          "description": "SameSite attribute of the HttpOnly session cookie."
+        },
+        "login_rate_limit_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 10,
+          "description": "Maximum login or pairing exchange attempts per peer within login_rate_limit_window_seconds."
+        },
+        "login_rate_limit_window_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Sliding window in seconds for login and pairing exchange rate limiting."
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Local state of this host (G23). With instance profiles the effective state_dir of a profile is <state_dir>/instances/<name> unless the profile sets its own paths.",
+      "properties": {
+        "state_dir": {
+          "type": "string",
+          "minLength": 1,
+          "default": "~/.local/state/skm",
+          "description": "pids/, logs/, cli-context.json, secrets/."
+        },
+        "blobs_root": {
+          "type": "string",
+          "minLength": 1,
+          "default": "~/.local/share/skm/blobs",
+          "description": "staging/ and <workspace_id>/objects/ of the local blob store; never cleaned by skm local clean."
+        },
+        "worktrees_root": {
+          "type": "string",
+          "minLength": 1,
+          "default": "${state_dir}/worktrees",
+          "description": "Attempt execution environments."
+        },
+        "materialized_root": {
+          "type": "string",
+          "minLength": 1,
+          "default": "${state_dir}/materialized",
+          "description": "Materialized file versions handed to steps."
+        },
+        "backups_root": {
+          "type": "string",
+          "minLength": 1,
+          "default": "${state_dir}/backups",
+          "description": "skm db backup output."
+        }
+      }
+    },
+    "access_rules": {
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "access": {
+                "properties": {
+                  "mode": {
+                    "const": "embedded"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "database"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "access": {
+                "properties": {
+                  "mode": {
+                    "const": "http"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "api"
+            ]
+          }
+        }
+      ]
+    },
+    "instance_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "access"
+      ],
+      "properties": {
+        "instance_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "access": {
+          "$ref": "#/$defs/access"
+        },
+        "database": {
+          "$ref": "#/$defs/database"
+        },
+        "api": {
+          "$ref": "#/$defs/api"
+        },
+        "secrets": {
+          "$ref": "#/$defs/secrets"
+        },
+        "web_auth": {
+          "$ref": "#/$defs/web_auth"
+        },
+        "paths": {
+          "$ref": "#/$defs/paths"
+        },
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/host_id"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/$defs/access_rules"
+        }
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated",
+      "class": "BootstrapDoc",
+      "kind": "typeddict"
+    }
+  }
+}

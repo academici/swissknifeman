@@ -1,0 +1,561 @@
+{
+  "description": "Three-way rebase of a draft (yours) based on r1 (base) onto the current revision r2 (theirs). Normative example of spec/modules/planning.md §5.10 and planning.rebase_draft (§7.8). Documents are full specifications; ids are stable entity ids.",
+  "base_revision": {
+    "revision_id": "0192f5c4-0000-7000-8000-000000000e01",
+    "revision_no": 1,
+    "document": {
+      "schema": "urn:skm:planning:specification:v1",
+      "title": "Refresh token rotation",
+      "goal": "Rotate refresh tokens on every use.",
+      "phases": [
+        {
+          "id": "0192f5c4-0000-7000-8000-00000000000a",
+          "key": "P1",
+          "title": "Storage and rotation",
+          "goal": "Store and rotate tokens.",
+          "design_state": "detailed"
+        }
+      ],
+      "items": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000014",
+          "key": "P1.1",
+          "phase": "P1",
+          "title": "Token table",
+          "summary": "Add refresh_tokens.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          }
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000015",
+          "key": "P1.2",
+          "phase": "P1",
+          "title": "Rotation service",
+          "summary": "Rotate on refresh.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "depends_on": [
+            "P1.1"
+          ]
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000016",
+          "key": "P1.3",
+          "phase": "P1",
+          "title": "Docs",
+          "summary": "Describe rotation.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "work_kind": "docs"
+        }
+      ],
+      "criteria": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000032",
+          "key": "AC1",
+          "owner": "P1.1",
+          "statement": "The table stores families.",
+          "verification_mode": "check",
+          "checks": [
+            "P1.1:V1"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000028",
+          "key": "V1",
+          "owner": "P1.1",
+          "title": "Repository tests",
+          "category": "acceptance",
+          "kind": "command",
+          "required": true,
+          "definition": {
+            "argv": [
+              "python",
+              "-m",
+              "pytest",
+              "tests/auth/test_token_repository.py",
+              "-q"
+            ],
+            "cwd": {
+              "mount": "api",
+              "path": "."
+            },
+            "timeout_seconds": 600
+          }
+        }
+      ]
+    }
+  },
+  "theirs_revision": {
+    "revision_id": "0192f5c4-0000-7000-8000-000000000e02",
+    "revision_no": 2,
+    "document": {
+      "schema": "urn:skm:planning:specification:v1",
+      "title": "Refresh token rotation",
+      "goal": "Rotate refresh tokens on every use.",
+      "phases": [
+        {
+          "id": "0192f5c4-0000-7000-8000-00000000000a",
+          "key": "P1",
+          "title": "Storage and rotation",
+          "goal": "Store and rotate tokens.",
+          "design_state": "detailed"
+        }
+      ],
+      "items": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000014",
+          "key": "P1.1",
+          "phase": "P1",
+          "title": "Token table",
+          "summary": "Add refresh_tokens.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          }
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000015",
+          "key": "P1.5",
+          "phase": "P1",
+          "title": "Rotation service",
+          "summary": "Rotate on refresh.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "depends_on": [
+            "P1.1"
+          ]
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000016",
+          "key": "P1.3",
+          "phase": "P1",
+          "title": "Runbook",
+          "summary": "Describe rotation.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "work_kind": "docs"
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000201",
+          "key": "P1.4",
+          "phase": "P1",
+          "title": "Reuse alerts",
+          "summary": "Alert on family revocation.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          }
+        }
+      ],
+      "criteria": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000032",
+          "key": "AC1",
+          "owner": "P1.1",
+          "statement": "The table stores families.",
+          "verification_mode": "check",
+          "checks": [
+            "P1.1:V1"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000028",
+          "key": "V1",
+          "owner": "P1.1",
+          "title": "Repository tests",
+          "category": "acceptance",
+          "kind": "command",
+          "required": true,
+          "definition": {
+            "argv": [
+              "python",
+              "-m",
+              "pytest",
+              "tests/auth/test_token_repository.py",
+              "-q"
+            ],
+            "cwd": {
+              "mount": "api",
+              "path": "."
+            },
+            "timeout_seconds": 900
+          }
+        }
+      ]
+    }
+  },
+  "draft": {
+    "draft_id": "0192f5c4-0000-7000-8000-000000000d00",
+    "edit_version": 4,
+    "base_revision_id": "0192f5c4-0000-7000-8000-000000000e01",
+    "document": {
+      "schema": "urn:skm:planning:specification:v1",
+      "title": "Refresh token rotation",
+      "goal": "Rotate refresh tokens on every use.",
+      "phases": [
+        {
+          "id": "0192f5c4-0000-7000-8000-00000000000a",
+          "key": "P1",
+          "title": "Storage and rotation",
+          "goal": "Store and rotate tokens.",
+          "design_state": "detailed"
+        }
+      ],
+      "items": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000014",
+          "key": "P1.1",
+          "phase": "P1",
+          "title": "Token table",
+          "summary": "Add refresh_tokens with an index on family_id.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          }
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000015",
+          "key": "P1.2",
+          "phase": "P1",
+          "title": "Rotation service",
+          "summary": "Rotate on refresh.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "depends_on": [
+            "P1.1",
+            "P1.3"
+          ]
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000016",
+          "key": "P1.3",
+          "phase": "P1",
+          "title": "Operator docs",
+          "summary": "Describe rotation.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "work_kind": "docs"
+        },
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000101",
+          "key": "P1.4",
+          "phase": "P1",
+          "title": "Rotation metrics",
+          "summary": "Count reuse detections.",
+          "why": "Part of the rotation work.",
+          "review": {
+            "mode": "required",
+            "profile": "code-review",
+            "independence": "separate_session",
+            "max_rounds": 2
+          },
+          "depends_on": [
+            "P1.2"
+          ]
+        }
+      ],
+      "criteria": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000032",
+          "key": "AC1",
+          "owner": "P1.1",
+          "statement": "The table stores families.",
+          "verification_mode": "check",
+          "checks": [
+            "P1.1:V1"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "id": "0192f5c4-0000-7000-8000-000000000028",
+          "key": "V1",
+          "owner": "P1.1",
+          "title": "Repository and migration tests",
+          "category": "acceptance",
+          "kind": "command",
+          "required": true,
+          "definition": {
+            "argv": [
+              "python",
+              "-m",
+              "pytest",
+              "tests/auth/test_token_repository.py",
+              "-q"
+            ],
+            "cwd": {
+              "mount": "api",
+              "path": "."
+            },
+            "timeout_seconds": 600
+          }
+        }
+      ]
+    }
+  },
+  "attempts": [
+    {
+      "command": {
+        "name": "planning.rebase_draft",
+        "dto": {
+          "draft_id": "0192f5c4-0000-7000-8000-000000000d00",
+          "expected_edit_version": 4
+        }
+      },
+      "outcome": {
+        "error": {
+          "code": "REBASE_CONFLICTS",
+          "category": "conflict",
+          "details": {
+            "conflicts": [
+              {
+                "conflict_id": "rc-9cbaaa46efcf",
+                "kind": "field",
+                "entity_id": "0192f5c4-0000-7000-8000-000000000016",
+                "entity_kind": "item",
+                "key": "P1.3",
+                "field": "title",
+                "pointer": "/items/2/title",
+                "resolutions": [
+                  "yours",
+                  "theirs"
+                ],
+                "base": "Docs",
+                "yours": "Operator docs",
+                "theirs": "Runbook"
+              },
+              {
+                "conflict_id": "rc-f29269c02890",
+                "kind": "key_collision",
+                "entity_id": "0192f5c4-0000-7000-8000-000000000101",
+                "entity_kind": "item",
+                "key": "P1.4",
+                "field": "key",
+                "pointer": "/items/3/key",
+                "resolutions": [
+                  "rekey"
+                ],
+                "colliding_entity_id": "0192f5c4-0000-7000-8000-000000000201"
+              }
+            ],
+            "base_revision_id": "0192f5c4-0000-7000-8000-000000000e01",
+            "current_revision_id": "0192f5c4-0000-7000-8000-000000000e02",
+            "edit_version": 4
+          }
+        }
+      }
+    },
+    {
+      "command": {
+        "name": "planning.rebase_draft",
+        "dto": {
+          "draft_id": "0192f5c4-0000-7000-8000-000000000d00",
+          "expected_edit_version": 4,
+          "resolutions": [
+            {
+              "conflict_id": "rc-9cbaaa46efcf",
+              "keep": "theirs"
+            },
+            {
+              "conflict_id": "rc-f29269c02890",
+              "new_key": "P1.6"
+            }
+          ]
+        }
+      },
+      "outcome": {
+        "result": {
+          "draft_id": "0192f5c4-0000-7000-8000-000000000d00",
+          "plan_id": "0192f5c4-0000-7000-8000-000000000c00",
+          "changed": true,
+          "edit_version": 5,
+          "previous_base_revision_id": "0192f5c4-0000-7000-8000-000000000e01",
+          "base_revision_id": "0192f5c4-0000-7000-8000-000000000e02",
+          "taken_from_current": 3,
+          "kept_from_draft": 4,
+          "resolved": 2
+        },
+        "document": {
+          "schema": "urn:skm:planning:specification:v1",
+          "title": "Refresh token rotation",
+          "goal": "Rotate refresh tokens on every use.",
+          "phases": [
+            {
+              "id": "0192f5c4-0000-7000-8000-00000000000a",
+              "key": "P1",
+              "title": "Storage and rotation",
+              "goal": "Store and rotate tokens.",
+              "design_state": "detailed"
+            }
+          ],
+          "items": [
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000014",
+              "key": "P1.1",
+              "phase": "P1",
+              "title": "Token table",
+              "summary": "Add refresh_tokens with an index on family_id.",
+              "why": "Part of the rotation work.",
+              "review": {
+                "mode": "required",
+                "profile": "code-review",
+                "independence": "separate_session",
+                "max_rounds": 2
+              }
+            },
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000015",
+              "key": "P1.5",
+              "phase": "P1",
+              "title": "Rotation service",
+              "summary": "Rotate on refresh.",
+              "why": "Part of the rotation work.",
+              "review": {
+                "mode": "required",
+                "profile": "code-review",
+                "independence": "separate_session",
+                "max_rounds": 2
+              },
+              "depends_on": [
+                "P1.1",
+                "P1.3"
+              ]
+            },
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000016",
+              "key": "P1.3",
+              "phase": "P1",
+              "title": "Runbook",
+              "summary": "Describe rotation.",
+              "why": "Part of the rotation work.",
+              "review": {
+                "mode": "required",
+                "profile": "code-review",
+                "independence": "separate_session",
+                "max_rounds": 2
+              },
+              "work_kind": "docs"
+            },
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000101",
+              "key": "P1.6",
+              "phase": "P1",
+              "title": "Rotation metrics",
+              "summary": "Count reuse detections.",
+              "why": "Part of the rotation work.",
+              "review": {
+                "mode": "required",
+                "profile": "code-review",
+                "independence": "separate_session",
+                "max_rounds": 2
+              },
+              "depends_on": [
+                "P1.5"
+              ]
+            },
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000201",
+              "key": "P1.4",
+              "phase": "P1",
+              "title": "Reuse alerts",
+              "summary": "Alert on family revocation.",
+              "why": "Part of the rotation work.",
+              "review": {
+                "mode": "required",
+                "profile": "code-review",
+                "independence": "separate_session",
+                "max_rounds": 2
+              }
+            }
+          ],
+          "criteria": [
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000032",
+              "key": "AC1",
+              "owner": "P1.1",
+              "statement": "The table stores families.",
+              "verification_mode": "check",
+              "checks": [
+                "P1.1:V1"
+              ]
+            }
+          ],
+          "checks": [
+            {
+              "id": "0192f5c4-0000-7000-8000-000000000028",
+              "key": "V1",
+              "owner": "P1.1",
+              "title": "Repository and migration tests",
+              "category": "acceptance",
+              "kind": "command",
+              "required": true,
+              "definition": {
+                "argv": [
+                  "python",
+                  "-m",
+                  "pytest",
+                  "tests/auth/test_token_repository.py",
+                  "-q"
+                ],
+                "cwd": {
+                  "mount": "api",
+                  "path": "."
+                },
+                "timeout_seconds": 900
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

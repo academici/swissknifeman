@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:checkout-bound:v1",
+  "title": "CheckoutBound",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "missing",
+        "mismatched",
+        "removed"
+      ]
+    }
+  },
+  "required": [
+    "binding_id",
+    "host_id",
+    "repository_id",
+    "state"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "CheckoutBound",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "CheckoutBound"
+    }
+  }
+}

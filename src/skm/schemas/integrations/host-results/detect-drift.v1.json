@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:detect-drift:v1",
+  "title": "DetectDriftResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "DetectDriftResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "DetectDriftResult"
+    }
+  }
+}

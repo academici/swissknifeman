@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:host:push-vault-notes:v1",
+  "title": "PushVaultNotesRequest",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "workspace_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.host",
+      "class": "PushVaultNotesRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "PushVaultNotesRequest"
+    }
+  }
+}

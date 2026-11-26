@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:host-result:rotate-worker-token:v1",
+  "title": "RotateWorkerTokenReport",
+  "description": "JsonObject pending the owner leaf: the owner specification describes the host workflow, but does not define its wire DTO fields. No fields are invented by P00.",
+  "type": "object",
+  "additionalProperties": {},
+  "properties": {},
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.host",
+      "class": "RotateWorkerTokenReport",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RotateWorkerTokenReport"
+    }
+  }
+}

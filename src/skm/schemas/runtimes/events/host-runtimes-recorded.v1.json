@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:event:host-runtimes-recorded:v1",
+  "title": "HostRuntimesRecorded",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime_id": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "auth_state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "missing",
+              "expired",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "runtime_id",
+          "version",
+          "auth_state"
+        ]
+      }
+    },
+    "removed": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+      }
+    }
+  },
+  "required": [
+    "host_id",
+    "runtimes",
+    "removed"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.events",
+      "class": "HostRuntimesRecorded",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "HostRuntimesRecorded"
+    }
+  }
+}

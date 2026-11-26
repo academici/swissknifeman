@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:work-policy:v1",
+  "title": "EffectiveWorkPolicy",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "requested": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role_intensity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scout": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "executor": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "reviewer": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "triager": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "advisor": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "researcher": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "registrar": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            }
+          },
+          "required": [
+            "scout",
+            "executor",
+            "reviewer",
+            "triager",
+            "advisor",
+            "researcher",
+            "registrar"
+          ]
+        },
+        "verification_intensity": {
+          "type": "string",
+          "enum": [
+            "light",
+            "medium",
+            "heavy"
+          ]
+        }
+      },
+      "required": [
+        "role_intensity",
+        "verification_intensity"
+      ]
+    },
+    "effective": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role_intensity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scout": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "executor": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "reviewer": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "triager": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "advisor": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "researcher": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            },
+            "registrar": {
+              "type": "string",
+              "enum": [
+                "light",
+                "medium",
+                "heavy"
+              ]
+            }
+          },
+          "required": [
+            "scout",
+            "executor",
+            "reviewer",
+            "triager",
+            "advisor",
+            "researcher",
+            "registrar"
+          ]
+        },
+        "verification_intensity": {
+          "type": "string",
+          "enum": [
+            "light",
+            "medium",
+            "heavy"
+          ]
+        }
+      },
+      "required": [
+        "role_intensity",
+        "verification_intensity"
+      ]
+    },
+    "role_warn_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scout": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "executor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "reviewer": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "triager": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "advisor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "researcher": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        },
+        "registrar": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800
+        }
+      },
+      "required": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ]
+    },
+    "triage_repro_warn_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "default",
+              "settings",
+              "item",
+              "unit",
+              "profile_cap",
+              "hard_cap"
+            ]
+          },
+          "ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "source",
+          "ref"
+        ]
+      }
+    },
+    "clamps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "emergency_role_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Derived existing frozen profile/role/step hard ceilings, independent of instruction intensity; null means no configured hard ceiling. Current remaining time is applied separately at admission.",
+      "properties": {
+        "scout": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executor": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triager": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "advisor": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "researcher": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registrar": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 172800
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ]
+    }
+  },
+  "required": [
+    "requested",
+    "effective",
+    "role_warn_seconds",
+    "triage_repro_warn_seconds",
+    "provenance",
+    "clamps",
+    "digest",
+    "emergency_role_seconds"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "EffectiveWorkPolicy",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "EffectiveWorkPolicy"
+    }
+  }
+}

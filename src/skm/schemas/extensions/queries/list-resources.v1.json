@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:query:list-resources:v1",
+  "title": "ListResources",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "scope": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/scope-ref"
+    },
+    "include_quarantined": {
+      "type": "boolean",
+      "default": false
+    },
+    "after": {
+      "type": "string",
+      "minLength": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 100
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.queries",
+      "class": "ListResources",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ListResources"
+    }
+  }
+}

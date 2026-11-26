@@ -1,0 +1,26 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gemini-3-8-flash"
+version = "2.0.6"
+model_family = "gemini"
+model_id = "gemini-3.8-flash"
+display_name = "Gemini 3.8 Flash"
+runtime_ids = ["antigravity"]
+classes = ["economy"]
+suited_roles = ["scout", "triager", "registrar"]
+notes = "2026 fast Gemini family kept beside the Gemini 4 line."
+strengths = ["low latency", "triage", "routing hints"]
+delegation_notes = ["Keep prompts short.", "Hand implementation to a Gemini 4 profile."]
+forbidden_params = ["candidate_count"]
+
+[prompt_style]
+shape = "conversational"
+instructions = ["Prefer a short answer.", "Do not expand the stable prefix."]
+
+[cache_capabilities]
+prompt_cache = "unknown"
+cache_read = false
+cache_write = false
+
+[compaction_threshold]
+input_tokens = 64000
+reserve_output_tokens = 4000

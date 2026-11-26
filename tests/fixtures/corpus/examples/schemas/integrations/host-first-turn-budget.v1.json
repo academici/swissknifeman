@@ -1,0 +1,115 @@
+{
+  "$id": "urn:skm:integrations:host-result:first-turn-budget:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "properties": {
+    "include_plugins": {
+      "type": "boolean"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "schema": {
+      "const": "urn:skm:integrations:host-result:first-turn-budget:v1"
+    },
+    "sources": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            },
+            "type": "object"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "tokens",
+          "method"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "target": {
+      "enum": [
+        "claude_code",
+        "codex",
+        "cursor",
+        "grok"
+      ],
+      "type": "string"
+    },
+    "thresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "warn": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "target",
+        "warn"
+      ],
+      "type": "object"
+    },
+    "total": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "verdict": {
+      "enum": [
+        "ok",
+        "elevated",
+        "warn",
+        "incomplete"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "target",
+    "thresholds",
+    "sources",
+    "total",
+    "verdict"
+  ],
+  "title": "HostFirstTurnBudget",
+  "type": "object",
+  "x-skm-codegen": {
+    "python": {
+      "class": "HostFirstTurnBudget",
+      "kind": "typeddict",
+      "module": "skm.modules.integrations.generated.documents"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostFirstTurnBudget"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "verify-claims"
+version = "0.2.0"
+kind = "domain"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:autopilot-state-changed:v1",
+  "title": "AutopilotStateChanged",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "from": {
+      "$ref": "#/$defs/json-value"
+    },
+    "to": {
+      "$ref": "#/$defs/json-value"
+    },
+    "code": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "previous_code": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "emergency": {
+      "$ref": "#/$defs/json-value"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "by": {
+      "$ref": "#/$defs/json-value"
+    },
+    "session_reset": {
+      "$ref": "#/$defs/json-value"
+    },
+    "previous_counters": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "from",
+    "to",
+    "emergency",
+    "by",
+    "session_reset"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "AutopilotStateChanged",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "AutopilotStateChanged"
+    }
+  },
+  "$defs": {
+    "json-value": {
+      "description": "JSON metadata local to this event; no runtime request or secret-bearing schema closure.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  }
+}

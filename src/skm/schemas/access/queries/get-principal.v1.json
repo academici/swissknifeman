@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:query:get-principal:v1",
+  "title": "GetPrincipal",
+  "description": "access query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "principal_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.queries",
+      "class": "GetPrincipal",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "GetPrincipal"
+    }
+  }
+}

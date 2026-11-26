@@ -1,0 +1,14 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "venv-dependencies"
+version = "0.1.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["ml-project-structure"]
+
+[triggers]
+paths = ["pyproject.toml", "requirements*.txt", "setup.py"]
+
+[provenance]
+source = "local"

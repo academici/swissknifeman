@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-draft-abandon:v1",
+  "title": "skm_plan_draft_abandon output",
+  "description": "Output for the skm_plan_draft_abandon MCP tool.",
+  "type": "object",
+  "$ref": "urn:skm:planning:result:abandon-draft:v1"
+}

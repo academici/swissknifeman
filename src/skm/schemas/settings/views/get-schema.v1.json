@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:view:get-schema:v1",
+  "title": "GetSchemaView",
+  "description": "settings view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "registry_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "schema_urn": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "object",
+            "description": "JsonObject: owner does not specify its internal shape."
+          },
+          "validators": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "KeySpecView metadata for forms and completion (settings §A.8, §B.1).",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "section",
+                "chain",
+                "levels",
+                "merge",
+                "reload",
+                "override",
+                "sensitivity",
+                "portable",
+                "lockable",
+                "nullable",
+                "pack",
+                "confirm",
+                "value_schema",
+                "validators",
+                "ui"
+              ],
+              "properties": {
+                "key": {
+                  "$ref": "urn:skm:config:entry:v1#/properties/key"
+                },
+                "section": {
+                  "$ref": "urn:skm:config:key-spec:v1#/$defs/section/properties/id"
+                },
+                "chain": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/chain"
+                },
+                "levels": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/levels"
+                },
+                "merge": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/merge"
+                },
+                "reload": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/reload"
+                },
+                "override": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/override"
+                },
+                "sensitivity": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/sensitivity"
+                },
+                "portable": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/portable"
+                },
+                "lockable": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/lockable"
+                },
+                "nullable": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/nullable"
+                },
+                "pack": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/pack"
+                },
+                "confirm": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/confirm"
+                },
+                "default": {
+                  "description": "Optional default JSON value; absence is distinct from null."
+                },
+                "value_schema": {
+                  "type": "object",
+                  "additionalProperties": {},
+                  "description": "JSON Schema of the value without default, description or x-skm."
+                },
+                "narrow": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/narrow"
+                },
+                "validators": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/validators"
+                },
+                "deprecated": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/deprecated"
+                },
+                "ui": {
+                  "$ref": "urn:skm:config:key-spec:v1#/properties/ui"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "title",
+          "schema_urn",
+          "schema",
+          "validators",
+          "keys"
+        ]
+      }
+    }
+  },
+  "required": [
+    "registry_digest",
+    "sections"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "GetSchemaView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetSchemaView"
+    }
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:capabilities:v1",
+  "title": "Capabilities",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 0
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "capability": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "native",
+              "adapted",
+              "unsupported",
+              "unknown"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 0
+          },
+          "tested_runtime_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limitations": {
+            "type": "string",
+            "minLength": 0
+          },
+          "last_verified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_context": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "host_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "binary_sha256": {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+                  },
+                  "os": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "kernel": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "adapter_version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "isolation_profile": {
+                    "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+                  },
+                  "launch_config_digest": {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+                  }
+                },
+                "required": [
+                  "host_id",
+                  "binary_sha256",
+                  "os",
+                  "kernel",
+                  "adapter_version",
+                  "isolation_profile",
+                  "launch_config_digest"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "capability",
+          "status",
+          "evidence",
+          "tested_runtime_version",
+          "limitations",
+          "last_verified_at"
+        ]
+      }
+    },
+    "self_loads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "user_config",
+              "plugins",
+              "skills",
+              "project_instructions",
+              "project_settings"
+            ]
+          },
+          "locator": {
+            "type": "string",
+            "minLength": 0
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "when": {
+            "type": "string",
+            "enum": [
+              "start",
+              "on_access"
+            ]
+          },
+          "suppressed_by": {
+            "type": "string",
+            "enum": [
+              "config_isolation",
+              "never"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "required": [
+          "kind",
+          "locator",
+          "files",
+          "when",
+          "suppressed_by",
+          "note"
+        ]
+      }
+    },
+    "read_only_network": {
+      "type": "boolean"
+    },
+    "config_isolation": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "env": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 0
+              }
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 0
+              }
+            },
+            "credential_mounts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  "target": {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  "required": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "source",
+                  "target",
+                  "required"
+                ]
+              }
+            },
+            "writable_home_dirs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 0
+              }
+            }
+          },
+          "required": [
+            "env",
+            "args",
+            "credential_mounts",
+            "writable_home_dirs"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "runtime_id",
+    "adapter_version",
+    "records",
+    "self_loads",
+    "read_only_network",
+    "config_isolation"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.documents",
+      "class": "Capabilities",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "Capabilities"
+    }
+  }
+}

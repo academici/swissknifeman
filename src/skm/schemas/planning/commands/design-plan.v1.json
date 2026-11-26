@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:command:design-plan:v1",
+  "title": "DesignPlan",
+  "description": "Record an immutable intake brief for an existing plan.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000,
+      "pattern": "\\S"
+    },
+    "context_md": {
+      "type": "string",
+      "maxLength": 100000
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000,
+        "pattern": "\\S"
+      },
+      "maxItems": 100,
+      "uniqueItems": true
+    },
+    "rag_file_version_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      },
+      "maxItems": 100,
+      "uniqueItems": true
+    },
+    "research_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "pattern": "\\S"
+          },
+          "content_digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          }
+        },
+        "required": [
+          "reference",
+          "content_digest"
+        ]
+      },
+      "maxItems": 100,
+      "uniqueItems": true
+    },
+    "visa_policy": {
+      "type": "string",
+      "enum": [
+        "optional",
+        "required"
+      ],
+      "description": "Whether an ordinary run of a revision linked to this brief requires a signed visa."
+    }
+  },
+  "required": [
+    "plan_id",
+    "goal"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.commands",
+      "class": "DesignPlan",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "DesignPlan"
+    }
+  }
+}

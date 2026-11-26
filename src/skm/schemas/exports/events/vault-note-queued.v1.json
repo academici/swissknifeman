@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:event:vault-note-queued:v1",
+  "title": "VaultNoteQueued",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "plan_archived",
+        "run_finished"
+      ]
+    },
+    "event_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "note_id",
+    "project_id",
+    "kind",
+    "event_id",
+    "name"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.events",
+      "class": "VaultNoteQueued",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "VaultNoteQueued"
+    }
+  },
+  "x-skm-hookable": false
+}

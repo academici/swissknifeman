@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:command:purge-notes:v1",
+  "title": "PurgeNotes",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "batch": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 500
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.commands",
+      "class": "PurgeNotes",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "PurgeNotes"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "command": "execution.claim_assignment",
+  "status": 200,
+  "response": {
+    "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+    "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+    "task_id": "0193a000-0000-7000-8000-000000000012",
+    "run_id": "0193a000-0000-7000-8000-000000000001",
+    "fencing_token": 1,
+    "lease_expires_at": "2026-10-25T12:00:02Z",
+    "lease_ttl_seconds": 120,
+    "renew_every_seconds": 30,
+    "instruction": {
+      "kind": "run_stage",
+      "stage_id": "prepare",
+      "stage_type": "prepare_environment",
+      "mode": "normal",
+      "round_no": 1,
+      "params": {
+        "baseline_strategy": "integration_branch_head"
+      },
+      "input_digest": "sha256:1c0f5e7a9b2d4c6e8f0a1b3c5d7e9f1a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e",
+      "environment": {
+        "reopen": false
+      }
+    },
+    "task": {
+      "revision_id": "0192f5c5-0000-7000-8000-000000000101",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000015",
+      "display_key": "P1.2",
+      "kind": "item",
+      "declared_write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/auth/rotation.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_rotation.py"
+        }
+      ]
+    }
+  },
+  "outcome_when_empty": {
+    "status": 200,
+    "body": {
+      "outcome": "nothing_to_claim",
+      "code": "NOTHING_TO_CLAIM",
+      "retry_after_ms": 2000
+    }
+  }
+}

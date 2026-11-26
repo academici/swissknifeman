@@ -1,0 +1,58 @@
+# Agent profile of the core source pack: resources/packs/core/agent-profiles/advisor-critic.toml
+# Schema: urn:skm:extensions:agent-profile:v1 (examples/schemas/extensions/agent-profile.v1.json);
+# spec: working/spec/modules/extensions.md §4.6, context.md §4.4.1 (inheritance matrix), runtimes.md §4.3.1, §4.11.
+# Legacy: packages/orch/roles/advisor.json (frontier; network allowed there, none here: external knowledge arrives as research blocks).
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "advisor-critic"
+version = "2.0.0"
+role = "advisor"
+title = "Advisor-Critic"
+description = "Critiques anonymized consilium recommendations against cited evidence."
+result_schema = "urn:skm:execution:role-result:advisor:v1"
+llm = true
+
+# Routing class and effort; config_isolation is added by routing itself when inherit_user_global = false.
+[routing]
+model_class = "frontier"
+effort = "high"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+# policy_profile is the policy profile id (policy.md §4.5); layer only narrows it (urn:skm:policy:permission-layer:v1).
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read", "shell.run"]
+
+# Prompt blocks per block type, in render order inside the type (keys of prompt_block resources).
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["advisor/role", "advisor/critic"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["advisor/result_contract"]
+
+[context]
+include = ["steering", "materials", "repo_instructions", "skills", "history"]
+inherit_user_global = false
+repo_instructions = "constraints"
+repo_instruction_sections = ["Constraints", "Decisions"]
+skills_mode = "auto"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 6000
+history_max_steps = 5
+memory_top_k = 0
+include_optional_materials = true
+
+[limits]
+timeout_seconds = 1800
+idle_timeout_seconds = 600
+max_turns = 80
+max_output_tokens = 16000
+max_result_retries = 2

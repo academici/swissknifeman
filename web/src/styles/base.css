@@ -1,0 +1,40 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-inline-size: 20rem;
+  background: var(--page);
+  color: var(--text);
+  font: 1rem/1.5 var(--font-sans);
+}
+
+a { color: var(--accent); }
+h1, h2, h3 { line-height: 1.2; }
+h1 { margin-block-start: 0; font-size: clamp(1.5rem, 2.5vw, 2rem); }
+code, pre { font-family: var(--font-mono); }
+code { overflow-wrap: anywhere; }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem 0.65rem;
+  min-block-size: 2.35rem;
+}
+
+button, summary { cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.6; }
+button:hover:not(:disabled) { background: var(--accent-surface); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+:where([hidden]) { display: none; }
+
+.visually-hidden, .skip-link:not(:focus) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

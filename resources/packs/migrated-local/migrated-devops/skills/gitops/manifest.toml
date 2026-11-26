@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "gitops"
+version = "0.3.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

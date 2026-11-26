@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:untrack-service-files:v1",
+  "title": "UntrackServiceFilesResult",
+  "description": "The SKM service paths removed from the index. Working files are retained.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "untracked": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "untracked"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "UntrackServiceFilesResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "UntrackServiceFilesResult"
+    }
+  }
+}

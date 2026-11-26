@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-node-frontend"
+version = "1.0.1"
+title = "Migrated Agent Pack: Node and TypeScript Frontend"
+description = "Neutral TypeScript UI state, accessibility, component isolation, and test conventions migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-frontend-reviewer.md"
+path = ".claude/agents/{prefix}-frontend-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-frontend-reviewer.toml"
+path = ".codex/agents/{prefix}-frontend-reviewer.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-frontend-reviewer.md"
+path = ".cursor/agents/{prefix}-frontend-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/node-frontend.md"
+path = ".claude/rules/node-frontend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/node-frontend.md"
+path = ".codex/rules/node-frontend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/node-frontend.mdc"
+path = ".cursor/rules/node-frontend.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/node-frontend.md"
+path = ".grok/rules/node-frontend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/node-frontend.md"
+path = ".agents/rules/node-frontend.md"
+ownership = "managed_file"

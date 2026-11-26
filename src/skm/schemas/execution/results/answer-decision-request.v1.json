@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:answer-decision-request:v1",
+  "title": "AnswerDecisionRequestResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string"
+    },
+    "task_status": {
+      "type": "string"
+    },
+    "next_action_kind": {
+      "type": "string"
+    },
+    "decision_record_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "request_id",
+    "state",
+    "task_status",
+    "next_action_kind"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "AnswerDecisionRequestResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "AnswerDecisionRequestResult"
+    }
+  }
+}

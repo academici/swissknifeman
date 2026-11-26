@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:event:pack-version-uninstalled:v1",
+  "title": "PackVersionUninstalled",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pack_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "pack_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "slug": {
+      "type": "string",
+      "minLength": 0
+    },
+    "version": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [
+    "pack_id",
+    "pack_version_id",
+    "slug",
+    "version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.events",
+      "class": "PackVersionUninstalled",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PackVersionUninstalled"
+    }
+  }
+}

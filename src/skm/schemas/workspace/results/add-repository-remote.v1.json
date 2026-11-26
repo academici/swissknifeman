@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:result:add-repository-remote:v1",
+  "title": "AddRepositoryRemoteResult",
+  "description": "workspace result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "remotes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "normalized": {
+            "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+          },
+          "display_url": {
+            "type": "string"
+          },
+          "is_primary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "normalized",
+          "display_url",
+          "is_primary"
+        ]
+      }
+    }
+  },
+  "required": [
+    "repository_id",
+    "remotes"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.results",
+      "class": "AddRepositoryRemoteResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "AddRepositoryRemoteResult"
+    }
+  }
+}

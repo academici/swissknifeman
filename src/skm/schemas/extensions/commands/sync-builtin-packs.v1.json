@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:command:sync-builtin-packs:v1",
+  "title": "SyncBuiltinPacks",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {},
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.commands",
+      "class": "SyncBuiltinPacks",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "SyncBuiltinPacks"
+    }
+  }
+}

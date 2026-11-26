@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-role-tech-lead"
+version = "1.0.1"
+title = "Migrated Agent Pack: Technical Lead"
+description = "Neutral decomposition, interface sequencing, and integration readiness lens migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-role-tech-lead.md"
+path = ".claude/agents/{prefix}-role-tech-lead.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-role-tech-lead.toml"
+path = ".codex/agents/{prefix}-role-tech-lead.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-role-tech-lead.md"
+path = ".cursor/agents/{prefix}-role-tech-lead.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/role-tech-lead.md"
+path = ".claude/rules/role-tech-lead.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/role-tech-lead.md"
+path = ".codex/rules/role-tech-lead.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/role-tech-lead.mdc"
+path = ".cursor/rules/role-tech-lead.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/role-tech-lead.md"
+path = ".grok/rules/role-tech-lead.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/role-tech-lead.md"
+path = ".agents/rules/role-tech-lead.md"
+ownership = "managed_file"

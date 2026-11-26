@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:event:plan-created:v1",
+  "title": "PlanCreated",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string",
+      "minLength": 0
+    },
+    "title": {
+      "type": "string",
+      "minLength": 0
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "review_requests"
+      ]
+    }
+  },
+  "required": [
+    "plan_id",
+    "workspace_id",
+    "project_id",
+    "alias",
+    "title",
+    "purpose"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.events",
+      "class": "PlanCreated",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanCreated"
+    }
+  },
+  "x-skm-hookable": true
+}

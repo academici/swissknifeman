@@ -1,0 +1,1423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:defs:v1",
+  "title": "KnowledgeDefinitions",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "$defs": {
+    "GraphBasis": {
+      "type": "string",
+      "enum": [
+        "declared",
+        "lsp",
+        "ast",
+        "text",
+        "heuristic"
+      ]
+    },
+    "Completeness": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "truncated",
+        "unknown"
+      ]
+    },
+    "FreshnessState": {
+      "type": "string",
+      "enum": [
+        "fresh",
+        "stale",
+        "unknown"
+      ]
+    },
+    "LimitationCode": {
+      "type": "string",
+      "enum": [
+        "depth_limit",
+        "node_limit",
+        "language_unsupported",
+        "dynamic_dispatch",
+        "generated_excluded",
+        "parse_errors",
+        "index_stale",
+        "index_old",
+        "index_dirty",
+        "no_index",
+        "cross_repository_unresolved"
+      ]
+    },
+    "MemoryState": {
+      "type": "string",
+      "enum": [
+        "live",
+        "forgotten",
+        "expired",
+        "superseded"
+      ]
+    },
+    "LessonKind": {
+      "type": "string",
+      "enum": [
+        "heuristic",
+        "procedure",
+        "gotcha"
+      ]
+    },
+    "LessonState": {
+      "type": "string",
+      "enum": [
+        "curated",
+        "deprecated"
+      ]
+    },
+    "ConfidenceTier": {
+      "type": "string",
+      "enum": [
+        "none",
+        "tentative",
+        "moderate",
+        "strong",
+        "core"
+      ]
+    },
+    "MemoryKind": {
+      "type": "string",
+      "enum": [
+        "context",
+        "fact",
+        "blocker",
+        "coordination",
+        "active_handoff",
+        "health_probe"
+      ]
+    },
+    "MemoryScopeKind": {
+      "type": "string",
+      "enum": [
+        "project",
+        "namespace",
+        "global"
+      ]
+    },
+    "NodeType": {
+      "type": "string",
+      "enum": [
+        "project",
+        "agent",
+        "memory",
+        "skill",
+        "entity",
+        "tool",
+        "package",
+        "doc",
+        "symbol"
+      ]
+    },
+    "EdgeType": {
+      "type": "string",
+      "enum": [
+        "uses",
+        "knows",
+        "relates_to",
+        "belongs_to",
+        "depends_on",
+        "provided_by",
+        "requires",
+        "references"
+      ]
+    },
+    "GraphAnswer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphQueryEcho"
+        },
+        "repository_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "index_generation": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphSourceRef"
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "relation_kind": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+            },
+            {
+              "enum": [
+                "mixed",
+                "none"
+              ]
+            }
+          ]
+        },
+        "completeness": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/Completeness"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/Limitation"
+          }
+        },
+        "freshness": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/Freshness"
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/AnswerNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/AnswerEdge"
+          }
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stats": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphStats"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "query",
+        "repository_id",
+        "revision",
+        "index_generation",
+        "sources",
+        "languages",
+        "relation_kind",
+        "completeness",
+        "limitations",
+        "freshness",
+        "basis",
+        "nodes",
+        "edges",
+        "path",
+        "stats"
+      ]
+    },
+    "EvidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    "Limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LimitationCode"
+        },
+        "message": {
+          "type": "string"
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "count"
+      ]
+    },
+    "GraphIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "basis_default": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+        },
+        "tool_name": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        },
+        "indexed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "completeness": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/Completeness"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/Limitation"
+          }
+        },
+        "files_indexed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "repository_id",
+        "source",
+        "generation",
+        "revision",
+        "dirty",
+        "languages",
+        "basis_default",
+        "tool_name",
+        "tool_version",
+        "indexed_at",
+        "completeness",
+        "limitations",
+        "files_indexed",
+        "files_skipped",
+        "nodes",
+        "edges"
+      ]
+    },
+    "CandidateForPromotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "tier": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/ConfidenceTier"
+        }
+      },
+      "required": [
+        "candidate_id",
+        "workspace_id",
+        "scope_id",
+        "kind",
+        "trigger",
+        "action",
+        "evidence",
+        "confidence",
+        "tier"
+      ]
+    },
+    "LessonRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lesson_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        }
+      },
+      "required": [
+        "lesson_id"
+      ]
+    },
+    "MemoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryScope"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryKind"
+        },
+        "body": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "created_by": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "writer": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "cli",
+            "mcp",
+            "hook",
+            "api",
+            "internal"
+          ]
+        },
+        "state": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryState"
+        },
+        "state_changed_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "scope",
+        "kind",
+        "body",
+        "created_at",
+        "expires_at",
+        "created_by",
+        "writer",
+        "source",
+        "state",
+        "state_changed_at",
+        "supersedes_id",
+        "row_version"
+      ]
+    },
+    "Lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "confidence_tier": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/ConfidenceTier"
+        },
+        "state": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonState"
+        },
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "promoted_by": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "promoted_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "deprecated_by": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deprecated_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deprecation_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_flag": {
+          "enum": [
+            "none",
+            "decay"
+          ]
+        },
+        "applicability": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonApplicability"
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "scope_id",
+        "kind",
+        "trigger",
+        "action",
+        "evidence",
+        "confidence",
+        "confidence_tier",
+        "state",
+        "candidate_id",
+        "promoted_by",
+        "promoted_at",
+        "deprecated_by",
+        "deprecated_at",
+        "deprecation_reason",
+        "supersedes_id",
+        "review_flag",
+        "applicability",
+        "row_version"
+      ]
+    },
+    "LessonApplicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "applies_to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validated_versions": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "review_after": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "Freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/FreshnessState"
+        },
+        "indexed_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "index_revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "at_revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "age_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "state",
+        "indexed_at",
+        "index_revision",
+        "at_revision",
+        "age_seconds"
+      ]
+    },
+    "GraphSourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "repository_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "indexed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "tool_name": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "repository_id",
+        "generation",
+        "revision",
+        "dirty",
+        "indexed_at",
+        "tool_name",
+        "tool_version"
+      ]
+    },
+    "AnswerNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "node_key": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/NodeType"
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "distance": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "node_key",
+        "type",
+        "attrs",
+        "source"
+      ]
+    },
+    "AnswerEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "src_key": {
+          "type": "string"
+        },
+        "dst_key": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+        },
+        "source": {
+          "type": "string"
+        },
+        "basis": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      },
+      "required": [
+        "src_key",
+        "dst_key",
+        "type",
+        "source",
+        "basis",
+        "attrs"
+      ]
+    },
+    "MemoryScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryScopeKind"
+        },
+        "scope_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "namespace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workspace_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "scope_id",
+        "namespace",
+        "workspace_id"
+      ]
+    },
+    "GraphNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "node_key": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/NodeType"
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "repository_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "node_key",
+        "type",
+        "attrs",
+        "source",
+        "repository_id"
+      ]
+    },
+    "GraphEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "src_node_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "dst_node_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "type": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "source": {
+          "type": "string"
+        },
+        "repository_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_key": {
+          "type": "string"
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "src_node_id",
+        "dst_node_id",
+        "type",
+        "attrs",
+        "source",
+        "repository_id",
+        "source_key",
+        "basis"
+      ]
+    },
+    "GraphQueryEcho": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": [
+            "neighbors",
+            "path",
+            "subgraph",
+            "stats"
+          ]
+        },
+        "root": {
+          "type": "string"
+        },
+        "src": {
+          "type": "string"
+        },
+        "dst": {
+          "type": "string"
+        },
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edge_types": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+          }
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "in",
+            "out",
+            "both"
+          ]
+        },
+        "at_revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "op"
+      ]
+    },
+    "GraphStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes_by_type": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "edges_by_type": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "components": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "isolated": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "nodes_by_type",
+        "edges_by_type",
+        "components",
+        "isolated"
+      ]
+    },
+    "ReplaceStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes_upserted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodes_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges_removed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "nodes_upserted",
+        "nodes_removed",
+        "edges_added",
+        "edges_removed"
+      ]
+    },
+    "MemoryEntryView": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryScope"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryKind"
+        },
+        "body": {
+          "type": "string"
+        },
+        "created_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "expires_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "created_by": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "writer": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "cli",
+            "mcp",
+            "hook",
+            "api",
+            "internal"
+          ]
+        },
+        "state": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryState"
+        },
+        "state_changed_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "scope",
+        "kind",
+        "body",
+        "created_at",
+        "expires_at",
+        "created_by",
+        "writer",
+        "source",
+        "state",
+        "state_changed_at",
+        "supersedes_id",
+        "row_version"
+      ]
+    },
+    "LessonView": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+          }
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "confidence_tier": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/ConfidenceTier"
+        },
+        "state": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonState"
+        },
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "promoted_by": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "promoted_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "deprecated_by": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deprecated_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deprecation_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_flag": {
+          "enum": [
+            "none",
+            "decay"
+          ]
+        },
+        "applicability": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonApplicability"
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "scope_id",
+        "kind",
+        "trigger",
+        "action",
+        "evidence",
+        "confidence",
+        "confidence_tier",
+        "state",
+        "candidate_id",
+        "promoted_by",
+        "promoted_at",
+        "deprecated_by",
+        "deprecated_at",
+        "deprecation_reason",
+        "supersedes_id",
+        "review_flag",
+        "applicability",
+        "row_version"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.documents",
+      "class": "KnowledgeDefinitions",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "KnowledgeDefinitions"
+    }
+  }
+}

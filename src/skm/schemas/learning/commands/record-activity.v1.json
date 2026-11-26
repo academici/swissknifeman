@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:command:record-activity:v1",
+  "title": "RecordActivity",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "summary": {
+      "allOf": [
+        {
+          "$ref": "urn:skm:learning:activity-summary:v1"
+        },
+        {
+          "properties": {
+            "source_kind": {
+              "const": "client_session"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "summary"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.commands",
+      "class": "RecordActivity",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "RecordActivity"
+    }
+  }
+}

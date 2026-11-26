@@ -1,0 +1,5 @@
+{"type":"system","subtype":"init","session_id":"sess_subagent_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"assistant","message":{"id":"msg_sub_01","model":"claude-sonnet-4-5-20250929","content":[{"type":"tool_use","id":"toolu_01task","name":"Task","input":{"description":"Explore module","prompt":"Inspect entrypoint"}}],"usage":{"input_tokens":220,"output_tokens":40,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_01task","is_error":false,"duration_ms":380,"content":"Subagent report: entrypoint verified."}]}}
+{"type":"assistant","message":{"id":"msg_sub_02","model":"claude-sonnet-4-5-20250929","content":[{"type":"text","text":"Subagent exploration finished."}],"usage":{"input_tokens":400,"output_tokens":50,"cache_read_input_tokens":220,"cache_creation_input_tokens":0}}}
+{"type":"result","subtype":"success","session_id":"sess_subagent_001","is_error":false,"stop_reason":"end_turn","result":"Subagent exploration finished.","usage":{"input_tokens":620,"output_tokens":90,"cache_read_input_tokens":220,"cache_creation_input_tokens":0}}

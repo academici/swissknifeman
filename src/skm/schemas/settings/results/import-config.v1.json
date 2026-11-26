@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:result:import-config:v1",
+  "title": "ImportConfigResult",
+  "description": "settings result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "dry_run": {
+      "type": "boolean"
+    },
+    "applied": {
+      "type": "boolean"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+          },
+          "change": {
+            "type": "string",
+            "enum": [
+              "added",
+              "updated",
+              "removed",
+              "unchanged",
+              "lock_changed"
+            ]
+          },
+          "before": {
+            "description": "JSON value; value-specific validation belongs to the owner."
+          },
+          "after": {
+            "description": "JSON value; value-specific validation belongs to the owner."
+          }
+        },
+        "required": [
+          "key",
+          "change"
+        ]
+      }
+    },
+    "effective_diff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+          },
+          "before": {
+            "description": "JSON value; value-specific validation belongs to the owner."
+          },
+          "after": {
+            "description": "JSON value; value-specific validation belongs to the owner."
+          }
+        },
+        "required": [
+          "key"
+        ]
+      }
+    },
+    "problems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+          },
+          "code": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/error-code"
+          },
+          "message": {
+            "type": "string"
+          },
+          "pointer": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/json-pointer"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      }
+    },
+    "entries_digest_before": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "entries_digest_after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "generation": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "dry_run",
+    "applied",
+    "changes",
+    "effective_diff",
+    "problems",
+    "entries_digest_before",
+    "entries_digest_after",
+    "generation"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.results",
+      "class": "ImportConfigResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ImportConfigResult"
+    }
+  }
+}

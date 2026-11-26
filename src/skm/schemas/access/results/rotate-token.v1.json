@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:result:rotate-token:v1",
+  "title": "RotateTokenResult",
+  "description": "access result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^(live_)?[a-z2-7]{8}$"
+    },
+    "secret": {
+      "type": "string",
+      "minLength": 1,
+      "x-skm-secret": true
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "previous_token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "previous_expires_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "token_id",
+    "prefix",
+    "secret",
+    "expires_at",
+    "previous_token_id",
+    "previous_expires_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.results",
+      "class": "RotateTokenResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "RotateTokenResult"
+    }
+  }
+}

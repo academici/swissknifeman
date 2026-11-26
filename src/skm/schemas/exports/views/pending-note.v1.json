@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:view:pending-note:v1",
+  "title": "PendingNoteView",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "source_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:exports:defs:v1#/$defs/NoteKind"
+    },
+    "name": {
+      "type": "string"
+    },
+    "subfolder": {
+      "type": "string",
+      "enum": [
+        "plans",
+        "runs"
+      ]
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 262144
+    },
+    "body_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "event_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "classification": {
+      "type": "string"
+    },
+    "nonportable_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    }
+  },
+  "required": [
+    "note_id",
+    "project_id",
+    "source_id",
+    "kind",
+    "name",
+    "subfolder",
+    "body",
+    "body_digest",
+    "event_id",
+    "generation",
+    "classification",
+    "nonportable_refs"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.views",
+      "class": "PendingNoteView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "PendingNoteView"
+    }
+  }
+}

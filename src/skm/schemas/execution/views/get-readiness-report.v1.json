@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:view:get-readiness-report:v1",
+  "title": "ReadinessReportView",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "report": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "effective_status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "ready_with_advisories",
+        "not_ready",
+        "stale"
+      ]
+    },
+    "stale_parts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "report",
+    "effective_status",
+    "stale_parts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.views",
+      "class": "ReadinessReportView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ReadinessReportView"
+    }
+  }
+}

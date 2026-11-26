@@ -1,0 +1,81 @@
+{
+  "purpose": "Future materialization contract vectors; no product test execution claimed.",
+  "owner_spec": "working/spec/modules/artifacts.md §4.4",
+  "cases": [
+    {
+      "id": "portable-reserved",
+      "original_filename": "CON.txt",
+      "safe_material_name": "_CON.txt",
+      "expected": "regular read-only copy under canonical version UUID"
+    },
+    {
+      "id": "portable-trailing-dot",
+      "original_filename": "a.",
+      "safe_material_name": "a",
+      "expected": "portable basename, no trailing dot"
+    },
+    {
+      "id": "same-version-retry",
+      "version_ids": [
+        "0192f5ca-5001-7a01-8000-f8091a2b3c4e",
+        "0192f5ca-5001-7a01-8000-f8091a2b3c4e"
+      ],
+      "metadata": "same immutable digest/size/name",
+      "expected": "one entry, create-only or verified own-manifest reuse"
+    },
+    {
+      "id": "same-version-metadata-mismatch",
+      "version_id": "0192f5ca-5001-7a01-8000-f8091a2b3c4e",
+      "metadata": "two different digests",
+      "expected": "INVALID_REFERENCE, no ready manifest"
+    },
+    {
+      "id": "distinct-case-and-unicode",
+      "versions": [
+        {
+          "id": "0192f5ca-5001-7a01-8000-f8091a2b3c4e",
+          "name": "A.txt"
+        },
+        {
+          "id": "0192f5ca-5002-7a01-8000-f8091a2b3c4e",
+          "name": "a.txt"
+        },
+        {
+          "id": "0192f5ca-5003-7a01-8000-f8091a2b3c4e",
+          "name": "é.txt"
+        },
+        {
+          "id": "0192f5ca-5004-7a01-8000-f8091a2b3c4e",
+          "name": "é.txt"
+        }
+      ],
+      "expected": "four distinct canonical UUID directories even on case/Unicode-normalizing FS"
+    },
+    {
+      "id": "intermediate-symlink-race",
+      "mutation": "replace version directory with symlink after validation before publication",
+      "expected": "refuse; no bytes outside trusted root changed"
+    },
+    {
+      "id": "hardlink-existing",
+      "target": "regular file with nlink=2",
+      "expected": "refuse; linked source bytes unchanged"
+    },
+    {
+      "id": "preexisting-other-content",
+      "target": "different bytes at planned path",
+      "expected": "refuse, no overwrite"
+    },
+    {
+      "id": "archive-bytes",
+      "original_filename": "bundle.tar",
+      "contents": "archive includes ../escape and symlink entry",
+      "expected": "store/materialize archive as ordinary bytes, never extract"
+    },
+    {
+      "id": "partial-download",
+      "stream": "digest mismatch or producer error in second entry",
+      "expected": "no ready material set; no execute bits"
+    }
+  ]
+}

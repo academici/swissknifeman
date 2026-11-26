@@ -1,0 +1,24 @@
+# Synthetic early M3: first matching rule wins.
+[[rule]]
+role = "executor"
+task_key = "P1.1/U1"
+invocation = 1
+scenario = "check-rework.toml"
+
+[[rule]]
+role = "reviewer"
+invocation = 1
+scenario = "review-red.toml"
+
+[[rule]]
+role = "reviewer"
+scenario = "review-green.toml"
+
+[[rule]]
+role = "executor"
+task_key = "P-question"
+scenario = "question.toml"
+
+[[rule]]
+role = "*"
+scenario = "success.toml"

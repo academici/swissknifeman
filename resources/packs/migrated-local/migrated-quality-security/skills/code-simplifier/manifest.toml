@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "code-simplifier"
+version = "0.3.1"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "quality-split"
+
+[provenance]
+source = "local"

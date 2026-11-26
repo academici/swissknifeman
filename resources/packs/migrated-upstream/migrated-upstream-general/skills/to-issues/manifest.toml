@@ -1,0 +1,23 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "to-issues"
+version = "0.1.1"
+kind = "workflow"
+risk = "high"
+license = "MIT"
+roles = ["registrar"]
+requires = ["github-flow"]
+
+[provenance]
+source = "upstream"
+repo = "mattpocock/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "3b78611de8420847cff1d2928ee28f8c98b4fd71c0a5cfc34df7eca65d23491e"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/to-issues/SKILL.md"
+sha256 = "f8a72a5bc88aa830ae62b323a52b08934da52851b010984c55829a644c7f6ba6"
+fetched_at = "2026-06-26"

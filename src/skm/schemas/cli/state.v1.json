@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:cli:state:v1",
+  "title": "Local CLI instance selection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema"],
+  "properties": {
+    "schema": {"const": "urn:skm:cli:state:v1"},
+    "current_instance": {"$ref": "#/$defs/name"},
+    "checkout_bindings": {
+      "type": "object",
+      "propertyNames": {"pattern": "^/"},
+      "additionalProperties": {"$ref": "#/$defs/name"}
+    },
+    "updated_at": {"type": "string", "format": "date-time"},
+    "last_workspace_id": {"type": ["string", "null"], "format": "uuid"},
+    "last_project_id": {"type": ["string", "null"], "format": "uuid"}
+  },
+  "$defs": {
+    "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$"}
+  }
+}

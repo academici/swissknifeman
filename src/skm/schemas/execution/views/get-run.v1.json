@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:view:get-run:v1",
+  "title": "RunView",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "plan",
+        "review_request",
+        "readiness_audit",
+        "adhoc"
+      ]
+    },
+    "plan_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "plan_alias": {
+      "type": "string"
+    },
+    "revision_no": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "type": "string"
+    },
+    "stop_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pause_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "unmetered": {
+      "type": "boolean"
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "counts_by_status": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "started_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "review_grouping": {
+      "type": "string"
+    },
+    "bundle_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "work_policy_default": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "autopilot": {
+      "type": "boolean"
+    },
+    "row_version": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "run_id",
+    "kind",
+    "plan_id",
+    "plan_alias",
+    "revision_no",
+    "status",
+    "stop_code",
+    "unmetered",
+    "health",
+    "counts_by_status",
+    "started_at",
+    "finished_at",
+    "review_grouping",
+    "bundle_digest",
+    "work_policy_default",
+    "autopilot",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.views",
+      "class": "RunView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RunView"
+    }
+  }
+}

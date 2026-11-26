@@ -1,0 +1,40 @@
+#!__PYTHON__
+import json
+import os
+import pathlib
+import sys
+
+args = sys.argv[1:]
+if args == ["--version"]:
+    print("codex-cli 0.165.0")
+    raise SystemExit(0)
+if args[:2] == ["login", "status"]:
+    print("Logged in using ChatGPT")
+    raise SystemExit(0)
+if "--help" in args:
+    print(
+        "Usage: codex exec resume login -a --ask-for-approval -c --config -C --cd -m --model "
+        "-s --sandbox --json --ephemeral --dangerously-bypass-approvals-and-sandbox"
+    )
+    raise SystemExit(0)
+
+_ = sys.stdin.read()
+codex_home = pathlib.Path(os.environ["CODEX_HOME"])
+cfg_text = (codex_home / "config.toml").read_text(encoding="utf-8")
+if "evil_user_codex_mcp" in cfg_text or "evil_worktree_codex_mcp" in cfg_text:
+    (pathlib.Path(os.environ["SKM_TEST_CANARY_DIR"]) / "codex_hijack").write_text("1", encoding="utf-8")
+
+sid = args[args.index("resume") + 1] if "resume" in args else "0199aa00-iso-1"
+sess_file = codex_home / "sessions" / f"{sid}.json"
+turns = (json.loads(sess_file.read_text(encoding="utf-8"))["turns"] if sess_file.is_file() else 0) + 1
+if "--ephemeral" not in args:
+    sess_file.write_text(json.dumps({"turns": turns}), encoding="utf-8")
+
+events = (
+    {"type": "thread.started", "thread_id": sid},
+    {"type": "turn.started"},
+    {"type": "item.completed", "item": {"id": "i1", "type": "agent_message", "text": f"turns={turns}"}},
+    {"type": "turn.completed", "usage": {"input_tokens": 12, "cached_input_tokens": 0, "output_tokens": 4}},
+)
+for ev in events:
+    print(json.dumps(ev), flush=True)

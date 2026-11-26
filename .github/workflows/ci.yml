@@ -1,0 +1,415 @@
+name: CI
+
+# One workflow, shaped as a graph instead of a line:
+#
+#   changes ─┬─ lint ─┬─ unit (shard × Python) ─────────┐
+#            │        ├─ pg (shard × PostgreSQL) ───────┤
+#            │        ├─ e2e (shard, PostgreSQL) ───────┤
+#            │        └─ compose (Docker stack) ────────┤
+#            ├─ typecheck, contracts, docs ─────────────┼─ CI gate
+#            ├─ workflows, shell ───────────────────────┤
+#            └─ web ────────────────────────────────────┘
+#
+# `changes` (tools/ci_shards.py plan) decides which lanes a pull request needs; pushes and manual runs take
+# every lane, except that a `CI-Only:` line in the head commit of a work-branch push narrows the run to the
+# cells a fix has to prove (docs/guides/continuous-integration.md). The release tag
+# check lives in release-tag.yml, so no job here runs for a tag.
+# Test lanes wait only for the cheap `lint` job, so a typo fails in a minute while type checking runs beside
+# the tests. Shards come from tools/ci_shards.py: every test file belongs to exactly one shard, and the
+# `contracts` job fails when a shard's database flag disagrees with the tests it holds. `CI gate` is the only
+# check a branch rule needs: it fails on any failed or cancelled lane and accepts lanes skipped by `changes`.
+
+on:
+  pull_request:
+    branches: [main, new]
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Superseded pushes to a work branch are cancelled; every commit on main/new keeps its run.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/new') }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  PYTHON_LATEST: '3.15'
+  HYPOTHESIS_PROFILE: ci
+  FORCE_COLOR: '1'
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      gate_name: ${{ steps.plan.outputs.gate_name }}
+      lint: ${{ steps.plan.outputs.lint }}
+      typecheck: ${{ steps.plan.outputs.typecheck }}
+      contracts: ${{ steps.plan.outputs.contracts }}
+      docs: ${{ steps.plan.outputs.docs }}
+      workflows: ${{ steps.plan.outputs.workflows }}
+      shell: ${{ steps.plan.outputs.shell }}
+      unit: ${{ steps.plan.outputs.unit }}
+      pg: ${{ steps.plan.outputs.pg }}
+      e2e: ${{ steps.plan.outputs.e2e }}
+      compose: ${{ steps.plan.outputs.compose }}
+      web: ${{ steps.plan.outputs.web }}
+      unit_matrix: ${{ steps.plan.outputs.unit_matrix }}
+      pg_matrix: ${{ steps.plan.outputs.pg_matrix }}
+      e2e_matrix: ${{ steps.plan.outputs.e2e_matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          filters: |
+            ci: &ci
+              - .github/**
+              - tools/ci_shards.py
+            python:
+              - *ci
+              - src/**
+              - tests/**
+              - tools/**
+              - resources/**
+              - deploy/**
+              - pyproject.toml
+              - pyrightconfig.json
+              - ruff.toml
+              - uv.lock
+              - Makefile
+            web:
+              - *ci
+              - web/**
+              - src/skm/schemas/**
+              - tools/gen.py
+              - tools/codegen/**
+              - uv.lock
+            compose:
+              - *ci
+              - deploy/**
+              - src/**
+              - resources/**
+              - web/**
+              - pyproject.toml
+              - uv.lock
+              - tests/e2e/test_compose.py
+              - tests/support/**
+            docs:
+              - *ci
+              - docs/**
+              - '**/*.md'
+              - tools/check_links.py
+            shell:
+              - *ci
+              - '**/*.sh'
+      - name: Plan lanes and matrices
+        id: plan
+        env:
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          FILTER_PYTHON: ${{ steps.filter.outputs.python }}
+          FILTER_WEB: ${{ steps.filter.outputs.web }}
+          FILTER_COMPOSE: ${{ steps.filter.outputs.compose }}
+          FILTER_DOCS: ${{ steps.filter.outputs.docs }}
+          FILTER_SHELL: ${{ steps.filter.outputs.shell }}
+        run: python3 tools/ci_shards.py plan | tee -a "$GITHUB_OUTPUT"
+
+  lint:
+    name: Lint
+    needs: changes
+    if: needs.changes.outputs.lint == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Formatting
+        run: make fmt-check
+      - name: Ruff
+        run: uv run --frozen --no-sync ruff check --output-format=github src tests tools
+
+  typecheck:
+    name: Type check
+    needs: changes
+    if: needs.changes.outputs.typecheck == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Pyright (strict source, basic tests)
+        run: uv run --frozen --no-sync pyright
+      - name: Pyright (tools)
+        run: uv run --frozen --no-sync pyright --project tools/pyrightconfig.json
+
+  contracts:
+    name: Contracts and generated files
+    needs: changes
+    if: needs.changes.outputs.contracts == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Schemas and generated code
+        run: make schema-check
+      - name: Migration chain
+        run: make sql-check
+      - name: Skill manifests
+        run: make check-skills
+      - name: Compiled extension packs
+        run: uv run --frozen --no-sync skm pack compile --check
+      - name: Test shards cover every test
+        run: uv run --frozen --no-sync python tools/ci_shards.py check
+
+  docs:
+    name: Docs
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Links and heading anchors
+        run: make docs-check
+
+  workflows:
+    name: Workflows
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint
+        run: >-
+          docker run --rm -v "$PWD:/repo" -w /repo
+          rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+      - name: zizmor
+        uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1 # v0.9.2
+        with:
+          advanced-security: false
+          persona: regular
+          version: 1.33.1
+
+  shell:
+    name: Shell scripts
+    needs: changes
+    if: needs.changes.outputs.shell == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ShellCheck
+        run: |
+          git ls-files -z '*.sh' ':!:plans/**' ':!:**/snippets/**' |
+            xargs -0 -r shellcheck -S error -e SC2148
+
+  unit:
+    name: Unit / ${{ matrix.shard }} / py${{ matrix.python }}
+    needs: [changes, lint]
+    # Waits for lint, but still runs in a targeted run that leaves lint out.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.lint.result) && needs.changes.outputs.unit == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Shard × Python (requires-python floor and latest), from tools/ci_shards.py.
+      matrix: ${{ fromJSON(needs.changes.outputs.unit_matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Tests
+        # Landlock descriptor tests open fd 70000; the runner's hard RLIMIT_NOFILE is 65536.
+        run: |
+          sudo prlimit --pid "$$" --nofile=1048576:1048576
+          uv run --frozen --no-sync python tools/ci_shards.py run "$SHARD" --suite unit
+        env:
+          SHARD: ${{ matrix.shard }}
+
+  pg:
+    name: PostgreSQL ${{ matrix.postgres }} / ${{ matrix.shard }}
+    needs: [changes, lint]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.lint.result) && needs.changes.outputs.pg == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # Shard × the two latest PostgreSQL majors (digest-pinned), from tools/ci_shards.py.
+      matrix: ${{ fromJSON(needs.changes.outputs.pg_matrix) }}
+    services:
+      postgres:
+        image: ${{ matrix.image }} # zizmor: ignore[unpinned-images] digest-pinned in tools/ci_shards.py POSTGRES
+        env:
+          POSTGRES_USER: skm
+          POSTGRES_PASSWORD: skm_dev
+          POSTGRES_DB: skm_test
+          TZ: UTC
+          PGTZ: UTC
+        ports: ['54329:5432']
+        options: >-
+          --health-cmd "pg_isready -U skm -d skm_test" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      SKM_TEST_DATABASE_URL: postgresql://skm:skm_dev@127.0.0.1:54329/skm_test
+      SKM_REQUIRE_PG: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/start-postgres
+        with:
+          container: ${{ job.services.postgres.id }}
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Tests
+        # Landlock descriptor tests open fd 70000; the runner's hard RLIMIT_NOFILE is 65536.
+        run: |
+          sudo prlimit --pid "$$" --nofile=1048576:1048576
+          uv run --frozen --no-sync python tools/ci_shards.py run "$SHARD" --suite pg
+        env:
+          SHARD: ${{ matrix.shard }}
+
+  e2e:
+    name: E2E / ${{ matrix.shard }}
+    needs: [changes, lint]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.lint.result) && needs.changes.outputs.e2e == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.e2e_matrix) }}
+    services:
+      postgres:
+        image: ${{ matrix.image }} # zizmor: ignore[unpinned-images] digest-pinned in tools/ci_shards.py POSTGRES
+        env:
+          POSTGRES_USER: skm
+          POSTGRES_PASSWORD: skm_dev
+          POSTGRES_DB: skm_test
+          TZ: UTC
+          PGTZ: UTC
+        ports: ['54329:5432']
+        options: >-
+          --health-cmd "pg_isready -U skm -d skm_test" --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      SKM_TEST_DATABASE_URL: postgresql://skm:skm_dev@127.0.0.1:54329/skm_test
+      SKM_REQUIRE_PG: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/start-postgres
+        with:
+          container: ${{ job.services.postgres.id }}
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - name: Tests
+        # Landlock descriptor tests open fd 70000; the runner's hard RLIMIT_NOFILE is 65536.
+        run: |
+          sudo prlimit --pid "$$" --nofile=1048576:1048576
+          uv run --frozen --no-sync python tools/ci_shards.py run "$SHARD" --suite e2e
+        env:
+          SHARD: ${{ matrix.shard }}
+
+  compose:
+    name: Compose stack
+    needs: [changes, lint]
+    if: ${{ !cancelled() && needs.changes.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.lint.result) && needs.changes.outputs.compose == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      # The shared e2e gate requires a DSN. This test starts its own internal database.
+      SKM_TEST_DATABASE_URL: postgresql://postgres@postgres/skm
+      SKM_REQUIRE_PG: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - run: uv run --frozen --no-sync pytest -q -n 0 tests/e2e/test_compose.py -m e2e
+
+  web:
+    name: Web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python
+        with:
+          python-version: ${{ env.PYTHON_LATEST }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: make web-check
+
+  gate:
+    name: ${{ needs.changes.outputs.gate_name || 'CI gate' }}
+    if: always()
+    needs: [changes, lint, typecheck, contracts, docs, workflows, shell, unit, pg, e2e, compose, web]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Every lane passed or was not needed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$RESULTS" | jq -e '
+            .changes as $plan
+            | ($plan.result == "success") and
+              (($plan.outputs | with_entries(select(.value == "true" or .value == "false")) | keys) ==
+               (del(.changes) | keys)) and
+              (del(.changes) | to_entries | all(.[];
+                ($plan.outputs[.key] == "true" and .value.result == "success") or
+                ($plan.outputs[.key] == "false" and .value.result == "skipped")))
+          '

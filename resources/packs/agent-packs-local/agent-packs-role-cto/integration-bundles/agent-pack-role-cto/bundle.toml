@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-role-cto"
+version = "1.0.1"
+title = "Migrated Agent Pack: Architecture and Risk Advisor"
+description = "Neutral system architecture, operational risk, and technology trade-off advisory lens migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-role-cto.md"
+path = ".claude/agents/{prefix}-role-cto.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-role-cto.toml"
+path = ".codex/agents/{prefix}-role-cto.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-role-cto.md"
+path = ".cursor/agents/{prefix}-role-cto.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/role-cto.md"
+path = ".claude/rules/role-cto.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/role-cto.md"
+path = ".codex/rules/role-cto.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/role-cto.mdc"
+path = ".cursor/rules/role-cto.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/role-cto.md"
+path = ".grok/rules/role-cto.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/role-cto.md"
+path = ".agents/rules/role-cto.md"
+ownership = "managed_file"

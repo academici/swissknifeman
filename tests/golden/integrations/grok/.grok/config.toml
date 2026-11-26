@@ -1,0 +1,15 @@
+# Project Grok configuration. Tables owned by skm (merged_toml): [permission], [mcp_servers.skm].
+# Everything else belongs to people and is kept byte for byte.
+[permission]
+deny = ["Read(.env*)", "Read(**/.env*)", "Read(**/*.pem)", "Read(**/id_rsa*)", "Write(**/.env*)", "Write(**/*.key)", "Write(**/*.pem)"]
+
+[mcp]
+max_output_bytes = 65536
+
+[mcp_servers.skm]
+command = "skm"
+args = ["mcp"]
+
+[mcp_servers.docs-search]
+command = "npx"
+args = ["-y", "@example/docs-mcp"]

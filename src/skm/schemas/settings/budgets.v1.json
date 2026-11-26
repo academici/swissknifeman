@@ -1,0 +1,580 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:budgets:v1",
+  "title": "Budgets settings",
+  "description": "Settings section 'budgets' owned by execution. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "budgets",
+    "owner": "execution",
+    "title": "Budgets",
+    "validators": [
+      {
+        "id": "budgets.task_le_run",
+        "keys": [
+          "budgets.task.max_usd",
+          "budgets.run.max_usd",
+          "budgets.task.max_tokens",
+          "budgets.run.max_tokens"
+        ],
+        "rule": "for usd and tokens: run == 0 or task == 0 or task <= run"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.settings",
+      "class": "BudgetsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "BudgetsSettings"
+    }
+  },
+  "properties": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_usd": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 20.0,
+          "description": "Cost ceiling of one run in USD; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "budgets.task_le_run"
+            ],
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000000,
+          "default": 0,
+          "description": "Fresh input+output tokens of one run; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "budgets.task_le_run"
+            ],
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_wall_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2592000,
+          "default": 0,
+          "description": "Wall-clock seconds of one run; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 0,
+          "description": "Attempts over all tasks of one run; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "max_tool_calls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000,
+          "default": 0,
+          "description": "Tool calls reported by runtimes over one run; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "max_review_rounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "default": 0,
+          "description": "Review rounds over the whole run; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Run",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_usd": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 0.0,
+          "description": "Cost ceiling of one task; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "budgets.task_le_run"
+            ],
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Task",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000000,
+          "default": 0,
+          "description": "Fresh tokens of one task; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "budgets.task_le_run"
+            ],
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Task",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 3,
+          "description": "Attempts of one task (fresh environments) before the task fails.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Task",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "warn_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000000,
+          "default": 100000,
+          "description": "Soft fresh-token warning per task (default 100000); record overrun and analyze progress, then continue useful authorized work. Hard task/run max_tokens stay 0 by default; explicit owner hard ceilings remain binding.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Task",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "max_wall_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2592000,
+          "default": 0,
+          "description": "Active wall-clock seconds of one task; 0 = unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Task",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "unknown_usage_policy": {
+      "type": "string",
+      "enum": [
+        "charge_estimate",
+        "block"
+      ],
+      "default": "charge_estimate",
+      "description": "A step without a usage report: charge the estimate, or stop the run (fail closed).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "order": [
+            "charge_estimate",
+            "block"
+          ]
+        },
+        "ui": {
+          "group": "Usage",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "unknown_usage_charge_tokens": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100000000,
+      "default": 50000,
+      "description": "Tokens charged for a step without usage when the policy is charge_estimate.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "replace",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Usage",
+          "order": 20,
+          "widget": "number"
+        }
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000000,
+          "default": 16000,
+          "description": "Output tokens assumed when reserving a step budget.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Usage",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "block_on_over": {
+          "type": "boolean",
+          "default": false,
+          "description": "Readiness becomes not_ready (instead of an advisory) when the budget estimate exceeds the run limits.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Usage",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

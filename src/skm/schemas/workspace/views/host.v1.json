@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:host:v1",
+  "title": "HostView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "platform": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_platform"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "retired"
+      ]
+    },
+    "registered_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "last_seen_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "host_id",
+    "name",
+    "platform",
+    "state",
+    "registered_at",
+    "last_seen_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "HostView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "HostView"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "urn:skm:execution:fix-brief:v1",
+  "id": "0193a000-0000-7000-8000-000000170001",
+  "task_id": "0193a000-0000-7000-8000-000000000012",
+  "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+  "source_review_id": "0193a000-0000-7000-8000-0000000f0001",
+  "source_check_round": null,
+  "limits": {
+    "max_findings": 12,
+    "max_finding_chars": 3000,
+    "max_inline_evidence_bytes": 4000,
+    "max_total_bytes": 24000
+  },
+  "items": [
+    {
+      "finding_key": "fk-3b9e1c0a7d2f4e61",
+      "local_id": "F1",
+      "severity": "major",
+      "category": "time",
+      "location": {
+        "mount": "api",
+        "path": "src/auth/rotation.py",
+        "line_start": 41,
+        "line_end": 44
+      },
+      "problem": "Expiry is checked with datetime.now() in RotationService.rotate. On an API node whose clock runs 2 minutes behind, an expired refresh token is still rotated and a new token family member is issued.",
+      "fix": "Read now() in the SELECT ... FOR UPDATE of the token row and compare expires_at with it.",
+      "observed": "AssertionError: rotated a token that expired 90 s ago by database time",
+      "reproduction": "python -m pytest tests/auth/test_rotation.py::test_expiry_uses_database_time -q  (exit 1)"
+    }
+  ],
+  "checks": [],
+  "deferred_finding_keys": [],
+  "truncated": false,
+  "full_report_file_version_id": "0193a000-0000-7000-8000-000000110010",
+  "digest": "sha256:8c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e"
+}

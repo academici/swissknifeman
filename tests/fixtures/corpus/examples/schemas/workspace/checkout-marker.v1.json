@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:checkout-marker:v1",
+  "title": "CheckoutMarker",
+  "description": "Optional file <checkout>/.skm/project.json (path: workspace.checkout.marker_path). A hint for attach_checkout; never an authority. Written by the CLI only with --write-marker.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "instance_id",
+    "workspace_id",
+    "project_id",
+    "repository_id",
+    "mount_name"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:workspace:checkout-marker:v1"
+    },
+    "instance_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount_name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name"
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.documents",
+      "class": "CheckoutMarkerDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "CheckoutMarker"
+    }
+  }
+}

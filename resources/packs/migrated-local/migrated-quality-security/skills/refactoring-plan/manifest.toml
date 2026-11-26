@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "refactoring-plan"
+version = "0.1.1"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["reviewer"]
+requires = ["tech-debt-audit"]
+exclusive_group = "quality-split"
+
+[provenance]
+source = "local"

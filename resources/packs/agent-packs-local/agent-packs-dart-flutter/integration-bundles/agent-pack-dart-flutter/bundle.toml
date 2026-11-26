@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-dart-flutter"
+version = "1.0.1"
+title = "Migrated Agent Pack: Dart and Flutter"
+description = "Neutral Dart null-safety, widget tree performance, and cross-platform testing conventions migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-flutter-reviewer.md"
+path = ".claude/agents/{prefix}-flutter-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-flutter-reviewer.toml"
+path = ".codex/agents/{prefix}-flutter-reviewer.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-flutter-reviewer.md"
+path = ".cursor/agents/{prefix}-flutter-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/dart-flutter.md"
+path = ".claude/rules/dart-flutter.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/dart-flutter.md"
+path = ".codex/rules/dart-flutter.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/dart-flutter.mdc"
+path = ".cursor/rules/dart-flutter.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/dart-flutter.md"
+path = ".grok/rules/dart-flutter.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/dart-flutter.md"
+path = ".agents/rules/dart-flutter.md"
+ownership = "managed_file"

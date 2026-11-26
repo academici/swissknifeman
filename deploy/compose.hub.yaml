@@ -1,0 +1,184 @@
+name: skm-hub
+
+x-hub-image: &hub-image
+  image: skm-api:${SKM_IMAGE_TAG:-local}
+  pull_policy: never
+  user: "10001:10001"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  read_only: true
+  tmpfs: [/tmp]
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-migrator-environment: &migrator-environment
+  SKM_DATABASE_URL: "postgresql://skm_migrator_login:${SKM_PG_MIGRATOR_PASSWORD:-}@postgres/skm_projects"
+
+services:
+  postgres:
+    image: postgres:16.4@sha256:e62fbf9d3e2b49816a32c400ed2dba83e3b361e6833e624024309c35d334b412
+    user: "999:999"
+    environment:
+      POSTGRES_DB: skm_projects
+      POSTGRES_PASSWORD: ${SKM_PG_ADMIN_PASSWORD:-}
+      SKM_PG_MIGRATOR_PASSWORD: ${SKM_PG_MIGRATOR_PASSWORD:-}
+      SKM_PG_APP_PASSWORD: ${SKM_PG_APP_PASSWORD:-}
+      TZ: UTC
+      PGTZ: UTC
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        : "$${POSTGRES_PASSWORD:?Set SKM_PG_ADMIN_PASSWORD}"
+        : "$${SKM_PG_MIGRATOR_PASSWORD:?Set SKM_PG_MIGRATOR_PASSWORD}"
+        : "$${SKM_PG_APP_PASSWORD:?Set SKM_PG_APP_PASSWORD}"
+        exec docker-entrypoint.sh postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    configs:
+      - source: postgres-roles
+        target: /docker-entrypoint-initdb.d/01-roles.sh
+    networks: [database]
+    healthcheck:
+      test: [CMD, pg_isready, -h, "127.0.0.1", -U, postgres, -d, skm_projects]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    restart: unless-stopped
+
+  migrate:
+    <<: *hub-image
+    command: [db, migrate]
+    environment: *migrator-environment
+    networks: [database]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # Explicit one-time Hub initialization: creates owner account, bootstrap.toml, and [web_auth] settings.
+  init:
+    <<: *hub-image
+    profiles: [setup]
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        skm init --state-dir /var/lib/skm --blobs-root /var/lib/skm/blobs --host-name skm-hub
+        python - <<'PY'
+        import os
+        from pathlib import Path
+        from shutil import copyfile
+
+        root = Path("/var/lib/skm")
+        profile = root / "bootstrap.toml"
+        text = profile.read_text(encoding="utf-8")
+        if "/secrets/token-pepper" in text:
+            pepper = root / "token-pepper"
+            copyfile(root / "secrets/token-pepper", pepper)
+            pepper.chmod(0o600)
+        text = (
+            text.replace("/secrets/token-pepper", "/token-pepper")
+            .replace("migrate_on_start = true", "migrate_on_start = false")
+        )
+        if "[web_auth]" not in text:
+            mode = os.environ.get("SKM_HUB_WEB_AUTH_MODE", "admin_login")
+            ttl = int(os.environ.get("SKM_HUB_SESSION_TTL_SECONDS", "28800"))
+            text = (
+                text.rstrip()
+                + f'\n\n[web_auth]\nmode = "{mode}"\nsession_ttl_seconds = {ttl}\n'
+            )
+        replacement = profile.with_suffix(".tmp")
+        replacement.write_text(text, encoding="utf-8")
+        replacement.chmod(0o600)
+        replacement.replace(profile)
+        PY
+        skm config set --scope instance --yes --reason "Hub compose API settings" \
+          api.allowed_hosts "$$SKM_API_ALLOWED_HOSTS"
+        skm config set --scope instance --yes --reason "Hub compose API settings" \
+          api.cors.origins "$$SKM_API_CORS_ORIGINS"
+    environment:
+      SKM_DATABASE_URL: "postgresql://skm_app_login:${SKM_PG_APP_PASSWORD:-}@postgres/skm_projects"
+      SKM_DATABASE_MIGRATOR_URL: "postgresql://skm_migrator_login:${SKM_PG_MIGRATOR_PASSWORD:-}@postgres/skm_projects"
+      SKM_BOOTSTRAP: /var/lib/skm/bootstrap.toml
+      SKM_FIRST_ADMIN_PASSWORD: "${SKM_FIRST_ADMIN_PASSWORD:-}"
+      SKM_HUB_WEB_AUTH_MODE: "${SKM_HUB_WEB_AUTH_MODE:-admin_login}"
+      SKM_HUB_SESSION_TTL_SECONDS: "${SKM_HUB_SESSION_TTL_SECONDS:-28800}"
+      SKM_API_ALLOWED_HOSTS: "${SKM_API_ALLOWED_HOSTS:-[\"hub:8765\",\"localhost:8765\",\"127.0.0.1:8765\"]}"
+      SKM_API_CORS_ORIGINS: "${SKM_API_CORS_ORIGINS:-[]}"
+    volumes:
+      - hub-state:/var/lib/skm
+      - owner-secrets:/var/lib/skm/secrets
+    networks: [database]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  hub:
+    <<: *hub-image
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.api
+    environment:
+      SKM_BOOTSTRAP: /var/lib/skm/bootstrap.toml
+      SKM_DATABASE_URL: "postgresql://skm_app_login:${SKM_PG_APP_PASSWORD:-}@postgres/skm_projects"
+    ports:
+      - "${SKM_HUB_BIND:-127.0.0.1}:${SKM_HUB_PORT:-8765}:8765"
+    networks: [database, frontend]
+    volumes:
+      - hub-state:/var/lib/skm
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          CMD,
+          python,
+          -c,
+          "from urllib.request import urlopen; urlopen('http://127.0.0.1:8765/health/ready', timeout=2).close()",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+networks:
+  database:
+    internal: true
+  frontend: {}
+
+volumes:
+  postgres-data: {}
+  hub-state: {}
+  owner-secrets: {}
+
+configs:
+  postgres-roles:
+    content: |
+      # Sourced by the official Postgres entrypoint during initialization of an empty volume.
+      : "$${SKM_PG_MIGRATOR_PASSWORD:?Set SKM_PG_MIGRATOR_PASSWORD}"
+      : "$${SKM_PG_APP_PASSWORD:?Set SKM_PG_APP_PASSWORD}"
+
+      docker_process_sql <<'SQL'
+      \getenv migrator_password SKM_PG_MIGRATOR_PASSWORD
+      \getenv app_password SKM_PG_APP_PASSWORD
+      BEGIN;
+      CREATE ROLE skm_migrator NOLOGIN;
+      CREATE ROLE skm_app NOLOGIN;
+      CREATE ROLE skm_migrator_login LOGIN PASSWORD :'migrator_password' IN ROLE skm_migrator;
+      CREATE ROLE skm_app_login LOGIN PASSWORD :'app_password' IN ROLE skm_app;
+      REVOKE ALL ON DATABASE skm_projects, postgres, template0, template1 FROM PUBLIC;
+      REVOKE ALL ON SCHEMA public FROM PUBLIC;
+      GRANT USAGE ON SCHEMA public TO skm_migrator, skm_app;
+      GRANT CONNECT, CREATE ON DATABASE skm_projects TO skm_migrator;
+      GRANT CONNECT ON DATABASE skm_projects TO skm_app;
+      COMMIT;
+      SQL

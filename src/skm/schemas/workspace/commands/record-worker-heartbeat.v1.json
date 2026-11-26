@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:record-worker-heartbeat:v1",
+  "title": "RecordWorkerHeartbeat",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "capabilities": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:worker-capabilities:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "worker_id",
+    "capabilities"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "RecordWorkerHeartbeat",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RecordWorkerHeartbeat"
+    }
+  }
+}

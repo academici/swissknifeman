@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:adopt-file:v1",
+  "title": "AdoptFileResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "AdoptFileResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "AdoptFileResult"
+    }
+  }
+}

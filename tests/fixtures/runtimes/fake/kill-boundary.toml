@@ -1,0 +1,31 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "kill-boundary"
+ignore_signals = true
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[[step]]
+action = "write_file"
+path = "before-cancel.txt"
+content = "preserved\n"
+
+[[step]]
+action = "emit"
+event = { type = "text_delta", text = "kill boundary reached" }
+
+[[step]]
+action = "sleep_ms"
+ms = 60000
+
+[[step]]
+action = "write_file"
+path = "after-cancel.txt"
+content = "must not exist\n"
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:executor:v1\", \"status\": \"done\", \"summary\": \"Implemented answer()\", \"changed_paths\": [{\"mount\": \"main\", \"path\": \"src/app.py\", \"change\": \"added\"}], \"checks_run\": [], \"open_issues\": [], \"self_check\": {\"performed\": false}}"

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:renew-lease:v1",
+  "title": "CommandRenewLease",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stage_record_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "step_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "phase": {
+          "const": "runtime_started"
+        },
+        "last_runtime_event_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cpu_active": {
+          "type": "boolean"
+        },
+        "repeated_command_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tool_running": {
+          "type": "string"
+        },
+        "process": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/process-identity"
+        },
+        "worktree_dirty": {
+          "type": "boolean"
+        },
+        "snapshot": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/staged-file"
+        },
+        "usage_so_far": {
+          "$ref": "urn:skm:runtimes:usage-report:v1"
+        }
+      },
+      "dependentRequired": {
+        "phase": [
+          "stage_record_id",
+          "step_id"
+        ]
+      }
+    }
+  },
+  "required": [
+    "claim"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "CommandRenewLease",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "CommandRenewLease"
+    }
+  }
+}

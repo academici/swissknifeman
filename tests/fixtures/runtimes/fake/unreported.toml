@@ -1,0 +1,8 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "unreported"
+
+[[step]]
+action = "read_stdin"
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:executor:v1\", \"status\": \"done\", \"summary\": \"Implemented answer()\", \"changed_paths\": [], \"checks_run\": [], \"open_issues\": [], \"self_check\": {\"performed\": false}}"

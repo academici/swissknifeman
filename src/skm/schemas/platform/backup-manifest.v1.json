@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:backup-manifest:v1",
+  "title": "Backup manifest",
+  "description": "Written last by `skm backup create` (mechanisms/07 K17, P15.01.b). Complete covers the control plane and immutable blobs; external host dependencies are explicitly captured or require rebind. Restore stays quarantined until explicit verified activation. Secrets, tokens, raw secret references and the token pepper are never part of a backup manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "backup_id", "instance_id", "skm_version", "schema_version", "canonicalization_version", "state", "started_at", "completed_at", "database", "blobs", "recovery_scope", "external_dependencies"],
+  "properties": {
+    "schema": {"const": "urn:skm:platform:backup-manifest:v1"},
+    "backup_id": {"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"},
+    "instance_id": {"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"},
+    "skm_version": {"type": "string", "minLength": 1, "maxLength": 64},
+    "schema_version": {"type": "integer", "minimum": 1, "description": "max(version) of skm_core.schema_migrations inside the exported snapshot; restore refuses a value above KNOWN_SCHEMA_VERSION (SCHEMA_TOO_NEW)."},
+    "schema_baseline": {
+      "type": "object",
+      "description": "The migration baseline marker read in the same exported snapshot. A matching marker is required to restore the archive.",
+      "additionalProperties": false,
+      "required": ["epoch", "chain_sha256"],
+      "properties": {
+        "epoch": {"type": "string", "minLength": 1},
+        "chain_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "canonicalization_version": {"type": "integer", "minimum": 1},
+    "recovery_scope": {"const": "control_plane_and_blobs"},
+    "external_dependencies": {
+      "type": "array",
+      "description": "Closure inventory of host/external references in the same database snapshot. Captured is evidence availability, never authority to execute. An omitted required host dependency invalidates closure; requires_rebind blocks affected activation.",
+      "items": {"$ref": "#/$defs/external_dependency"}
+    },
+    "state": {"const": "complete", "description": "Written only after every file was copied and verified; an interrupted backup has no manifest."},
+    "started_at": {"$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"},
+    "completed_at": {"$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"},
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "format", "digest", "size_bytes", "server_version_num", "table_rows"],
+      "properties": {
+        "file": {"type": "string", "pattern": "^[a-z0-9._-]{1,120}$", "description": "Relative to the backup directory."},
+        "format": {"const": "pg_dump_custom"},
+        "digest": {"$ref": "urn:skm:kernel:defs:v1#/$defs/digest"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "server_version_num": {"type": "integer", "minimum": 160000},
+        "table_rows": {
+          "type": "object",
+          "description": "Row count per qualified table (skm_<module>.<table>) in the exported snapshot.",
+          "propertyNames": {"pattern": "^skm_[a-z_]+\\.[a-z][a-z0-9_]*$"},
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "blobs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inventory_file", "inventory_digest", "count", "total_bytes"],
+      "properties": {
+        "inventory_file": {"type": "string", "pattern": "^[a-z0-9._-]{1,120}$", "description": "JSON lines {workspace_id, digest, size_bytes, path}: every final blob referenced by blob_locations in the same snapshot."},
+        "inventory_digest": {"$ref": "urn:skm:kernel:defs:v1#/$defs/digest"},
+        "count": {"type": "integer", "minimum": 0},
+        "total_bytes": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "external_dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "state", "required_for"],
+      "properties": {
+        "kind": {"enum": ["git_output", "prepared_effect", "writer_binding", "host_configuration", "runtime_session", "secret_provider"]},
+        "identity": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Owner-qualified opaque logical identity, never a raw local path, endpoint, secret value or secret URI."},
+        "host_id": {"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"},
+        "state": {"enum": ["captured", "requires_rebind"]},
+        "captured_in": {"enum": ["database", "blob_inventory"]},
+        "workspace_id": {"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"},
+        "digest": {"$ref": "urn:skm:kernel:defs:v1#/$defs/digest"},
+        "required_for": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["output_read", "run_resume", "effect_reconcile", "external_delivery"]}},
+        "reason_code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,79}$"}
+      },
+      "allOf": [
+        {"if": {"properties": {"state": {"const": "captured"}}}, "then": {"required": ["captured_in"]}, "else": {"not": {"anyOf": [{"required": ["captured_in"]}, {"required": ["digest"]}]}}},
+        {"if": {"required": ["captured_in"], "properties": {"captured_in": {"const": "blob_inventory"}}}, "then": {"required": ["workspace_id", "digest"]}}
+      ]
+    }
+  }
+}

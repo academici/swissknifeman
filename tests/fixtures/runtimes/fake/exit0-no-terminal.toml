@@ -1,0 +1,9 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "exit0-no-terminal"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "text_delta", text = "{\"status\":\"done\"}" }

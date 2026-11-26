@@ -1,0 +1,10 @@
+{
+  "skill": "new-project",
+  "snippets": [
+    {
+      "file": "project-folder-structure.md",
+      "description": "project folder structure",
+      "tags": []
+    }
+  ]
+}

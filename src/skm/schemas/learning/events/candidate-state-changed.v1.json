@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:event:candidate-state-changed:v1",
+  "title": "CandidateStateChanged",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "from": {
+      "type": "string",
+      "enum": ["observed", "candidate", "promoted", "rejected", "deprecated"]
+    },
+    "to": {
+      "type": "string",
+      "enum": ["observed", "candidate", "promoted", "rejected", "deprecated"]
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "numeric_gate",
+        "source_support_low",
+        "reobserved",
+        "rejected"
+      ]
+    }
+  },
+  "required": [
+    "candidate_id",
+    "from",
+    "to",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.events",
+      "class": "CandidateStateChanged",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "CandidateStateChanged"
+    }
+  },
+  "x-skm-hookable": false
+}

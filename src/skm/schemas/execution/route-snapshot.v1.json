@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:route-snapshot:v1",
+  "title": "RouteSnapshot",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "requested": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model_class": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "model_class",
+        "effort"
+      ]
+    },
+    "resolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "effort"
+      ]
+    },
+    "route_source": {
+      "type": "string",
+      "enum": [
+        "previous_route",
+        "plan_route",
+        "role_routing",
+        "role_fallback",
+        "preference",
+        "host_substitution"
+      ]
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "executable_sha256": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verification_key": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "effective_config_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "reconfiguration_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      },
+      "maxItems": 128,
+      "uniqueItems": true,
+      "description": "Only unique latest-effective record IDs per semantic key, ordered by their RunReconfigured stream_seq; not the unbounded full history. The fixed semantic allowlist has <=128 effective keys, checked at registry construction. Full provenance remains in append-only records/events."
+    },
+    "route_reason": {
+      "type": "string",
+      "enum": [
+        "ROUTE_DEFAULT",
+        "ROUTE_FALLBACK",
+        "ROUTE_UPGRADED",
+        "ROUTE_OVERRIDE"
+      ]
+    },
+    "runtime_version": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "adapter_version": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "catalog_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "profile_version_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "requested_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+        },
+        "effort": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "effort"
+      ]
+    },
+    "selected_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+        },
+        "effort": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "effort"
+      ]
+    }
+  },
+  "required": [
+    "requested",
+    "resolved",
+    "route_source",
+    "host_id",
+    "executable_sha256",
+    "verification_key",
+    "effective_config_digest",
+    "reconfiguration_ids",
+    "route_reason",
+    "runtime_version",
+    "adapter_version",
+    "catalog_digest",
+    "profile_version_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "RouteSnapshot",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RouteSnapshot"
+    }
+  }
+}

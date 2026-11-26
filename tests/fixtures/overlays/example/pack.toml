@@ -1,0 +1,23 @@
+# Example operator overlay pack (extensions §4.3, §4.13, §11.3).
+schema = "urn:skm:extensions:pack:v1"
+slug = "example-overlay"
+version = "1.0.0"
+title = "Example Operator Overlay"
+description = "Operator overlay customizing configuration budgets and overriding core work policy."
+publisher = "operator"
+trust = "operator"
+priority = 100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[config]
+"context.skills.budget_tokens" = 12000
+"context.budget.supporting" = 36000
+"context.report.top_sources" = 8
+"execution.debug.enabled" = true
+"execution.work_policy.role_intensity" = { executor = "heavy", reviewer = "heavy" }
+
+[[overrides]]
+kind = "prompt_block"
+key = "shared/work_policy"
+reason = "Customize verification checklist for operator-managed workspaces."

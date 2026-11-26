@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:release-assignment:v1",
+  "title": "CommandReleaseAssignment",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "done",
+        "paused",
+        "cancelled",
+        "retry_later"
+      ]
+    },
+    "retain_environment": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "claim",
+    "reason",
+    "retain_environment"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "CommandReleaseAssignment",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "CommandReleaseAssignment"
+    }
+  }
+}

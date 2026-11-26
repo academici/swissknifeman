@@ -1,0 +1,178 @@
+# urn:skm:runtimes:capabilities:v1 for built-in codex runtime adapter (P08.04).
+# TOML has no null literal: every schema-nullable member carries a concrete value.
+runtime_id = "codex"
+adapter_version = "0.1.0"
+read_only_network = false
+
+[config_isolation]
+args = []
+writable_home_dirs = ["sessions", "cache", "tmp"]
+
+[config_isolation.env]
+CODEX_HOME = "{client_home}"
+HOME = "{client_home}"
+
+[[config_isolation.credential_mounts]]
+source = "~/.codex/auth.json"
+target = "auth.json"
+required = true
+
+[[self_loads]]
+kind = "user_config"
+locator = "~/.codex"
+files = ["config.toml"]
+when = "start"
+suppressed_by = "config_isolation"
+note = "Redirected to isolated client_home via CODEX_HOME and HOME"
+
+[[self_loads]]
+kind = "plugins"
+locator = "~/.codex/plugins"
+files = []
+when = "start"
+suppressed_by = "config_isolation"
+note = "Suppressed by isolated CODEX_HOME"
+
+[[self_loads]]
+kind = "skills"
+locator = "~/.codex/skills"
+files = []
+when = "start"
+suppressed_by = "config_isolation"
+note = "Suppressed by isolated CODEX_HOME"
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["AGENTS.md"]
+when = "start"
+suppressed_by = "never"
+note = "Codex reads AGENTS.md up the directory tree even under isolated CODEX_HOME"
+
+[[self_loads]]
+kind = "project_settings"
+locator = "{workdir}/.codex"
+files = ["config.toml"]
+when = "start"
+suppressed_by = "config_isolation"
+note = "Untrusted worktree .codex/config.toml suppressed by isolated CODEX_HOME"
+
+[[records]]
+capability = "headless_execution"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "structured_result"
+status = "adapted"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Final answer extracted from turn-scoped agent_message on turn.completed"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "stream_events"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "session_resume"
+status = "native"
+evidence = "fixture:codex/stream_resume.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Requires persistent session_policy and isolated client_home"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "tool_interception"
+status = "unsupported"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Unattended execution runs with -a never without interactive tool interception"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "adapted"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Enforcing capability: process group SIGINT/SIGTERM requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "usage_reporting"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Cumulative token counters reported on turn.completed"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "workspace_binding"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "native_subagents"
+status = "unknown"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Codex subagent execution and disclosure not verified"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "mcp_support"
+status = "adapted"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Step-local config.toml in isolated CODEX_HOME"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "permission_flags"
+status = "native"
+evidence = "fixture:codex/stream_sandbox_denial.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Enforcing capability: --sandbox mode requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "sandbox_native"
+status = "native"
+evidence = "fixture:codex/stream_sandbox_denial.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Enforcing capability: --sandbox read-only | workspace-write | danger-full-access"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "effort_control"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "model_selection"
+status = "native"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "config_isolation"
+status = "adapted"
+evidence = "fixture:codex/stream_basic.jsonl"
+tested_runtime_version = "0.165.0"
+limitations = "Enforcing capability: isolated CODEX_HOME and generated config.toml"
+last_verified_at = "2026-10-26"

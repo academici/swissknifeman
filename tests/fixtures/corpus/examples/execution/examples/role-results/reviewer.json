@@ -1,0 +1,57 @@
+{
+  "schema": "urn:skm:execution:role-result:reviewer:v1",
+  "verdict": "attention",
+  "summary": "Rotation and reuse detection are correct. The expiry check compares with the process clock instead of database time, against the phase pitfall.",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "major",
+      "confidence": "high",
+      "basis": "correctness",
+      "category": "time",
+      "message": "Expiry is checked with datetime.now() in RotationService.rotate.",
+      "failure_scenario": "On an API node whose clock runs 2 minutes behind, an expired refresh token is still rotated and a new token family member is issued.",
+      "location": {
+        "mount": "api",
+        "path": "src/auth/rotation.py",
+        "line_start": 41,
+        "line_end": 44
+      },
+      "reproduction": {
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "tests/auth/test_rotation.py::test_expiry_uses_database_time",
+          "-q"
+        ],
+        "expected_exit": 1
+      },
+      "fix_hint": "Select now() together with the token row and compare in the same transaction."
+    },
+    {
+      "id": "F2",
+      "severity": "nit",
+      "confidence": "medium",
+      "basis": "maintainability",
+      "category": "naming",
+      "message": "_family_ids is a set but named like a list.",
+      "failure_scenario": "No runtime failure; readability only.",
+      "location": {
+        "mount": "api",
+        "path": "src/auth/rotation.py",
+        "line_start": 18
+      }
+    }
+  ],
+  "residual_risk": "Concurrent rotation of the same token is covered by SELECT ... FOR UPDATE; not load-tested.",
+  "coverage": {
+    "paths_reviewed": [
+      "api:src/auth/rotation.py",
+      "api:tests/auth/test_rotation.py"
+    ],
+    "criteria_checked": [
+      "AC1"
+    ]
+  }
+}

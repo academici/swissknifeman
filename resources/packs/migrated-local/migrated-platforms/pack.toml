@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-platforms"
+version = "1.0.1"
+title = "Migrated Neutral Skills: Mobile, Dart & 3D Platforms"
+description = "Reproducibly migrated neutral authored skills for Mobile, Dart & 3D Platforms (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

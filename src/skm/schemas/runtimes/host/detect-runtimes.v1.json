@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:host:detect-runtimes:v1",
+  "title": "DetectRuntimesRequest",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {},
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.host",
+      "class": "DetectRuntimesRequest",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "DetectRuntimesRequest"
+    }
+  }
+}

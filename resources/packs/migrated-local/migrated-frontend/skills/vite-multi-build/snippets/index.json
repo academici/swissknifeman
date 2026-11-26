@@ -1,0 +1,30 @@
+{
+  "skill": "vite-multi-build",
+  "snippets": [
+    {
+      "file": "vite.config.js",
+      "description": "Main Assembly: Inputs app.ts + sass, loadEnv for APP_URL/VITE_PORT, HMR/CORS for Docker, aliases",
+      "tags": ["vite", "laravel", "docker"]
+    },
+    {
+      "file": "vite.admin.config.js",
+      "description": "Admin build Filament: separate hotFile, buildDirectory public/filament, yours tailwind-config",
+      "tags": ["vite", "filament", "admin"]
+    },
+    {
+      "file": "tailwind.config.js",
+      "description": "Tailwind-main application theme: custom fonts, plugin forms, content without Filament",
+      "tags": ["tailwind", "theme"]
+    },
+    {
+      "file": "tailwind-admin.config.js",
+      "description": "Tailwind admin: presets with preset Filament, content only Filament-files",
+      "tags": ["tailwind", "filament", "preset"]
+    },
+    {
+      "file": "package-scripts.json",
+      "description": "Scripts package.json: dev/build and dev:admin/build:admin for two assemblies",
+      "tags": ["npm", "scripts", "build"]
+    }
+  ]
+}

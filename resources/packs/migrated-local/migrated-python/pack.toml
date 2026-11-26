@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-python"
+version = "1.0.1"
+title = "Migrated Neutral Skills: Python Engineering"
+description = "Reproducibly migrated neutral authored skills for Python Engineering (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

@@ -1,0 +1,18 @@
+{
+  "x-skm-section": {
+    "id": "planning"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.settings",
+      "class": "PlanningSettings",
+      "kind": "settings_view"
+    }
+  },
+  "properties": {
+    "depth": {
+      "type": "integer",
+      "x-skm": {}
+    }
+  }
+}

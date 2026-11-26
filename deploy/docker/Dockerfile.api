@@ -1,0 +1,67 @@
+FROM node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS web
+WORKDIR /build/web
+COPY web/package.json web/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund --fetch-retries=4
+COPY web/index.html web/tsconfig.json web/vite.config.ts ./
+# Same locked install and build as make web-build.
+RUN --network=none \
+    --mount=type=bind,source=web/src,target=/build/web/src \
+    --mount=type=bind,source=web/tests,target=/build/web/tests \
+    --mount=type=bind,source=src/skm/schemas,target=/build/src/skm/schemas \
+    npm run build
+
+FROM ghcr.io/astral-sh/uv:0.13.1@sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901ada336 AS uv
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS python
+FROM python AS package
+COPY --from=uv /uv /usr/local/bin/uv
+WORKDIR /build
+COPY pyproject.toml uv.lock README.md ./
+# The project lock covers the runtime. Pin the build backend and its closure separately.
+COPY <<'REQUIREMENTS' /build-backend.txt
+hatchling==1.33.0 --hash=sha256:415290b84f464d2884303fca8974d38e7b85579069fab02a15db0828fbb1446d --hash=sha256:4c422bd4d554fcff5de5b73e9596f85e41e9f97f7e553d8f7595ecb31a627bef
+packaging==26.3 --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pathspec==1.1.1 --hash=sha256:17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a --hash=sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189
+pluggy==1.7.0 --hash=sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec --hash=sha256:d1eaa46ebb595891b860ab086b4d09c8588af65ebd4361b8e8f4bb8920b90ba8
+tomlkit==0.15.2 --hash=sha256:05562412163a3037b94497385fb7f9204c637bc605af7a48199e41cf2272f437 --hash=sha256:83e32755ba1d20d9340bd069ee97e9f6232ba2346b63ffcba425de01f7e327a6
+trove-classifiers==2026.9.21.13 --hash=sha256:0a9ebc8d4e2f3e8a22848c5258033035bec17a3012ac3fea16dbaa764489eb71 --hash=sha256:8b1ff4f9c191b1040b71c37f1e445ab99732911e3cd91de52838453a854d7a17
+REQUIREMENTS
+RUN --mount=type=cache,target=/root/.cache/pip \
+    uv export --quiet --frozen --no-dev --no-emit-project -o /runtime.txt \
+    && for attempt in 1 2 3 4; do \
+        python -m pip download --disable-pip-version-check --only-binary=:all: \
+            --require-hashes --dest /wheels -r /runtime.txt -r /build-backend.txt && break; \
+        test "$attempt" -lt 4 || exit 1; \
+    done
+RUN --network=none uv venv /opt/build \
+    && uv pip install --python /opt/build/bin/python --offline --no-index --find-links /wheels \
+        --require-hashes -r /build-backend.txt
+COPY --from=web /build/web/dist ./web/dist
+COPY deploy/compose.local.yaml deploy/compose.local.yaml
+RUN --network=none \
+    --mount=type=bind,source=src/skm,target=/build/src/skm \
+    --mount=type=bind,source=resources,target=/build/resources \
+    uv build --wheel --offline --no-build-isolation --python /opt/build/bin/python --out-dir /wheels
+RUN --network=none uv venv /opt/skm \
+    && uv pip install --python /opt/skm/bin/python --offline --no-index --find-links /wheels \
+        --require-hashes -r /runtime.txt \
+    && uv pip install --python /opt/skm/bin/python --offline --no-index --no-deps /wheels/skm-*.whl \
+    && /opt/skm/bin/python - <<'PY'
+from pathlib import Path
+from shutil import rmtree
+from sysconfig import get_path
+
+# Some dependency wheels ship their own test suites.
+for path in Path(get_path("purelib")).glob("*/tests"):
+    rmtree(path)
+PY
+
+FROM python AS api
+COPY --from=package /opt/skm /opt/skm
+RUN groupadd --gid 10001 skm \
+    && useradd --uid 10001 --gid 10001 --home-dir /var/lib/skm skm \
+    && install -d -o 10001 -g 10001 -m 0700 /var/lib/skm /var/lib/skm/secrets
+ENV PATH="/opt/skm/bin:$PATH" HOME=/var/lib/skm PYTHONDONTWRITEBYTECODE=1
+WORKDIR /var/lib/skm
+USER 10001:10001
+ENTRYPOINT ["skm"]
+CMD ["serve", "--bind", "0.0.0.0:8765"]

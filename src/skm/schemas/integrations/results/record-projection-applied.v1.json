@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:result:record-projection-applied:v1",
+  "title": "RecordProjectionAppliedResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "projection_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionState"
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "projection_id",
+    "state",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.results",
+      "class": "RecordProjectionAppliedResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RecordProjectionAppliedResult"
+    }
+  }
+}

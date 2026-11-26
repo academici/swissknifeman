@@ -1,0 +1,94 @@
+schema = "urn:skm:execution:workflow:v1"
+id = "reviewed-development"
+version = "2.0.0"
+title = "Reviewed development"
+description = "Default workflow: prepare -> optional scout -> execute -> checks -> review (triage, bounded rework) -> acceptance -> integrate; item, phase and plan gates review integrated ranges and turn findings into follow-up tasks."
+applies_to = ["code", "config", "test", "docs", "ops"]
+requires_roles = ["scout", "executor", "reviewer", "triager", "advisor", "registrar"]
+
+[[stage]]
+id = "prepare"
+type = "prepare_environment"
+params = { baseline_strategy = "integration_branch_head" }
+
+[[stage]]
+id = "gate_prepare"
+type = "prepare_environment"
+for_kinds = ["item_gate", "phase_gate", "group_review", "plan_acceptance"]
+params = { baseline_strategy = "gate_range" }
+
+[[stage]]
+id = "scout"
+type = "agent_step"
+role = "scout"
+optional = true
+when = { route_flag = "scout" }
+on = { result_invalid = "skip_if_optional" }
+
+[[stage]]
+id = "execute"
+type = "agent_step"
+role = "executor"
+on = { result_invalid = "retry_then_escalate" }
+
+[[stage]]
+id = "checks"
+type = "run_checks"
+params = { scope = "task" }
+on = { checks_failed = "rework", checks_error = "retry_once_then_escalate" }
+
+[[stage]]
+id = "gate_checks"
+type = "run_checks"
+for_kinds = ["item_gate", "phase_gate", "plan_acceptance"]
+params = { scope = "gate" }
+
+[[stage]]
+id = "review"
+type = "agent_review"
+role = "reviewer"
+for_kinds = ["unit", "item", "integration", "followup", "item_gate", "phase_gate", "group_review"]
+skip_when = { review_mode = "waived" }
+params = { audit_scope = "corrected", profile = "reviewer" }
+on = { verdict_attention = "triage", verdict_red = "triage", result_invalid = "retry_then_escalate" }
+
+[[stage]]
+id = "triage"
+type = "agent_step"
+role = "triager"
+for_kinds = ["unit", "item", "integration", "followup", "item_gate", "phase_gate", "group_review"]
+when = { any = [ { review_verdict = "red" }, { review_verdict = "attention" } ] }
+
+[[stage]]
+id = "advise"
+type = "advisor_consult"
+role = "advisor"
+optional = true
+for_kinds = ["unit", "item", "integration", "followup", "item_gate", "phase_gate", "group_review"]
+when = { has_open_questions = true }
+
+[[stage]]
+id = "accept"
+type = "acceptance_gate"
+
+[[stage]]
+id = "phase_gate"
+type = "phase_gate"
+params = { blocks_next_phase = true }
+
+[[stage]]
+id = "plan_acceptance"
+type = "plan_acceptance"
+params = { coverage = "required" }
+
+[[stage]]
+id = "integrate"
+type = "integrate"
+params = { push = "none" }
+on = { conflict = "integration_task" }
+
+[[stage]]
+id = "recheck"
+type = "run_checks"
+params = { scope = "rerun_after_integration" }
+on = { checks_failed = "escalate", checks_error = "escalate" }

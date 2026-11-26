@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:local-memory-search:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "classification": {"const": "HOST_PRIVATE"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "integer", "minimum": 1},
+          "session_id": {"$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"},
+          "kind": {"$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryKind"},
+          "text": {"type": "string"},
+          "expires_at": {"$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"}
+        },
+        "required": ["id", "session_id", "kind", "text", "expires_at"]
+      }
+    },
+    "items_truncated": {"$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"}
+  },
+  "required": ["classification", "items"]
+}

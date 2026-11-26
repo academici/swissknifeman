@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:decision-answered:v1",
+  "title": "DecisionAnswered",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "#/$defs/json-value"
+    },
+    "answered_by_kind": {
+      "$ref": "#/$defs/json-value"
+    },
+    "record_as_plan_decision": {
+      "$ref": "#/$defs/json-value"
+    },
+    "decision_record_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "question_key": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "request_id",
+    "kind",
+    "answered_by_kind",
+    "record_as_plan_decision"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "DecisionAnswered",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "DecisionAnswered"
+    }
+  },
+  "$defs": {
+    "json-value": {
+      "description": "JSON metadata local to this event; no runtime request or secret-bearing schema closure.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  }
+}

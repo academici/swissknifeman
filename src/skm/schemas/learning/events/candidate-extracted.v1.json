@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:event:candidate-extracted:v1",
+  "title": "CandidateExtracted",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "detector": {
+      "type": "string",
+      "enum": [
+        "resolved_failure",
+        "workaround",
+        "pathology",
+        "workflow_relaunch"
+      ]
+    },
+    "pathology_code": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "file_reread",
+            "tool_error_loop",
+            "no_op_run",
+            "no_verify",
+            "cache_miss",
+            "retrieval_stuffing",
+            "protected_write",
+            "static_context",
+            "fanout"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "consolidation": {
+      "type": "string",
+      "enum": [
+        "add",
+        "update",
+        "noop",
+        "conflict"
+      ]
+    },
+    "conflicts_with_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "candidate_id",
+    "project_id",
+    "detector",
+    "pathology_code",
+    "consolidation",
+    "conflicts_with_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.events",
+      "class": "CandidateExtracted",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "CandidateExtracted"
+    }
+  },
+  "x-skm-hookable": false
+}

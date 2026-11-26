@@ -1,0 +1,34 @@
+schema = "urn:skm:execution:workflow:v1"
+id = "review-only"
+version = "2.0.0"
+title = "Review on request"
+description = "prepare (base..head or base + working-tree patch) -> review -> triage -> report acceptance (clearance report)."
+applies_to = ["review"]
+requires_roles = ["reviewer", "triager"]
+
+[[stage]]
+id = "prepare"
+type = "prepare_environment"
+for_kinds = ["item"]
+when = { run_kind = ["review_request"] }
+params = { baseline_strategy = "review_request" }
+
+[[stage]]
+id = "review"
+type = "agent_review"
+role = "reviewer"
+for_kinds = ["item"]
+params = { audit_scope = "range", profile = "reviewer" }
+on = { verdict_attention = "triage", verdict_red = "triage", result_invalid = "retry_then_escalate" }
+
+[[stage]]
+id = "triage"
+type = "agent_step"
+role = "triager"
+for_kinds = ["item"]
+when = { any = [ { review_verdict = "red" }, { review_verdict = "attention" } ] }
+
+[[stage]]
+id = "accept"
+type = "acceptance_gate"
+for_kinds = ["item"]

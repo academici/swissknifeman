@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:result:record-tool-decisions:v1",
+  "title": "RecordToolDecisionsResult",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recorded": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "recorded"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.results",
+      "class": "RecordToolDecisionsResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "RecordToolDecisionsResult"
+    }
+  }
+}

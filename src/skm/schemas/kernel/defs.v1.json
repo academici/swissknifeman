@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:kernel:defs:v1",
+  "title": "Kernel definitions",
+  "description": "Shared primitive definitions referenced by every module schema.",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID (v7 for entities) in canonical lowercase form."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 UTC timestamp, e.g. 2026-10-25T14:03:11.123456Z."
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Tagged SHA-256 digest (canonical JSON or bytes)."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){1,62}$"
+    },
+    "display-key": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9./-]{0,63}$",
+      "description": "Human key such as PLAN7, P2.4/U1, D3, V2."
+    },
+    "json-pointer": {
+      "type": "string",
+      "pattern": "^(/([^~/]|~[01])*)*$"
+    },
+    "error-code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
+    },
+    "secret-ref": {
+      "type": "string",
+      "pattern": "^secret://(env|file|keyring)/.+$",
+      "description": "Reference to a secret, never the secret itself."
+    },
+    "usd-micros": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Money in millionths of a US dollar (no floats in digests)."
+    },
+    "page-cursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Opaque keyset cursor."
+    },
+    "page-limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 50
+    },
+    "page-meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "next"
+      ],
+      "properties": {
+        "next": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/page-cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "scope-ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "instance",
+            "workspace",
+            "project",
+            "plan",
+            "run",
+            "host"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "x-skm-codegen": {
+        "python": {
+          "module": "skm.kernel.generated.defs",
+          "class": "ScopeRefDto",
+          "kind": "dataclass"
+        }
+      }
+    },
+    "problem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/error-code"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "object"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "request_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

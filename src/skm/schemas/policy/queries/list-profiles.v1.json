@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:query:list-profiles:v1",
+  "title": "ListProfiles",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {},
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.queries",
+      "class": "ListProfiles",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ListProfiles"
+    }
+  }
+}

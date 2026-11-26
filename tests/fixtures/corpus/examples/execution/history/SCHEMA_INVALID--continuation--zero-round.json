@@ -1,0 +1,54 @@
+{
+  "contract": "urn:skm:execution:pending-continuation:v1",
+  "value": {
+    "schema_version": 1,
+    "continuation_id": "01928f61-0000-7000-8000-000000000090",
+    "kind": "stage",
+    "cause": {
+      "trigger_kind": "check_failed",
+      "advance_rule": "D6",
+      "reason_codes": [
+        "CHECKS_FAILED"
+      ],
+      "refs": [
+        {
+          "kind": "stage",
+          "id": "01928f61-0000-7000-8000-000000000004"
+        },
+        {
+          "kind": "output",
+          "id": "01928f61-0000-7000-8000-000000000005"
+        },
+        {
+          "kind": "check",
+          "id": "01928f61-0000-7000-8000-000000000006"
+        },
+        {
+          "kind": "fix_brief",
+          "id": "01928f61-0000-7000-8000-000000000007"
+        }
+      ],
+      "source_event_id": "01928f61-0000-7000-8000-000000000080"
+    },
+    "stage": {
+      "stage_id": "execute",
+      "stage_type": "agent_step",
+      "mode": "rework",
+      "round_no": 0,
+      "params": {
+        "role": "executor"
+      },
+      "not_before": null,
+      "route_override": null,
+      "feedback_refs": {
+        "fix_brief_id": "01928f61-0000-7000-8000-000000000007",
+        "schema_errors_step_id": null,
+        "answer_request_ids": [],
+        "advice_step_id": null,
+        "interrupted_stage_record_id": null
+      },
+      "input_output_id": "01928f61-0000-7000-8000-000000000005",
+      "retry_of_id": null
+    }
+  }
+}

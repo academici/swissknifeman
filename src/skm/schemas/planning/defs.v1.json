@@ -1,0 +1,582 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:defs:v1",
+  "title": "Defs",
+  "description": "planning owner contract; see the planning module.",
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 0
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 0
+        },
+        "entity_key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entity_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pointer": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "message",
+        "entity_key",
+        "entity_id",
+        "pointer",
+        "details"
+      ]
+    },
+    "rule-failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rule": {
+          "type": "string",
+          "minLength": 0
+        },
+        "error_type": {
+          "type": "string",
+          "minLength": 0
+        },
+        "message": {
+          "type": "string",
+          "minLength": 0
+        },
+        "plugin": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule",
+        "error_type",
+        "message",
+        "plugin"
+      ]
+    },
+    "schema-issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pointer": {
+          "type": "string",
+          "minLength": 0
+        },
+        "message": {
+          "type": "string",
+          "minLength": 0
+        },
+        "schema_pointer": {
+          "type": "string",
+          "minLength": 0
+        }
+      },
+      "required": [
+        "pointer",
+        "message",
+        "schema_pointer"
+      ]
+    },
+    "read-source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "revision_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "draft_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "expected_edit_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "plan_id"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "revision_id"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "draft_id"
+                ]
+              },
+              {
+                "required": [
+                  "expected_edit_version"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "draft_id",
+            "expected_edit_version"
+          ],
+          "not": {
+            "required": [
+              "revision_id"
+            ]
+          }
+        }
+      ]
+    },
+    "source-view": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "revision"
+            },
+            "plan_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "document_digest": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            "revision_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "plan_id",
+            "document_digest",
+            "revision_id"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "draft"
+            },
+            "plan_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "document_digest": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            "draft_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "edit_version": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "kind",
+            "plan_id",
+            "document_digest",
+            "draft_id",
+            "edit_version"
+          ]
+        }
+      ]
+    },
+    "rebase-resolution": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "conflict_id": {
+              "type": "string",
+              "minLength": 0
+            },
+            "keep": {
+              "type": "string",
+              "enum": [
+                "yours",
+                "theirs"
+              ]
+            }
+          },
+          "required": [
+            "conflict_id",
+            "keep"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "conflict_id": {
+              "type": "string",
+              "minLength": 0
+            },
+            "new_key": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "required": [
+            "conflict_id",
+            "new_key"
+          ]
+        }
+      ]
+    },
+    "draft-change": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "patch"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 0
+            },
+            "merge_patch": {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "op",
+            "target",
+            "merge_patch"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "add"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "phase",
+                "item",
+                "unit",
+                "requirement",
+                "criterion",
+                "check",
+                "decision",
+                "material",
+                "plan_relation"
+              ]
+            },
+            "entity": {
+              "type": "object",
+              "additionalProperties": {}
+            },
+            "after": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "required": [
+            "op",
+            "kind",
+            "entity"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "remove"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 0
+            },
+            "cascade": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "op",
+            "target"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "move"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 0
+            },
+            "after": {
+              "type": "string",
+              "minLength": 0
+            },
+            "before": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "required": [
+            "op",
+            "target"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "rekey"
+            },
+            "target": {
+              "type": "string",
+              "minLength": 0
+            },
+            "new_key": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "required": [
+            "op",
+            "target",
+            "new_key"
+          ]
+        },
+        {
+          "$ref": "urn:skm:planning:change:replace-text:v1"
+        }
+      ]
+    },
+    "rebase-conflict": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "conflict_id": {
+          "type": "string",
+          "minLength": 0
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "field",
+            "modify_delete",
+            "delete_modify",
+            "key_collision",
+            "schema"
+          ]
+        },
+        "entity_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entity_kind": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "phase",
+                "item",
+                "unit",
+                "requirement",
+                "criterion",
+                "check",
+                "decision",
+                "material"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pointer": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {},
+        "yours": {},
+        "theirs": {},
+        "resolutions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "yours",
+              "theirs",
+              "rekey"
+            ]
+          }
+        },
+        "colliding_entity_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "children_kept": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pointer": {
+                "type": "string",
+                "minLength": 0
+              },
+              "message": {
+                "type": "string",
+                "minLength": 0
+              },
+              "schema_pointer": {
+                "type": "string",
+                "minLength": 0
+              }
+            },
+            "required": [
+              "pointer",
+              "message",
+              "schema_pointer"
+            ]
+          }
+        }
+      },
+      "required": [
+        "conflict_id",
+        "kind",
+        "entity_id",
+        "entity_kind",
+        "key",
+        "field",
+        "pointer",
+        "resolutions",
+        "colliding_entity_id",
+        "children_kept",
+        "issues"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.documents",
+      "class": "Defs",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "Defs"
+    }
+  }
+}

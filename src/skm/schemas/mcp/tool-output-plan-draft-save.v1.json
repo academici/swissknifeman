@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-draft-save:v1",
+  "title": "skm_plan_draft_save output",
+  "description": "Output for the skm_plan_draft_save MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "draft_id": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/draft_id"
+    },
+    "edit_version": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/edit_version"
+    },
+    "document_digest": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/document_digest"
+    },
+    "assigned_ids": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/assigned_ids"
+    },
+    "notes": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/notes"
+    },
+    "findings": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/findings"
+    },
+    "counts": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/counts"
+    },
+    "rule_failures": {
+      "$ref": "urn:skm:planning:result:save-draft:v1#/properties/rule_failures"
+    },
+    "assigned_ids_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "notes_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "findings_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "rule_failures_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "draft_id",
+    "edit_version",
+    "document_digest",
+    "assigned_ids",
+    "notes",
+    "findings",
+    "counts",
+    "rule_failures"
+  ]
+}

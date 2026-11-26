@@ -1,0 +1,28 @@
+{
+  "schema": "urn:skm:execution:fix-brief:v1",
+  "id": "0193a000-0000-7000-8000-000000170021",
+  "task_id": "0193a000-0000-7000-8000-000000000021",
+  "attempt_id": "0193a000-0000-7000-8000-0000000a0021",
+  "source_review_id": null,
+  "source_check_round": 1,
+  "limits": {
+    "max_findings": 12,
+    "max_finding_chars": 3000,
+    "max_inline_evidence_bytes": 4000,
+    "max_total_bytes": 24000
+  },
+  "items": [],
+  "checks": [
+    {
+      "check_key": "P2.1:V1",
+      "exit_code": 1,
+      "tail": "… [clipped 2 097 152 bytes; full: file_version:0193a000-0000-7000-8000-000000110031]\nFAILED tests/api/test_refresh_endpoint.py::test_reuse_returns_401 - assert 200 == 401\n==== 1 failed, 11 passed in 3.41s ====",
+      "tail_bytes": 3920,
+      "full_log_file_version_id": "0193a000-0000-7000-8000-000000110031"
+    }
+  ],
+  "deferred_finding_keys": [],
+  "truncated": true,
+  "full_report_file_version_id": "0193a000-0000-7000-8000-000000110032",
+  "digest": "sha256:1f3a5c7e9a1c3e5a7c9e1a3c5e7a9c1e3a5c7e9a1c3e5a7c9e1a3c5e7a9c1e3a"
+}

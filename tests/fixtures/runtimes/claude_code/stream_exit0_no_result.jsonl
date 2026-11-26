@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"sess_incomplete_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"assistant","message":{"id":"msg_inc_01","model":"claude-sonnet-4-5-20250929","content":[{"type":"text","text":"Assistant text without terminal result record."}],"usage":{"input_tokens":80,"output_tokens":12,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}}

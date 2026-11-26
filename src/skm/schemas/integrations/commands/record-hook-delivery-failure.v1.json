@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:command:record-hook-delivery-failure:v1",
+  "title": "RecordHookDeliveryFailure",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delivery_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "subscription_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "event_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "class": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+    },
+    "failure_policy": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/FailurePolicy"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason": {
+      "type": "string"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    }
+  },
+  "required": [
+    "delivery_id",
+    "subscription_id",
+    "subscription_digest",
+    "event_id",
+    "event_type",
+    "class",
+    "failure_policy",
+    "attempts",
+    "reason",
+    "status",
+    "scope"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.commands",
+      "class": "RecordHookDeliveryFailure",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RecordHookDeliveryFailure"
+    }
+  }
+}

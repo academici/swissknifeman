@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:view:graph-indexes:v1",
+  "title": "GraphIndexesView",
+  "description": "The latest visible index for each source and repository.",
+  "type": "array",
+  "items": {
+    "$ref": "urn:skm:knowledge:view:graph-index:v1"
+  }
+}

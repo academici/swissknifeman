@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:finding-catalog:v1",
+  "title": "FindingCatalog",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "const": "urn:skm:planning:finding-catalog:v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "severities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "warning": {
+          "type": "string"
+        },
+        "info": {
+          "type": "string"
+        }
+      }
+    },
+    "dropped_legacy_codes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "codes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]+$"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "rule_module": {
+            "type": "string",
+            "pattern": "^skm\\.modules\\.planning\\.domain\\.validation\\."
+          },
+          "description": {
+            "type": "string"
+          },
+          "legacy_codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "configurable_by": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "category",
+          "rule_module",
+          "description",
+          "legacy_codes"
+        ]
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "version",
+    "severities",
+    "dropped_legacy_codes",
+    "codes"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.documents",
+      "class": "FindingCatalog",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "FindingCatalog"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:memory-search:v1",
+  "title": "skm_memory_search output",
+  "description": "Output for the skm_memory_search MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "project"
+            ],
+            "default": "project"
+          },
+          "expires_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "entry_id",
+          "key",
+          "text",
+          "scope",
+          "expires_at"
+        ]
+      }
+    },
+    "items_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "items"
+  ]
+}

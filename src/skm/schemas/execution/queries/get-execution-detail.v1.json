@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:query:get-execution-detail:v1",
+  "title": "GetExecutionDetail",
+  "description": "Resolve exactly one execution entity to its owning run.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [],
+  "minProperties": 1,
+  "maxProperties": 1,
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.detail",
+      "class": "GetExecutionDetail",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution-detail.ts",
+      "name": "GetExecutionDetail"
+    }
+  }
+}

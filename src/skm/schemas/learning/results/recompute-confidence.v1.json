@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:result:recompute-confidence:v1",
+  "title": "RecomputeConfidenceResult",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recomputed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "transitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "to_candidate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deprecated": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "curated_ready": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lesson_decay": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "to_candidate",
+        "deprecated",
+        "curated_ready",
+        "lesson_decay"
+      ]
+    }
+  },
+  "required": [
+    "recomputed",
+    "transitions"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.results",
+      "class": "RecomputeConfidenceResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "RecomputeConfidenceResult"
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:task-created:v1",
+  "title": "TaskCreated",
+  "description": "Trusted execution emitter records closed domain fields and cause in the transition UoW. The history builder derives nodes/edges; no independently emitted generic facts snapshot. Observation is metadata, never lifecycle authority. Payload <=256KiB. See execution-history.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "unit",
+        "item",
+        "item_gate",
+        "phase_gate",
+        "plan_acceptance",
+        "integration",
+        "followup",
+        "group_review",
+        "plan_audit",
+        "adhoc"
+      ]
+    },
+    "revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entity_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "origin": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_task_id": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "finding_ids": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              }
+            },
+            "reason_code": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            }
+          },
+          "required": [
+            "source_task_id",
+            "finding_ids",
+            "reason_code"
+          ]
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "initial_state": {
+      "type": "string",
+      "enum": [
+        "blocked",
+        "ready"
+      ]
+    },
+    "position": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "parent_task_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "task_id",
+    "kind",
+    "revision_id",
+    "entity_id",
+    "origin",
+    "cause",
+    "run_id",
+    "workspace_id",
+    "project_id",
+    "initial_state",
+    "position",
+    "parent_task_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "TaskCreated",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "TaskCreated"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "cause": {
+          "properties": {
+            "trigger_kind": {
+              "not": {
+                "const": "observation"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

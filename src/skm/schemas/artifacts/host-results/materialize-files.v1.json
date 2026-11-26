@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:host-result:materialize-files:v1",
+  "title": "MaterializeFilesReport",
+  "description": "artifacts host-result contract from the owning specification.",
+  "type": "array",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.host",
+      "class": "MaterializeFilesReport",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "MaterializeFilesReport"
+    }
+  },
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "file_version_id": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      },
+      "relative_path": {
+        "type": "string"
+      },
+      "size_bytes": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "digest": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+      }
+    },
+    "required": [
+      "file_version_id",
+      "relative_path",
+      "size_bytes",
+      "digest"
+    ]
+  }
+}

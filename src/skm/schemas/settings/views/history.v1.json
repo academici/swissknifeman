@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:view:history:v1",
+  "title": "HistoryView",
+  "description": "settings view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "entry_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+    },
+    "change_kind": {
+      "type": "string",
+      "enum": [
+        "created",
+        "updated",
+        "removed",
+        "locked",
+        "unlocked"
+      ]
+    },
+    "old_op": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "set",
+            "unset",
+            "append"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "old_value": {
+      "description": "JSON value; value-specific validation belongs to the owner."
+    },
+    "old_locked": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "new_op": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "set",
+            "unset",
+            "append"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "new_value": {
+      "description": "JSON value; value-specific validation belongs to the owner."
+    },
+    "new_locked": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "actor_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "request_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "changed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "id",
+    "entry_id",
+    "scope_id",
+    "key",
+    "change_kind",
+    "old_op",
+    "old_value",
+    "old_locked",
+    "new_op",
+    "new_value",
+    "new_locked",
+    "actor_id",
+    "request_id",
+    "reason",
+    "generation",
+    "changed_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "HistoryView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "HistoryView"
+    }
+  }
+}

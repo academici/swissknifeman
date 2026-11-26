@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Edit(src/**)",
+      "Write(src/**)",
+      "Edit(tests/**)",
+      "Write(tests/**)",
+      "Bash(uv run pytest *)",
+      "Bash(uv run ruff *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "WebFetch(domain:docs.python.org)",
+      "TodoWrite"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Bash(sudo *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/team-audit.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface lifecycle.git_guardrails --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface security.safe_dirs --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface lifecycle.plan_guard --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface lifecycle.pack_guard --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface lifecycle.review_gate --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook PreToolUse --target claude_code --surface custom.subscriptions --class enforcement --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook SubagentStop --target claude_code --surface lifecycle.review_gate --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "skm-hook SessionStart --target claude_code --surface context.session_start --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60"
+          }
+        ]
+      }
+    ]
+  }
+}

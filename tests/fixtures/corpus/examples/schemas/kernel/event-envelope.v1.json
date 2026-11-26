@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:kernel:event-envelope:v1",
+  "title": "EventEnvelope",
+  "description": "A stored domain event as delivered to subscribers, SSE clients and exports. Semantically a superset of legacy event/v1 (CloudEvents subset).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "type",
+    "schema_version",
+    "stream_kind",
+    "stream_id",
+    "stream_seq",
+    "correlation_id",
+    "occurred_at",
+    "recorded_at",
+    "payload"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^urn:skm:[a-z][a-z0-9-]*:event:[a-z][a-z0-9-]*:v[1-9][0-9]*$"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workspace_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stream_kind": {
+      "type": "string",
+      "enum": [
+        "workspace",
+        "project",
+        "plan",
+        "run",
+        "file",
+        "pack",
+        "config",
+        "principal",
+        "host",
+        "intent",
+        "projection",
+        "memory",
+        "lesson",
+        "candidate"
+      ]
+    },
+    "stream_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stream_seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workspace_seq": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "actor_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "request_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Root of the causal chain; inherited by every command and event caused by it."
+    },
+    "causation_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Request id of the producing command (RequestMeta.request_id); its own cause is preserved separately in parent_causation_id. Diagnostic context never grants authority."
+    },
+    "parent_causation_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 64
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Producing command's RequestMeta.causation_id: the parent event or command id, or null when absent. Older envelopes may omit this field and readers treat omission as null. Caller-supplied identifiers do not prove a causal edge or confer authority."
+    },
+    "occurred_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "recorded_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "global_position": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.kernel.generated.events",
+      "class": "EventEnvelopeDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "kernel.ts",
+      "name": "EventEnvelope"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "workspace_id": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "workspace_id"
+        ]
+      },
+      "then": {
+        "properties": {
+          "workspace_seq": {
+            "type": "null"
+          },
+          "global_position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "global_position"
+        ]
+      },
+      "else": {
+        "properties": {
+          "global_position": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+# .claude/skills after `skm integrations apply` (ownership managed_file; one record per file in projection_files)
+.claude/skills/
+├── skm-planning/                 # core skill (integrations.skills.include_core = true)
+│   ├── SKILL.md                  # frontmatter: name, description (≤ 1536 chars in the listing) + body
+│   └── references/
+│       └── plan-schema.md
+├── skm-memory/
+│   └── SKILL.md
+├── python-testing/               # integrations.skills.presets = ["python"] → closure over requires
+│   └── SKILL.md
+└── team-release-notes/           # NOT managed: created by a person; skm never reads, changes or removes it
+    └── SKILL.md
+# A file of a managed skill edited by hand → next apply writes <file>.skm-new and the projection becomes drifted.
+# A skill removed from the selection → REMOVE_OWNED if unchanged since our write, LEAVE_MODIFIED otherwise.

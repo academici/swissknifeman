@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:command:review-candidate:v1",
+  "title": "ReviewCandidate",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "verdict": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/ReviewVerdict"
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "edited_trigger": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "edited_action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "edited_kind": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+    },
+    "proposal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "workspace_id",
+    "candidate_id",
+    "verdict",
+    "expected_row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.commands",
+      "class": "ReviewCandidate",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "ReviewCandidate"
+    }
+  },
+  "if": {
+    "properties": {
+      "verdict": {
+        "const": "edit"
+      }
+    }
+  },
+  "then": {
+    "anyOf": [
+      {"required": ["edited_trigger"]},
+      {"required": ["edited_action"]},
+      {"required": ["edited_kind"]}
+    ]
+  }
+}

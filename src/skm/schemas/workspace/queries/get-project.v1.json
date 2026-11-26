@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:query:get-project:v1",
+  "title": "GetProject",
+  "description": "workspace query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_slug": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/slug"
+    },
+    "project_slug": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/slug"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.queries",
+      "class": "GetProject",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "GetProject"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "project_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "workspace_slug"
+            ]
+          },
+          {
+            "required": [
+              "project_slug"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "workspace_slug",
+        "project_slug"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "project_id"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

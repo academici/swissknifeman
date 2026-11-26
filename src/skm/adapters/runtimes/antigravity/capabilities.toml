@@ -1,0 +1,154 @@
+# urn:skm:runtimes:capabilities:v1
+runtime_id = "antigravity"
+adapter_version = "0.1.0"
+read_only_network = true
+
+[config_isolation]
+env = {}
+args = []
+credential_mounts = []
+writable_home_dirs = []
+
+[[self_loads]]
+kind = "project_settings"
+locator = "{workdir}"
+files = [".agents/hooks.json", ".agents/mcp_config.json", ".agents/plugins/**", ".mcp.json"]
+when = "start"
+suppressed_by = "never"
+note = "No verified disable switch for workspace customization"
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["AGENTS.md", "GEMINI.md", ".agents/AGENTS.md", ".agents/GEMINI.md", ".agents/rules/*.md", ".agent/rules/*.md"]
+when = "start"
+suppressed_by = "never"
+note = "Workspace and parent rules are discovered by AGY"
+
+[[self_loads]]
+kind = "skills"
+locator = "{workdir}"
+files = [".agents/skills/**", ".agent/skills/**"]
+when = "on_access"
+suppressed_by = "never"
+note = "Workspace skills are discovered by AGY"
+
+[[records]]
+capability = "headless_execution"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Supervised read-only Landlock launch; no tool approval bypass"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "structured_result"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Final response validated by the host"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "stream_events"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Session start and assistant responses; tool coverage unavailable"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "session_resume"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Single-turn SKM binding"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "tool_interception"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "No verified policy broker"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Host verification required for supervised local process cleanup"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "usage_reporting"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Fresh input unknown unless AGY reports zero cache hits"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "workspace_binding"
+status = "adapted"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Bound to an owned checkout by the host launcher"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "native_subagents"
+status = "unknown"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "No verified isolation or usage coverage"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "mcp_support"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "SKM does not bind MCP servers into the headless adapter"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "permission_flags"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "No complete SKM tool policy mapping"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "sandbox_native"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "AGY terminal sandbox is not full process isolation"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "effort_control"
+status = "native"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Supported efforts depend on the model"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "model_selection"
+status = "native"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Init must match the requested CLI selector"
+last_verified_at = "2026-11-20"
+
+[[records]]
+capability = "config_isolation"
+status = "unsupported"
+evidence = "agy 1.5.13 --help and stream contract tests"
+tested_runtime_version = "1.5.13"
+limitations = "Private HOME and XDG paths do not disable workspace customization"
+last_verified_at = "2026-11-20"

@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-role-maintainer"
+version = "1.0.1"
+title = "Migrated Agent Pack: Repository Maintainer"
+description = "Neutral backward-compatibility, changelog hygiene, and regression stewardship lens migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-role-maintainer.md"
+path = ".claude/agents/{prefix}-role-maintainer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-role-maintainer.toml"
+path = ".codex/agents/{prefix}-role-maintainer.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-role-maintainer.md"
+path = ".cursor/agents/{prefix}-role-maintainer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/role-maintainer.md"
+path = ".claude/rules/role-maintainer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/role-maintainer.md"
+path = ".codex/rules/role-maintainer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/role-maintainer.mdc"
+path = ".cursor/rules/role-maintainer.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/role-maintainer.md"
+path = ".grok/rules/role-maintainer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/role-maintainer.md"
+path = ".agents/rules/role-maintainer.md"
+ownership = "managed_file"

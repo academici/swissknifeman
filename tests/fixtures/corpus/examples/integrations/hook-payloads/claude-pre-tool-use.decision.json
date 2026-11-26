@@ -1,0 +1,22 @@
+{
+  "schema": "urn:skm:integrations:host:hook-decision:v1",
+  "surface": "lifecycle.git_guardrails",
+  "mode": "strict",
+  "verdict": "deny",
+  "reason_code": "GIT_FORCE_PUSH",
+  "user_message": "skm git_guardrails: force push without --force-with-lease is blocked; use git push --force-with-lease",
+  "agent_message": "skm git_guardrails: force push without --force-with-lease is blocked; use git push --force-with-lease",
+  "additional_context": null,
+  "client_output": {
+    "exit_code": 0,
+    "stdout": {
+      "hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": "skm git_guardrails: force push without --force-with-lease is blocked; use git push --force-with-lease"
+      },
+      "systemMessage": "skm git_guardrails: force push without --force-with-lease is blocked; use git push --force-with-lease"
+    },
+    "stderr": ""
+  }
+}

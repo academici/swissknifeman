@@ -1,0 +1,12 @@
+FROM python:3.12.16-bookworm@sha256:4209fae09a3e20afd863e528bfddc235da5fd5977983e1996cd54cc9a72e6267 AS worker
+# The base image includes Git and its dependencies.
+RUN --network=none groupadd --gid 10001 skm \
+    && useradd --uid 10001 --gid 10001 --home-dir /var/lib/skm skm \
+    && install -d -o 10001 -g 10001 -m 0700 /var/lib/skm
+# skm_package is the API build context declared in Compose. Both services use the same wheel.
+COPY --from=skm_package /opt/skm /opt/skm
+ENV PATH="/opt/skm/bin:$PATH" HOME=/var/lib/skm PYTHONDONTWRITEBYTECODE=1
+WORKDIR /var/lib/skm
+USER 10001:10001
+ENTRYPOINT ["skm"]
+CMD ["worker", "start"]

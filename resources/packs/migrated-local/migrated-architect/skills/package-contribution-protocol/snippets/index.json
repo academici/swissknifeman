@@ -1,0 +1,25 @@
+{
+  "skill": "package-contribution-protocol",
+  "snippets": [
+    {
+      "file": "proposal-issue.md",
+      "description": "Template [PROPOSAL] issue to add functionality to a dependent package",
+      "tags": ["governance", "issue", "proposal"]
+    },
+    {
+      "file": "adr-template.md",
+      "description": "ADR to change the package's public contract (alternatives, consequences, version)",
+      "tags": ["adr", "architecture", "semver"]
+    },
+    {
+      "file": "claude-md-priority.md",
+      "description": "Generic-block «first priority» for root CLAUDE.md package consumer project",
+      "tags": ["claude-md", "boundary", "priority"]
+    },
+    {
+      "file": "permissions-deny.md",
+      "description": "Fragment permissions.deny to block writing to a dependent package (vendor/path-repo)",
+      "tags": ["permissions", "boundary", "claude-code"]
+    }
+  ]
+}

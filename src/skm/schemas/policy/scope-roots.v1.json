@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:scope-roots:v1",
+  "title": "ScopeRoots",
+  "description": "Absolute, already resolved (realpath) roots of one attempt or hook session against which check_tool_call classifies paths (policy.md §§4.2, 5.3). The host computes them before any IO; they describe scopes, they do not grant access.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worktrees": {
+      "type": "object",
+      "description": "Mount name → root of the attempt worktree (hook: root of the checkout).",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/absolute_path"
+      }
+    },
+    "materials": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/absolute_path"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tmp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/absolute_path"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "home": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/absolute_path"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "safe_dirs": {
+      "type": "array",
+      "description": "policy.safe_dirs of the host (read-only scope safe_dir).",
+      "items": {
+        "$ref": "#/$defs/absolute_path"
+      },
+      "uniqueItems": true
+    },
+    "protected": {
+      "type": "array",
+      "description": "SKM state roots (state_dir, blobs, backups, worktrees_root, materialized_root): refused for every profile unless inside an own root.",
+      "items": {
+        "$ref": "#/$defs/absolute_path"
+      },
+      "uniqueItems": true
+    },
+    "remote_hosts": {
+      "type": "array",
+      "description": "Hosts of the project remotes: hints for the destination of git without a URL; they never lift a network restriction.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "worktrees",
+    "materials",
+    "tmp",
+    "home",
+    "safe_dirs",
+    "protected",
+    "remote_hosts"
+  ],
+  "$defs": {
+    "absolute_path": {
+      "type": "string",
+      "pattern": "^/",
+      "minLength": 1,
+      "maxLength": 4096
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "ScopeRoots",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ScopeRoots"
+    }
+  }
+}

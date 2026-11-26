@@ -1,0 +1,20 @@
+{
+  "skill": "codebase-design",
+  "snippets": [
+    {
+      "file": "DEEPENING.md",
+      "description": "Deepening the module cluster taking into account dependencies: dependency categories, discipline seam'ah, testing «replace, do not layer»",
+      "tags": ["deep-modules", "dependencies", "seam", "testing"]
+    },
+    {
+      "file": "DESIGN-IT-TWICE.md",
+      "description": "Design twice: parallel sub-agents design the interface in several radically different ways, then compare depth/locality/seam",
+      "tags": ["design", "alternatives", "interface", "subagents"]
+    },
+    {
+      "file": "HTML-REPORT.md",
+      "description": "Visual HTML-report on deepening-capabilities (before/after, Tailwind+Mermaid CDN) from improve-codebase-architecture; optional, depends on xdg-open/browser",
+      "tags": ["architecture", "report", "html", "deepening", "optional"]
+    }
+  ]
+}

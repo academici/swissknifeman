@@ -1,0 +1,155 @@
+# urn:skm:runtimes:capabilities:v1 for built-in cursor runtime adapter (P08.05).
+# Honest capability matrix: headless CLI contract is not verified in v1 (adapters.md §5.9).
+runtime_id = "cursor"
+adapter_version = "0.1.0"
+read_only_network = false
+
+[config_isolation]
+env = {}
+args = []
+credential_mounts = []
+writable_home_dirs = []
+
+[[self_loads]]
+kind = "user_config"
+locator = "~/.cursor"
+files = ["cli-config.json"]
+when = "start"
+suppressed_by = "never"
+note = "not verified; headless contract unknown"
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["AGENTS.md", ".cursor/rules/**"]
+when = "start"
+suppressed_by = "never"
+note = "not verified; headless contract unknown"
+
+[[self_loads]]
+kind = "project_settings"
+locator = "{workdir}/.cursor"
+files = [".cursor/**"]
+when = "start"
+suppressed_by = "never"
+note = "not verified; headless contract unknown"
+
+[[records]]
+capability = "headless_execution"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "structured_result"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "stream_events"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "session_resume"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "tool_interception"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "usage_reporting"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "workspace_binding"
+status = "native"
+evidence = "probe:cursor_version"
+tested_runtime_version = "0.1.0"
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "native_subagents"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "mcp_support"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "permission_flags"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "sandbox_native"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "effort_control"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "model_selection"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "config_isolation"
+status = "unknown"
+evidence = "unverified:cursor_headless"
+tested_runtime_version = ""
+limitations = "not verified; headless contract unknown"
+last_verified_at = "2026-10-26"

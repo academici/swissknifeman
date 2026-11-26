@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:session-event:v1",
+  "title": "SessionEvent",
+  "description": "One normalized event of an agent session (spec/modules/runtimes.md §4.6). Closed union on 'type'; seq is monotonic within the session; exactly one terminal event (session_completed | session_failed) ends the stream; cancel_ignored is non-terminal; session_completed only after the provider's native terminal event (otherwise session_failed RUNTIME_STREAM_INCOMPLETE); usage_reported precedes session_failed. Example: examples/runtimes/session-events.jsonl (one event per line).",
+  "$defs": {
+    "provider_failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error_class",
+        "code",
+        "retryable",
+        "safe_message",
+        "retry_after_seconds",
+        "scope",
+        "evidence"
+      ],
+      "properties": {
+        "error_class": {
+          "type": "string",
+          "enum": [
+            "authentication",
+            "authorization",
+            "quota",
+            "rate_limit",
+            "invalid_request",
+            "model_unavailable",
+            "content_policy",
+            "transport",
+            "provider_internal",
+            "timeout",
+            "context_limit",
+            "crash",
+            "cancelled",
+            "unknown"
+          ],
+          "x-skm-enum-name": "ErrorClass"
+        },
+        "code": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/error-code"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "safe_message": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "retry_after_seconds": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "request",
+                "session",
+                "account",
+                "provider"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "enum": [
+            "structured",
+            "text",
+            "process"
+          ]
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": "Safe scalar details of a process outcome (runtimes.md §4.9): exit_code, last_event_type, kind, reason."
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "session_ref",
+        "model",
+        "runtime_version"
+      ],
+      "properties": {
+        "type": {
+          "const": "session_started"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "session_ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtime_version": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "channel",
+        "text"
+      ],
+      "properties": {
+        "type": {
+          "const": "text_delta"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "assistant",
+            "reasoning"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "call_id",
+        "tool",
+        "args_preview",
+        "args_digest"
+      ],
+      "properties": {
+        "type": {
+          "const": "tool_requested"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "call_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "args_preview": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "args_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "call_id",
+        "status",
+        "duration_ms"
+      ],
+      "properties": {
+        "type": {
+          "const": "tool_completed"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "call_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error",
+            "denied"
+          ]
+        },
+        "duration_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "usage",
+        "cumulative"
+      ],
+      "properties": {
+        "type": {
+          "const": "usage_reported"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "usage": {
+          "$ref": "urn:skm:runtimes:usage-report:v1"
+        },
+        "cumulative": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "session_ref"
+      ],
+      "properties": {
+        "type": {
+          "const": "checkpoint_available"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "session_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "signal"
+      ],
+      "properties": {
+        "type": {
+          "const": "cancel_ignored"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "signal": {
+          "type": "string",
+          "enum": [
+            "SIGINT",
+            "SIGTERM"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "stop_reason",
+        "final_text_digest"
+      ],
+      "properties": {
+        "type": {
+          "const": "session_completed"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "stop_reason": {
+          "type": "string",
+          "enum": [
+            "end_turn",
+            "max_turns",
+            "max_tokens",
+            "stop_sequence",
+            "other"
+          ]
+        },
+        "final_text_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "seq",
+        "at",
+        "failure"
+      ],
+      "properties": {
+        "type": {
+          "const": "session_failed"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "failure": {
+          "$ref": "#/$defs/provider_failure"
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.session_events",
+      "class": "SessionEventDto",
+      "kind": "union",
+      "discriminator": "type"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "SessionEvent"
+    }
+  }
+}

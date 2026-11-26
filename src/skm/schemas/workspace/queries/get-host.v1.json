@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:query:get-host:v1",
+  "title": "GetHost",
+  "description": "workspace query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.queries",
+      "class": "GetHost",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "GetHost"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "host_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "name"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "name"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "host_id"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

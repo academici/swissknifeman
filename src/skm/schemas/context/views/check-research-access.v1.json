@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:view:check-research-access:v1",
+  "title": "ResearchAccessView",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "allowed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "allowed"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.views",
+      "class": "ResearchAccessView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ResearchAccessView"
+    }
+  }
+}

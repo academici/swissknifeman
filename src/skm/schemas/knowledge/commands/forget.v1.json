@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:command:forget:v1",
+  "title": "Forget",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entry_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/MemoryScopeKind"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "active_handoff"
+      ]
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.commands",
+      "class": "Forget",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "Forget"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "entry_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "scope"
+            ]
+          },
+          {
+            "required": [
+              "kind"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "scope",
+        "kind"
+      ],
+      "not": {
+        "required": [
+          "entry_id"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:event:token-created:v1",
+  "title": "TokenCreatedPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token_id",
+    "principal_id",
+    "kind",
+    "name",
+    "prefix",
+    "scope_id",
+    "expires_at"
+  ],
+  "properties": {
+    "token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/token_kind"
+    },
+    "name": {
+      "type": "string"
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^[a-z2-7]{8}$"
+    },
+    "scope_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expires_at": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.events",
+      "class": "TokenCreatedPayload",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "TokenCreatedPayload"
+    }
+  }
+}

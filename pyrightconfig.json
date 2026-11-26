@@ -1,0 +1,15 @@
+{
+  "include": ["src", "tests"],
+  "exclude": ["**/__pycache__", "web", "src/skm/**/generated", "tests/architecture/fixtures", "tests/fixtures/plugins"],
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "basic",
+  "strict": ["src"],
+  "reportMissingTypeStubs": "none",
+  "reportUnnecessaryTypeIgnoreComment": "error",
+  "reportImplicitOverride": "error",
+  "reportPrivateUsage": "error",
+  "executionEnvironments": [
+    { "root": "src" },
+    { "root": "tests", "extraPaths": ["."], "reportPrivateUsage": "none" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "skill": "laravel-security-audit",
+  "snippets": [
+    {
+      "file": "security-audit-scheduled.yml",
+      "description": "Template GitHub Actions: weekly background security-audit Laravel, result - Issue with severity",
+      "tags": ["github-actions", "background-agent", "security"]
+    }
+  ]
+}

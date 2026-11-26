@@ -1,0 +1,35 @@
+{
+  "contract": "urn:skm:execution:event:runtime-start-admitted:v1",
+  "value": {
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "workspace_id": "01928f61-0000-7000-8000-000000000040",
+    "project_id": "01928f61-0000-7000-8000-000000000041",
+    "task_id": "01928f61-0000-7000-8000-000000000002",
+    "attempt_id": "01928f61-0000-7000-8000-000000000003",
+    "stage_record_id": "01928f61-0000-7000-8000-000000000004",
+    "step_ids": [
+      "01928f61-0000-7000-8000-000000000005"
+    ],
+    "assignment_id": "01928f61-0000-7000-8000-000000000030",
+    "fencing_token": 1,
+    "step_bindings": [
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000005",
+        "context_manifest_id": "01928f61-0000-7000-8000-000000000050",
+        "effective_config_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "route_snapshot_digest": "sha256:172f652967fd726d96d47c6c2ddbac8f1d602d65b3f4d7472b0e557087c5798b"
+      }
+    ],
+    "cause": {
+      "trigger_kind": "stage_outcome",
+      "advance_rule": "K5b",
+      "reason_codes": [],
+      "refs": [
+        {
+          "kind": "run",
+          "id": "01928f61-0000-7000-8000-000000000001"
+        }
+      ]
+    }
+  }
+}

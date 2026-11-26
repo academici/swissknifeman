@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "figma-mcp-core"
+version = "0.1.0"
+kind = "domain"
+risk = "low"
+license = "Apache-2.0"
+roles = ["advisor", "executor"]
+requires_tools = ["mcp__figma__tools"]
+
+[provenance]
+source = "local"

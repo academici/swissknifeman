@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:host-result:derive-project-graph:v1",
+  "title": "DeriveProjectGraphResult",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.host",
+      "class": "DeriveProjectGraphResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "DeriveProjectGraphResult"
+    }
+  }
+}

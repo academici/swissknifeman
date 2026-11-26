@@ -1,0 +1,12 @@
+{
+  "session_id": "4f6c2a1e-9b7d-4c3a-8e21-7d5b3c9a0f12",
+  "transcript_path": "/home/dev/.claude/projects/-home-dev-demo/4f6c2a1e.jsonl",
+  "cwd": "/home/dev/demo",
+  "permission_mode": "acceptEdits",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "git push --force origin main",
+    "description": "Push the branch"
+  }
+}

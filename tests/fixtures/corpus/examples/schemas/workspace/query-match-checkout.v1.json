@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:query:match-checkout:v1",
+  "title": "MatchCheckout",
+  "description": "Read-only decision: which project/repository an observed checkout belongs to (marker, then remotes, then a new repository). Returns AttachDecisionView; writes nothing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "host_id",
+    "observed_exists",
+    "observed_toplevel",
+    "observed_remotes",
+    "observed_head",
+    "observed_marker"
+  ],
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "observed_exists": {
+      "type": "boolean"
+    },
+    "observed_toplevel": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_remotes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+      },
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "observed_head": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/git_object_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_marker": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:workspace:checkout-marker:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "project_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "mount_name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name",
+      "default": "main"
+    },
+    "assume_yes": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.queries",
+      "class": "MatchCheckout",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "MatchCheckout"
+    }
+  }
+}

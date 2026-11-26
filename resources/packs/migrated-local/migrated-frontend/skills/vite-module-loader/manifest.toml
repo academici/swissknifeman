@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "vite-module-loader"
+version = "0.1.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "vite"
+
+[provenance]
+source = "local"

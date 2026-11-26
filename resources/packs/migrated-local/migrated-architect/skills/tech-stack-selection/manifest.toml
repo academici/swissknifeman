@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "tech-stack-selection"
+version = "0.1.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+requires = ["brd", "ecosystem-reuse-gate"]
+exclusive_group = "architect-stage"
+
+[provenance]
+source = "local"

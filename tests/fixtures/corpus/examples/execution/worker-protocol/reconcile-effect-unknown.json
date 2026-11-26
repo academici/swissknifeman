@@ -1,0 +1,23 @@
+{
+  "command": "execution.record_stage_result",
+  "outcome_contract": "urn:skm:execution:stage-outcome-integrate:v1",
+  "note": "Synthetic admin read-only reconciliation; server Assignment.reconcile_effect_id is authoritative. No workflow advance or new publication.",
+  "request": {
+    "claim": {
+      "assignment_id": "01930000-0000-7000-8000-000000000081",
+      "attempt_id": "01930000-0000-7000-8000-000000000071",
+      "worker_id": "01930000-0000-7000-8000-000000000061",
+      "fencing_token": 1
+    },
+    "stage_record_id": "01930000-0000-7000-8000-000000000051",
+    "outcome_kind": "success",
+    "outcome": {
+      "reconciled_effect": {
+        "effect_id": "01930000-0000-7000-8000-000000000091",
+        "request_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "state": "outcome_unknown",
+        "reason_code": "OUTCOME_UNKNOWN"
+      }
+    }
+  }
+}

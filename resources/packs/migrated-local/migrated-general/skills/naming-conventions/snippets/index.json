@@ -1,0 +1,10 @@
+{
+  "skill": "naming-conventions",
+  "snippets": [
+    {
+      "file": "naming-gallery.md",
+      "description": "Cross-language table «bad → good»: functions, classes, variables, booleans, collections, tests, symmetry - for review or insertion into CLAUDE.md",
+      "tags": ["naming", "readability", "review", "claude-md"]
+    }
+  ]
+}

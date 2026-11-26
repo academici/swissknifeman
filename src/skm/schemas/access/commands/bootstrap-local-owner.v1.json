@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:command:bootstrap-local-owner:v1",
+  "title": "BootstrapLocalOwner",
+  "description": "access command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "token_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "default": "local-owner"
+    },
+    "password": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 1024,
+          "x-skm-secret": true
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "display_name"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.commands",
+      "class": "BootstrapLocalOwner",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "BootstrapLocalOwner"
+    }
+  }
+}

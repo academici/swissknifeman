@@ -1,0 +1,22 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "legal"
+version = "1.0.0"
+kind = "router"
+risk = "low"
+license = "MIT"
+roles = ["reviewer"]
+
+[provenance]
+source = "upstream"
+repo = "get-zeked/legal-super-skill"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "90db165c35aedcd5b8954f19d7485862ab77503d48c90b955e7b9adccd00235c"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "references/full.md"
+url = "https://raw.githubusercontent.com/get-zeked/legal-super-skill/main/SKILL.md"
+sha256 = "90db165c35aedcd5b8954f19d7485862ab77503d48c90b955e7b9adccd00235c"
+fetched_at = "2026-06-11"

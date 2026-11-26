@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:error-rules:v1",
+  "title": "ErrorRules",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime_id": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+          },
+          "error_class": {
+            "type": "string",
+            "enum": [
+              "authentication",
+              "authorization",
+              "quota",
+              "rate_limit",
+              "invalid_request",
+              "model_unavailable",
+              "content_policy",
+              "transport",
+              "provider_internal",
+              "timeout",
+              "context_limit",
+              "crash",
+              "cancelled",
+              "unknown"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 0
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "request",
+              "session",
+              "account",
+              "provider"
+            ]
+          },
+          "signal_any": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "integer",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "signal_not_in": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "integer",
+                  "number",
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          },
+          "text_contains_any": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          },
+          "retryable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "safe_message": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "retry_after_from": {
+            "anyOf": [
+              {
+                "const": "limit_resets_at"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "runtime_id",
+          "error_class",
+          "code",
+          "scope",
+          "signal_any",
+          "signal_not_in",
+          "text_contains_any",
+          "retryable",
+          "safe_message",
+          "retry_after_from"
+        ]
+      }
+    }
+  },
+  "required": [
+    "rules"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.documents",
+      "class": "ErrorRules",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ErrorRules"
+    }
+  }
+}

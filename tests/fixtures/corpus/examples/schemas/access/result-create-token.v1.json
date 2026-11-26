@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:result:create-token:v1",
+  "title": "CreateTokenResult",
+  "description": "The only document that ever carries the token secret. Surfaces print it once and never log it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "token_id",
+    "prefix",
+    "secret",
+    "expires_at"
+  ],
+  "properties": {
+    "token_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^[a-z2-7]{8}$"
+    },
+    "secret": {
+      "type": "string",
+      "pattern": "^skm_[a-z2-7]{8}_[A-Za-z0-9_-]{43}$",
+      "x-skm-sensitive": true
+    },
+    "expires_at": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.results",
+      "class": "CreateTokenResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "CreateTokenResult"
+    }
+  }
+}

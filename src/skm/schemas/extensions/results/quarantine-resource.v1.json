@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:result:quarantine-resource:v1",
+  "title": "QuarantineResourceResult",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "resource_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "quarantined": {
+      "const": true
+    }
+  },
+  "required": [
+    "resource_version_id",
+    "quarantined"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.results",
+      "class": "QuarantineResourceResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "QuarantineResourceResult"
+    }
+  }
+}

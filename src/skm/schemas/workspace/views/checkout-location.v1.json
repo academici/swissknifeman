@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:view:checkout-location:v1",
+  "title": "CheckoutLocationView",
+  "description": "workspace view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "local_locator": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "missing",
+        "mismatched",
+        "removed"
+      ]
+    },
+    "is_stale": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "binding_id",
+    "repository_id",
+    "local_locator",
+    "state",
+    "is_stale"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.views",
+      "class": "CheckoutLocationView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "CheckoutLocationView"
+    }
+  }
+}

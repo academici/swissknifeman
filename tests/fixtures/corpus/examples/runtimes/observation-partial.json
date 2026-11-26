@@ -1,0 +1,40 @@
+{
+  "schema": "urn:skm:runtimes:runtime-observation:v1",
+  "request_id": "01928f61-3333-7aaa-8bbb-2c3d4e5f6a7c",
+  "binding": {
+    "runtime_id": "fake",
+    "runtime_version": "0.0.0",
+    "adapter_version": "0.0.0",
+    "executable_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "verification_key": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "provider_reported_model": "fake-provider-reported",
+    "model_source": "provider_stream"
+  },
+  "timing": {
+    "clock_domain_id": "01928f61-4444-7aaa-8bbb-2c3d4e5f6a7c",
+    "duration_ms": 142,
+    "first_observed_at": "2026-10-26T10:00:00.000Z",
+    "last_observed_at": "2026-10-26T09:59:00.142Z",
+    "provider_first_at": "2026-10-26T09:58:00Z",
+    "provider_last_at": "2026-10-26T09:58:01Z"
+  },
+  "capture": {
+    "coverage": "partial",
+    "bytes_seen": 4096,
+    "bytes_retained": 2048,
+    "bytes_dropped": 2048,
+    "truncated": true,
+    "gaps": [
+      "capture_gap",
+      "live_delivery_gap"
+    ],
+    "parser_flags": [
+      "parser_limit"
+    ],
+    "live_events_dropped": 5
+  },
+  "tools": {
+    "coverage": "partial",
+    "observed_calls": 2
+  }
+}

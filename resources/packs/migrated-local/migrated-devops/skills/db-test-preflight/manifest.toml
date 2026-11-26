@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "db-test-preflight"
+version = "0.1.0"
+kind = "domain"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["docker-postgres"]
+
+[provenance]
+source = "local"

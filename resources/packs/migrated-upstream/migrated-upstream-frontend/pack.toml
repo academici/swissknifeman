@@ -1,0 +1,35 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-upstream-frontend"
+version = "1.0.1"
+title = "Migrated Upstream Skills: Frontend, Vue & TypeScript"
+description = "Reproducibly migrated upstream-mirrored third-party skills for Frontend, Vue & TypeScript (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "js-style"
+max = 1
+description = "One style skill by the project config: upstream opinion conflicts with project policy."
+
+[[exclusive_groups]]
+name = "pinia"
+max = 1
+description = "Only the conventions skill is inserted; `pinia` stays a reference."
+
+[[exclusive_groups]]
+name = "vite"
+max = 1
+description = "The generic `vite` is not a mandatory neighbour of the specialised skills."
+
+[[exclusive_groups]]
+name = "vitest"
+max = 2
+description = "A reference plus one task skill."
+
+[[exclusive_groups]]
+name = "vue-core"
+max = 1
+description = "One Vue core skill: `vue` is a reference, the other two are merged."

@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:command:import-specification:v1",
+  "title": "ImportSpecification",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "document": {
+      "$ref": "urn:skm:planning:specification:v1"
+    },
+    "mode": {
+      "enum": [
+        "new_plan",
+        "new_draft"
+      ]
+    },
+    "plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source_base_revision_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "keep_ids": {
+      "type": "boolean",
+      "default": true
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "export_meta": {
+      "$ref": "#/$defs/export-meta"
+    },
+    "material_rebind": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "material_key": {
+            "type": "string"
+          },
+          "file_version_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "material_key",
+          "file_version_id"
+        ]
+      }
+    }
+  },
+  "required": [
+    "project_id",
+    "document",
+    "mode"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "new_draft"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "plan_id",
+          "source_base_revision_id"
+        ],
+        "not": {
+          "required": [
+            "title"
+          ]
+        }
+      },
+      "else": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "plan_id"
+              ]
+            },
+            {
+              "required": [
+                "source_base_revision_id"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "export-meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "const": "urn:skm:planning:specification:v1"
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "revision"
+                },
+                "plan_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "plan_alias": {
+                  "type": "string"
+                },
+                "revision_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "revision_no": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "kind",
+                "plan_id",
+                "plan_alias",
+                "revision_id",
+                "revision_no"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "draft"
+                },
+                "plan_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "plan_alias": {
+                  "type": "string"
+                },
+                "draft_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "edit_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "base_revision_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "kind",
+                "plan_id",
+                "plan_alias",
+                "draft_id",
+                "edit_version",
+                "base_revision_id"
+              ]
+            }
+          ]
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "exported_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "exported_by": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "skm_version": {
+          "type": "string"
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "material_key": {
+                "type": "string"
+              },
+              "file_version_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "content_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "original_filename": {
+                "type": "string"
+              },
+              "media_type": {
+                "type": "string"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "material_key",
+              "file_version_id",
+              "content_digest",
+              "original_filename",
+              "media_type",
+              "size"
+            ]
+          }
+        }
+      },
+      "required": [
+        "format",
+        "source",
+        "content_digest",
+        "exported_at",
+        "exported_by",
+        "skm_version",
+        "materials"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.commands",
+      "class": "ImportSpecification",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ImportSpecification"
+    }
+  },
+  "description": "planning owner schema: ImportSpecification."
+}

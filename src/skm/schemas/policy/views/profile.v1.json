@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:profile:v1",
+  "title": "ProfileView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 0
+    },
+    "version": {
+      "type": "string",
+      "minLength": 0
+    },
+    "description": {
+      "type": "string",
+      "minLength": 0
+    },
+    "builtin": {
+      "type": "boolean"
+    },
+    "requires_host_flag": {
+      "type": "boolean"
+    },
+    "allowed_isolation": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "description",
+    "builtin",
+    "requires_host_flag",
+    "allowed_isolation"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.views",
+      "class": "ProfileView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ProfileView"
+    }
+  }
+}

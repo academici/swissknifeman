@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:hook-decision:v1",
+  "title": "HostHookDecision",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host:hook-decision:v1"
+    },
+    "surface": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "off",
+        "warn",
+        "strict"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "allow",
+        "deny",
+        "ask",
+        "warn",
+        "none"
+      ]
+    },
+    "reason_code": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "user_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "agent_message": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "additional_context": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "client_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exit_code": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stdout": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+              }
+            }
+          ]
+        },
+        "stderr": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "exit_code",
+        "stdout",
+        "stderr"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "surface",
+    "mode",
+    "verdict",
+    "client_output"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "HostHookDecision",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostHookDecision"
+    }
+  }
+}

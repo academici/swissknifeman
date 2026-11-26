@@ -1,0 +1,33 @@
+{
+  "contract": "urn:skm:planning:command:import-specification:v1",
+  "request": {
+    "project_id": "0192f5c5-0b33-7c44-9a00-2b3c4d5e6f70",
+    "document": {
+      "schema": "urn:skm:planning:specification:v1",
+      "title": "Audited plan",
+      "goal": "Preserve the source base during import.",
+      "phases": [],
+      "items": []
+    },
+    "mode": "new_draft",
+    "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+    "source_base_revision_id": null,
+    "export_meta": {
+      "format": "urn:skm:planning:specification:v1",
+      "source": {
+        "kind": "draft",
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "plan_alias": "PLAN7",
+        "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+        "edit_version": 7,
+        "base_revision_id": null,
+        "revision_id": "0192f5c7-0000-7000-8000-000000000301"
+      },
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "exported_at": "2026-10-26T00:00:00Z",
+      "exported_by": "0192f5c5-0000-7000-8000-000000000001",
+      "skm_version": "2.0.0",
+      "materials": []
+    }
+  }
+}

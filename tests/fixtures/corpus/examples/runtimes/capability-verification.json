@@ -1,0 +1,21 @@
+{
+  "command": "runtimes.record_capability_verification",
+  "request": {
+    "runtime_id": "claude_code",
+    "runtime_version": "0.0.0",
+    "capability": "config_isolation",
+    "status": "unknown",
+    "evidence": "fixture only: no installed-binary canary has been performed",
+    "limitations": "Illustrative context; not positive capability evidence. No live test was run.",
+    "verified_at": "2026-10-26",
+    "verification_context": {
+      "host_id": "01928f61-3333-7aaa-8bbb-2c3d4e5f6a7c",
+      "binary_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "os": "linux",
+      "kernel": "fixture-kernel",
+      "adapter_version": "0.0.0",
+      "isolation_profile": "container",
+      "launch_config_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  }
+}

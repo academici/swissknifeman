@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:stage-outcome-advisor-consult:v1",
+  "title": "StageOutcomeAdvisorConsult",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "advice": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "held": {
+      "type": "boolean"
+    },
+    "held_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "panel": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "role_result": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_read_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_write_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasoning_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cost_usd_micros": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "reported",
+            "estimated",
+            "unknown"
+          ]
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "input_tokens",
+        "output_tokens",
+        "status",
+        "source"
+      ]
+    },
+    "error_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "detail": {
+      "type": "string"
+    },
+    "error_class": {
+      "type": "string"
+    },
+    "worktree_dirty": {
+      "type": "boolean"
+    },
+    "retry_after_seconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [],
+  "anyOf": [
+    {
+      "required": [
+        "advice",
+        "held"
+      ]
+    },
+    {
+      "required": [
+        "error_code"
+      ]
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "StageOutcomeAdvisorConsult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StageOutcomeAdvisorConsult"
+    }
+  }
+}

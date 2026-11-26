@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "docs-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@example/docs-mcp"
+      ]
+    },
+    "skm": {
+      "command": "skm",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

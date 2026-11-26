@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:query:get-research-query:v1",
+  "title": "GetResearchQuery",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "query_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "query_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.queries",
+      "class": "GetResearchQuery",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "GetResearchQuery"
+    }
+  }
+}

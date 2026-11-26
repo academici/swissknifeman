@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:view:projection-summary:v1",
+  "title": "ProjectionSummaryView",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "projection_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "checkout_binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "state": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionState"
+    },
+    "desired_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "applied_desired_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "applied_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "drift_checked_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "projection_id",
+    "checkout_binding_id",
+    "host_id",
+    "target",
+    "state",
+    "desired_digest",
+    "applied_desired_digest",
+    "applied_at",
+    "drift_checked_at",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.views",
+      "class": "ProjectionSummaryView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "ProjectionSummaryView"
+    }
+  }
+}

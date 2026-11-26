@@ -1,0 +1,8 @@
+{
+  "contract": "urn:skm:execution:query:get-run-history:v1",
+  "value": {
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "after": "opaque-bound-cursor",
+    "limit": 20
+  }
+}

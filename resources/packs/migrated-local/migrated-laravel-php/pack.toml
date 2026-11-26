@@ -1,0 +1,25 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-laravel-php"
+version = "1.0.1"
+title = "Migrated Neutral Skills: PHP & Laravel Engineering"
+description = "Reproducibly migrated neutral authored skills for PHP & Laravel Engineering (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "authz"
+max = 1
+description = "Mutually exclusive by the project dependency or config."
+
+[[exclusive_groups]]
+name = "php-architecture"
+max = 2
+description = "Not more than two of the PHP architecture skills together; choose by decision level."
+
+[[exclusive_groups]]
+name = "php-packages"
+max = 1
+description = "The router does not pull the bodies of its children."

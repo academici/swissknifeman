@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:command:grant-membership:v1",
+  "title": "GrantMembership",
+  "description": "access command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "role": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/role"
+    }
+  },
+  "required": [
+    "scope_id",
+    "principal_id",
+    "role"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.commands",
+      "class": "GrantMembership",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "GrantMembership"
+    }
+  }
+}

@@ -1,0 +1,2751 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:specification:v1",
+  "title": "SpecificationDoc",
+  "description": "Specification of a plan: the canonical document of a draft and the payload of a published revision. References between entities use display keys; identity is the uuid 'id'. Numbers are integers only (canonical JSON v1 forbids floats).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "title",
+    "goal",
+    "phases",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:planning:specification:v1"
+    },
+    "title": {
+      "$ref": "#/$defs/short_text"
+    },
+    "goal": {
+      "$ref": "#/$defs/text"
+    },
+    "context_md": {
+      "$ref": "#/$defs/text"
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/text"
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/text"
+      }
+    },
+    "brief": {
+      "$ref": "#/$defs/brief"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/requirement"
+      },
+      "maxItems": 500
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/phase"
+      },
+      "maxItems": 100
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      },
+      "maxItems": 2000
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/unit"
+      },
+      "maxItems": 5000
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/criterion"
+      },
+      "maxItems": 5000
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/check"
+      },
+      "maxItems": 5000
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/decision"
+      },
+      "maxItems": 1000
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/material"
+      },
+      "maxItems": 1000
+    },
+    "plan_relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/plan_relation"
+      },
+      "maxItems": 50
+    },
+    "execution_constraints": {
+      "$ref": "#/$defs/execution_constraints"
+    },
+    "sections": {
+      "$ref": "#/$defs/sections"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    },
+    "design_brief_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "description": "Stable entity id (UUIDv7, lowercase). Optional in a draft: SaveDraft assigns it."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000,
+      "description": "Non-empty text; Markdown allowed."
+    },
+    "short_text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Calendar date YYYY-MM-DD (historical date without time)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?Z$",
+      "description": "UTC timestamp."
+    },
+    "phase_key": {
+      "type": "string",
+      "pattern": "^P[0-9]+$",
+      "description": "Phase display key, e.g. P1."
+    },
+    "item_key": {
+      "type": "string",
+      "pattern": "^P[0-9]+\\.[0-9]+$",
+      "description": "Item display key, e.g. P1.2; the prefix is its phase key."
+    },
+    "unit_key": {
+      "type": "string",
+      "pattern": "^P[0-9]+\\.[0-9]+/U[0-9]+$",
+      "description": "Unit display key, e.g. P1.2/U1; the prefix is its item key."
+    },
+    "unit_ref": {
+      "type": "string",
+      "pattern": "^(P[0-9]+\\.[0-9]+/)?U[0-9]+$",
+      "description": "Unit reference: local U<k> (inside the owning item) or full P<n>.<m>/U<k>."
+    },
+    "decision_key": {
+      "type": "string",
+      "pattern": "^D[0-9]+$"
+    },
+    "requirement_key": {
+      "type": "string",
+      "pattern": "^R[0-9]+$"
+    },
+    "criterion_key": {
+      "type": "string",
+      "pattern": "^AC[0-9]+$"
+    },
+    "check_local_key": {
+      "type": "string",
+      "pattern": "^V[0-9]+$",
+      "description": "Check key unique within its owner (phase or item)."
+    },
+    "check_ref": {
+      "type": "string",
+      "pattern": "^(P[0-9]+(\\.[0-9]+)?:)?V[0-9]+$",
+      "description": "Check reference: V<n> (owner implied by context) or <owner key>:V<n>."
+    },
+    "batch_key": {
+      "type": "string",
+      "pattern": "^B[0-9A-Za-z-]+$"
+    },
+    "material_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+    },
+    "material_ref": {
+      "type": "string",
+      "pattern": "^material/[a-z0-9][a-z0-9-]{0,62}(#[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?)?$",
+      "description": "material/<key>[#<section id>]"
+    },
+    "artifact_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+    },
+    "artifact_ref": {
+      "type": "string",
+      "pattern": "^artifact/[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+    },
+    "entity_ref": {
+      "type": "string",
+      "pattern": "^(P[0-9]+(\\.[0-9]+(/U[0-9]+)?)?|D[0-9]+|R[0-9]+|AC[0-9]+)$",
+      "description": "Reference to a phase, item, unit, decision, requirement or criterion of this plan."
+    },
+    "work_entity_ref": {
+      "type": "string",
+      "pattern": "^P[0-9]+(\\.[0-9]+(/U[0-9]+)?)?$",
+      "description": "Phase, item or unit key."
+    },
+    "mount": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+      "description": "Repository mount name of the project (project_repositories.mount_name)."
+    },
+    "repo_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?![/~])(?![A-Za-z]:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\s\\x00]+$",
+      "description": "Repository-relative POSIX path; no leading '/', '~', drive letter or '..' segment."
+    },
+    "path_glob": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?![/~])(?![A-Za-z]:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\s\\x00]+$",
+      "description": "Repository-relative POSIX path or fnmatch glob (*, ?, [..]); a trailing '/' names a directory."
+    },
+    "skill_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(?:(?::|/)[a-z][a-z0-9-]*)?$"
+    },
+    "plan_ref": {
+      "type": "string",
+      "pattern": "^((?!AC[0-9])[A-Z]{2,8}[1-9][0-9]*|plan:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+      "description": "Another plan of the same project: short alias <prefix><n> (prefix from planning.aliases.prefix, default PLAN; never AC) or plan:<uuid>."
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$"
+        },
+        "title": {
+          "$ref": "#/$defs/short_text"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 200000
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "text"
+      ],
+      "description": "Named content section; ids unique within the owning entity."
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      },
+      "maxItems": 100
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 100
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "include",
+        "exclude"
+      ],
+      "description": "Scope in words: what is in and out."
+    },
+    "model_class": {
+      "type": "string",
+      "enum": [
+        "economy",
+        "implementation",
+        "frontier"
+      ],
+      "description": "Ordered economy < implementation < frontier."
+    },
+    "effort": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "description": "Ordered low < medium < high < xhigh < max (legacy 'ultra' is imported as 'max')."
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/model_class"
+        },
+        "effort": {
+          "$ref": "#/$defs/effort"
+        },
+        "runtime": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Preferred runtime id (validated against the catalog; a preference, never a requirement)."
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Preferred model id; requires runtime."
+        },
+        "correction": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "class": {
+              "$ref": "#/$defs/model_class"
+            },
+            "effort": {
+              "$ref": "#/$defs/effort"
+            }
+          },
+          "required": [
+            "class",
+            "effort"
+          ],
+          "description": "Minimum route of a bounded correction round."
+        }
+      },
+      "required": [
+        "class",
+        "effort"
+      ],
+      "description": "Minimum semantic route of the work.",
+      "dependentRequired": {
+        "model": [
+          "runtime"
+        ]
+      }
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "$ref": "#/$defs/model_class"
+        },
+        "effort": {
+          "$ref": "#/$defs/effort"
+        },
+        "runtime": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "description": "Preferred reviewer.",
+      "dependentRequired": {
+        "model": [
+          "runtime"
+        ]
+      }
+    },
+    "review": {
+      "type": "object",
+      "description": "Explicit review contract. Absence of the field is not a waiver.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "required"
+            },
+            "profile": {
+              "$ref": "#/$defs/skill_key"
+            },
+            "independence": {
+              "type": "string",
+              "enum": [
+                "separate_session",
+                "separate_runtime",
+                "human"
+              ],
+              "default": "separate_session"
+            },
+            "reviewer": {
+              "$ref": "#/$defs/reviewer"
+            },
+            "max_rounds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            },
+            "covers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/item_key"
+              },
+              "uniqueItems": true
+            },
+            "required_evidence": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "diff",
+                  "checks",
+                  "acceptance_coverage",
+                  "transcript"
+                ]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "mode"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "self"
+            },
+            "reason": {
+              "$ref": "#/$defs/text"
+            }
+          },
+          "required": [
+            "mode",
+            "reason"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "waived"
+            },
+            "reason": {
+              "$ref": "#/$defs/text"
+            },
+            "waived_by": {
+              "$ref": "#/$defs/short_text"
+            }
+          },
+          "required": [
+            "mode",
+            "reason",
+            "waived_by"
+          ]
+        }
+      ],
+      "x-skm-discriminator": "mode"
+    },
+    "authority": {
+      "type": "object",
+      "description": "Authority the work needs.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "routine"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "owner_gate"
+            },
+            "gate": {
+              "type": "string",
+              "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+            },
+            "label": {
+              "$ref": "#/$defs/short_text"
+            },
+            "scope": {
+              "$ref": "#/$defs/text"
+            }
+          },
+          "required": [
+            "kind",
+            "scope"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "gate"
+              ],
+              "not": {
+                "required": [
+                  "label"
+                ]
+              }
+            },
+            {
+              "required": [
+                "label"
+              ],
+              "not": {
+                "required": [
+                  "gate"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "external_gate"
+            },
+            "gate": {
+              "type": "string",
+              "pattern": "^[A-Z0-9][A-Z0-9._-]*$"
+            },
+            "label": {
+              "$ref": "#/$defs/short_text"
+            },
+            "scope": {
+              "$ref": "#/$defs/text"
+            }
+          },
+          "required": [
+            "kind",
+            "scope"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "gate"
+              ],
+              "not": {
+                "required": [
+                  "label"
+                ]
+              }
+            },
+            {
+              "required": [
+                "label"
+              ],
+              "not": {
+                "required": [
+                  "gate"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind"
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "need": {
+          "type": "string",
+          "enum": [
+            "none",
+            "optional",
+            "required"
+          ]
+        },
+        "question": {
+          "$ref": "#/$defs/text"
+        },
+        "notes": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "need"
+      ],
+      "description": "Research need (status is execution state, not specification)."
+    },
+    "read": {
+      "type": "object",
+      "description": "One input to read, in reading order.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "repository_path"
+            },
+            "mount": {
+              "$ref": "#/$defs/mount"
+            },
+            "path": {
+              "$ref": "#/$defs/path_glob"
+            },
+            "section": {
+              "$ref": "#/$defs/short_text"
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "mount",
+            "path",
+            "why",
+            "required"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "material"
+            },
+            "ref": {
+              "$ref": "#/$defs/material_ref"
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "ref",
+            "why",
+            "required"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "plan_entity"
+            },
+            "ref": {
+              "$ref": "#/$defs/entity_ref"
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "ref",
+            "why",
+            "required"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "artifact"
+            },
+            "ref": {
+              "$ref": "#/$defs/artifact_ref"
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "ref",
+            "why",
+            "required"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "external_source"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://",
+              "maxLength": 2048
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "required": {
+              "type": "boolean"
+            },
+            "external_source_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "url",
+            "why",
+            "required"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "external_source"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "external_source_id"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind"
+    },
+    "change_hint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "$ref": "#/$defs/mount"
+        },
+        "pattern": {
+          "$ref": "#/$defs/path_glob"
+        },
+        "change": {
+          "type": "string",
+          "enum": [
+            "create",
+            "modify",
+            "delete",
+            "any"
+          ]
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "mount",
+        "pattern",
+        "change"
+      ],
+      "description": "Files likely to change (a hint, not a write limit)."
+    },
+    "write_scope_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "$ref": "#/$defs/mount"
+        },
+        "pattern": {
+          "$ref": "#/$defs/path_glob"
+        }
+      },
+      "required": [
+        "mount",
+        "pattern"
+      ],
+      "description": "Declared write scope entry of a unit (a limit enforced by the worker fence)."
+    },
+    "output_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "$ref": "#/$defs/mount"
+        },
+        "path": {
+          "$ref": "#/$defs/repo_path"
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "mount",
+        "path"
+      ]
+    },
+    "artifact_decl": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/artifact_key"
+        },
+        "mount": {
+          "$ref": "#/$defs/mount"
+        },
+        "path": {
+          "$ref": "#/$defs/path_glob"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "input",
+            "output"
+          ]
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "mount",
+        "path",
+        "role"
+      ],
+      "description": "Artifact consumed or produced; an output with a key may be read as artifact/<key>."
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/entity_ref"
+        },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "informs",
+            "consumes",
+            "conflicts",
+            "follows_up",
+            "supersedes"
+          ]
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "target",
+        "relation"
+      ],
+      "description": "Non-blocking link; never affects scheduling."
+    },
+    "skill_req": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/skill_key"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(\\^|~|>=|=)?[0-9]+(\\.[0-9]+){0,2}$",
+          "description": "Version constraint of the resource."
+        }
+      },
+      "required": [
+        "key"
+      ]
+    },
+    "evidence_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stdout": {
+          "type": "boolean",
+          "default": true
+        },
+        "stderr": {
+          "type": "boolean",
+          "default": true
+        },
+        "report_files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repo_path"
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "cwd": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "$ref": "#/$defs/mount"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 1024,
+          "pattern": "^(\\.|(?![/~])(?![A-Za-z]:)(?!(?:.*/)?\\.\\.(?:/|$))[^\\s\\x00*?\\[]+)$",
+          "default": "."
+        }
+      },
+      "required": [
+        "mount"
+      ]
+    },
+    "command_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1,
+          "maxItems": 200
+        },
+        "cwd": {
+          "$ref": "#/$defs/cwd"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 600
+        },
+        "env_allow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "maxItems": 50
+        },
+        "expected_exit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 0
+        },
+        "expect": {
+          "$ref": "#/$defs/short_text"
+        }
+      },
+      "required": [
+        "argv",
+        "cwd"
+      ]
+    },
+    "shell_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "cwd": {
+          "$ref": "#/$defs/cwd"
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "default": 600
+        },
+        "env_allow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "maxItems": 50
+        },
+        "expected_exit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 0
+        },
+        "expect": {
+          "$ref": "#/$defs/short_text"
+        },
+        "risk_ack": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "script",
+        "cwd",
+        "risk_ack"
+      ]
+    },
+    "manual_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "instructions_md": {
+          "$ref": "#/$defs/text"
+        },
+        "actor_role": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "maintainer",
+            "member"
+          ]
+        },
+        "allowed_verdicts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "default": [
+            "pass",
+            "fail"
+          ]
+        }
+      },
+      "required": [
+        "instructions_md",
+        "actor_role"
+      ]
+    },
+    "external_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "description": "Check-runner plugin id."
+        },
+        "ref": {
+          "$ref": "#/$defs/short_text"
+        },
+        "params": {
+          "type": "object",
+          "maxProperties": 50,
+          "additionalProperties": {
+            "type": [
+              "string",
+              "integer",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "required": [
+        "provider",
+        "ref"
+      ]
+    },
+    "check": {
+      "type": "object",
+      "description": "Verification of work: command, shell, manual or external.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/check_local_key"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/phase_key"
+                },
+                {
+                  "$ref": "#/$defs/item_key"
+                }
+              ],
+              "description": "Phase or item that owns the check."
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "acceptance",
+                "impact",
+                "live"
+              ],
+              "description": "acceptance must pass for done; impact is a wider guard; live runs at a live boundary."
+            },
+            "required": {
+              "type": "boolean",
+              "description": "Default: true for acceptance, false otherwise (resolved by from_document, stored explicitly)."
+            },
+            "rerun_after_integration": {
+              "type": "boolean",
+              "default": false
+            },
+            "evidence": {
+              "$ref": "#/$defs/evidence_policy"
+            },
+            "kind": {
+              "const": "command"
+            },
+            "definition": {
+              "$ref": "#/$defs/command_definition"
+            }
+          },
+          "required": [
+            "key",
+            "owner",
+            "category",
+            "kind",
+            "definition"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/check_local_key"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/phase_key"
+                },
+                {
+                  "$ref": "#/$defs/item_key"
+                }
+              ],
+              "description": "Phase or item that owns the check."
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "acceptance",
+                "impact",
+                "live"
+              ],
+              "description": "acceptance must pass for done; impact is a wider guard; live runs at a live boundary."
+            },
+            "required": {
+              "type": "boolean",
+              "description": "Default: true for acceptance, false otherwise (resolved by from_document, stored explicitly)."
+            },
+            "rerun_after_integration": {
+              "type": "boolean",
+              "default": false
+            },
+            "evidence": {
+              "$ref": "#/$defs/evidence_policy"
+            },
+            "kind": {
+              "const": "shell"
+            },
+            "definition": {
+              "$ref": "#/$defs/shell_definition"
+            }
+          },
+          "required": [
+            "key",
+            "owner",
+            "category",
+            "kind",
+            "definition"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/check_local_key"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/phase_key"
+                },
+                {
+                  "$ref": "#/$defs/item_key"
+                }
+              ],
+              "description": "Phase or item that owns the check."
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "acceptance",
+                "impact",
+                "live"
+              ],
+              "description": "acceptance must pass for done; impact is a wider guard; live runs at a live boundary."
+            },
+            "required": {
+              "type": "boolean",
+              "description": "Default: true for acceptance, false otherwise (resolved by from_document, stored explicitly)."
+            },
+            "rerun_after_integration": {
+              "type": "boolean",
+              "default": false
+            },
+            "evidence": {
+              "$ref": "#/$defs/evidence_policy"
+            },
+            "kind": {
+              "const": "manual"
+            },
+            "definition": {
+              "$ref": "#/$defs/manual_definition"
+            }
+          },
+          "required": [
+            "key",
+            "owner",
+            "category",
+            "kind",
+            "definition"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/check_local_key"
+            },
+            "owner": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/phase_key"
+                },
+                {
+                  "$ref": "#/$defs/item_key"
+                }
+              ],
+              "description": "Phase or item that owns the check."
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "acceptance",
+                "impact",
+                "live"
+              ],
+              "description": "acceptance must pass for done; impact is a wider guard; live runs at a live boundary."
+            },
+            "required": {
+              "type": "boolean",
+              "description": "Default: true for acceptance, false otherwise (resolved by from_document, stored explicitly)."
+            },
+            "rerun_after_integration": {
+              "type": "boolean",
+              "default": false
+            },
+            "evidence": {
+              "$ref": "#/$defs/evidence_policy"
+            },
+            "kind": {
+              "const": "external"
+            },
+            "definition": {
+              "$ref": "#/$defs/external_definition"
+            }
+          },
+          "required": [
+            "key",
+            "owner",
+            "category",
+            "kind",
+            "definition"
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind"
+    },
+    "unit_command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "command"
+            },
+            "definition": {
+              "$ref": "#/$defs/command_definition"
+            }
+          },
+          "required": [
+            "kind",
+            "definition"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "shell"
+            },
+            "definition": {
+              "$ref": "#/$defs/shell_definition"
+            }
+          },
+          "required": [
+            "kind",
+            "definition"
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind",
+      "description": "Exact command of a command unit."
+    },
+    "brief_message": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^M[0-9]+$"
+        },
+        "at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "$ref": "#/$defs/date"
+            }
+          ]
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "chat",
+            "issue",
+            "meeting",
+            "document",
+            "other"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "record"
+          ]
+        },
+        "text": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "key",
+        "kind",
+        "text"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/brief_message"
+          },
+          "maxItems": 500
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "environment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "description": "Owner brief: what was asked, by whom, in which words."
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/requirement_key"
+        },
+        "statement": {
+          "$ref": "#/$defs/text"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "must",
+            "should",
+            "could"
+          ]
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "brief_message",
+                "owner",
+                "derived",
+                "external"
+              ]
+            },
+            "ref": {
+              "$ref": "#/$defs/short_text"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/work_entity_ref"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "key",
+        "statement",
+        "priority",
+        "source"
+      ]
+    },
+    "batch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/batch_key"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item_key"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "recommended",
+            "required"
+          ]
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "key",
+        "items",
+        "mode"
+      ],
+      "description": "Ordered execution group inside a phase; an item is in at most one batch."
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/phase_key"
+        },
+        "title": {
+          "$ref": "#/$defs/short_text"
+        },
+        "goal": {
+          "$ref": "#/$defs/text"
+        },
+        "context_md": {
+          "$ref": "#/$defs/text"
+        },
+        "contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "consumes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "produces": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "boundaries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/phase_key"
+          },
+          "uniqueItems": true,
+          "description": "Prerequisite phases. Absent: the previous phase in order. Empty: none."
+        },
+        "pitfalls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "assurance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "impact": {
+              "$ref": "#/$defs/text"
+            },
+            "seams": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/short_text"
+              }
+            },
+            "live": {
+              "type": "boolean"
+            },
+            "note": {
+              "$ref": "#/$defs/text"
+            }
+          }
+        },
+        "supporting": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/read"
+          },
+          "description": "Phase-wide reading (dossiers, examples)."
+        },
+        "batches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/batch"
+          }
+        },
+        "design_state": {
+          "type": "string",
+          "enum": [
+            "skeleton",
+            "detailed"
+          ]
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "default": "dag"
+        },
+        "sections": {
+          "$ref": "#/$defs/sections"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "goal",
+        "design_state"
+      ]
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/item_key"
+        },
+        "phase": {
+          "$ref": "#/$defs/phase_key"
+        },
+        "title": {
+          "$ref": "#/$defs/short_text"
+        },
+        "summary": {
+          "$ref": "#/$defs/text"
+        },
+        "why": {
+          "$ref": "#/$defs/text"
+        },
+        "work_kind": {
+          "type": "string",
+          "enum": [
+            "code",
+            "docs",
+            "research",
+            "config",
+            "test",
+            "review",
+            "ops"
+          ],
+          "default": "code"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item_key"
+          },
+          "uniqueItems": true
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "implements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirement_key"
+          },
+          "uniqueItems": true
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decision_key"
+          },
+          "uniqueItems": true
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/skill_req"
+          }
+        },
+        "reads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/read"
+          },
+          "maxItems": 200
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/read"
+          },
+          "maxItems": 50
+        },
+        "change_hints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/change_hint"
+          },
+          "maxItems": 200
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_decl"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "guidance_md": {
+          "$ref": "#/$defs/text"
+        },
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "route": {
+          "$ref": "#/$defs/route"
+        },
+        "review": {
+          "$ref": "#/$defs/review"
+        },
+        "authority": {
+          "$ref": "#/$defs/authority"
+        },
+        "research": {
+          "$ref": "#/$defs/research"
+        },
+        "unit_strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "default": "dag"
+        },
+        "sections": {
+          "$ref": "#/$defs/sections"
+        },
+        "work_policy": {
+          "$ref": "#/$defs/work_policy"
+        }
+      },
+      "required": [
+        "key",
+        "phase",
+        "title",
+        "summary",
+        "why",
+        "review"
+      ]
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/unit_key"
+        },
+        "title": {
+          "$ref": "#/$defs/short_text"
+        },
+        "goal": {
+          "$ref": "#/$defs/text"
+        },
+        "unit_kind": {
+          "type": "string",
+          "enum": [
+            "preparation",
+            "implementation",
+            "review",
+            "verification",
+            "integration",
+            "command"
+          ],
+          "default": "implementation"
+        },
+        "work_kind": {
+          "type": "string",
+          "enum": [
+            "code",
+            "docs",
+            "research",
+            "config",
+            "test",
+            "review",
+            "ops"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "self",
+            "delegate",
+            "either"
+          ],
+          "default": "either"
+        },
+        "parent": {
+          "$ref": "#/$defs/unit_ref"
+        },
+        "write_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/write_scope_entry"
+          },
+          "maxItems": 200
+        },
+        "reads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/read"
+          },
+          "maxItems": 200
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unit_ref"
+          },
+          "uniqueItems": true
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check_local_key"
+          },
+          "uniqueItems": true,
+          "description": "Checks of the owning item that gate this unit."
+        },
+        "route": {
+          "$ref": "#/$defs/route"
+        },
+        "instructions_md": {
+          "$ref": "#/$defs/text"
+        },
+        "command": {
+          "$ref": "#/$defs/unit_command"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/output_entry"
+          }
+        },
+        "implements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirement_key"
+          },
+          "uniqueItems": true
+        },
+        "sections": {
+          "$ref": "#/$defs/sections"
+        },
+        "work_policy": {
+          "$ref": "#/$defs/work_policy"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "goal"
+      ]
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/criterion_key"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/item_key"
+            },
+            {
+              "$ref": "#/$defs/unit_key"
+            }
+          ]
+        },
+        "statement": {
+          "$ref": "#/$defs/text"
+        },
+        "verification_mode": {
+          "type": "string",
+          "enum": [
+            "check",
+            "review",
+            "manual"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check_ref"
+          },
+          "uniqueItems": true
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirement_key"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "key",
+        "owner",
+        "statement",
+        "verification_mode"
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "key": {
+          "$ref": "#/$defs/decision_key"
+        },
+        "title": {
+          "$ref": "#/$defs/short_text"
+        },
+        "date": {
+          "$ref": "#/$defs/date"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "open",
+            "proposed",
+            "accepted",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "question": {
+          "$ref": "#/$defs/text"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Z]$"
+              },
+              "text": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "required": [
+              "key",
+              "text"
+            ]
+          },
+          "maxItems": 26
+        },
+        "context_md": {
+          "$ref": "#/$defs/text"
+        },
+        "decision": {
+          "$ref": "#/$defs/text"
+        },
+        "rationale": {
+          "$ref": "#/$defs/text"
+        },
+        "consequences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "applies_to": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/work_entity_ref"
+          },
+          "uniqueItems": true
+        },
+        "global": {
+          "type": "boolean",
+          "default": false
+        },
+        "supersedes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decision_key"
+          },
+          "uniqueItems": true
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "material",
+                  "url",
+                  "entity",
+                  "note"
+                ]
+              },
+              "ref": {
+                "$ref": "#/$defs/short_text"
+              },
+              "note": {
+                "$ref": "#/$defs/text"
+              }
+            },
+            "required": [
+              "kind",
+              "ref"
+            ]
+          }
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "owner",
+                "agent",
+                "advice",
+                "panel",
+                "import"
+              ]
+            },
+            "ref": {
+              "$ref": "#/$defs/short_text"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "answered_by": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "agent"
+          ]
+        },
+        "sections": {
+          "$ref": "#/$defs/sections"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "state"
+      ]
+    },
+    "material": {
+      "type": "object",
+      "description": "Material bound to the revision: a pinned file version, a repository path or an external source. Freshness defaults to pinned (written explicitly by normalization).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/material_key"
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "selector": {
+              "$ref": "#/$defs/selector"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "input",
+                "reference"
+              ]
+            },
+            "required_for": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "execution",
+                  "review",
+                  "acceptance"
+                ]
+              },
+              "uniqueItems": true,
+              "maxItems": 3,
+              "description": "Stages that cannot proceed without this material (empty or absent: optional reference). execution: blocks task start; review: blocks review rounds; acceptance: blocks the acceptance decision. Unavailable at that stage -> execution waits with BLOCKED_BY_MATERIAL."
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "applies_to": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/work_entity_ref"
+              },
+              "uniqueItems": true
+            },
+            "global": {
+              "type": "boolean",
+              "default": false
+            },
+            "kind": {
+              "const": "file_version"
+            },
+            "file_version_id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "freshness": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "const": "pinned"
+                    }
+                  },
+                  "required": [
+                    "policy"
+                  ],
+                  "description": "Use exactly the pinned version (file_version), the run baseline commit (repository_path) or the captured content (external_source)."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "const": "latest_at_publish"
+                    }
+                  },
+                  "required": [
+                    "policy"
+                  ],
+                  "description": "At publication the newest ready version of the same file is pinned and written into the revision; afterwards behaves as pinned."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "const": "must_refresh"
+                    },
+                    "max_age_seconds": {
+                      "type": "integer",
+                      "minimum": 60,
+                      "maximum": 31536000
+                    }
+                  },
+                  "required": [
+                    "policy",
+                    "max_age_seconds"
+                  ],
+                  "description": "Pinned, but older than max_age_seconds (file version created_at / retrieved_at) counts as stale: a stage it is required for waits with BLOCKED_BY_MATERIAL until a revision pins a fresher one."
+                }
+              ]
+            }
+          },
+          "required": [
+            "key",
+            "title",
+            "kind",
+            "file_version_id",
+            "role"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/material_key"
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "selector": {
+              "$ref": "#/$defs/selector"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "input",
+                "reference"
+              ]
+            },
+            "required_for": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "execution",
+                  "review",
+                  "acceptance"
+                ]
+              },
+              "uniqueItems": true,
+              "maxItems": 3,
+              "description": "Stages that cannot proceed without this material (empty or absent: optional reference). execution: blocks task start; review: blocks review rounds; acceptance: blocks the acceptance decision. Unavailable at that stage -> execution waits with BLOCKED_BY_MATERIAL."
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "applies_to": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/work_entity_ref"
+              },
+              "uniqueItems": true
+            },
+            "global": {
+              "type": "boolean",
+              "default": false
+            },
+            "kind": {
+              "const": "repository_path"
+            },
+            "mount": {
+              "$ref": "#/$defs/mount"
+            },
+            "path": {
+              "$ref": "#/$defs/repo_path"
+            },
+            "freshness": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "policy": {
+                  "const": "pinned"
+                }
+              },
+              "required": [
+                "policy"
+              ],
+              "description": "Use exactly the pinned version (file_version), the run baseline commit (repository_path) or the captured content (external_source)."
+            }
+          },
+          "required": [
+            "key",
+            "title",
+            "kind",
+            "mount",
+            "path",
+            "role"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/uuid"
+            },
+            "key": {
+              "$ref": "#/$defs/material_key"
+            },
+            "title": {
+              "$ref": "#/$defs/short_text"
+            },
+            "selector": {
+              "$ref": "#/$defs/selector"
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "input",
+                "reference"
+              ]
+            },
+            "required_for": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "execution",
+                  "review",
+                  "acceptance"
+                ]
+              },
+              "uniqueItems": true,
+              "maxItems": 3,
+              "description": "Stages that cannot proceed without this material (empty or absent: optional reference). execution: blocks task start; review: blocks review rounds; acceptance: blocks the acceptance decision. Unavailable at that stage -> execution waits with BLOCKED_BY_MATERIAL."
+            },
+            "why": {
+              "$ref": "#/$defs/text"
+            },
+            "applies_to": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/work_entity_ref"
+              },
+              "uniqueItems": true
+            },
+            "global": {
+              "type": "boolean",
+              "default": false
+            },
+            "kind": {
+              "const": "external_source"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://",
+              "maxLength": 2048
+            },
+            "retrieved_at": {
+              "$ref": "#/$defs/timestamp"
+            },
+            "content_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "freshness": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "const": "pinned"
+                    }
+                  },
+                  "required": [
+                    "policy"
+                  ],
+                  "description": "Use exactly the pinned version (file_version), the run baseline commit (repository_path) or the captured content (external_source)."
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "policy": {
+                      "const": "must_refresh"
+                    },
+                    "max_age_seconds": {
+                      "type": "integer",
+                      "minimum": 60,
+                      "maximum": 31536000
+                    }
+                  },
+                  "required": [
+                    "policy",
+                    "max_age_seconds"
+                  ],
+                  "description": "Pinned, but older than max_age_seconds (file version created_at / retrieved_at) counts as stale: a stage it is required for waits with BLOCKED_BY_MATERIAL until a revision pins a fresher one."
+                }
+              ]
+            },
+            "external_source_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "key",
+            "title",
+            "kind",
+            "url",
+            "role"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "external_source"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "required": [
+                  "external_source_id"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind"
+    },
+    "selector": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "markdown_heading"
+            },
+            "value": {
+              "$ref": "#/$defs/short_text"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "page_range"
+            },
+            "from": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "to": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "kind",
+            "from",
+            "to"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "line_range"
+            },
+            "from": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "to": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "kind",
+            "from",
+            "to"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "section_id"
+            },
+            "value": {
+              "$ref": "#/$defs/short_text"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ],
+      "x-skm-discriminator": "kind",
+      "description": "Part of a material."
+    },
+    "plan_relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "predecessor",
+            "supersedes",
+            "related"
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/plan_ref"
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        }
+      },
+      "required": [
+        "kind",
+        "target"
+      ]
+    },
+    "execution_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "dag",
+            "sequential"
+          ],
+          "default": "dag"
+        },
+        "forbidden_paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mount": {
+                "$ref": "#/$defs/mount"
+              },
+              "pattern": {
+                "$ref": "#/$defs/path_glob"
+              }
+            },
+            "required": [
+              "mount",
+              "pattern"
+            ]
+          },
+          "maxItems": 100
+        },
+        "required_isolation": {
+          "type": "string",
+          "enum": [
+            "worktree",
+            "container"
+          ]
+        },
+        "max_parallel_units": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "description": "Upper bound that is part of the plan's meaning; the run uses min(this, execution.parallel.max_units)."
+        }
+      },
+      "description": "Constraints that belong to the plan's meaning and are frozen with the revision (not configuration)."
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Namespaced extension payloads (namespace 'publisher/name' -> {schema_version, value}). Unknown core fields are never accepted here.",
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$"
+      },
+      "maxProperties": 50,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "value": {}
+        },
+        "required": [
+          "schema_version",
+          "value"
+        ]
+      }
+    },
+    "intensity": {
+      "type": "string",
+      "enum": [
+        "light",
+        "medium",
+        "heavy"
+      ]
+    },
+    "work_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Partial task work policy; absent members inherit settings -> item -> unit. Not a settings scope or authority override.",
+      "properties": {
+        "role_intensity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scout": {
+              "$ref": "#/$defs/intensity"
+            },
+            "executor": {
+              "$ref": "#/$defs/intensity"
+            },
+            "reviewer": {
+              "$ref": "#/$defs/intensity"
+            },
+            "triager": {
+              "$ref": "#/$defs/intensity"
+            },
+            "advisor": {
+              "$ref": "#/$defs/intensity"
+            },
+            "researcher": {
+              "$ref": "#/$defs/intensity"
+            },
+            "registrar": {
+              "$ref": "#/$defs/intensity"
+            }
+          }
+        },
+        "verification_intensity": {
+          "$ref": "#/$defs/intensity"
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.documents",
+      "class": "SpecificationDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "SpecificationDoc"
+    }
+  }
+}

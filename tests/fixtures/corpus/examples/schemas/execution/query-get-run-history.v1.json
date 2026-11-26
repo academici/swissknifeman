@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:query:get-run-history:v1",
+  "title": "GetRunHistory",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "after": {
+      "type": "string",
+      "maxLength": 4096
+    },
+    "through_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 100
+    }
+  },
+  "required": [
+    "run_id"
+  ],
+  "not": {
+    "required": [
+      "after",
+      "through_seq"
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.queries",
+      "class": "GetRunHistory",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "GetRunHistory"
+    }
+  }
+}

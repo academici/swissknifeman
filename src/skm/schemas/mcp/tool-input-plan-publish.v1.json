@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-publish:v1",
+  "title": "skm_plan_publish input",
+  "description": "Input for the skm_plan_publish MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "draft_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expected_content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "plan",
+    "draft_id",
+    "expected_edit_version",
+    "expected_content_digest",
+    "reason",
+    "idempotency_key"
+  ]
+}

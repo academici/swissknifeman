@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:host-result:check-upstream:v1",
+  "title": "CheckUpstreamReport",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+          },
+          "key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "up_to_date",
+              "changed",
+              "unreachable",
+              "local"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 0
+                },
+                "recorded_sha256": {
+                  "type": "string",
+                  "minLength": 0
+                },
+                "upstream_sha256": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "path",
+                "recorded_sha256",
+                "upstream_sha256"
+              ]
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "key",
+          "strategy",
+          "status",
+          "files"
+        ]
+      }
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.host",
+      "class": "CheckUpstreamReport",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "CheckUpstreamReport"
+    }
+  }
+}

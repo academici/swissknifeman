@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:ecosystems:v1",
+  "title": "Ecosystem settings",
+  "description": "Settings section 'ecosystems' owned by platform. Every leaf carries x-skm metadata read by the settings registry. Ecosystem and host allowlists narrow by intersection; deny patterns accumulate.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "ecosystems",
+    "owner": "platform",
+    "title": "Ecosystems",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "EcosystemsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "EcosystemsSettings"
+    }
+  },
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]{0,31}$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Ecosystem identifiers in force for this scope. The core pack supplies the base set, not a ceiling. The first explicit instance or workspace value establishes the effective allowlist; nearer project, plan and run scopes can only intersect it. Empty means no ecosystem is enabled.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Ecosystems",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9*.-]+(:[0-9]{1,5})?$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Registry host patterns the enabled ecosystems may reach. The first explicit instance or workspace value establishes the effective allowlist; nearer project, plan and run scopes can only intersect it. Empty forbids every host.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Ecosystems",
+          "order": 20,
+          "widget": "tags"
+        }
+      }
+    },
+    "deny_patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "default": [
+        "cargo publish",
+        "cargo yank",
+        "flit publish",
+        "gem push",
+        "gem yank",
+        "gradle publish",
+        "hatch publish",
+        "mvn deploy",
+        "npm publish",
+        "npm unpublish",
+        "pnpm publish",
+        "poetry publish",
+        "twine upload",
+        "uv publish",
+        "yarn publish"
+      ],
+      "description": "Protective command prefixes for ecosystem publication and registry removal. A nearer level can only add prefixes.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "union",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {
+          "group": "Ecosystems",
+          "order": 30,
+          "widget": "tags"
+        }
+      }
+    }
+  }
+}

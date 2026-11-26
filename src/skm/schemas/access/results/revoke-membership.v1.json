@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:result:revoke-membership:v1",
+  "title": "RevokeMembershipResult",
+  "description": "access result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "removed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "scope_id",
+    "principal_id",
+    "removed"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.results",
+      "class": "RevokeMembershipResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "RevokeMembershipResult"
+    }
+  }
+}

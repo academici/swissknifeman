@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:result:remove-value:v1",
+  "title": "RemoveValueResult",
+  "description": "settings result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "removed_entry_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "effective": {
+      "$ref": "urn:skm:settings:view:effective-key:v1"
+    }
+  },
+  "required": [
+    "removed_entry_id",
+    "generation",
+    "effective"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.results",
+      "class": "RemoveValueResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "RemoveValueResult"
+    }
+  }
+}

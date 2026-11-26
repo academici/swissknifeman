@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:event:intent-proposed:v1",
+  "title": "IntentProposed",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+    },
+    "risk": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/risk_class"
+    },
+    "args_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "approved",
+        "denied",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "outcome_unknown"
+      ]
+    },
+    "subject_ref": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [
+    "intent_id",
+    "scope_id",
+    "kind",
+    "risk",
+    "args_digest",
+    "state",
+    "subject_ref"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.events",
+      "class": "IntentProposed",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentProposed"
+    }
+  },
+  "x-skm-hookable": true
+}

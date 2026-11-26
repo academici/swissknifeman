@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:host-result:locate-vault:v1",
+  "title": "LocateVaultResult",
+  "description": "exports contract; semantics: the exports module.",
+  "$ref": "urn:skm:exports:defs:v1#/$defs/VaultLocation",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.host",
+      "class": "LocateVaultResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "LocateVaultResult"
+    }
+  }
+}

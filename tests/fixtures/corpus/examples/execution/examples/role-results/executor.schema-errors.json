@@ -1,0 +1,25 @@
+{
+  "step_id": "0193a000-0000-7000-8000-0000000d0102",
+  "outcome_kind": "result_invalid",
+  "schema_errors": [
+    {
+      "path": "/checks_run",
+      "message": "{'V1': 'passed'} is not of type 'array'",
+      "expected": "array of {id, cmd, exit} or {id, procedure, verdict}"
+    },
+    {
+      "path": "/self_check/performed",
+      "message": "'yes' is not of type 'boolean'",
+      "expected": "boolean"
+    }
+  ],
+  "next": {
+    "stage_id": "execute",
+    "mode": "retry",
+    "purpose": "result_retry",
+    "feedback": {
+      "schema_errors_step_id": "0193a000-0000-7000-8000-0000000d0102"
+    }
+  },
+  "result_contract_hint": "Your previous result did not match urn:skm:execution:role-result:executor:v1: /checks_run must be an array of {id, cmd, exit} or {id, procedure, verdict}; /self_check/performed must be a boolean. Return the whole result again; do not change what you report."
+}

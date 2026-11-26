@@ -1,0 +1,9 @@
+# Synthetic fixture; invalid UTF-8 is never provider capability evidence.
+scenario = "malformed"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "raw_hex"
+data = "ff0a"

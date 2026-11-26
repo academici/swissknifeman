@@ -1,0 +1,5 @@
+{"type":"system","subtype":"init","session_id":"sess_429_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"system","subtype":"api_retry","attempt":1,"http_status":429,"retry_category":"rate_limit"}
+{"type":"system","subtype":"api_retry","attempt":2,"http_status":429,"retry_category":"rate_limit"}
+{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","rateLimitType":"five_hour","resetsAt":1790007200}}
+{"type":"result","subtype":"error_during_execution","session_id":"sess_429_001","is_error":true,"http_status":429,"result":"API Error: 429 rate_limit_error: Too many requests","usage":{"input_tokens":120,"output_tokens":0,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}

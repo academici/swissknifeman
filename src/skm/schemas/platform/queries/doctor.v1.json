@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:query:doctor:v1",
+  "title": "Doctor",
+  "description": "platform query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "only": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.queries",
+      "class": "Doctor",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "Doctor"
+    }
+  }
+}

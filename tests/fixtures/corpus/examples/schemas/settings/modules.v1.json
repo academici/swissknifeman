@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:modules:v1",
+  "title": "Modules settings",
+  "description": "Settings section 'modules' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "modules",
+    "owner": "platform",
+    "title": "Modules",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "ModulesSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ModulesSettings"
+    }
+  },
+  "properties": {
+    "knowledge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the optional knowledge module (memory, lessons, graph).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Modules",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "learning": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the optional learning module (lesson candidates from runs).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Modules",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "exports": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the optional exports module (Markdown and Obsidian projections).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Modules",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

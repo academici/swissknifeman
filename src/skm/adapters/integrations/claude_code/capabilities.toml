@@ -1,0 +1,65 @@
+# Static capability manifest for the Claude Code integration target (integrations §4.1, §4.7, §4.8).
+target = "claude_code"
+tested_client_version = "2.1.220"
+verified_at = "2026-08-02"
+
+[surfaces]
+instructions = "native"
+skills = "native"
+permissions = "native"
+hooks = "native"
+mcp = "native"
+agents = "native"
+
+[hook_surfaces."lifecycle.git_guardrails"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "Bash" }]
+
+[hook_surfaces."security.safe_dirs"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "Bash" }]
+
+[hook_surfaces."lifecycle.plan_guard"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "Edit|Write|MultiEdit" }]
+
+[hook_surfaces."lifecycle.pack_guard"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "Edit|Write|MultiEdit|NotebookEdit" }]
+
+[hook_surfaces."lifecycle.changelog_gate"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "Bash" }]
+
+[hook_surfaces."lifecycle.review_gate"]
+class = "workflow"
+bindings = [
+  { event = "PreToolUse", matcher = "Bash" },
+  { event = "SubagentStop" },
+]
+
+[hook_surfaces."lifecycle.command_log"]
+class = "observation"
+bindings = [{ event = "PreToolUse", matcher = "Bash" }]
+
+[hook_surfaces."context.session_start"]
+class = "workflow"
+bindings = [{ event = "SessionStart" }]
+
+[hook_surfaces."lifecycle.run_report"]
+class = "observation"
+bindings = [{ event = "SessionEnd" }]
+
+[hook_event_kinds]
+session_start = { event = "SessionStart" }
+session_end = { event = "SessionEnd" }
+user_prompt = { event = "UserPromptSubmit" }
+pre_shell = { event = "PreToolUse", matcher = "Bash" }
+pre_tool = { event = "PreToolUse", matcher = "Edit|Write|MultiEdit|NotebookEdit" }
+post_tool = { event = "PostToolUse" }
+subagent_stop = { event = "SubagentStop" }
+
+[budget]
+skill_listing_entry_max_chars = 1536
+context_window_tokens = 1000000
+skill_listing_fraction = 0.01

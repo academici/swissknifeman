@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:context-assemble:v1",
+  "title": "skm_context_assemble output",
+  "$ref": "urn:skm:context:result:assemble-context:v1"
+}

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:usage-report:v1",
+  "title": "UsageReport",
+  "description": "Normalized usage of one runtime session or delta (spec/modules/runtimes.md §4.8) — the only usage definition in the product (execution DTOs $ref it). Missing usage is null with status unknown, never zero; fresh tokens = input + output + cache_write. Example: examples/runtimes/usage-report.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "reasoning_tokens",
+    "cost_usd_micros",
+    "status",
+    "source",
+    "subagents"
+  ],
+  "properties": {
+    "input_tokens": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "output_tokens": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cache_read_tokens": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cache_write_tokens": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reasoning_tokens": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cost_usd_micros": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/usd-micros"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "reported",
+        "estimated",
+        "unknown"
+      ],
+      "x-skm-enum-name": "UsageStatus"
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^(stream:(result|delta)|estimate:[a-z_]+|none|[a-z_]+\\.[a-z_]+)$",
+      "description": "Where the numbers come from: stream:result, stream:delta, estimate:prompt_chars, none."
+    },
+    "subagents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "used",
+        "disclosed"
+      ],
+      "description": "Native subagents (G29/S-69): used=true with disclosed=false means the counters exclude subagent usage; execution then does not treat the step as reported (execution.md §4.8).",
+      "properties": {
+        "used": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "disclosed": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "unknown"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "input_tokens": {
+            "type": "null"
+          },
+          "output_tokens": {
+            "type": "null"
+          },
+          "cost_usd_micros": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.usage",
+      "class": "UsageReportDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "UsageReport"
+    }
+  }
+}

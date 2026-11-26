@@ -1,0 +1,140 @@
+{
+  "plan_id": "0192f5c4-0000-7000-8000-0000000000c1",
+  "from_revision": {
+    "id": "0192f5c5-0000-7000-8000-000000000101",
+    "revision_no": 1,
+    "content_digest": "sha256:1f0c9a8b7e6d5c4b3a291807f6e5d4c3b2a1908f7e6d5c4b3a2918f7e6d5c4b3a"
+  },
+  "to_revision": {
+    "id": "0192f5c5-0000-7000-8000-000000000102",
+    "revision_no": 2,
+    "content_digest": "sha256:9a8b7c6d5e4f30211f0e9d8c7b6a5948372615f4e3d2c1b0a9f8e7d6c5b4a392"
+  },
+  "summary": {
+    "added": 1,
+    "removed": 1,
+    "changed": 4,
+    "rekeyed": 2,
+    "moved": 0,
+    "unchanged": 30
+  },
+  "plan_fields": [
+    {
+      "pointer": "/rules/2",
+      "op": "add",
+      "to": "Feature flag auth.rotation guards the rollout."
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000015",
+      "entity_kind": "item",
+      "changes": [
+        "added"
+      ],
+      "key_from": null,
+      "key_to": "P2.4",
+      "fields": []
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000035",
+      "entity_kind": "unit",
+      "changes": [
+        "removed"
+      ],
+      "key_from": "P2.2/U2",
+      "key_to": null,
+      "fields": []
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000021",
+      "entity_kind": "item",
+      "changes": [
+        "changed"
+      ],
+      "key_from": "P1.2",
+      "key_to": "P1.2",
+      "fields": [
+        {
+          "pointer": "/title",
+          "op": "replace",
+          "from": "Rotation service",
+          "to": "Token rotation service"
+        }
+      ]
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000042",
+      "entity_kind": "check",
+      "changes": [
+        "changed"
+      ],
+      "key_from": "P1.2:V1",
+      "key_to": "P1.2:V1",
+      "fields": [
+        {
+          "pointer": "/definition/timeout_seconds",
+          "op": "add",
+          "to": 300
+        }
+      ]
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000061",
+      "entity_kind": "decision",
+      "changes": [
+        "changed"
+      ],
+      "key_from": "D2",
+      "key_to": "D2",
+      "fields": [
+        {
+          "pointer": "/state",
+          "op": "replace",
+          "from": "open",
+          "to": "accepted"
+        },
+        {
+          "pointer": "/decision",
+          "op": "add",
+          "to": "A"
+        },
+        {
+          "pointer": "/rationale",
+          "op": "add",
+          "to": "Product keeps 15 minutes; silent refresh hides it."
+        }
+      ]
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000024",
+      "entity_kind": "item",
+      "changes": [
+        "rekeyed",
+        "changed"
+      ],
+      "key_from": "P2.3",
+      "key_to": "P2.5",
+      "fields": [
+        {
+          "pointer": "/depends_on/2",
+          "op": "add",
+          "to": "P2.4"
+        }
+      ]
+    },
+    {
+      "entity_id": "0192f5c4-0000-7000-8000-000000000046",
+      "entity_kind": "check",
+      "changes": [
+        "rekeyed"
+      ],
+      "key_from": "P2.3:V1",
+      "key_to": "P2.5:V1",
+      "fields": []
+    }
+  ],
+  "notes": [
+    "References that only followed a rekey (criterion AC4 owner P2.3 -> P2.5, check owners) are not reported as field changes."
+  ]
+}

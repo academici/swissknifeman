@@ -1,0 +1,22 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "web-design-guidelines"
+version = "1.0.0"
+kind = "reference"
+risk = "low"
+license = "MIT"
+roles = ["reviewer"]
+
+[provenance]
+source = "upstream"
+repo = "antfu/skills"
+strategy = "fork"
+license = "MIT"
+upstream_sha = "eea73cb6dd46fee9faec9973e8e7fe198b5f07ec326f14d276a56e50287e1cab"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "references/web-interface-guidelines.md"
+url = "https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/4e799d45c17aec1498c269287a83b9dba22b966b/command.md"
+sha256 = "eea73cb6dd46fee9faec9973e8e7fe198b5f07ec326f14d276a56e50287e1cab"
+fetched_at = "2026-08-01"

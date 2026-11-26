@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:fetch:v1",
+  "title": "skm_fetch input",
+  "description": "Input for the skm_fetch MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "receipt": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    }
+  },
+  "required": [
+    "receipt"
+  ]
+}

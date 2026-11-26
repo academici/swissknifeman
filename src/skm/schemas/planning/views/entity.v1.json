@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:entity:v1",
+  "title": "EntityView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "entity_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "entity_kind": {
+      "type": "string",
+      "enum": [
+        "phase",
+        "item",
+        "unit",
+        "requirement",
+        "criterion",
+        "check",
+        "decision",
+        "material"
+      ]
+    },
+    "display_key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "first_revision_no": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    },
+    "document": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/phase"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/item"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/unit"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/requirement"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/criterion"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/check"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/decision"
+        },
+        {
+          "$ref": "urn:skm:planning:specification:v1#/$defs/material"
+        }
+      ]
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "dependents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 0
+          }
+        }
+      },
+      "required": [
+        "prerequisites",
+        "dependents",
+        "criteria",
+        "checks",
+        "decisions",
+        "materials",
+        "requirements"
+      ]
+    }
+  },
+  "required": [
+    "entity_id",
+    "entity_kind",
+    "display_key",
+    "revision_id",
+    "first_revision_no",
+    "source",
+    "document",
+    "links"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "EntityView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "EntityView"
+    }
+  }
+}

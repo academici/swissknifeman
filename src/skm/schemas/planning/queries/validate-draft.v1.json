@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:query:validate-draft:v1",
+  "title": "ValidateDraft",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "min_severity": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ],
+      "default": "info"
+    }
+  },
+  "required": [
+    "plan_id",
+    "draft_id",
+    "expected_edit_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "ValidateDraft",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ValidateDraft"
+    }
+  }
+}

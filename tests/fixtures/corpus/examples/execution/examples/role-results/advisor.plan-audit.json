@@ -1,0 +1,76 @@
+{
+  "schema": "urn:skm:execution:role-result:advisor:v1",
+  "mode": "plan_audit",
+  "problem_ref": "readiness:0193a000-0000-7000-8000-000000140001",
+  "confidence": "medium",
+  "needs_owner": false,
+  "rationale": "Requirements map to items and criteria; one rollback gap and one late check.",
+  "assumptions": [
+    "Material storage-design is current."
+  ],
+  "sources": [
+    {
+      "kind": "material",
+      "ref": "material/storage-design"
+    }
+  ],
+  "verdict": "attention",
+  "checklist": [
+    {
+      "item_id": "coverage",
+      "outcome": "ok",
+      "note": "R1 -> P1.2 (AC1), R2 -> P2.2 (AC3), R3 -> P2.3 (AC4)."
+    },
+    {
+      "item_id": "conflicting_decisions",
+      "outcome": "ok",
+      "note": "D1 does not conflict with requirements."
+    },
+    {
+      "item_id": "producer_missing",
+      "outcome": "ok",
+      "note": "refresh_tokens table is produced by P1.1 before P1.2."
+    },
+    {
+      "item_id": "check_after_gate",
+      "outcome": "concern",
+      "note": "The security semgrep check is bound to P2.3, after P2#gate integrates the HTTP route.",
+      "entity_ids": [
+        "0192f5c4-0000-7000-8000-00000000002f"
+      ]
+    },
+    {
+      "item_id": "vagueness",
+      "outcome": "ok",
+      "note": "Criteria are observable."
+    },
+    {
+      "item_id": "migration_strategy",
+      "outcome": "ok",
+      "note": "Reversible migration checked by P1.1:V2."
+    },
+    {
+      "item_id": "mixing",
+      "outcome": "ok",
+      "note": "Items are single-purpose."
+    },
+    {
+      "item_id": "rollback",
+      "outcome": "concern",
+      "note": "No plan to restore old refresh behaviour if the web client fails in production.",
+      "entity_ids": [
+        "0192f5c4-0000-7000-8000-00000000000b"
+      ]
+    },
+    {
+      "item_id": "unknowns_research",
+      "outcome": "ok",
+      "note": "No open external facts."
+    },
+    {
+      "item_id": "checkpoints",
+      "outcome": "ok",
+      "note": "Phase gates with tests after each phase."
+    }
+  ]
+}

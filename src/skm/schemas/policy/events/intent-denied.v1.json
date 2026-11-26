@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:event:intent-denied:v1",
+  "title": "IntentDenied",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [
+    "intent_id",
+    "by",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.events",
+      "class": "IntentDenied",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentDenied"
+    }
+  },
+  "x-skm-hookable": true
+}

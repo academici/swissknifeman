@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:result:set-value:v1",
+  "title": "SetValueResult",
+  "description": "settings result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "entry": {
+      "$ref": "urn:skm:config:entry:v1"
+    },
+    "changed": {
+      "type": "boolean"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "effective": {
+      "$ref": "urn:skm:settings:view:effective-key:v1"
+    }
+  },
+  "required": [
+    "entry",
+    "changed",
+    "generation",
+    "effective"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.results",
+      "class": "SetValueResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "SetValueResult"
+    }
+  }
+}

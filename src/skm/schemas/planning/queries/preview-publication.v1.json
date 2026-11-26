@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:query:preview-publication:v1",
+  "title": "PreviewPublication",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "draft_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "plan_id",
+    "draft_id",
+    "expected_edit_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "PreviewPublication",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PreviewPublication"
+    }
+  },
+  "description": "planning owner schema: PreviewPublication."
+}

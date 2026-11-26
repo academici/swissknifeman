@@ -1,0 +1,77 @@
+#!__PYTHON__
+import json
+import os
+import pathlib
+import subprocess
+import sys
+
+args = sys.argv[1:]
+if "--version" in args:
+    print("2.1.266 (Claude Code)")
+    raise SystemExit(0)
+if "--help" in args:
+    print(
+        "Usage: claude -p --output-format --verbose --model --effort --permission-prompts "
+        "--safe-mode --no-session-persistence --setting-sources --settings --resume "
+        "--tools --disallowedTools --permission-mode --allowedTools --add-dir "
+        "--mcp-config --strict-mcp-config --dangerously-skip-permissions"
+    )
+    raise SystemExit(0)
+
+_ = sys.stdin.read()
+idx = args.index("--setting-sources") + 1 if "--setting-sources" in args else -1
+sources = args[idx].split(",") if idx > 0 else ["user", "project", "local"]
+home_claude = pathlib.Path(os.environ["HOME"]) / ".claude"
+cfg_dir = pathlib.Path(os.environ.get("CLAUDE_CONFIG_DIR") or home_claude)
+
+
+def run_hooks(settings_file: pathlib.Path) -> None:
+    if not settings_file.is_file():
+        return
+    doc = json.loads(settings_file.read_text(encoding="utf-8"))
+    for entries in doc.get("hooks", {}).values():
+        for group in entries:
+            for hook in group.get("hooks", []):
+                if hook.get("type") == "command":
+                    subprocess.run(hook["command"], shell=True, check=False)
+
+
+if "user" in sources:
+    run_hooks(cfg_dir / "settings.json")
+if "project" in sources:
+    run_hooks(pathlib.Path.cwd() / ".claude/settings.json")
+if "local" in sources:
+    run_hooks(pathlib.Path.cwd() / ".claude/settings.local.json")
+
+step_doc = json.loads(pathlib.Path(args[args.index("--settings") + 1]).read_text(encoding="utf-8"))
+assert step_doc.get("disableAllHooks") is True
+assert step_doc.get("enableAllProjectMcpServers") is False
+assert os.environ.get("CLAUDE_CODE_DISABLE_CLAUDE_MDS") == "1"
+
+sid = args[args.index("--resume") + 1] if "--resume" in args else "sess_iso_01"
+marker = cfg_dir / "projects" / f"{sid}.json"
+turns = (json.loads(marker.read_text(encoding="utf-8"))["turns"] if marker.is_file() else 0) + 1
+if "--no-session-persistence" not in args:
+    marker.write_text(json.dumps({"turns": turns}), encoding="utf-8")
+
+msg, mdl = f"turns={turns}", "claude-sonnet-4-5-20250929"
+usage = {"input_tokens": 10, "output_tokens": 5}
+events = (
+    {"type": "system", "subtype": "init", "session_id": sid, "model": mdl, "claude_code_version": "2.1.266"},
+    {
+        "type": "assistant",
+        "session_id": sid,
+        "message": {"id": "m1", "model": mdl, "content": [{"type": "text", "text": msg}], "usage": usage},
+    },
+    {
+        "type": "result",
+        "subtype": "success",
+        "session_id": sid,
+        "is_error": False,
+        "stop_reason": "end_turn",
+        "result": msg,
+        "usage": usage,
+    },
+)
+for ev in events:
+    print(json.dumps(ev), flush=True)

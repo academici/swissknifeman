@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:storage:v1",
+  "title": "Storage settings",
+  "description": "Settings section 'storage' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "storage",
+    "owner": "platform",
+    "title": "Storage",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "StorageSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "StorageSettings"
+    }
+  },
+  "properties": {
+    "statement_timeout_ms": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 600000,
+      "default": 30000,
+      "description": "statement_timeout set on every connection; long queries fail with BACKEND_UNAVAILABLE.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Storage",
+          "order": 10,
+          "widget": "number"
+        }
+      }
+    },
+    "lock_timeout_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 600000,
+      "default": 10000,
+      "description": "lock_timeout set on every connection; 0 waits forever.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Storage",
+          "order": 20,
+          "widget": "number"
+        }
+      }
+    },
+    "idle_in_transaction_timeout_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600000,
+      "default": 60000,
+      "description": "Server-side limit of an idle open transaction (SET idle_in_transaction_session_timeout); 0 disables it.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Storage",
+          "order": 30,
+          "widget": "number"
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 3,
+          "description": "Attempts of one command transaction on serialization failure (40001/40P01) before SERIALIZATION_FAILURE.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Storage",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "backoff_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 50,
+          "description": "Base back-off between transaction retries; doubled per attempt with full jitter.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Storage",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "idempotency": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ttl_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 720,
+          "default": 72,
+          "description": "Lifetime of idempotency receipts; the janitor service purges older receipts.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Storage",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

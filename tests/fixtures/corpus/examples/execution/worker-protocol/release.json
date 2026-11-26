@@ -1,0 +1,45 @@
+{
+  "command": "execution.release_assignment",
+  "http": "POST /api/v1/worker/assignments/0193a000-0000-7000-8000-0000000b0012/release",
+  "exchanges": [
+    {
+      "title": "task accepted and integrated (row K5 -> Done): the worker releases the assignment and the environment is discarded",
+      "idempotency_key": "0193a000-0000-7000-8000-0000000b0012:release_assignment:1",
+      "request": {
+        "claim": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "fencing_token": 1
+        },
+        "reason": "done",
+        "retain_environment": false
+      },
+      "response": {
+        "assignment_state": "completed",
+        "attempt_state": "completed",
+        "environment_state": "discarded"
+      }
+    },
+    {
+      "title": "task waits for a person (row D5, WAITING_MANUAL_CHECK): the environment is kept for the same host",
+      "idempotency_key": "0193a000-0000-7000-8000-0000000b0018:release_assignment:1",
+      "request": {
+        "claim": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0018",
+          "attempt_id": "0193a000-0000-7000-8000-0000000a0018",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "fencing_token": 1
+        },
+        "reason": "waiting",
+        "retain_environment": true
+      },
+      "response": {
+        "assignment_state": "completed",
+        "attempt_state": "waiting",
+        "environment_state": "retained",
+        "task_required_host_id": "01928f60-1111-7aaa-8bbb-2c3d4e5f6a7b"
+      }
+    }
+  ]
+}

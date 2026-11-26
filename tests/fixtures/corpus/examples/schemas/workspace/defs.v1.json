@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:defs:v1",
+  "title": "Workspace definitions",
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]([a-z0-9]|-(?=[a-z0-9])){1,62}$"
+    },
+    "mount_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,31}$"
+    },
+    "host_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]{0,62}$"
+    },
+    "normalized_remote": {
+      "type": "string",
+      "pattern": "^[^/\\s]+/\\S+$",
+      "maxLength": 2048
+    },
+    "local_locator": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(/|[A-Za-z]:\\\\)[^\\n\\u0000]*$"
+    },
+    "git_object_id": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "host_platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "arch"
+      ],
+      "properties": {
+        "os": {
+          "type": "string",
+          "enum": [
+            "linux",
+            "macos",
+            "windows"
+          ],
+          "x-skm-enum-name": "HostOs"
+        },
+        "arch": {
+          "type": "string",
+          "enum": [
+            "x86_64",
+            "arm64",
+            "other"
+          ],
+          "x-skm-enum-name": "HostArch"
+        }
+      }
+    },
+    "checkout_marker": {
+      "$ref": "urn:skm:workspace:checkout-marker:v1"
+    },
+    "observed_checkout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exists",
+        "toplevel",
+        "remotes",
+        "head",
+        "dirty",
+        "marker",
+        "observed_at"
+      ],
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "toplevel": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/local_locator"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "remotes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/normalized_remote"
+          },
+          "uniqueItems": true,
+          "maxItems": 32
+        },
+        "head": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/git_object_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "marker": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/checkout_marker"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "dirty": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

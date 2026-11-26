@@ -1,0 +1,13 @@
+# Synthetic fixture; explicit resume refusal has a nonzero process exit.
+scenario = "resume_unsupported"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "fail_if_resume"
+exit_code = 3
+error = "resume unsupported"
+
+[result]
+text = "Fresh synthetic execution."

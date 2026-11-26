@@ -1,0 +1,4341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:execution:v1",
+  "title": "Execution settings",
+  "description": "Settings section 'execution' owned by execution. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "execution",
+    "owner": "execution",
+    "title": "Execution",
+    "validators": [
+      {
+        "id": "execution.timeouts_consistent",
+        "keys": [
+          "execution.stall.idle_seconds",
+          "execution.timeouts.step_wall_seconds"
+        ],
+        "rule": "step_wall_seconds == 0 or idle_seconds == 0 or idle_seconds <= step_wall_seconds"
+      },
+      {
+        "id": "execution.lease_renewal",
+        "keys": [
+          "execution.lease.ttl_seconds",
+          "execution.lease.renew_every_seconds"
+        ],
+        "rule": "renew_every_seconds * 2 < ttl_seconds"
+      },
+      {
+        "id": "execution.work_policy_bounds",
+        "keys": [
+          "execution.work_policy.role_warn_seconds",
+          "execution.work_policy.repro_warn_seconds"
+        ],
+        "rule": "every effective role has all three positive warning thresholds and light <= medium <= heavy; reproduction warning thresholds follow the same order"
+      },
+      {
+        "id": "execution.health_order",
+        "keys": [
+          "execution.health.wait_grace_seconds",
+          "execution.health.hung_after_seconds",
+          "execution.stall.idle_seconds"
+        ],
+        "rule": "wait_grace_seconds <= hung_after_seconds and (idle_seconds == 0 or hung_after_seconds <= idle_seconds)"
+      },
+      {
+        "id": "execution.handoff_bounds",
+        "keys": [
+          "execution.handoff.max_finding_chars",
+          "execution.handoff.max_total_bytes"
+        ],
+        "rule": "max_finding_chars <= max_total_bytes"
+      },
+      {
+        "id": "execution.integration_mode_consistent",
+        "keys": [
+          "execution.integration.commit_mode",
+          "execution.integration.strategy"
+        ],
+        "rule": "commit_mode == implementation_and_fixes ⇒ strategy in {rebase, merge}"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.settings",
+      "class": "ExecutionSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExecutionSettings"
+    }
+  },
+  "properties": {
+    "work_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "role_intensity": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "light",
+              "medium",
+              "heavy"
+            ]
+          },
+          "default": {
+            "scout": "medium",
+            "executor": "medium",
+            "reviewer": "medium",
+            "triager": "medium",
+            "advisor": "medium",
+            "researcher": "medium",
+            "registrar": "medium"
+          },
+          "description": "Requested instruction intensity per role; item/unit work_policy may override unlocked fields. Independent of route effort and never removes required review, checks or security gates.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Work policy",
+              "order": 10,
+              "widget": "map"
+            }
+          }
+        },
+        "verification_intensity": {
+          "type": "string",
+          "enum": [
+            "light",
+            "medium",
+            "heavy"
+          ],
+          "default": "medium",
+          "description": "Supplemental verification breadth: light targeted, medium affected contracts, heavy integration/recovery. Declared required checks always run; reusable evidence must match the exact acceptance contract.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Work policy",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "role_warn_seconds": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "light": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 172800
+              },
+              "medium": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 172800
+              },
+              "heavy": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 172800
+              }
+            },
+            "required": [
+              "light",
+              "medium",
+              "heavy"
+            ]
+          },
+          "default": {
+            "scout": {
+              "light": 300,
+              "medium": 600,
+              "heavy": 900
+            },
+            "executor": {
+              "light": 900,
+              "medium": 1800,
+              "heavy": 3600
+            },
+            "reviewer": {
+              "light": 180,
+              "medium": 300,
+              "heavy": 600
+            },
+            "triager": {
+              "light": 90,
+              "medium": 180,
+              "heavy": 300
+            },
+            "advisor": {
+              "light": 180,
+              "medium": 300,
+              "heavy": 600
+            },
+            "researcher": {
+              "light": 300,
+              "medium": 900,
+              "heavy": 1800
+            },
+            "registrar": {
+              "light": 30,
+              "medium": 60,
+              "heavy": 90
+            }
+          },
+          "description": "Soft elapsed-time warning thresholds by role and instruction intensity. Crossing a threshold reports overrun and prompts progress analysis; useful authorized work continues. Never passed to RuntimeLimits.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.work_policy_bounds"
+            ],
+            "ui": {
+              "group": "Work policy",
+              "order": 30,
+              "widget": "json"
+            }
+          }
+        },
+        "repro_warn_seconds": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(light|medium|heavy)$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
+          "default": {
+            "light": 30,
+            "medium": 60,
+            "heavy": 90
+          },
+          "description": "Soft reproduction-time warning threshold by triager intensity; does not replace the existing reproduction timeout or end useful work.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.work_policy_bounds"
+            ],
+            "ui": {
+              "group": "Work policy",
+              "order": 40,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,60}$",
+          "default": "reviewed-development",
+          "description": "Workflow resource used for tasks whose work_kind has no entry in profile_by_work_kind.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Workflow",
+              "order": 10,
+              "widget": "text"
+            }
+          }
+        },
+        "profile_by_work_kind": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(code|docs|research|config|test|review)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,60}$"
+          },
+          "default": {
+            "research": "research-only"
+          },
+          "description": "Workflow per unit work_kind.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Workflow",
+              "order": 20,
+              "widget": "map"
+            }
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request_workflow": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,60}$",
+          "default": "review-only",
+          "description": "Workflow of ad-hoc review runs started by execution.request_review (G5).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 10,
+              "widget": "text"
+            }
+          }
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 2,
+          "description": "Review rounds per task output chain before escalation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Review",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "final_correction": {
+          "type": "boolean",
+          "default": true,
+          "description": "After the last allowed review round, allow one final correction limited to confirmed blockers.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        },
+        "accept_findings_only": {
+          "type": "boolean",
+          "default": true,
+          "description": "Rework may address only triaged findings (fix_now); other changes count as deviations.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        },
+        "attention_policy": {
+          "type": "string",
+          "enum": [
+            "triage",
+            "ask_owner"
+          ],
+          "default": "triage",
+          "description": "Verdict attention: triage the findings automatically, or ask the owner.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 50,
+              "widget": "select"
+            }
+          }
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "per_task",
+            "risk_scored"
+          ],
+          "default": "risk_scored",
+          "description": "per_task: review mode from the plan; risk_scored: tasks with review mode self get a reviewer when the risk score passes threshold.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 60,
+              "widget": "select"
+            }
+          }
+        },
+        "grouping": {
+          "type": "string",
+          "enum": [
+            "none",
+            "groups"
+          ],
+          "default": "none",
+          "description": "none: every task output is reviewed on its own; groups: tasks of a group are reviewed together and blockers become follow-up tasks.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 70,
+              "widget": "select"
+            }
+          }
+        },
+        "followups_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 3,
+          "description": "Follow-up tasks created from one group review.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Review",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "solo_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Path globs whose changes are always reviewed on their own, even with grouping.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project",
+              "plan"
+            ],
+            "merge": "append_unique",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 90,
+              "widget": "tags"
+            }
+          }
+        },
+        "audit_scope": {
+          "type": "string",
+          "enum": [
+            "corrected",
+            "full"
+          ],
+          "default": "corrected",
+          "description": "A re-review audits only the corrected findings, or the full output.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 100,
+              "widget": "select"
+            }
+          }
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_./-]{1,120}$",
+          "default": "reviewer",
+          "description": "Agent profile resource of the reviewer role (security for the security review profile, G19).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Review",
+              "order": 110,
+              "widget": "text"
+            }
+          }
+        },
+        "security_on_risk": {
+          "type": "boolean",
+          "default": true,
+          "description": "A task whose risk features include security gets an additional review with the security profile.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Review",
+              "order": 120,
+              "widget": "toggle"
+            }
+          }
+        },
+        "risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "threshold": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "default": 60,
+              "description": "Risk score from which a self-reviewed task gets an independent review.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "replace",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Risk",
+                  "order": 10,
+                  "widget": "number"
+                }
+              }
+            },
+            "weights": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^(public_cli|schema|security|shared|diff_size|red_first|deviation|outside_write_set|executor_recommended)$"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "default": {
+                "public_cli": 25,
+                "schema": 25,
+                "security": 30,
+                "shared": 15,
+                "diff_size": 10,
+                "red_first": 10,
+                "deviation": 10,
+                "outside_write_set": 15,
+                "executor_recommended": 30
+              },
+              "description": "Weights of risk features.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "deep_merge",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Risk",
+                  "order": 20,
+                  "widget": "json"
+                }
+              }
+            },
+            "patterns": {
+              "type": "object",
+              "propertyNames": {
+                "pattern": "^(public_cli|schema|security|shared)$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "uniqueItems": true
+              },
+              "default": {
+                "public_cli": [
+                  "bin/**",
+                  "**/cli/**",
+                  "**/cli.py"
+                ],
+                "schema": [
+                  "**/schemas/**",
+                  "**/migrations/**"
+                ],
+                "security": [
+                  "**/auth/**",
+                  "**/security/**",
+                  "**/permissions/**"
+                ],
+                "shared": []
+              },
+              "description": "Path globs of path-based risk features (shared is project-specific, empty by default).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "deep_merge",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Risk",
+                  "order": 30,
+                  "widget": "json"
+                }
+              }
+            },
+            "diff_lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000,
+              "default": 400,
+              "description": "Changed lines past which the diff_size feature counts.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "replace",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Risk",
+                  "order": 40,
+                  "widget": "number"
+                }
+              }
+            },
+            "critical": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "public_cli",
+                  "schema",
+                  "security",
+                  "shared"
+                ]
+              },
+              "uniqueItems": true,
+              "default": [
+                "security"
+              ],
+              "description": "Features that require an independent review regardless of the score.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project",
+                  "plan"
+                ],
+                "merge": "union",
+                "reload": "run_frozen",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Risk",
+                  "order": 50,
+                  "widget": "tags"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "StartRun requires a fresh readiness report with status ready.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Readiness",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "max_age_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 2592000,
+          "default": 86400,
+          "description": "Age after which a readiness report is stale even when its inputs did not change.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Readiness",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "semantic_audit_allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "ValidateForExecution may request a semantic plan audit by the advisor through the plan-audit workflow; the permission is instance-controlled.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Readiness",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        },
+        "require_coverage": {
+          "type": "boolean",
+          "default": false,
+          "description": "Readiness is not_ready when a requirement has no acceptance criterion bound to a check or review.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Readiness",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "parallel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_units": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 2,
+          "description": "Tasks of one run executing at the same time (also bounded by worker.capacity).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Parallelism",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_runs_per_project": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 2,
+          "description": "Runs of one project in status running at the same time.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Parallelism",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "waiting_counts": {
+          "type": "boolean",
+          "default": false,
+          "description": "Tasks waiting for a human occupy a parallel slot.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Parallelism",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "rework": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 2,
+          "description": "Rework rounds after failed checks or manual verdicts; review rework uses execution.review.max_rounds.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Rework",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_findings": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 12,
+          "description": "Findings in one fix brief; blockers are never left out (more blockers raise the limit), the rest is referenced by the full report artifact.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Handoff",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_finding_chars": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 20000,
+          "default": 3000,
+          "description": "Characters of one finding in the fix brief (message, location, suggestion); longer text is cut and marked truncated.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.handoff_bounds"
+            ],
+            "ui": {
+              "group": "Handoff",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_inline_evidence_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536,
+          "default": 4000,
+          "description": "Evidence bytes inlined per finding; larger evidence is passed as a file version reference.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Handoff",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_total_bytes": {
+          "type": "integer",
+          "minimum": 4000,
+          "maximum": 1048576,
+          "default": 24000,
+          "description": "Bytes of one fix brief; beyond it truncated=true and the full report is referenced.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.handoff_bounds"
+            ],
+            "ui": {
+              "group": "Handoff",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase_review": {
+          "type": "string",
+          "enum": [
+            "off",
+            "on_risk",
+            "always"
+          ],
+          "default": "off",
+          "description": "Review of a whole phase at its phase_gate stage: never, when a task of the phase passed the risk threshold, always (G19).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Gates",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "attempts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_exhausted": {
+          "type": "string",
+          "enum": [
+            "escalate",
+            "fail"
+          ],
+          "default": "escalate",
+          "description": "After budgets.task.max_attempts: open a decision request for the owner, or fail the task.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Steps",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_result_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 1,
+          "description": "Repeats of a role step whose result stays invalid after form-only repair.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Steps",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_infra_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 1,
+          "description": "Repeats of a step after a retryable runtime error (rate limit, crash) before escalation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Steps",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 1,
+          "description": "Repeats of a check whose run ended in state error (not failed).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Checks",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "default_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800,
+          "default": 7200,
+          "description": "Timeout of a command check whose definition names none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checks",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "idle_timeout_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 3600,
+          "description": "Output-silence threshold for suspected_stall only; 0 disables suspicion. A silent check is stopped only by its authoritative check.timeout/wall deadline or explicit authorized cancellation, with process identity checked.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checks",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "reuse_green": {
+          "type": "boolean",
+          "default": true,
+          "description": "Reuse a passed check result whose fingerprint (output digest, check digest, env manifest) is unchanged.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checks",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "triage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reverify": {
+          "type": "boolean",
+          "default": true,
+          "description": "The triager re-checks blocker findings against the output before rework.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Triage",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "repro_timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600,
+          "default": 300,
+          "description": "Time limit of a reproduction command run by the triager.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Triage",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outside_policy": {
+          "type": "string",
+          "enum": [
+            "deviation",
+            "block"
+          ],
+          "default": "deviation",
+          "description": "Changes outside the write set: recorded as a deviation for acceptance, or block acceptance.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "deviation",
+                "block"
+              ]
+            },
+            "ui": {
+              "group": "Scope",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Acceptance requires stored evidence for every required check.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Evidence",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "advisor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the advisor role answers decision requests at all.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Advisor",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 2,
+          "description": "Advice rounds per task, all triggers together.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Advisor",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "human_gate": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "security",
+              "destructive",
+              "public_api",
+              "scope_expansion",
+              "product",
+              "legal",
+              "cost",
+              "data_loss"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "security",
+            "destructive",
+            "public_api",
+            "scope_expansion"
+          ],
+          "description": "Question categories always sent to the owner; union of all levels including the default, so no level can remove a category (G27).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Advisor",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "min_confidence": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "default": "medium",
+          "description": "Minimum advisor confidence to apply an answer automatically; the strictest level wins.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "ui": {
+              "group": "Advisor",
+              "order": 40,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "autonomy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "question_policy": {
+          "type": "string",
+          "enum": [
+            "advisor",
+            "queue",
+            "defaults",
+            "deny"
+          ],
+          "default": "advisor",
+          "description": "Blocking executor question: ask the advisor within authority, queue for the owner, apply documented defaults, or deny.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autonomy",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "max_questions_per_task": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 5,
+          "description": "Decision requests one task may open before it escalates to the owner.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autonomy",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "category_audience": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(local_reversible|bounded_ambiguity|cross_module|architectural|authority_required|external_fact)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "advisor",
+              "owner"
+            ]
+          },
+          "default": {
+            "local_reversible": "advisor",
+            "bounded_ambiguity": "advisor",
+            "cross_module": "advisor",
+            "architectural": "owner",
+            "authority_required": "owner",
+            "external_fact": "advisor"
+          },
+          "description": "Audience per decision category (G27): advisor or owner; per category the stricter value (owner) wins over farther explicit levels.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "advisor",
+                "owner"
+              ]
+            },
+            "ui": {
+              "group": "Autonomy",
+              "order": 30,
+              "widget": "map"
+            }
+          }
+        }
+      }
+    },
+    "questions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_expired": {
+          "type": "string",
+          "enum": [
+            "keep_waiting",
+            "fail_task"
+          ],
+          "default": "keep_waiting",
+          "description": "A decision request past its deadline keeps waiting or fails the task.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autonomy",
+              "order": 40,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "consilium": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,40}(/[A-Za-z0-9._:-]{1,120})?$"
+          },
+          "uniqueItems": true,
+          "maxItems": 5,
+          "default": [],
+          "description": "Route selectors runtime[/model] of consilium advisors; fewer than 2 disables the consilium.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consilium",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "low_confidence",
+            "always"
+          ],
+          "default": "low_confidence",
+          "description": "When the consilium is asked.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consilium",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "aggregation": {
+          "type": "string",
+          "enum": [
+            "majority"
+          ],
+          "default": "majority",
+          "description": "How consilium answers combine (v2.0: majority only; disagreement beyond it escalates to the owner).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consilium",
+              "order": 30,
+              "widget": "select"
+            }
+          }
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "default": 1,
+          "description": "Consilium rounds per decision request.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Consilium",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_resume_context_tokens": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 2000000,
+          "default": 120000,
+          "description": "A resumed session whose accumulated context exceeds this starts fresh with a handoff instead (G7).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Steps",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 15,
+          "maximum": 3600,
+          "default": 120,
+          "description": "Lifetime of an assignment lease without renewal.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.lease_renewal"
+            ],
+            "ui": {
+              "group": "Leases",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "renew_every_seconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 1200,
+          "default": 30,
+          "description": "How often a worker renews its lease (must be below ttl/2).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.lease_renewal"
+            ],
+            "ui": {
+              "group": "Leases",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "reap_wait_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 86400,
+          "default": 600,
+          "description": "How long an attempt whose runtime was running when its lease expired waits for the worker of the same host to confirm the reap before a new attempt starts (rule L2).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Leases",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "scheduler": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capability_wait_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 86400,
+          "default": 120,
+          "description": "A ready task no online worker can serve (labels, environment kind, capabilities) waits this long before a WAITING diagnostic.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Scheduling",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "materials": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recheck_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 86400,
+          "default": 300,
+          "description": "Interval of re-checking material availability for tasks BLOCKED_BY_MATERIAL.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Scheduling",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "timeouts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "step_wall_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 172800,
+          "default": 0,
+          "description": "Ceiling on one role step; 0 uses timeouts.role_wall_seconds or none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.timeouts_consistent"
+            ],
+            "ui": {
+              "group": "Timeouts",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "attempt_wall_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800,
+          "default": 0,
+          "description": "Ceiling on one attempt; 0 = none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Timeouts",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "role_wall_seconds": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 172800
+          },
+          "default": {
+            "scout": 1800,
+            "executor": 14400,
+            "reviewer": 1800,
+            "triager": 1800,
+            "advisor": 1800,
+            "researcher": 3600,
+            "registrar": 600
+          },
+          "description": "Emergency wall ceiling per role invocation, independent of work intensity. Reviewer defaults to 1800 seconds at every intensity; soft work_policy time warnings never stop work.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Timeouts",
+              "order": 30,
+              "widget": "json"
+            }
+          }
+        },
+        "stage_seconds": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(prepare_environment|integrate)$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800
+          },
+          "default": {
+            "prepare_environment": 900,
+            "integrate": 1800
+          },
+          "description": "Wall-clock limit of non-agent stages; agent steps use step_wall_seconds and role_wall_seconds; 0 = none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Timeouts",
+              "order": 40,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "stall": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "idle_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 5400,
+          "description": "No-progress observation threshold for suspected_stall; 0 disables suspicion. Missing output/events is not process death and alone never authorizes cancellation, restart or destructive recovery.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.timeouts_consistent",
+              "execution.health_order"
+            ],
+            "ui": {
+              "group": "Timeouts",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hung_after_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 86400,
+          "default": 300,
+          "description": "A stage past its deadline or a lease heartbeat older than this is classified hung.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.health_order"
+            ],
+            "ui": {
+              "group": "Health",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "stall_repeat_n": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 5,
+          "description": "The same command repeated this many times counts as no progress for the stall rule; 0 disables it.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Health",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "wait_grace_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Grace after a waiting deadline before a stage counts as suspected_stall.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.health_order"
+            ],
+            "ui": {
+              "group": "Health",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "run_warn_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 2592000,
+          "default": 7200,
+          "description": "Active run time after which run health reports a long-running warning.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Health",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "supervisor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "recover": {
+          "type": "string",
+          "enum": [
+            "notify",
+            "stop_only",
+            "resume"
+          ],
+          "default": "notify",
+          "description": "Recovery mode after a health finding: notify, stop_only or resume. Destructive action additionally requires an expired authoritative deadline, explicit authorized cancellation or verified lease recovery and current process identity; suspicion or silence alone only notifies.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Supervisor",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "max_recoveries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 2,
+          "description": "Circuit breaker (G10): automatic recoveries of one run within window_seconds; one more pauses the run and opens a decision request.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Supervisor",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "window_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 604800,
+          "default": 3600,
+          "description": "Window of the recovery circuit breaker.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Supervisor",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "grace_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600,
+          "default": 60,
+          "description": "Grace after SIGINT and after SIGTERM before SIGKILL of a runtime process group.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Supervisor",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "diagnostic_snapshot": {
+          "type": "boolean",
+          "default": true,
+          "description": "Before killing a stalled runtime process group, save a diagnostic snapshot (process tree, last output) as evidence (G10).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Supervisor",
+              "order": 50,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_error": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]{1,40}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "action"
+            ],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "stop",
+                  "retry",
+                  "retry_after",
+                  "fallback_route",
+                  "replan",
+                  "reconcile"
+                ]
+              },
+              "max": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              }
+            }
+          },
+          "default": {},
+          "description": "Override of the retry table per runtime error class: action and maximum repeats.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Retry",
+              "order": 10,
+              "widget": "json"
+            }
+          }
+        },
+        "fallback_routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "runtime"
+            ],
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "scout",
+                  "executor",
+                  "reviewer",
+                  "triager",
+                  "advisor",
+                  "researcher",
+                  "registrar"
+                ]
+              },
+              "runtime": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{1,31}$"
+              },
+              "model_class": {
+                "type": "string",
+                "enum": [
+                  "economy",
+                  "implementation",
+                  "frontier"
+                ]
+              },
+              "effort": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh"
+                ]
+              }
+            }
+          },
+          "default": [],
+          "description": "Routes tried in order when the error class action is fallback.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Retry",
+              "order": 20,
+              "widget": "json"
+            }
+          }
+        },
+        "provider_wait_max_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800,
+          "default": 21600,
+          "description": "Longest wait for a provider rate limit or quota reset before escalation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Retry",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "budget_total_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 6,
+          "description": "Stage repeats over the whole run.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Retry",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "integration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._/{}-]{1,200}$",
+          "default": "skm/integration/{run}",
+          "description": "Branch accepted tasks are integrated into; {run} expands to the run alias.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 10,
+              "widget": "text"
+            }
+          }
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "squash",
+            "rebase",
+            "merge"
+          ],
+          "default": "squash",
+          "description": "How an accepted output enters the integration branch: squash (one commit with the accepted tree), rebase or merge of the output chain.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.integration_mode_consistent"
+            ],
+            "ui": {
+              "group": "Integration",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "commit_mode": {
+          "type": "string",
+          "enum": [
+            "final_only",
+            "implementation_and_fixes"
+          ],
+          "default": "final_only",
+          "description": "final_only: one commit per accepted task; implementation_and_fixes: the first output is an implementation commit and every rework output a fix commit.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "execution.integration_mode_consistent"
+            ],
+            "ui": {
+              "group": "Integration",
+              "order": 30,
+              "widget": "select"
+            }
+          }
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._/~^@{}-]{1,200}$",
+          "default": "HEAD",
+          "description": "Ref the integration branch starts from when it does not exist yet.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 40,
+              "widget": "text"
+            }
+          }
+        },
+        "exclude_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [
+            ".skm/**"
+          ],
+          "description": "Globs never committed (runtime artifacts, transcripts, evidence); the sealer also excludes the runtime's declared artifact paths.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 50,
+              "widget": "tags"
+            }
+          }
+        },
+        "commit_scope": {
+          "type": "string",
+          "pattern": "^([a-z0-9-]{1,40})?$",
+          "default": "",
+          "description": "Scope of commit subjects type(scope): ...; empty omits the scope.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 60,
+              "widget": "text"
+            }
+          }
+        },
+        "rerun_checks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Rerun checks marked rerun_after_integration after each integration.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 70,
+              "widget": "toggle"
+            }
+          }
+        },
+        "slot_poll_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 5,
+          "description": "Wait before a worker asks again for a busy integration slot.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "slot_wait_max_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 86400,
+          "default": 1800,
+          "description": "Longest wait for the integration slot before the stage fails with SLOT_BUSY.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Integration",
+              "order": 90,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "git_worktree",
+            "existing_checkout",
+            "managed_clone"
+          ],
+          "default": "git_worktree",
+          "description": "Kind of attempt environment: a git worktree of the bound checkout, the checkout itself (one attempt at a time), or a clone managed by the worker.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Environment",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "clone_depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000,
+          "default": 50,
+          "description": "History depth of a managed clone; 0 clones the full history.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Environment",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "workers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "selector": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_.-]{0,40}(=[A-Za-z0-9_.-]{1,60})?$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Labels a worker must all have (worker.labels) to claim tasks of this scope; label or label=value; accumulates over levels.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Workers",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_task_failed": {
+          "type": "string",
+          "enum": [
+            "continue",
+            "stop"
+          ],
+          "default": "continue",
+          "description": "continue: independent tasks go on and the run ends failed; stop: pause the run at the first failed task.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Run",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "reconfigure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}(\\.\\*)?$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "budgets.run.*",
+            "budgets.task.*",
+            "execution.parallel.max_units"
+          ],
+          "description": "Instance restriction intersected with the fixed semantic run-reconfiguration allowlist; trailing .* restricts matching groups but never authorizes arbitrary workflow, security or acceptance changes.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Run",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "context_tokens": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2000000
+          },
+          "default": {
+            "scout": 30000,
+            "executor": 60000,
+            "reviewer": 50000,
+            "triager": 20000,
+            "advisor": 30000
+          },
+          "description": "Average context tokens per role used by the readiness budget estimate.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Estimate",
+              "order": 10,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "scout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "off",
+            "auto",
+            "always"
+          ],
+          "default": "auto",
+          "description": "When the scout stage runs: never, when the item route sets the scout flag, or for every task.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Stages",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "kill_switch": {
+      "type": "boolean",
+      "default": false,
+      "description": "Stop issuing assignments and pause running runs in this scope (live; lock it at instance to hold it).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": true,
+        "ui": {
+          "group": "Run",
+          "order": 30,
+          "widget": "toggle"
+        }
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+          "default": "2.0.0",
+          "description": "Workers older than this version are refused at claim with CLIENT_TOO_OLD.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Workers",
+              "order": 20,
+              "widget": "text"
+            }
+          }
+        }
+      }
+    },
+    "carry_forward": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether accepted results may be carried forward to a run of a newer revision (manual only).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Run",
+              "order": 40,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "argv that regenerates generated files of the project, run in the attempt environment before checks.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": true,
+            "ui": {
+              "group": "Generation",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "check_command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "argv that verifies generated files are fresh (exit 0).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": true,
+            "ui": {
+              "group": "Generation",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Globs of generated files: writes there by the executor are allowed only through generation.command.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Generation",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "debug": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Debug mode: verbose step logs and DEBUG markers in run events.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": true,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Debug",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": [
+            "required",
+            "conditional",
+            "off"
+          ],
+          "default": "conditional",
+          "description": "When a task gets a research stage: always, when its research need is required/optional, or never.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "autopilot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the autopilot service may run at all in this instance.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the autopilot continues the approved queue of this project.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autopilot",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        },
+        "queue": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9:._/-]{1,200}$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Approved plan references (aliases or ids) the autopilot may start runs for, in order.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autopilot",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "max_runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 20,
+          "description": "Runs one autopilot session may start.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "max_wall_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 2592000,
+          "default": 43200,
+          "description": "Wall-clock seconds of one autopilot session.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "max_no_progress_runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 2,
+          "description": "Runs in a row without an accepted task before AUTOPILOT stops.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "max_auto_decisions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500,
+          "default": 10,
+          "description": "Advisor-answered questions one session may accept before stopping for the owner.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        },
+        "quota_wait_max_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800,
+          "default": 21600,
+          "description": "Longest wait for a provider quota reset before the autopilot stops.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "accept_advisories": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start runs whose readiness is ready_with_advisories.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 90,
+              "widget": "toggle"
+            }
+          }
+        },
+        "max_waiting_runs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 3,
+          "description": "Runs of the queue waiting for a human at the same time before the autopilot stops starting new ones.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 100,
+              "widget": "number"
+            }
+          }
+        },
+        "max_no_improvement_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 2,
+          "description": "Rework rounds in a row whose checks and review do not improve before the autopilot stops (S-49).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 110,
+              "widget": "number"
+            }
+          }
+        },
+        "max_consecutive_failures": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 3,
+          "description": "Runs in a row ended by an infrastructure failure (runtime crash, worker lost, environment error) before the autopilot stops (G8).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Autopilot",
+              "order": 120,
+              "widget": "number"
+            }
+          }
+        },
+        "stop_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "run_failed",
+              "task_failed",
+              "attention_verdict",
+              "deviation_accepted",
+              "quota_wait",
+              "readiness_advisories"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Optional stop conditions added to the mandatory ones (no work, owner needed, budget, repeated blocker, integrity violation, checkout ownership lost, no progress, decisions exceeded) (G8).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Autopilot",
+              "order": 130,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    }
+  }
+}

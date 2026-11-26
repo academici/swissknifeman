@@ -1,0 +1,48 @@
+{
+  "command": "execution.report_attempt_failure",
+  "http": "POST /api/v1/worker/assignments/0193a000-0000-7000-8000-0000000b0021/failure",
+  "task": "P2.1/U1 (task 0193a000-0000-7000-8000-000000000021)",
+  "idempotency_key": "0193a000-0000-7000-8000-0000000b0021:report_attempt_failure:1",
+  "request": {
+    "claim": {
+      "assignment_id": "0193a000-0000-7000-8000-0000000b0021",
+      "attempt_id": "0193a000-0000-7000-8000-0000000a0021",
+      "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+      "fencing_token": 1
+    },
+    "stage_record_id": "0193a000-0000-7000-8000-0000000c0201",
+    "error_class": "environment_lost",
+    "detail": "worktree /var/lib/skm/worktrees/0193a000-0000-7000-8000-0000000a0021/api disappeared (removed outside SKM)",
+    "worktree_dirty": false
+  },
+  "response": {
+    "task_status": "ready",
+    "next": {
+      "kind": "release",
+      "release_reason": "cancelled"
+    }
+  },
+  "server_effects": [
+    "stage 0193a000-0000-7000-8000-0000000c0201 -> failed (error_code RUNTIME_CRASHED, class environment_lost)",
+    "decide_retry -> NewAttempt(RETRY_NEW_ATTEMPT): attempt 1 -> abandoned, task -> ready (T22)",
+    "schedule_ready_tasks creates attempt 2 with a new environment; fix briefs and findings of attempt 1 stay with the task"
+  ],
+  "error_classes": [
+    "authentication",
+    "authorization",
+    "quota",
+    "rate_limit",
+    "invalid_request",
+    "model_unavailable",
+    "content_policy",
+    "transport",
+    "provider_internal",
+    "timeout",
+    "context_limit",
+    "unknown",
+    "unknown_outcome",
+    "environment_lost",
+    "disk_low",
+    "worker_shutdown"
+  ]
+}

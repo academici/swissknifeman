@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:command:add-file:v1",
+  "title": "AddFile",
+  "description": "Create a logical file and its version 1 from a staged blob (SkmClient.upload_blob). Consumes the staged blob.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "title",
+    "origin",
+    "blob",
+    "original_filename",
+    "source"
+  ],
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "origin": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/file_origin"
+    },
+    "classification": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/classification",
+      "default": "internal"
+    },
+    "blob": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+    },
+    "original_filename": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^(?!\\.{1,2}$)[^/\\\\\\u0000-\\u001f\\u007f-\\u009f\\u202a-\\u202e\\u2066-\\u2069]+$",
+      "description": "G21: basename only (no '/', '\\\\'), not '.' or '..', no control or bidi characters; at most 255 UTF-8 bytes (checked by the domain: validate_filename, since JSON Schema counts code points)."
+    },
+    "declared_media_type": {
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 200,
+          "pattern": "^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "type/subtype (RFC 6838), lower-case, parameters stripped by the client; compared with the signature (CS-MEDIA-MISMATCH)."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "default": ""
+    },
+    "source": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/version_source"
+    },
+    "acknowledge": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:artifacts:defs:v1#/$defs/safety_rule"
+      },
+      "uniqueItems": true,
+      "default": []
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.commands",
+      "class": "AddFile",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "AddFile"
+    }
+  }
+}

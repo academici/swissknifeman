@@ -1,0 +1,36 @@
+{
+  "schema": "urn:skm:runtimes:runtime-observation:v1",
+  "request_id": "01928f61-3333-7aaa-8bbb-2c3d4e5f6a7c",
+  "binding": {
+    "runtime_id": "fake",
+    "runtime_version": null,
+    "adapter_version": null,
+    "executable_sha256": null,
+    "verification_key": null,
+    "provider_reported_model": null,
+    "model_source": "unavailable"
+  },
+  "timing": {
+    "clock_domain_id": null,
+    "duration_ms": null,
+    "first_observed_at": "2026-10-26T10:00:00.000Z",
+    "last_observed_at": "2026-10-26T10:03:00Z"
+  },
+  "capture": {
+    "coverage": "partial",
+    "bytes_seen": null,
+    "bytes_retained": null,
+    "bytes_dropped": null,
+    "truncated": null,
+    "gaps": [
+      "capture_gap",
+      "process_epoch_changed"
+    ],
+    "parser_flags": [],
+    "live_events_dropped": null
+  },
+  "tools": {
+    "coverage": "unavailable",
+    "observed_calls": null
+  }
+}

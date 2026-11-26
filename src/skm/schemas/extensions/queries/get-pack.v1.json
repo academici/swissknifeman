@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:query:get-pack:v1",
+  "title": "GetPack",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pack": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [
+    "pack"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.queries",
+      "class": "GetPack",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "GetPack"
+    }
+  }
+}

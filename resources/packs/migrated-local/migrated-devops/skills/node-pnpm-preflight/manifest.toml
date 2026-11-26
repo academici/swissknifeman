@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "node-pnpm-preflight"
+version = "0.1.0"
+kind = "domain"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor", "registrar"]
+
+[provenance]
+source = "local"

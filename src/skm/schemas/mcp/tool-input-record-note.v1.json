@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:record-note:v1",
+  "title": "skm_record_note input",
+  "description": "Input for the skm_record_note MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "assumption",
+        "risk"
+      ]
+    }
+  },
+  "required": [
+    "text",
+    "kind"
+  ]
+}

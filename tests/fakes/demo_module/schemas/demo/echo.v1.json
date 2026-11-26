@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:demo:command:echo:v1",
+  "title": "Echo",
+  "description": "Test-only command of the demo module: echo a text in a workspace.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_id", "text"],
+  "properties": {
+    "workspace_id": {"type": "string", "format": "uuid"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

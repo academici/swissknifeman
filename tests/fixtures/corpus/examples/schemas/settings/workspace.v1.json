@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:workspace:v1",
+  "title": "Workspace settings",
+  "description": "Settings section 'workspace' owned by workspace. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "workspace",
+    "owner": "workspace",
+    "title": "Workspace",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.settings",
+      "class": "WorkspaceSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "WorkspaceSettings"
+    }
+  },
+  "properties": {
+    "locale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+      "default": "en",
+      "description": "Default human language of reports and agent summaries in this workspace.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Workspace",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "default_project": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$",
+      "description": "Project slug the CLI selects when `skm use` names only the workspace.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "workspace"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": true,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Workspace",
+          "order": 20,
+          "widget": "text"
+        }
+      }
+    },
+    "checkout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verify_on_resolve": {
+          "type": "boolean",
+          "default": true,
+          "description": "Re-check remotes and HEAD of a checkout binding every time it is resolved for execution.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checkout",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "stale_after_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650,
+          "default": 30,
+          "description": "A binding not verified for this many days is reported as stale by doctor.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checkout",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "marker_path": {
+          "type": "string",
+          "pattern": "^[^/~][^\\\\]{0,255}$",
+          "default": ".skm/project.json",
+          "description": "Checkout-relative path of the marker file that binds a checkout to its project (no .. segments).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Checkout",
+              "order": 30,
+              "widget": "text"
+            }
+          }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_remote_hosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9.-]+$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Git hosts repositories may be registered from; empty list = any host (unlimited).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect",
+              "unlimited": []
+            },
+            "ui": {
+              "group": "Repositories",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "offline_after_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600,
+          "default": 120,
+          "description": "A worker without a heartbeat for this long is marked offline.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Workers",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:record-stage-result:v1",
+  "title": "RecordStageResult",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "stage_record_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "outcome_kind": {
+      "type": "string"
+    },
+    "outcome": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/evidence-item"
+      }
+    },
+    "usage": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:runtimes:usage-report:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "activity": {
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "runtimes.summarize_tool_activity summary (attempt_steps.activity)."
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "observation": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:runtimes:runtime-observation:v1"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "step_id",
+          "observation"
+        ]
+      },
+      "maxItems": 8,
+      "description": "Exact unique current-stage steps under the existing claim/fence; each observation <=16KiB. Absence means unavailable. Persist one StepObservationRecorded per step in the terminal UoW; no authority comes from observation."
+    }
+  },
+  "required": [
+    "claim",
+    "stage_record_id",
+    "outcome_kind",
+    "outcome"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "RecordStageResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RecordStageResult"
+    }
+  }
+}

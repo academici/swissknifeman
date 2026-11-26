@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:checks:v1",
+  "title": "Checks settings",
+  "description": "Settings section 'checks' owned by execution. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "checks",
+    "owner": "execution",
+    "title": "Checks",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.settings",
+      "class": "ChecksSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ChecksSettings"
+    }
+  },
+  "properties": {
+    "env": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base_allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "PATH",
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "TZ",
+            "TMPDIR",
+            "TERM"
+          ],
+          "description": "Names every check may receive from sanitized safe host values (plus definition env_allow); never arbitrary parent os.environ or worker/DB/provider credentials.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Environment",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 2147483648,
+          "default": 52428800,
+          "description": "Bytes of stdout/stderr captured per check; beyond it the stream is cut and marked [truncated].",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Capture",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "summary_chars": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 100000,
+          "default": 4000,
+          "description": "Characters of the redacted output tail kept as the check summary.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Capture",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "timeout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 172800,
+          "default": 7200,
+          "description": "Upper bound of a check's timeout_seconds (execution.checks.default_timeout_seconds applies when the definition names none).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Timeouts",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "shell": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Checks of kind shell may run (they also need risk_ack in the definition).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Shell",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:plan:v1",
+  "title": "PlanView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string",
+      "minLength": 0
+    },
+    "title": {
+      "type": "string",
+      "minLength": 0
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "review_requests"
+      ]
+    },
+    "lifecycle_state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ]
+    },
+    "current_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "current_revision_no": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "open_drafts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updated_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string",
+            "minLength": 0
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "short",
+              "system",
+              "legacy",
+              "external"
+            ]
+          }
+        },
+        "required": [
+          "alias",
+          "kind"
+        ]
+      }
+    },
+    "created_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "archived_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "next_revision_no": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "plan_id",
+    "alias",
+    "title",
+    "purpose",
+    "lifecycle_state",
+    "current_revision_id",
+    "current_revision_no",
+    "open_drafts",
+    "updated_at",
+    "workspace_id",
+    "project_id",
+    "aliases",
+    "created_by",
+    "created_at",
+    "archived_at",
+    "row_version",
+    "next_revision_no"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "PlanView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanView"
+    }
+  }
+}

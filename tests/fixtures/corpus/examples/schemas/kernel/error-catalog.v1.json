@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:kernel:error-catalog:v1",
+  "title": "ErrorCatalog",
+  "description": "Catalog of every error code of SKM v2. The data document is schemas/kernel/data/error-codes.json; tools/gen.py turns it into skm/kernel/generated/error_codes.py and docs/reference/errors.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "categories",
+    "codes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:kernel:error-catalog:v1"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "categories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "http_status",
+          "cli_exit"
+        ],
+        "properties": {
+          "category": {
+            "$ref": "#/$defs/category"
+          },
+          "http_status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 599
+          },
+          "cli_exit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "category",
+          "http_status",
+          "cli_exit",
+          "retryable",
+          "description"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
+          },
+          "category": {
+            "$ref": "#/$defs/category"
+          },
+          "http_status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 599
+          },
+          "cli_exit": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "not_found",
+        "validation",
+        "conflict",
+        "precondition",
+        "forbidden",
+        "unauthenticated",
+        "capability",
+        "backend",
+        "outcome_unknown",
+        "waiting",
+        "internal"
+      ]
+    }
+  }
+}

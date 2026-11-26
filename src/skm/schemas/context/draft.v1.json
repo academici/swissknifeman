@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:draft:v1",
+  "title": "ContextDraft",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:context:defs:v1#/$defs/DraftBlock"
+      }
+    },
+    "conditional": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:context:defs:v1#/$defs/ConditionalBlock"
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:context:defs:v1#/$defs/ManifestBlock"
+      }
+    },
+    "host_inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:context:defs:v1#/$defs/HostInputRequest"
+      }
+    },
+    "templates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "prompt_plan": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "budget": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/BudgetPolicy"
+    },
+    "resume": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:context:defs:v1#/$defs/ResumeInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "skills_trace": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    },
+    "draft_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "blocks",
+    "conditional",
+    "excluded",
+    "host_inputs",
+    "templates",
+    "prompt_plan",
+    "variables",
+    "budget",
+    "resume",
+    "skills_trace",
+    "diagnostics",
+    "draft_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.documents",
+      "class": "ContextDraft",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ContextDraft"
+    }
+  }
+}

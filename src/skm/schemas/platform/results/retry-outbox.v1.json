@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:result:retry-outbox:v1",
+  "title": "RetryOutboxResult",
+  "description": "platform result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "requeued": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "requeued"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.results",
+      "class": "RetryOutboxResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "RetryOutboxResult"
+    }
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:skill-manifest:v1",
+  "title": "SkillManifest",
+  "description": "manifest.toml next to SKILL.md (spec/modules/extensions.md §4.5). SKILL.md frontmatter holds only name and description. Example: examples/skills/sample-skill/manifest.toml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "key",
+    "version"
+  ],
+  "$defs": {
+    "skill_key": {
+      "type": "string",
+      "pattern": "^(?:[a-z][a-z0-9_-]*:)?[a-z0-9][a-z0-9-]{1,80}$"
+    }
+  },
+  "properties": {
+    "schema": {
+      "const": "urn:skm:extensions:skill-manifest:v1"
+    },
+    "key": {
+      "$ref": "#/$defs/skill_key"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "domain",
+        "router",
+        "reference",
+        "persona",
+        "workflow"
+      ],
+      "default": "domain",
+      "description": "router, reference and persona are not preloaded (kind_not_preloaded): explicit include or skill_index only."
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skill_key"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "requires_tools": {
+      "type": "array",
+      "uniqueItems": true,
+      "default": [],
+      "items": {
+        "type": "string",
+        "pattern": "^(Read|Edit|Write|Grep|Glob|Bash|WebFetch|WebSearch|mcp__[a-z0-9_-]+__[a-z0-9_-]+)$"
+      }
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "exclusive_group": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+    },
+    "replaced_by": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "max_tokens": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 50000
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "low"
+    },
+    "license": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/spdx"
+    },
+    "triggers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "uniqueItems": true,
+          "default": []
+        },
+        "deps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(pip|npm|composer|cargo|go):[A-Za-z0-9@/._-]+$"
+          },
+          "uniqueItems": true,
+          "default": []
+        }
+      }
+    },
+    "conflicts_with": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skill_key"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "local",
+            "upstream"
+          ]
+        },
+        "repo": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "replace",
+            "notify",
+            "fork",
+            "merge"
+          ]
+        },
+        "license": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/spdx"
+        },
+        "upstream_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "url",
+              "sha256",
+              "fetched_at"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "fetched_at": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        },
+        "audit_verdict": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "audit_at": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "upstream"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "repo",
+              "strategy",
+              "upstream_sha"
+            ]
+          }
+        }
+      ]
+    },
+    "compat_accepted": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "checks",
+          "reason"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "default": [],
+      "description": "Only for provenance.source = upstream."
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.skill",
+      "class": "SkillManifestDoc",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "SkillManifest"
+    }
+  }
+}

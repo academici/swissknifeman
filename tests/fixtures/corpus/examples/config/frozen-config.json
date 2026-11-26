@@ -1,0 +1,14 @@
+{
+  "schema": "urn:skm:config:frozen:v1",
+  "registry_digest": "sha256:65a65d26400f2c219bb5fbd0d93d727ecb8b02635f0803cfa07de2aedbcc5a68",
+  "values": {
+    "execution.review.max_rounds": 3
+  },
+  "run_scope_id": "019d54a4-7e00-7000-8000-000000000001",
+  "generation": 7,
+  "pack_generation": 2,
+  "digest": "sha256:01d2dce5561f4b3a24a56871604cf8582403c4e8a7990719bbf345ca89099bc8",
+  "provenance": {
+    "execution.review.max_rounds": "default"
+  }
+}

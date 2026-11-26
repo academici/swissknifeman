@@ -1,0 +1,13 @@
+{
+  "schema": "urn:skm:integrations:defs:v1#/$defs/hook_event",
+  "target": "grok",
+  "kind": "pre_shell",
+  "session_id": "grk-5520",
+  "cwd": "/home/dev/demo",
+  "tool_name": "shell",
+  "command": "git status --short",
+  "paths": [],
+  "prompt": null,
+  "stop_status": null,
+  "raw_event_name": "PreToolUse"
+}

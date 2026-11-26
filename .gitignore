@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+web/node_modules/
+web/dist/
+.codegraph/
+
+# Local AI client environments and runtime state
+/.agents/
+/.claude/
+/.codex/
+/.cursor/
+/.grok/
+/.serena/
+/.swissknifeman/
+/CLAUDE.md
+
+# Historical local diagnostic transcripts
+/tests/contracts/integrations/evidence.txt
+/tests/contracts/integrations/review-correction-evidence.txt

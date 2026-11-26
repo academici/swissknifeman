@@ -1,0 +1,13 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "dart-package-development"
+version = "0.1.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[triggers]
+paths = ["pubspec.yaml"]
+
+[provenance]
+source = "local"

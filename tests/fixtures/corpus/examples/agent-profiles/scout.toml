@@ -1,0 +1,61 @@
+# Agent profile of the core source pack: resources/packs/core/agent-profiles/scout.toml
+# Schema: urn:skm:extensions:agent-profile:v1 (examples/schemas/extensions/agent-profile.v1.json);
+# spec: working/spec/modules/extensions.md §4.6, context.md §4.4.1 (inheritance matrix), runtimes.md §4.3.1, §4.11.
+# Legacy: packages/orch/roles/context-scout.json (economy, filesystem read, shell read_only, network none).
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "scout"
+version = "2.0.0"
+role = "scout"
+title = "Context scout"
+description = "Maps the code a task touches before the executor starts: entry points, files to read, tests that cover them. Reads only."
+result_schema = "urn:skm:execution:role-result:scout:v1"
+llm = true
+
+# Routing class and effort; config_isolation is added by routing itself when inherit_user_global = false.
+[routing]
+model_class = "economy"
+effort = "medium"
+required_capabilities = ["headless_execution", "structured_result", "workspace_binding"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+# policy_profile is the policy profile id (policy.md §4.5); layer only narrows it (urn:skm:policy:permission-layer:v1).
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read", "shell.run"]
+
+# Prompt blocks per block type, in render order inside the type (keys of prompt_block resources).
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["scout/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["scout/result_contract"]
+
+[context]
+include = ["materials", "repo_instructions", "skills"]
+inherit_user_global = false
+repo_instructions = "constraints"
+repo_instruction_sections = ["Constraints", "Security", "Read only"]
+skills_mode = "allowlist"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 4000
+history_max_steps = 0
+memory_top_k = 0
+include_optional_materials = false
+
+[context.budgets]
+supporting = 16000
+
+[limits]
+timeout_seconds = 900
+idle_timeout_seconds = 300
+max_turns = 60
+max_output_tokens = 8000
+max_result_retries = 1

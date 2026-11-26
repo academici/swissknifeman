@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:check-result:v1",
+  "title": "CheckResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$ref": "urn:skm:integrations:defs:v1#/$defs/CheckResult",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "CheckResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "CheckResult"
+    }
+  }
+}

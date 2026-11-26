@@ -1,0 +1,918 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:policy:v1",
+  "title": "Policy settings",
+  "description": "Settings section 'policy' owned by policy. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "policy",
+    "owner": "policy",
+    "title": "Policy",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.settings",
+      "class": "PolicySettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "PolicySettings"
+    }
+  },
+  "properties": {
+    "default_profile": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,40}$",
+      "default": "workspace-contained",
+      "description": "Id of a built-in permission profile or a custom profile from policy.profiles, used when a role names none.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": true,
+        "ui": {
+          "group": "Profile",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9-]{1,40}$",
+        "not": {
+          "enum": [
+            "workspace-contained",
+            "read-only",
+            "trusted-full-access"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "$ref": "urn:skm:policy:profile:v1"
+      },
+      "default": {},
+      "description": "Custom permission profiles by id (urn:skm:policy:profile:v1, also from packs); an id may not shadow a built-in profile.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "deep_merge",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": true,
+        "ui": {
+          "group": "Profile",
+          "order": 20,
+          "widget": "json"
+        }
+      }
+    },
+    "restrictions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:permission-layer:v1"
+      },
+      "default": [],
+      "description": "Permission layers (partial profiles) narrowing the effective permissions; layers of all levels apply together (conjunction).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "append",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Restrictions",
+          "order": 10,
+          "widget": "json"
+        }
+      }
+    },
+    "safe_dirs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Host directories outside worktrees that read-only tool calls may access (e.g. a shared cache).",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "append_unique",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "path": true,
+        "ui": {
+          "group": "Host",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "interactive": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "profile": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,40}$",
+          "default": "workspace-contained",
+          "description": "Permission profile evaluated by client hooks of interactive sessions (skm-hook).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": true,
+            "ui": {
+              "group": "Profile",
+              "order": 30,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "ceiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "network": {
+          "type": "string",
+          "enum": [
+            "any",
+            "allowlist",
+            "none"
+          ],
+          "default": "allowlist",
+          "description": "Network ceiling of agent steps: any, only network_allowlist hosts, or none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "any",
+                "allowlist",
+                "none"
+              ]
+            },
+            "ui": {
+              "group": "Ceiling",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "network_allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9*.-]+(:[0-9]{1,5})?$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Host patterns reachable when the network ceiling is allowlist; empty forbids every host. Use network=any for unrestricted access.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Ceiling",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "shell": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether checks of kind shell and shell tool calls may run at all.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Ceiling",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        },
+        "external_effects": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "git_commit",
+              "git_push",
+              "pr_create",
+              "message",
+              "publish",
+              "fs_write_external"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "git_commit"
+          ],
+          "description": "External effect kinds runs may perform (still subject to approval rules).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Ceiling",
+              "order": 40,
+              "widget": "tags"
+            }
+          }
+        },
+        "isolation_profiles": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "worktree",
+                  "landlock",
+                  "container"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "worktree",
+            "landlock",
+            "container"
+          ],
+          "description": "Isolation profiles steps may use; none (unconfined) is excluded by default and also needs policy.host.allow_unconfined.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Ceiling",
+              "order": 50,
+              "widget": "tags"
+            }
+          }
+        },
+        "commands_denylist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "uniqueItems": true,
+          "default": [
+            "rm -rf /",
+            "git push --force",
+            "git reset --hard"
+          ],
+          "description": "Command prefixes always refused in agent tool calls and checks (accumulates over levels).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Ceiling",
+              "order": 60,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "git_commit",
+              "git_push",
+              "pr_create",
+              "message",
+              "publish",
+              "fs_write_external"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "git_push",
+            "pr_create",
+            "message",
+            "publish",
+            "fs_write_external"
+          ],
+          "description": "External effects that need an approval of a human (accumulates: a nearer level can only add).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Approvals",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 604800,
+          "default": 86400,
+          "description": "Lifetime of an approval of a tool intent.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Approvals",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "single_use": {
+          "type": "boolean",
+          "default": true,
+          "description": "An approval authorizes one execution only.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "or"
+            },
+            "ui": {
+              "group": "Approvals",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "intents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_ttl_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 604800,
+          "default": 259200,
+          "description": "A proposed tool intent not approved within this time expires.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Approvals",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "risk": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(git_commit|git_push|pr_create|message|publish|fs_write_external)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "default": {
+            "git_commit": "low",
+            "pr_create": "medium",
+            "message": "medium",
+            "git_push": "high",
+            "publish": "critical",
+            "fs_write_external": "high"
+          },
+          "description": "Risk class per external effect kind (drives approval and audit detail).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Approvals",
+              "order": 50,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "access_capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "secrets",
+              "docker_socket",
+              "external_services"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Access capabilities that nearer levels may grant to steps; empty: none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Capabilities",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "granted": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "secrets",
+              "docker_socket",
+              "external_services"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Access capabilities granted to steps of this scope; effective = granted ∩ allowed.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": true,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Capabilities",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "task_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "modify_write_set",
+              "modify_outside_write_set",
+              "delete_tracked",
+              "delete_own_untracked",
+              "delete_foreign_untracked",
+              "modify_git_dir",
+              "git_discard",
+              "git_push",
+              "git_force_push",
+              "forge_write",
+              "release_publish",
+              "secrets_access",
+              "docker_socket",
+              "external_services"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Operations whose rule is task_authority that tasks of this scope may perform (for example git_discard).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "plan",
+              "run"
+            ],
+            "merge": "append_unique",
+            "reload": "run_frozen",
+            "override": true,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Capabilities",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "auto_approve": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "permissive",
+            "off"
+          ],
+          "default": "strict",
+          "description": "Interactive auto-approval of client tool calls by `skm hook`: strict allows read-only commands, permissive all but the denylist, off disables auto-approval (the client asks the human).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "narrow": {
+              "order": [
+                "off",
+                "permissive",
+                "strict"
+              ]
+            },
+            "ui": {
+              "group": "Interactive",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow_unconfined": {
+          "type": "boolean",
+          "default": false,
+          "description": "This host may run steps under profiles with requires_host_flag (trusted-full-access) and isolation none.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "ui": {
+              "group": "Host",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_entries": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000,
+          "default": 10000,
+          "description": "Entries of the host fact cache used by hook evaluation.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_glob_matches": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 1000,
+          "description": "Paths one glob of a rule may expand to while facts are collected.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

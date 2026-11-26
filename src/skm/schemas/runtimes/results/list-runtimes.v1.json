@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:result:list-runtimes:v1",
+  "title": "ListRuntimesResult",
+  "description": "runtimes owner contract; see the runtimes module. The bus carries objects only: the array of RuntimesViewItem of runtimes.list_runtimes is the items member.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "$ref": "urn:skm:runtimes:view:runtimes:v1"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.results",
+      "class": "ListRuntimesResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ListRuntimesResult"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "risk-assessment"
+version = "0.1.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["advisor"]
+exclusive_group = "founder-pipeline"
+
+[provenance]
+source = "local"

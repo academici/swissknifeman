@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-entities:v1",
+  "title": "skm_plan_entities output",
+  "description": "Output for the skm_plan_entities MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "urn:skm:planning:view:entity-page:v1#/properties/source"
+    },
+    "items": {
+      "$ref": "urn:skm:planning:view:entity-page:v1#/properties/items"
+    },
+    "next_cursor": {
+      "$ref": "urn:skm:planning:view:entity-page:v1#/properties/next_cursor"
+    },
+    "items_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "authoring_receipt": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "source",
+    "items",
+    "next_cursor"
+  ]
+}

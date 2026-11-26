@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:command:assemble-context:v1",
+  "title": "AssembleContext",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "role": {
+      "enum": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ]
+    },
+    "runtime_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "context_window_tokens": {
+      "type": "integer",
+      "minimum": 2000
+    }
+  },
+  "required": [
+    "project_id",
+    "role",
+    "runtime_id",
+    "model",
+    "context_window_tokens"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.commands",
+      "class": "AssembleContext",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "AssembleContext"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "contract": "urn:skm:execution:event:monitor-evaluated:v1",
+  "value": {
+    "evaluation_id": "monitor-request-1",
+    "monitor_id": "stall_detector",
+    "rule_id": "runtime_silence",
+    "rule_version": "1",
+    "target_stage_record_id": "01928f61-0000-7000-8000-000000000004",
+    "fencing_token": 1,
+    "thresholds": [
+      {
+        "key": "execution.stall.idle_seconds",
+        "value": 5400
+      }
+    ],
+    "config_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "input_watermark": 12,
+    "input_coverage": "unavailable",
+    "last_signal_at": null,
+    "scheduled_at": "2026-10-26T08:00:00Z",
+    "started_at": "2026-10-26T08:00:00Z",
+    "finished_at": "2026-10-26T08:00:00Z",
+    "verdict": "unknown",
+    "action": "none",
+    "action_request_id": null,
+    "recovery_record_id": null,
+    "reason_code": "STATUS_UNKNOWN",
+    "cause": {
+      "trigger_kind": "monitor",
+      "advance_rule": null,
+      "reason_codes": [],
+      "refs": [
+        {
+          "kind": "run",
+          "id": "01928f61-0000-7000-8000-000000000001"
+        }
+      ]
+    },
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "workspace_id": "01928f61-0000-7000-8000-000000000040",
+    "project_id": "01928f61-0000-7000-8000-000000000041",
+    "config_generation": 1,
+    "recovery_mode": "notify"
+  }
+}

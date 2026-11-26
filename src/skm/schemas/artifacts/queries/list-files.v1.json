@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:query:list-files:v1",
+  "title": "ListFiles",
+  "description": "artifacts query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trashed"
+      ]
+    },
+    "origin": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/file_origin"
+    },
+    "after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 50
+    }
+  },
+  "required": [
+    "workspace_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.queries",
+      "class": "ListFiles",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "ListFiles"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "diagnosing-bugs"
+version = "0.2.0"
+kind = "workflow"
+risk = "medium"
+license = "MIT"
+roles = ["scout"]
+
+[provenance]
+source = "upstream"
+repo = "mattpocock/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "4cea464274844c7be12f4934311976422088e94c343c7e1b0a62cb56433028b9"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/SKILL.md"
+sha256 = "7a0779480f323a66d109404646bcc1a14bf0232b45b3e3ea93b652a035718acb"
+fetched_at = "2026-06-26"
+
+[[provenance.files]]
+path = "snippets/hitl-loop.template.sh"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/diagnosing-bugs/scripts/hitl-loop.template.sh"
+sha256 = "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8"
+fetched_at = "2026-06-26"

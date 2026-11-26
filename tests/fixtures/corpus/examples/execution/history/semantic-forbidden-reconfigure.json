@@ -1,0 +1,11 @@
+{
+  "contract": "urn:skm:execution:command:reconfigure-run:v1",
+  "value": {
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "expected_row_version": 2,
+    "changes": {
+      "policy.ceiling.network": "allow"
+    },
+    "reason": "must be rejected by closed semantic allowlist"
+  }
+}

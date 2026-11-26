@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:seal-output:v1",
+  "title": "SealOutput",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "stage_record_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "manifest": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/output-manifest"
+    },
+    "patch": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/staged-file"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "executor",
+        "range"
+      ]
+    }
+  },
+  "required": [
+    "claim",
+    "stage_record_id",
+    "manifest",
+    "source"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "SealOutput",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "SealOutput"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source": {
+            "const": "executor"
+          }
+        },
+        "required": [
+          "source"
+        ]
+      },
+      "then": {
+        "required": [
+          "step_id"
+        ]
+      }
+    }
+  ]
+}

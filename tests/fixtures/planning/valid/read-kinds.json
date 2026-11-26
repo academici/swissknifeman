@@ -1,0 +1,78 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "reads": [
+        {
+          "kind": "repository_path",
+          "mount": "api",
+          "path": "src/auth/**",
+          "section": "Overview",
+          "why": "Current code.",
+          "required": true
+        },
+        {
+          "kind": "material",
+          "ref": "material/spec#intro",
+          "why": "Spec.",
+          "required": true
+        },
+        {
+          "kind": "plan_entity",
+          "ref": "P1",
+          "why": "Phase goal.",
+          "required": false
+        },
+        {
+          "kind": "artifact",
+          "ref": "artifact/schema-doc",
+          "why": "Produced earlier.",
+          "required": false
+        },
+        {
+          "kind": "external_source",
+          "url": "https://example.com/doc",
+          "why": "Reference.",
+          "required": false,
+          "external_source_id": "0193a000-0000-7000-8000-000000ee0001"
+        }
+      ],
+      "examples": [
+        {
+          "kind": "material",
+          "ref": "material/spec",
+          "why": "Example.",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "key": "spec",
+      "title": "Spec",
+      "kind": "file_version",
+      "file_version_id": "0192f5c3-9999-7000-8000-000000000001",
+      "role": "input"
+    }
+  ]
+}

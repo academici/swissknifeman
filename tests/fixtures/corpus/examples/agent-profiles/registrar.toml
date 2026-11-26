@@ -1,0 +1,62 @@
+# Agent profile of the core source pack: resources/packs/core/agent-profiles/registrar.toml
+# Schema: urn:skm:extensions:agent-profile:v1 (examples/schemas/extensions/agent-profile.v1.json);
+# spec: working/spec/modules/extensions.md §4.6, context.md §4.4.1 (inheritance matrix), runtimes.md §4.3.1, §4.11.
+# Legacy: packages/orch/roles/registrar.json (economy, plan_api write). v2: plan state is written by execution commands, the registrar only phrases the commit message.
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "registrar"
+version = "2.0.0"
+role = "registrar"
+title = "Registrar"
+description = "Writes the commit message of an accepted task from the machine contract. Deterministic template by default (llm = false)."
+result_schema = "urn:skm:execution:role-result:registrar:v1"
+llm = false
+
+# Routing class and effort; config_isolation is added by routing itself when inherit_user_global = false.
+[routing]
+model_class = "economy"
+effort = "low"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = []
+
+[isolation]
+profile = "worktree"
+
+# policy_profile is the policy profile id (policy.md §4.5); layer only narrows it (urn:skm:policy:permission-layer:v1).
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = []
+
+# Prompt blocks per block type, in render order inside the type (keys of prompt_block resources).
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["registrar/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["registrar/result_contract"]
+
+[context]
+include = []
+inherit_user_global = false
+repo_instructions = "none"
+repo_instruction_sections = []
+skills_mode = "none"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 0
+history_max_steps = 0
+memory_top_k = 0
+include_optional_materials = false
+
+[context.budgets]
+supporting = 0
+retrieval = 0
+
+[limits]
+timeout_seconds = 300
+idle_timeout_seconds = 120
+max_turns = 4
+max_output_tokens = 2000
+max_result_retries = 1

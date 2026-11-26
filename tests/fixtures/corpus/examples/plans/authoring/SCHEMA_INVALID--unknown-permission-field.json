@@ -1,0 +1,14 @@
+{
+  "contract": "urn:skm:planning:change:replace-text:v1",
+  "request": {
+    "op": "replace_text",
+    "target": "plan",
+    "pointer": "/context_md",
+    "expected_text_digest": "sha256:c4bfcb9fafd1d56a8a9832102e03b00d08c5894bcf6e16e816166e036c82b326",
+    "old_text": "Audit the new draft.",
+    "new_text": "Validate the prepared candidate.",
+    "permissions": [
+      "*"
+    ]
+  }
+}

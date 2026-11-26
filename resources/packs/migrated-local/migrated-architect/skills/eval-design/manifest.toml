@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "eval-design"
+version = "0.1.0"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor", "researcher"]
+requires = ["agent-design"]
+
+[provenance]
+source = "local"

@@ -1,0 +1,17 @@
+$ skm config explain execution.review.max_rounds storage.statement_timeout_ms --scope plan:PLAN7
+scope   plan:PLAN7  (chain: default > pack > instance > workspace:personal > project:skm > plan:PLAN7)
+config  generation 42, packs 3, digest sha256:4f6c1c0d…8091
+
+execution.review.max_rounds = 3                         narrow · run_frozen · locked at workspace:personal
+  default                          2                     shadowed
+  pack example-overlay (prio 10)   3                     shadowed
+  instance                         4                     used        (starts the narrowing chain; default and pack are base values)
+  workspace:personal   [locked]    3                     ← winner    entry 0192f6a0…0101 v3
+  project:skm                      5                     ignored: locked above (workspace:personal)
+  plan:PLAN7                       1                     ignored: locked above (workspace:personal)
+  ! CONFIG_LOCKED  2 contributions below workspace:personal are ignored
+
+storage.statement_timeout_ms = 30000                    replace · live
+  default                          30000                 ← winner
+
+$ skm config explain execution.review.max_rounds --scope plan:PLAN7 --json   # → explain-execution-review-max-rounds.json

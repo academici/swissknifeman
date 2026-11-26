@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:view:verify-stage-access:v1",
+  "title": "StageAccessView",
+  "description": "A current lease and assignment credential admitted this stage-tool request.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "active": {
+      "const": true
+    }
+  },
+  "required": [
+    "active"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.views",
+      "class": "StageAccessView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StageAccessView"
+    }
+  }
+}

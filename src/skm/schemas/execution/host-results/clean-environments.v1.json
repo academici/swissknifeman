@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:host-result:clean-environments:v1",
+  "title": "CleanEnvironments",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.host",
+      "class": "CleanEnvironments",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "CleanEnvironments"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:plan-projection:v1",
+  "title": "PlanProjectionRequest",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "targets": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "force_conflicts": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "project_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "PlanProjectionRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "PlanProjectionRequest"
+    }
+  }
+}

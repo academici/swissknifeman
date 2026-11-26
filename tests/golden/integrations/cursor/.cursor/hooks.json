@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "./scripts/local-audit.sh",
+        "matcher": "\\bgit\\b"
+      },
+      {
+        "command": "skm-hook beforeShellExecution --target cursor --surface lifecycle.git_guardrails --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+        "matcher": "\\bgit\\b"
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "skm-hook sessionStart --target cursor --surface context.session_start --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "skm-hook preToolUse --target cursor --surface lifecycle.pack_guard --project 01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+        "matcher": "^(Write|Delete|Task|MCP:.*)$"
+      }
+    ]
+  }
+}

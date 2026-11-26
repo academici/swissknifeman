@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:begin-stage:v1",
+  "title": "BeginStage",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "stage_id": {
+      "type": "string"
+    },
+    "round_no": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "runtime_token_secret": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^skm_(?:[a-z2-7]{8}_[A-Za-z0-9_-]{43}|live_[a-z2-7]{8}_[A-Za-z0-9_-]{43}_[0-9a-f]{8})$"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-skm-secret": true
+    }
+  },
+  "required": [
+    "claim",
+    "stage_id",
+    "round_no",
+    "input_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "BeginStage",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "BeginStage"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:command:record-research-result:v1",
+  "title": "RecordResearchResult",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "query_text": {
+      "type": "string"
+    },
+    "query_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "depth": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "deep"
+      ]
+    },
+    "max_documents": {
+      "type": "integer"
+    },
+    "step_ref": {
+      "type": "string"
+    },
+    "results": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "$ref": "urn:skm:context:research-result:v1"
+      }
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "query_text",
+    "query_digest",
+    "depth",
+    "max_documents",
+    "results"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.commands",
+      "class": "RecordResearchResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "RecordResearchResult"
+    }
+  }
+}

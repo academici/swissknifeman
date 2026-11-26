@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:query:list-models:v1",
+  "title": "ListModels",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid",
+      "description": "Authorize the shared catalog read on this registered host."
+    },
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "model_class": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+    },
+    "prepare_for": {
+      "description": "Retrieve the resolved delegation guideline for this target model.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.queries",
+      "class": "ListModels",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ListModels"
+    }
+  }
+}

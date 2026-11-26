@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:set-worker-state:v1",
+  "title": "SetWorkerState",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "online",
+        "draining",
+        "retired"
+      ]
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "worker_id",
+    "state",
+    "expected_row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "SetWorkerState",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "SetWorkerState"
+    }
+  }
+}

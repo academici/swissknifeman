@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:query:find-orphan-blobs:v1",
+  "title": "FindOrphanBlobs",
+  "description": "artifacts query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "backend_id": {
+      "type": "string",
+      "default": "local-primary"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.queries",
+      "class": "FindOrphanBlobs",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "FindOrphanBlobs"
+    }
+  }
+}

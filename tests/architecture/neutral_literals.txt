@@ -1,0 +1,19 @@
+# author overlay and personal namespaces (live outside the neutral core)
+axioma
+azguard
+botkit
+corex
+flexcrm
+getchat
+agelto
+# personal names and machine paths
+dmitry
+re:/Users/[A-Za-z]
+re:/home/[a-z][a-z0-9_-]*/
+re:C:\\Users\\
+# organisation/repository names of the author
+academici
+swissknifeman-next
+# author-specific daemons and tools named in legacy hooks
+perplexity
+pplx

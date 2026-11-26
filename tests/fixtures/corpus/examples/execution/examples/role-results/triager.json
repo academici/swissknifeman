@@ -1,0 +1,28 @@
+{
+  "schema": "urn:skm:execution:role-result:triager:v1",
+  "confirmed": [
+    {
+      "finding_id": "F1",
+      "decision": "fix_now",
+      "reproduction": {
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "tests/auth/test_rotation.py::test_expiry_uses_database_time",
+          "-q"
+        ],
+        "exit": 1,
+        "observed": "AssertionError: rotated a token that expired 90 s ago by database time"
+      },
+      "fix": "Read now() in the SELECT ... FOR UPDATE of the token row and compare expires_at with it."
+    }
+  ],
+  "rejected": [
+    {
+      "finding_id": "F2",
+      "reason": "Style preference; the name follows the module's existing convention (*_ids for any collection)."
+    }
+  ],
+  "summary": "One real defect (F1), reproduced; F2 is style."
+}

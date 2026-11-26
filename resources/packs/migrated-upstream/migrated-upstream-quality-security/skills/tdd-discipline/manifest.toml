@@ -1,0 +1,34 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "tdd-discipline"
+version = "0.2.0"
+kind = "workflow"
+risk = "medium"
+license = "MIT"
+roles = ["executor"]
+
+[provenance]
+source = "upstream"
+repo = "mattpocock/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "f21b1850f0499f91d67021ebe44e7042c4c25a2bb028d457a97b4c958b6f0612"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/SKILL.md"
+sha256 = "13722957277ed4960061a2d254a0ed7d86f95693e88b40d1c68307e7fdc98287"
+fetched_at = "2026-06-26"
+
+[[provenance.files]]
+path = "snippets/tests.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/tests.md"
+sha256 = "e12182f5c4c6a844b7c6ab4b8d2623b642aaaae5460fe58ed087efd4f3d5fb8a"
+fetched_at = "2026-06-26"
+
+[[provenance.files]]
+path = "snippets/mocking.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/tdd/mocking.md"
+sha256 = "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef"
+fetched_at = "2026-06-26"

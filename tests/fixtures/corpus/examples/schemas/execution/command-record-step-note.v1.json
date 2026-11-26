@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:record-step-note:v1",
+  "title": "CommandRecordStepNote",
+  "description": "Normative execution contract; authenticated by the assignment token of the step (right step.note); the server derives the claim from token.assignment_id and the current fence (K17). Details: spec/modules/execution.md §7.2.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "assumption",
+        "risk",
+        "question"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20000
+    },
+    "options": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      }
+    },
+    "why_blocked": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "blocking"
+      ],
+      "default": "normal"
+    }
+  },
+  "required": [
+    "step_id",
+    "kind",
+    "text"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "CommandRecordStepNote",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "CommandRecordStepNote"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "not": {
+              "const": "question"
+            }
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "options"
+              ]
+            },
+            {
+              "required": [
+                "why_blocked"
+              ]
+            },
+            {
+              "required": [
+                "urgency"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

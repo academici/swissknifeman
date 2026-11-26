@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:task-status:v1",
+  "title": "skm_task_status output",
+  "description": "Output for the skm_task_status MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task_key": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rework_rounds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "blocking_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "task_key",
+    "status",
+    "attempts",
+    "rework_rounds"
+  ]
+}

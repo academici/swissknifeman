@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:view:export-config:v1",
+  "title": "ExportConfigView",
+  "description": "settings view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "type": "string",
+      "enum": [
+        "toml",
+        "json"
+      ]
+    },
+    "document": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "urn:skm:settings:document:v1"
+        }
+      ]
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:config:entry:v1"
+      }
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "format",
+    "document",
+    "entries",
+    "digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "ExportConfigView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExportConfigView"
+    }
+  }
+}

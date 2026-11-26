@@ -1,0 +1,343 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:access:v1",
+  "title": "Access settings",
+  "description": "Settings section 'access' owned by access. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "access",
+    "owner": "access",
+    "title": "Access",
+    "validators": [
+      {
+        "id": "access.ttl_bounds",
+        "keys": [
+          "access.tokens.default_ttl_days",
+          "access.tokens.max_ttl_days"
+        ],
+        "rule": "max_ttl_days == 0 or (default_ttl_days != 0 and default_ttl_days <= max_ttl_days)"
+      },
+      {
+        "id": "access.worker_rotation",
+        "keys": [
+          "access.tokens.worker_ttl_hours",
+          "access.tokens.worker_rotate_before_hours"
+        ],
+        "rule": "worker_rotate_before_hours * 2 <= worker_ttl_hours"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.settings",
+      "class": "AccessSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "AccessSettings"
+    }
+  },
+  "properties": {
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_ttl_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650,
+          "default": 90,
+          "description": "Lifetime of a new API token when the request names none; 0 means no expiry.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "access.ttl_bounds"
+            ],
+            "ui": {
+              "group": "Tokens",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_ttl_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650,
+          "default": 365,
+          "description": "Longest lifetime a token may get; 0 means unlimited.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "access.ttl_bounds"
+            ],
+            "narrow": {
+              "direction": "min",
+              "unlimited": 0
+            },
+            "ui": {
+              "group": "Tokens",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "worker_ttl_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8760,
+          "default": 168,
+          "description": "Lifetime of tokens issued to worker principals (G20); `skm worker register --rotate` issues a new one.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "validators": [
+              "access.worker_rotation"
+            ],
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Tokens",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "worker_rotate_before_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8760,
+          "default": 48,
+          "description": "A worker rotates its token this long before expiry.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "validators": [
+              "access.worker_rotation"
+            ],
+            "ui": {
+              "group": "Tokens",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "rotation_grace_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1440,
+          "default": 10,
+          "description": "The previous token stays valid this long after a rotation (in-flight requests).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Tokens",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "assignment_permissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "project.read",
+            "plan.read",
+            "run.read",
+            "context.read",
+            "file.read",
+            "policy.read",
+            "memory.read",
+            "lesson.read",
+            "ext.read",
+            "runtime.read",
+            "step.note"
+          ],
+          "description": "Permissions of assignment-scoped tokens handed to runtimes: reads on ancestors of the run, writes in the run only; never the worker protocol (worker.claim).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "narrow": {
+              "direction": "intersect"
+            },
+            "ui": {
+              "group": "Tokens",
+              "order": 60,
+              "widget": "tags"
+            }
+          }
+        },
+        "assignment_ttl_slack_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "default": 60,
+          "description": "Assignment-scoped tokens handed to a runtime (MCP) expire this long after the lease expires.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Tokens",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "record_allowed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Write audit records for allowed mutations (denials are always recorded; queries are never audited).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Audit",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "touch_interval_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "default": 60,
+          "description": "At most one last_used_at update per token within this interval; 0 updates on every request.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Tokens",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

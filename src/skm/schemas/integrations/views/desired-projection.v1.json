@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:view:desired-projection:v1",
+  "title": "DesiredProjectionView",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionInputs",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.views",
+      "class": "DesiredProjectionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "DesiredProjectionView"
+    }
+  }
+}

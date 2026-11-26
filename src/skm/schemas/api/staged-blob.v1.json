@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:api:staged-blob:v1",
+  "title": "StagedBlobRef",
+  "description": "HTTP API v1 staged-blob contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "staged_blob_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "digest": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/content_digest"
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "staged_blob_id",
+    "workspace_id",
+    "digest",
+    "size",
+    "media_type"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.api",
+      "class": "StagedBlobRef",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "api.ts",
+      "name": "StagedBlobRef"
+    }
+  }
+}

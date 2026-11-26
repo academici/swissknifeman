@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:command:record-intent-outcome:v1",
+  "title": "RecordIntentOutcome",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "succeeded",
+        "failed",
+        "outcome_unknown"
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "intent_id",
+    "outcome",
+    "receipt"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.commands",
+      "class": "RecordIntentOutcome",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "RecordIntentOutcome"
+    }
+  }
+}

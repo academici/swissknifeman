@@ -1,0 +1,229 @@
+# Exact owner-mandated declaration path, not a general exemption for base.py.
+[[allow]]
+rule = "file-names"
+path = "src/skm/modules/execution/host/stages/base.py"
+detail = "base.py"
+reason = "Execution §6.3 owns StageRequest and StageOutcome in host/stages/base.py."
+adr = "working/spec/modules/execution.md §6.3; working/spec/tree.md"
+
+# The owner declares these four wire values in integrations §4.1 TargetId.
+[[allow]]
+rule = "provider-literals"
+path = "src/skm/modules/integrations/domain/target.py"
+detail = "claude_code"
+reason = "Canonical TargetId member required by the integrations owner; no provider selection logic."
+adr = "working/spec/modules/integrations.md §4.1; working/spec/00-conventions.md §0"
+
+[[allow]]
+rule = "provider-literals"
+path = "src/skm/modules/integrations/domain/target.py"
+detail = "codex"
+reason = "Canonical TargetId member required by the integrations owner; no provider selection logic."
+adr = "working/spec/modules/integrations.md §4.1; working/spec/00-conventions.md §0"
+
+[[allow]]
+rule = "provider-literals"
+path = "src/skm/modules/integrations/domain/target.py"
+detail = "cursor"
+reason = "Canonical TargetId member required by the integrations owner; no provider selection logic."
+adr = "working/spec/modules/integrations.md §4.1; working/spec/00-conventions.md §0"
+
+[[allow]]
+rule = "provider-literals"
+path = "src/skm/modules/integrations/domain/target.py"
+detail = "grok"
+reason = "Canonical TargetId member required by the integrations owner; no provider selection logic."
+adr = "working/spec/modules/integrations.md §4.1; working/spec/00-conventions.md §0"
+
+# Non-personal, non-deliverable git identity explicitly required by the key owner.
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/schemas/settings/worker.v1.json"
+detail = "worker@skm.invalid"
+reason = "Canonical worker.git.author_email default from config-catalog; not a personal contact."
+adr = "working/spec/config-catalog.md worker.git.author_email; working/spec/00-conventions.md §0"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/schemas/settings/document.v1.json"
+detail = "worker@skm.invalid"
+reason = "The full settings document embeds the canonical worker.git.author_email default."
+adr = "working/spec/config-catalog.md worker.git.author_email; working/spec/00-conventions.md §0"
+
+# Trusted operator migration files and checked MigrationSession SQL. Each entry pins one exact call in runner.py (and
+# rejects it when a name of the call is assigned in its function), so interpolating a value elsewhere still fails.
+[[allow]]
+rule = "no-fstring-sql"
+path = "src/skm/adapters/postgres/migrations/runner.py"
+detail = "SQL uses external data as syntax: bind values as parameters; use constant identifier allowlists"
+statement = 'self._conn.execute(cast("str", sql), cast("psycopg.abc.Params | None", params))'
+reason = "MigrationSession.execute runs SQL that check_migration_sql already screened; the text is a parameter and values travel as params."
+adr = "working/spec/adapters.md §1.10"
+
+[[allow]]
+rule = "no-fstring-sql"
+path = "src/skm/adapters/postgres/migrations/runner.py"
+detail = "SQL uses external data as syntax: bind values as parameters; use constant identifier allowlists"
+statement = 'cursor.executemany(cast("str", sql), cast("Iterable[psycopg.abc.Params]", params))'
+reason = "MigrationSession.executemany runs SQL that check_migration_sql already screened; values travel as params."
+adr = "working/spec/adapters.md §1.10"
+
+[[allow]]
+rule = "no-fstring-sql"
+path = "src/skm/adapters/postgres/migrations/runner.py"
+detail = "SQL uses external data as syntax: bind values as parameters; use constant identifier allowlists"
+statement = 'cursor.execute(cast("str", sql), cast("psycopg.abc.Params | None", params))'
+reason = "MigrationSession.fetchall runs SQL that check_migration_sql already screened; values travel as params."
+adr = "working/spec/adapters.md §1.10"
+
+[[allow]]
+rule = "no-fstring-sql"
+path = "src/skm/adapters/postgres/migrations/runner.py"
+detail = "SQL uses external data as syntax: bind values as parameters; use constant identifier allowlists"
+statement = 'conn.execute(_bootstrap_sql(self._database))'
+reason = "The packaged runner_bootstrap.sql file, a constant resource."
+adr = "working/spec/adapters.md §1.10"
+
+[[allow]]
+rule = "no-fstring-sql"
+path = "src/skm/adapters/postgres/migrations/runner.py"
+detail = "SQL uses external data as syntax: bind values as parameters; use constant identifier allowlists"
+statement = 'conn.execute(cast("str", source))'
+reason = "A migration file body that was screened and checksum-verified in _preflight; a trusted operator file."
+adr = "working/spec/adapters.md §1.10"
+
+# P09.04.c: context §13 exposes this pure host helper through its public facade.
+[[allow]]
+rule = "layer-imports"
+path = "src/skm/modules/context/public.py"
+detail = "import of 'skm.modules.context.host.collect_host_blocks.collect_host_blocks' (host) is not allowed from public"
+reason = "The context owner explicitly exposes collect_host_blocks through public.py; it receives the reader and estimator and is not a registered host operation."
+adr = "working/spec/modules/context.md §§7.3, 13"
+
+# These are explicitly passed pure values, not access to the control-plane gateway table.
+[[allow]]
+rule = "host-boundary"
+path = "src/skm/modules/context/host/collect_host_blocks.py"
+detail = "host operation imports 'skm.kernel.tokens.TokenEstimator': talk to the control plane via ctx.client"
+reason = "The pure deterministic estimator is an explicit collect_host_blocks argument, as required by kernel/tokens.py and the context owner."
+adr = "working/spec/modules/context.md §7.3; working/spec/kernel-platform.md §2.11c"
+
+[[allow]]
+rule = "host-boundary"
+path = "src/skm/modules/context/host/collect_host_blocks.py"
+detail = "host operation imports 'skm.modules.context.ports.ReadOutcome': talk to the control plane via ctx.client"
+reason = "ReadOutcome is the inert result DTO of the host CheckoutReader, not a repository or control-plane gateway."
+adr = "working/spec/modules/context.md §§4.2, 5.8, 6"
+
+[[allow]]
+rule = "config-access"
+path = "src/skm/modules/context/domain/deps.py"
+detail = "environment/TOML access outside config sources: use ctx.config"
+reason = "The owning pure domain function parses caller-supplied pyproject.toml text with tomllib.loads; it reads no configuration files or environment."
+adr = "working/spec/modules/context.md §§5.8, 7.3"
+
+# Known reach-ins into private code of another package; each names the exact importer and private module.
+[[allow]]
+rule = "private-imports"
+path = "src/skm/bootstrap/hook_subscriptions.py"
+detail = "skm.adapters.event_sinks._pinned_http"
+reason = "The composition root builds the pinned HTTP client for trusted hook subscriptions; the event_sinks adapter does not export it publicly yet."
+adr = "working/spec/adapters.md; working/spec/modules/integrations.md"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/bootstrap/host_services.py"
+detail = "skm.adapters.runtimes._cli_session.identity"
+reason = "The composition root reaps orphaned runtime processes at host start; the runtimes adapter does not export its containment identity publicly yet."
+adr = "working/spec/adapters.md; working/spec/modules/runtimes.md"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/modules/context/application/registry.py"
+detail = "skm.kernel.generated._codec"
+reason = "SecretRef and record_from_json are emitted only into the generated codec runtime; no public kernel module re-exports them yet."
+adr = "working/spec/tooling.md §7"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/modules/integrations/domain/checks/claude.py"
+detail = "skm.kernel.generated._codec"
+reason = "SecretRef and record_from_json are emitted only into the generated codec runtime; no public kernel module re-exports them yet."
+adr = "working/spec/tooling.md §7"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/platform/config/bootstrap.py"
+detail = "skm.kernel.generated._codec"
+reason = "SecretRef and record_from_json are emitted only into the generated codec runtime; no public kernel module re-exports them yet."
+adr = "working/spec/tooling.md §7; working/spec/config-catalog.md"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/platform/config/secrets.py"
+detail = "skm.kernel.generated._codec"
+reason = "SecretRef and record_from_json are emitted only into the generated codec runtime; no public kernel module re-exports them yet."
+adr = "working/spec/tooling.md §7; working/spec/config-catalog.md"
+
+[[allow]]
+rule = "private-imports"
+path = "src/skm/platform/logging/redaction.py"
+detail = "skm.kernel.generated._codec"
+reason = "SecretRef and record_from_json are emitted only into the generated codec runtime; no public kernel module re-exports them yet."
+adr = "working/spec/tooling.md §7; working/spec/kernel-platform.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/adapters/research/providers.py"
+detail = "perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/adapters/research/providers.py"
+detail = "Perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/adapters/research/providers.py"
+detail = "PERPLEXITY"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/bootstrap/builtins.py"
+detail = "perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/bootstrap/builtins.py"
+detail = "Perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/modules/context/domain/research_rules.py"
+detail = "perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/schemas/settings/context.v1.json"
+detail = "perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"
+
+[[allow]]
+rule = "neutral-literals"
+path = "src/skm/schemas/settings/context.v1.json"
+detail = "Perplexity"
+reason = "I-11.2 registers this public research provider as an opt-in host adapter."
+adr = "docs/adr/0024-research-source-component.md"

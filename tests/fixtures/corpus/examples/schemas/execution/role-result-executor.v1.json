@@ -1,0 +1,621 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:role-result:executor:v1",
+  "title": "ExecutorResult",
+  "description": "Stage report of the executor role (document kind stage-report for semantics.py drift and heal). changed_paths is the role's claim; the authoritative list is computed by Vcs (OutputManifest).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "summary",
+    "changed_paths",
+    "checks_run",
+    "open_issues",
+    "self_check"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:role-result:executor:v1"
+    },
+    "status": {
+      "enum": [
+        "done",
+        "done_with_deviations",
+        "done_pending_checks",
+        "blocked"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "changed_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 2000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mount",
+          "path",
+          "change"
+        ],
+        "properties": {
+          "mount": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "change": {
+            "enum": [
+              "added",
+              "modified",
+              "deleted",
+              "renamed"
+            ]
+          },
+          "old_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    },
+    "checks_run": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "cmd",
+              "exit"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^V[0-9]{1,3}$"
+              },
+              "cmd": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "exit": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "procedure",
+              "verdict"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^V[0-9]{1,3}$"
+              },
+              "procedure": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "verdict": {
+                "enum": [
+                  "pass",
+                  "fail"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "open_issues": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/issue"
+      }
+    },
+    "questions": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    },
+    "self_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "performed"
+      ],
+      "properties": {
+        "performed": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "criteria": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "criterion_key",
+              "status"
+            ],
+            "properties": {
+              "criterion_key": {
+                "type": "string",
+                "pattern": "^AC[0-9]{1,4}$"
+              },
+              "status": {
+                "enum": [
+                  "met",
+                  "not_met",
+                  "unknown"
+                ]
+              },
+              "evidence": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            }
+          }
+        }
+      }
+    },
+    "recommend_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommended"
+      ],
+      "properties": {
+        "recommended": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "subagents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "used",
+        "disclosed"
+      ],
+      "properties": {
+        "used": {
+          "type": "boolean"
+        },
+        "disclosed": {
+          "type": "boolean"
+        },
+        "usage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "open_issues": {
+            "contains": {
+              "properties": {
+                "kind": {
+                  "const": "escalation"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "done_with_deviations"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "open_issues": {
+            "contains": {
+              "properties": {
+                "kind": {
+                  "const": "deviation"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "done_pending_checks"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "open_issues": {
+            "contains": {
+              "properties": {
+                "kind": {
+                  "const": "pending"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "questions": {
+            "contains": {
+              "properties": {
+                "blocking": {
+                  "const": true
+                }
+              },
+              "required": [
+                "blocking"
+              ]
+            }
+          }
+        },
+        "required": [
+          "questions"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "blocked"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "kind"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "kind": {
+          "enum": [
+            "escalation",
+            "blocker",
+            "pending",
+            "deviation",
+            "note",
+            "assumption"
+          ]
+        },
+        "class": {
+          "enum": [
+            "write_set",
+            "spec_mismatch",
+            "test_env",
+            "docs",
+            "dependency",
+            "environment",
+            "other"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "accepted",
+            "follow_up",
+            "owner_decision"
+          ]
+        },
+        "escalation_class": {
+          "enum": [
+            "decision",
+            "environment",
+            "pre_existing_red",
+            "scope",
+            "authority"
+          ]
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "auto_fixable": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "deviation"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "class",
+              "outcome",
+              "impact"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "escalation"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "escalation_class"
+            ]
+          }
+        }
+      ]
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "kind",
+        "text",
+        "blocking",
+        "facts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^Q[0-9]{1,3}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "enum": [
+            "clarification",
+            "decision",
+            "approval",
+            "credential"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "options": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "label"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            }
+          }
+        },
+        "answer_schema": {
+          "type": "object"
+        },
+        "default": {},
+        "blocking": {
+          "type": "boolean"
+        },
+        "assumed": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reversibility",
+            "scope_impact",
+            "contract_change",
+            "cost_class",
+            "needs_external_fact",
+            "needs_authority"
+          ],
+          "properties": {
+            "reversibility": {
+              "enum": [
+                "reversible",
+                "costly",
+                "irreversible"
+              ]
+            },
+            "scope_impact": {
+              "enum": [
+                "local",
+                "task",
+                "cross_module",
+                "plan"
+              ]
+            },
+            "contract_change": {
+              "enum": [
+                "none",
+                "internal",
+                "public"
+              ]
+            },
+            "cost_class": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "needs_external_fact": {
+              "type": "boolean"
+            },
+            "needs_authority": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "blocking": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "assumed"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "ExecutorResultDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ExecutorResultDoc"
+    }
+  }
+}

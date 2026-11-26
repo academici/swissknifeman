@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:runtime-result:v1",
+  "title": "RuntimeResult",
+  "description": "Result of AgentRuntime.result(handle) after the terminal event (spec/modules/runtimes.md §4.7). The only result shape; adapters do not add fields. usage is always present (status unknown when nothing was reported). outcome=cancelled iff the failure code is SESSION_CANCELLED or CANCEL_IGNORED. Optional observation is bounded wrapper metadata, never lifecycle or acceptance authority; absent/null means unavailable. model remains the provider-reported value, never a resolved-route fallback.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "outcome",
+    "final_text",
+    "structured",
+    "session_ref",
+    "model",
+    "usage",
+    "failure",
+    "exit",
+    "lingered",
+    "denials",
+    "api_retries",
+    "transcript_path",
+    "stderr_path"
+  ],
+  "properties": {
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "final_text": {
+      "type": "string"
+    },
+    "structured": {},
+    "session_ref": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "model": {
+      "description": "Provider-reported model from the runtime stream/result, otherwise null. Preserved compatibility field; if observation is present, its binding.provider_reported_model must equal this value.",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage": {
+      "$ref": "urn:skm:runtimes:usage-report:v1"
+    },
+    "observation": {
+      "description": "Optional for existing adapters/fixtures; absent or null means unavailable. At the semantic boundary validate <=16KiB canonical UTF-8 JSON, request_id=step_id and reported model equality; this field cannot establish start/kill/acceptance or repair an incomplete terminal stream.",
+      "oneOf": [
+        {
+          "$ref": "urn:skm:runtimes:runtime-observation:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "failure": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:runtimes:session-event:v1#/$defs/provider_failure"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "exit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exit_code",
+        "signal",
+        "output_truncated",
+        "duration_ms"
+      ],
+      "properties": {
+        "exit_code": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 16
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_truncated": {
+          "type": "boolean"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "lingered": {
+      "type": "boolean"
+    },
+    "denials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tool",
+          "hint"
+        ],
+        "properties": {
+          "tool": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "hint": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      }
+    },
+    "api_retries": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "transcript_path": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^/",
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stderr_path": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^/",
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "failed",
+              "cancelled"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failure": {
+            "$ref": "urn:skm:runtimes:session-event:v1#/$defs/provider_failure"
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.result",
+      "class": "RuntimeResultDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RuntimeResult"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:plan-template:v1",
+  "title": "PlanTemplate",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:extensions:plan-template:v1"
+    },
+    "key": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 0
+    },
+    "description": {
+      "type": "string",
+      "minLength": 0
+    },
+    "inputs_schema": {
+      "type": "object",
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "schema",
+    "key",
+    "version",
+    "inputs_schema"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.documents",
+      "class": "PlanTemplate",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PlanTemplate"
+    }
+  }
+}

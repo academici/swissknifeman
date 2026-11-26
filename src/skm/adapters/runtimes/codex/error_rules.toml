@@ -1,0 +1,235 @@
+# urn:skm:runtimes:error-rules:v1 for built-in codex runtime adapter (P08.04).
+# Evaluated in file order; first matching rule wins.
+
+[[rules]]
+runtime_id = "codex"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = { http_status = [401] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Codex authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "not logged in",
+    "failed to authenticate",
+    "invalid api key",
+    "auth.json is missing or corrupted",
+    "401 unauthorized",
+]
+retryable = false
+safe_message = "Codex authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = { http_status = [403] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Codex access denied by provider authorization policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "To use Codex with your ChatGPT plan",
+    "permission_error",
+    "not authorized",
+]
+retryable = false
+safe_message = "Codex access denied by provider authorization policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "quota"
+code = "QUOTA_EXHAUSTED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "You’ve hit your usage limit",
+    "Quota exceeded",
+    "insufficient_quota",
+]
+retryable = false
+safe_message = "Codex account quota or usage limit exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = { http_status = [429] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Codex rate limit reached"
+retry_after_from = "limit_resets_at"
+
+# After the HTTP 429 rule: these phrases also appear on 429 responses, and an
+# earlier text rule would classify that response as auth or quota instead.
+[[rules]]
+runtime_id = "codex"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "authentication failed",
+]
+retryable = false
+safe_message = "Codex authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "quota"
+code = "QUOTA_EXHAUSTED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "Usage limit exceeded",
+    "quota exhausted",
+]
+retryable = false
+safe_message = "Codex account quota or usage limit exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "rate limit exceeded",
+    "too many requests",
+]
+retryable = true
+safe_message = "Codex rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "context_limit"
+code = "CONTEXT_OVERFLOW"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "ran out of room in the model's context window",
+    "context length exceeded",
+    "context_length_exceeded",
+]
+retryable = false
+safe_message = "Codex prompt exceeded model context window"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = { http_status = [404] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Requested Codex model is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "Selected model is at capacity",
+    "model not found",
+    "The model does not exist or you do not have access to it",
+]
+retryable = false
+safe_message = "Requested Codex model is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = { http_status = [500, 502, 503, 504, 529] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Codex provider is temporarily overloaded or unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "experiencing high demand",
+    "server error",
+]
+retryable = true
+safe_message = "Codex provider is temporarily overloaded or unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "content_policy"
+code = "CONTENT_REFUSED"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "reason: content_filter",
+    "content policy",
+]
+retryable = false
+safe_message = "Request refused by provider content policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "codex"
+error_class = "transport"
+code = "RUNTIME_TRANSPORT"
+scope = "provider"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "stream disconnected before completion",
+    "connection error",
+]
+retryable = true
+safe_message = "Transport connection to Codex provider failed"
+retry_after_from = "limit_resets_at"

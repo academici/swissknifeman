@@ -1,0 +1,97 @@
+# urn:skm:runtimes:error-rules:v1. First matching rule wins.
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = { http_status = [401] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Gemini CLI authentication failed"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["api_key_invalid", "api key not valid", "please set an auth method", "unauthenticated"]
+retryable = false
+safe_message = "Gemini CLI authentication failed"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "quota"
+code = "QUOTA_EXHAUSTED"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["quota exhausted", "daily quota", "quota will reset"]
+retryable = false
+safe_message = "Gemini CLI quota exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = { http_status = [403] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Gemini CLI access denied"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "provider"
+signal_any = { http_status = [429] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Gemini CLI rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = { http_status = [404] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Requested Gemini model is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "invalid_request"
+code = "RUNTIME_INVALID_REQUEST"
+scope = "request"
+signal_any = { exit_code = [42] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Gemini CLI rejected the input"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "gemini_cli"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = { http_status = [500, 502, 503, 504] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Gemini CLI is temporarily unavailable"
+retry_after_from = "limit_resets_at"

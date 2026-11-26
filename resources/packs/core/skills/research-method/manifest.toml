@@ -1,0 +1,21 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "research-method"
+version = "2.0.0"
+kind = "domain"
+roles = ["researcher"]
+requires = []
+requires_tools = ["Read", "Bash"]
+required_capabilities = []
+adapters = []
+exclusive_group = "research-method"
+max_tokens = 4000
+risk = "low"
+license = "Apache-2.0"
+conflicts_with = []
+
+[triggers]
+paths = []
+deps = []
+
+[provenance]
+source = "local"

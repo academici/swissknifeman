@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:result:list-hook-subscriptions:v1",
+  "title": "ListHookSubscriptionsResult",
+  "description": "integrations owner contract; see the integrations module. The bus carries objects only: the array of HookSubscriptionView of integrations.list_hook_subscriptions is the items member.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:integrations:view:hook-subscription:v1"
+      }
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.results",
+      "class": "ListHookSubscriptionsResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "ListHookSubscriptionsResult"
+    }
+  }
+}

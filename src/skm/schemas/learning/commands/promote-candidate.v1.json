@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:command:promote-candidate:v1",
+  "title": "PromoteCandidate",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "override_low_confidence": {
+      "type": "boolean",
+      "default": false
+    },
+    "override_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resolve_conflict": {
+      "type": "string",
+      "enum": [
+        "supersede",
+        "keep_both"
+      ]
+    },
+    "supersedes_lesson_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "applicability": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonApplicability"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "candidate_id",
+    "expected_row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.commands",
+      "class": "PromoteCandidate",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "PromoteCandidate"
+    }
+  }
+}

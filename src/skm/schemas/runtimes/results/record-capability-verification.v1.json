@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:result:record-capability-verification:v1",
+  "title": "RecordCapabilityVerificationResult",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "capability": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/capability"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "native",
+        "adapted",
+        "unsupported",
+        "unknown"
+      ]
+    }
+  },
+  "required": [
+    "runtime_id",
+    "capability",
+    "status"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.results",
+      "class": "RecordCapabilityVerificationResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RecordCapabilityVerificationResult"
+    }
+  }
+}

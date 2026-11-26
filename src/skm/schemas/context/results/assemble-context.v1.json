@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:result:assemble-context:v1",
+  "title": "AssembleContextResult",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "draft_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.results",
+      "class": "AssembleContextResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "AssembleContextResult"
+    }
+  }
+}

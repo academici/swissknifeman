@@ -1,0 +1,13 @@
+{
+  "schema": "urn:skm:integrations:defs:v1#/$defs/hook_event",
+  "target": "cursor",
+  "kind": "pre_shell",
+  "session_id": "s-91aa",
+  "cwd": "/home/dev/demo",
+  "tool_name": "shell",
+  "command": "rm -rf ../shared-cache",
+  "paths": [],
+  "prompt": null,
+  "stop_status": null,
+  "raw_event_name": "beforeShellExecution"
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:step-observation-recorded:v1",
+  "title": "StepObservationRecorded",
+  "description": "Trusted execution emitter records closed domain fields and cause in the transition UoW. The history builder derives nodes/edges; no independently emitted generic facts snapshot. Observation is metadata, never lifecycle authority. Payload <=256KiB. See execution-history.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stage_record_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "step_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "observation": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:runtimes:runtime-observation:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observation_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "route_snapshot": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:execution:route-snapshot:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "result_retry",
+        "triage_reverify",
+        "consilium_member",
+        "consilium_critic"
+      ]
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "parent_step_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "context_manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "binding_consistency": {
+      "type": "string",
+      "enum": [
+        "matched",
+        "mismatch",
+        "unavailable"
+      ]
+    }
+  },
+  "required": [
+    "task_id",
+    "attempt_id",
+    "stage_record_id",
+    "step_id",
+    "observation",
+    "observation_digest",
+    "cause",
+    "run_id",
+    "workspace_id",
+    "project_id",
+    "route_snapshot",
+    "role",
+    "purpose",
+    "seq",
+    "parent_step_id",
+    "context_manifest_id",
+    "binding_consistency"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "StepObservationRecorded",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StepObservationRecorded"
+    }
+  }
+}

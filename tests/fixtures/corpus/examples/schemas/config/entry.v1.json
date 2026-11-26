@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:config:entry:v1",
+  "title": "Config entry",
+  "description": "One stored contribution of a level: the view of a row of skm_config.entries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry_id",
+    "scope",
+    "key",
+    "op",
+    "locked",
+    "row_version",
+    "updated_at",
+    "updated_by"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope_ref"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+    },
+    "op": {
+      "type": "string",
+      "enum": [
+        "set",
+        "unset",
+        "append"
+      ]
+    },
+    "value": {
+      "description": "Absent for op=unset. Secret keys hold a secret reference string."
+    },
+    "locked": {
+      "type": "boolean"
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_by": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "$defs": {
+    "scope_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level"
+      ],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "instance",
+            "workspace",
+            "project",
+            "plan",
+            "run",
+            "host"
+          ]
+        },
+        "scope_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "label": {
+          "type": "string",
+          "description": "Human label such as project:skm or plan:PLAN7 (output only)."
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "EntryView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "EntryView"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-upstream-laravel-php"
+version = "1.0.1"
+title = "Migrated Upstream Skills: PHP & Laravel Engineering"
+description = "Reproducibly migrated upstream-mirrored third-party skills for PHP & Laravel Engineering (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "php-packages"
+max = 1
+description = "The router does not pull the bodies of its children."
+
+[[exclusive_groups]]
+name = "realtime"
+max = 1
+description = "Together only for end-to-end realtime; selection of both is explicit."

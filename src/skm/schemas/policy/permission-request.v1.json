@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:permission-request:v1",
+  "title": "PermissionRequest",
+  "description": "Permissions an installed resource (agent profile, integration bundle) asks for, compared with a ceiling by policy.public.is_subset (policy.md §13; extensions.md §4.6). Profile-shaped like a permission layer: an absent field requests nothing; every inclusion that cannot be proven is reported as widening.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,40}$",
+      "description": "Policy profile the request was resolved from (provenance only)."
+    },
+    "allowed_isolation": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+      },
+      "uniqueItems": true
+    },
+    "fs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read": {
+          "$ref": "urn:skm:policy:permission-layer:v1#/$defs/path_policy"
+        },
+        "write": {
+          "$ref": "urn:skm:policy:permission-layer:v1#/$defs/path_policy"
+        }
+      }
+    },
+    "commands": {
+      "$ref": "urn:skm:policy:permission-layer:v1#/$defs/command_policy"
+    },
+    "network": {
+      "$ref": "urn:skm:policy:permission-layer:v1#/$defs/network_policy"
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:policy:profile:v1#/$defs/tool_name"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+          },
+          "uniqueItems": true
+        },
+        "need_approval": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "modify_write_set",
+          "modify_outside_write_set",
+          "delete_tracked",
+          "delete_own_untracked",
+          "delete_foreign_untracked",
+          "modify_git_dir",
+          "git_discard",
+          "git_push",
+          "git_force_push",
+          "forge_write",
+          "release_publish",
+          "secrets_access",
+          "docker_socket",
+          "external_services"
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/operation_rule"
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "PermissionRequestDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "PermissionRequest"
+    }
+  }
+}

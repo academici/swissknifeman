@@ -1,0 +1,29 @@
+{
+  "schema": "urn:skm:execution:decision-record:v1",
+  "id": "0193a000-0000-7000-8000-0000001c0001",
+  "workspace_id": "01928f50-aaaa-7bbb-8ccc-1d2e3f4a5b6c",
+  "project_id": "01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60",
+  "run_id": "0193a000-0000-7000-8000-000000000001",
+  "task_id": "0193a000-0000-7000-8000-000000000012",
+  "request_id": "0193a000-0000-7000-8000-000000130001",
+  "category": "bounded_ambiguity",
+  "gate_categories": [],
+  "authority": "advisor",
+  "status": "applied",
+  "selected_option": "revoke-family",
+  "value": {
+    "option_id": "revoke-family"
+  },
+  "rationale": "The requirement text and the recorded decision settle the question; the trade-off is already assigned to another item.",
+  "evidence_refs": [
+    "decision:D1",
+    "material:material/storage-design#rotation"
+  ],
+  "assumptions": [
+    "P2.2 implements single-flight refresh as planned."
+  ],
+  "requires_owner": false,
+  "question_key": "qk-5d2a9e0c4b7f1361",
+  "question_input_digest": "sha256:6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6a8c0e2a4c6e8a0c2e4a6c8e0a2c4e6a8c",
+  "created_at": "2026-10-25T12:20:44Z"
+}

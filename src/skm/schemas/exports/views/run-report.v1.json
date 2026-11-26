@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:view:run-report:v1",
+  "title": "RunReportView",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "markdown": {
+      "type": "string"
+    },
+    "suggested_name": {
+      "type": "string"
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "metrics": {
+      "$ref": "urn:skm:exports:defs:v1#/$defs/RunReportMetrics"
+    }
+  },
+  "required": [
+    "markdown",
+    "suggested_name",
+    "digest",
+    "metrics"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.views",
+      "class": "RunReportView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "RunReportView"
+    }
+  }
+}

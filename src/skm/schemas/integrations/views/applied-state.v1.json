@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:view:applied-state:v1",
+  "title": "AppliedStateView",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "projection": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:integrations:view:projection-summary:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:integrations:defs:v1#/$defs/AppliedFileRecord"
+      }
+    }
+  },
+  "required": [
+    "projection",
+    "files"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.views",
+      "class": "AppliedStateView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "AppliedStateView"
+    }
+  }
+}

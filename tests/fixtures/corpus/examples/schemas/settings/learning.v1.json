@@ -1,0 +1,1205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:learning:v1",
+  "title": "Learning settings",
+  "description": "Settings section 'learning' owned by learning. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "learning",
+    "owner": "learning",
+    "title": "Learning",
+    "validators": [
+      {
+        "id": "learning.thresholds_order",
+        "keys": [
+          "learning.thresholds.deprecate_conf",
+          "learning.thresholds.candidate_min_conf",
+          "learning.thresholds.curated_min_conf",
+          "learning.thresholds.candidate_min_n",
+          "learning.thresholds.curated_min_n",
+          "learning.thresholds.candidate_min_n_floor"
+        ],
+        "rule": "deprecate_conf < candidate_min_conf <= curated_min_conf and candidate_min_n_floor <= candidate_min_n <= curated_min_n"
+      },
+      {
+        "id": "learning.pathology_order",
+        "keys": [
+          "learning.detectors.pathology_min_hits",
+          "learning.detectors.pathology_window"
+        ],
+        "rule": "pathology_min_hits <= pathology_window"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.settings",
+      "class": "LearningSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "LearningSettings"
+    }
+  },
+  "properties": {
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Collect learning signals from run events.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Signals",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "client_sessions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Also collect signals from interactive client sessions (run_report hook).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Signals",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "candidate_min_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 15,
+          "description": "Additional lower bound on independent known-outcome activities; the support-score gate also applies.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "candidate_min_n_floor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 3,
+          "description": "Lowest adaptive additional count bound; not the effective minimum of the support-score gate.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "candidate_min_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Minimum un-decayed source-association support score for candidate entry; not utility or causal confidence.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "curated_min_n": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 50,
+          "description": "Additional independent known-outcome activity count required before human curation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "curated_min_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Minimum un-decayed source-association support score for curation review; human endorsement is separate.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "curated_min_passrate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.95,
+          "description": "Share of passing checks after which a candidate is flagged ready.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Confidence",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "deprecate_conf": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.4,
+          "description": "Lower exit threshold for un-decayed source-association support; strictly below entry. Freshness alone does not deprecate.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.thresholds_order"
+            ],
+            "ui": {
+              "group": "Confidence",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "alpha": {
+          "type": "number",
+          "minimum": 0.0001,
+          "maximum": 1000,
+          "default": 1.0,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Prior successes of the Beta confidence model.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Thresholds",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "beta": {
+          "type": "number",
+          "minimum": 0.0001,
+          "maximum": 1000,
+          "default": 1.0,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Prior failures of the Beta confidence model.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Thresholds",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "volume_k": {
+          "type": "number",
+          "minimum": 0.0001,
+          "maximum": 100000,
+          "default": 20.0,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). E-folding observation scale k: volume weight = 1-exp(-N/k), equal to 0.6321 at N=k.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Thresholds",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "decay_lambda": {
+          "type": "number",
+          "minimum": 0.0001,
+          "maximum": 1,
+          "default": 0.95,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Per-day decay factor of old observations.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Thresholds",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "detectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pathology_window": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 5,
+          "description": "Latest runs inspected for a recurring pathology.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.pathology_order"
+            ],
+            "ui": {
+              "group": "Pathology",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "pathology_min_hits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 2,
+          "description": "Runs of the window a pathology code must occur in to become a candidate.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "learning.pathology_order"
+            ],
+            "ui": {
+              "group": "Pathology",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "similar_command": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Reviewer shortlist similarity only; an A-pair requires exact normalized command equality.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "workflow_relaunch_min": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 100,
+          "default": 3,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Relaunches of a workflow that form a relaunch pathology.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "reread_min_total": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 10,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Reads before the re-read ratio is evaluated.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "reread_ratio_max": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.4,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Share of repeated reads above which re-reading is flagged.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "error_loop_info_len": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 3,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Repeated errors that give an info error-loop signal.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "error_loop_attention_len": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 5,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Repeated errors that give an attention error-loop signal.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "noop_min_tools": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 20,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Tool calls without a change that form a no-op pathology.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        },
+        "cache_hit_low": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.4,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Prompt-cache hit rate below which a cache signal is raised.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "cache_miss_min_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000000,
+          "default": 200000,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Uncached input tokens needed before the cache signal counts.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 90,
+              "widget": "number"
+            }
+          }
+        },
+        "retrieval_in_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.25,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Share of input tokens spent on retrieval above which it is flagged.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 100,
+              "widget": "number"
+            }
+          }
+        },
+        "retrieval_repeated_min": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 2,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Repeated retrievals of the same source that count.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 110,
+              "widget": "number"
+            }
+          }
+        },
+        "chars_per_token": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 4.0,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Characters per token assumed by detectors without usage data.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 120,
+              "widget": "number"
+            }
+          }
+        },
+        "static_min_msgs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 3,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Messages before the static-session detector applies.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 130,
+              "widget": "number"
+            }
+          }
+        },
+        "static_window_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.7,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Share of the window without progress that counts as static.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 140,
+              "widget": "number"
+            }
+          }
+        },
+        "static_max_tools": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 15,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Tool calls below which a long session counts as static.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 150,
+              "widget": "number"
+            }
+          }
+        },
+        "fanout_min_agents": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 8,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Delegated agents that form a fan-out signal.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 160,
+              "widget": "number"
+            }
+          }
+        },
+        "fanout_max_files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 5,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Changed files at most for the fan-out signal to apply.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 170,
+              "widget": "number"
+            }
+          }
+        },
+        "extra_runner_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Extra regular expressions recognizing test or build runner commands.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Detectors",
+              "order": 180,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "consolidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "shortlist_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.4,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Similarity from which candidates are shortlisted for consolidation.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consolidation",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "trigger_high": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Trigger similarity that proposes a merge.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consolidation",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "action_high": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.6,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Reviewer proposal-priority threshold only; never evidence of instruction equivalence.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consolidation",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "action_low": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.2,
+          "description": "Heuristic, not calibrated on field data (legacy analyst admits it). Reviewer possible-conflict threshold only; non-identical instructions remain independent.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Consolidation",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "recompute": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "interval_seconds": {
+          "type": "integer",
+          "minimum": 3600,
+          "maximum": 604800,
+          "default": 86400,
+          "description": "Interval of the confidence recompute job.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Signals",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "contract": "urn:skm:planning:query:list-entities:v1",
+  "request": {
+    "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+    "revision_id": "0192f5c7-0000-7000-8000-000000000301",
+    "kinds": [],
+    "limit": 50
+  }
+}

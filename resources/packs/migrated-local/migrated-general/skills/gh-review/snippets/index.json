@@ -1,0 +1,10 @@
+{
+  "skill": "gh-review",
+  "snippets": [
+    {
+      "file": "gh-review-commands.md",
+      "description": "Cheat Sheet gh for review (pr view/diff/comment/review), point reading of someone else's repo (gh api contents/commits/rate_limit) and boundaries with git",
+      "tags": ["github", "gh", "review", "api"]
+    }
+  ]
+}

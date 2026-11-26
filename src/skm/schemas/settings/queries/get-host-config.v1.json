@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:query:get-host-config:v1",
+  "title": "GetHostConfig",
+  "description": "Internal query of an http-mode worker (allowed_kinds = {worker}): the effective host chain of host:<host_id> plus the instance plugin allowlist, read before host services are built (kernel-platform §5.3a step 2). Permission config.read on host:<host_id>; a worker holds it only for the host it is registered on (K17).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host_id"
+  ],
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.queries",
+      "class": "GetHostConfig",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetHostConfig"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:event:plan-archived:v1",
+  "title": "PlanArchived",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string",
+      "minLength": 0
+    },
+    "abandoned_draft_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      }
+    }
+  },
+  "required": [
+    "plan_id",
+    "project_id",
+    "alias",
+    "abandoned_draft_ids"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.events",
+      "class": "PlanArchived",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanArchived"
+    }
+  },
+  "x-skm-hookable": true
+}

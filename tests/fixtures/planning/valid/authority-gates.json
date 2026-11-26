@@ -1,0 +1,93 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "authority": {
+        "kind": "routine"
+      }
+    },
+    {
+      "key": "P1.2",
+      "phase": "P1",
+      "title": "Item P1.2",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "authority": {
+        "kind": "owner_gate",
+        "gate": "REL-1",
+        "scope": "Release."
+      }
+    },
+    {
+      "key": "P1.3",
+      "phase": "P1",
+      "title": "Item P1.3",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "authority": {
+        "kind": "owner_gate",
+        "label": "Owner approval",
+        "scope": "Pricing change."
+      }
+    },
+    {
+      "key": "P1.4",
+      "phase": "P1",
+      "title": "Item P1.4",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "authority": {
+        "kind": "external_gate",
+        "gate": "LEGAL.2",
+        "scope": "Contract."
+      }
+    },
+    {
+      "key": "P1.5",
+      "phase": "P1",
+      "title": "Item P1.5",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "authority": {
+        "kind": "external_gate",
+        "label": "Vendor ack",
+        "scope": "Vendor API."
+      }
+    }
+  ]
+}

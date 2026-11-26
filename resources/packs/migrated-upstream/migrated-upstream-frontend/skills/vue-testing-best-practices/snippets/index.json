@@ -1,0 +1,10 @@
+{
+  "skill": "vue-testing-best-practices",
+  "snippets": [
+    {
+      "file": "component.spec.ts",
+      "description": "Reference spec Vue-component: mount + createTestingPinia (stubActions) + flushPromises/nextTick + check emitted; resistant data-testid and child component stub",
+      "tags": ["vue-test-utils", "pinia", "async", "emits", "data-testid"]
+    }
+  ]
+}

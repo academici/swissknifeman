@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:result:review-candidate:v1",
+  "title": "ReviewCandidateResult",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateState"
+    }
+  },
+  "required": [
+    "review_id",
+    "state"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.results",
+      "class": "ReviewCandidateResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "ReviewCandidateResult"
+    }
+  }
+}

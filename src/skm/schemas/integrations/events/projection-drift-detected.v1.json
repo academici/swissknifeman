@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:event:projection-drift-detected:v1",
+  "title": "ProjectionDriftDetected",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "projection_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "noop",
+              "create",
+              "update",
+              "adopt_clean",
+              "conflict_write_new",
+              "adopt_required",
+              "boundary_invalid",
+              "remove_owned",
+              "leave_modified",
+              "unsafe_target"
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "decision"
+        ]
+      }
+    }
+  },
+  "required": [
+    "projection_id",
+    "files"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.events",
+      "class": "ProjectionDriftDetected",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "ProjectionDriftDetected"
+    }
+  },
+  "x-skm-hookable": true
+}

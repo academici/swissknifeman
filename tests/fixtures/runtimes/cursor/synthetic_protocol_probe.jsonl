@@ -1,0 +1,2 @@
+{"provenance":"synthetic","runtime_id":"cursor","verified":false,"note":"Synthetic protocol fixture for probe/rejection testing only; never activates Cursor capabilities."}
+{"provenance":"synthetic","type":"probe_version","stdout":"cursor-agent 0.45.0\n","headless_contract":"unknown"}

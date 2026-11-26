@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "project-map"
+version = "0.1.0"
+kind = "reference"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

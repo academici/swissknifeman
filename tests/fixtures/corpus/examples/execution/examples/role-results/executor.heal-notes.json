@@ -1,0 +1,22 @@
+{
+  "step_id": "0193a000-0000-7000-8000-0000000d0101",
+  "kind": "stage-report",
+  "raw_result_file_version_id": "0193a000-0000-7000-8000-000000110101",
+  "repairs": [
+    "status: 'Done-With-Deviations ' read as done_with_deviations (rule 1)",
+    "changed_paths: duplicate entry api:src/auth/rotation.py dropped (rule 2)",
+    "evidence: string read as a list of one (rule 2)",
+    "checks_run: absent, assumed empty (rule 2)",
+    "open_issues[0]: string read as {text, kind: note} (rule 4)",
+    "open_issues[1]: kind 'Deviation' normalized to deviation (rule 4)",
+    "open_issues[1]: deviation without class/outcome/impact got class=other, outcome=follow_up, impact='not stated by the executor' (rule 5)"
+  ],
+  "drift": [],
+  "diagnostics": [
+    {
+      "code": "RESULT_HEALED",
+      "message": "7 form repairs; meaning preserved (drift empty)"
+    }
+  ],
+  "note": "The output still carries api:src/auth/token_repository.py outside the declared write scope: seal_output computes outside_write_scope on the server, and with execution.scope.outside_policy = deviation acceptance needs a finding-deviation (A12)."
+}

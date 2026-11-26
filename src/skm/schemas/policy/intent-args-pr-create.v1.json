@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:intent-args-pr-create:v1",
+  "title": "IntentArgsPrCreate",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "endpoint": {
+      "$ref": "urn:skm:policy:intent-args-git-push:v1#/properties/endpoint"
+    },
+    "binding_identity": {
+      "$ref": "urn:skm:policy:intent-args-git-push:v1#/properties/binding_identity"
+    },
+    "base": {
+      "type": "string",
+      "minLength": 0
+    },
+    "head": {
+      "type": "string",
+      "minLength": 0
+    },
+    "title_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "body_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "repository_id",
+    "endpoint",
+    "binding_identity",
+    "base",
+    "head",
+    "title_digest",
+    "body_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "IntentArgsPrCreate",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentArgsPrCreate"
+    }
+  }
+}

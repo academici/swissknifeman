@@ -1,0 +1,13 @@
+{
+  "schema": "urn:skm:integrations:defs:v1#/$defs/hook_event",
+  "target": "claude_code",
+  "kind": "pre_shell",
+  "session_id": "4f6c2a1e-9b7d-4c3a-8e21-7d5b3c9a0f12",
+  "cwd": "/home/dev/demo",
+  "tool_name": "shell",
+  "command": "git push --force origin main",
+  "paths": [],
+  "prompt": null,
+  "stop_status": null,
+  "raw_event_name": "PreToolUse"
+}

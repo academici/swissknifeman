@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:result:doctor:v1",
+  "title": "DoctorResult",
+  "description": "platform result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:check-result:v1"
+      }
+    }
+  },
+  "required": [
+    "checks"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.results",
+      "class": "DoctorResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "DoctorResult"
+    }
+  }
+}

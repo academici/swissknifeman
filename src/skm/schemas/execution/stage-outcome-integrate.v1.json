@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:stage-outcome-integrate:v1",
+  "title": "StageOutcomeIntegrate",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "commit_sha": {
+      "type": "string"
+    },
+    "commit_shas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "target_branch": {
+      "type": "string"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "conflict_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      }
+    },
+    "pushed": {
+      "type": "boolean"
+    },
+    "error_code": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "detail": {
+      "type": "string"
+    },
+    "error_class": {
+      "type": "string"
+    },
+    "worktree_dirty": {
+      "type": "boolean"
+    },
+    "retry_after_seconds": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "integration_receipts": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/git-commit-receipt"
+      }
+    },
+    "conflict_path_bytes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mount": {
+            "type": "string"
+          },
+          "path_bytes": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "mount",
+          "path_bytes"
+        ]
+      }
+    },
+    "reconciled_effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "effect_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "request_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "state": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "outcome_unknown"
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/git-commit-receipt"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ref": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
+                },
+                "response_digest": {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "ref",
+                "at"
+              ]
+            }
+          ]
+        },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{2,63}$"
+        }
+      },
+      "required": [
+        "effect_id",
+        "request_digest",
+        "state"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "receipt"
+            ]
+          }
+        }
+      ]
+    },
+    "outcome": {
+      "const": "waiting"
+    },
+    "effect_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "git_push",
+            "pr_create",
+            "publish",
+            "message"
+          ]
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "args"
+      ]
+    }
+  },
+  "required": [],
+  "anyOf": [
+    {
+      "required": []
+    },
+    {
+      "required": [
+        "error_code"
+      ]
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "StageOutcomeIntegrate",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StageOutcomeIntegrate"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "required": [
+          "error_code",
+          "retry_after_seconds"
+        ],
+        "properties": {
+          "error_code": {
+            "const": "SLOT_BUSY"
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "commit_sha"
+              ]
+            },
+            {
+              "required": [
+                "commit_shas"
+              ]
+            },
+            {
+              "required": [
+                "output_ids"
+              ]
+            },
+            {
+              "required": [
+                "pushed"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

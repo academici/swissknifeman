@@ -1,0 +1,12 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "question"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:executor:v1\", \"status\": \"blocked\", \"summary\": \"Owner decision required\", \"changed_paths\": [], \"checks_run\": [], \"open_issues\": [{\"kind\": \"escalation\", \"text\": \"Synthetic owner decision\", \"escalation_class\": \"decision\"}], \"self_check\": {\"performed\": false}, \"questions\": [{\"id\": \"Q1\", \"revision\": 1, \"kind\": \"decision\", \"text\": \"Which synthetic behavior should be implemented?\", \"options\": [{\"id\": \"a\", \"label\": \"Return 42\"}, {\"id\": \"b\", \"label\": \"Return 43\"}], \"default\": \"a\", \"blocking\": true, \"risk\": \"low\", \"facts\": {\"reversibility\": \"reversible\", \"scope_impact\": \"task\", \"contract_change\": \"none\", \"cost_class\": \"low\", \"needs_external_fact\": false, \"needs_authority\": true}}]}"

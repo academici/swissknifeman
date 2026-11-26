@@ -1,0 +1,80 @@
+{
+  "description": "G14 (policy.md §4.5): every operation x every built-in profile. 'decision' is the profile row; 'empty' and 'granted' are the evaluate_operation outcome with an empty task authority and with every operation, capability and worktree delete scope granted ('allow', 'warn', 'ask' or 'deny:<code>').",
+  "network": {
+    "workspace-contained": "allowlist",
+    "read-only": "none",
+    "trusted-full-access": "any"
+  },
+  "operations": {
+    "modify_write_set": {
+      "workspace-contained": {"decision": "allow", "empty": "allow", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "allow", "empty": "allow", "granted": "allow"}
+    },
+    "modify_outside_write_set": {
+      "workspace-contained": {"decision": "warn", "empty": "warn", "granted": "warn"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "allow", "empty": "allow", "granted": "allow"}
+    },
+    "delete_tracked": {
+      "workspace-contained": {"decision": "task_authority", "empty": "deny:requires_task_authority", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "delete_own_untracked": {
+      "workspace-contained": {"decision": "allow", "empty": "allow", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "allow", "empty": "allow", "granted": "allow"}
+    },
+    "delete_foreign_untracked": {
+      "workspace-contained": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "modify_git_dir": {
+      "workspace-contained": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "git_discard": {
+      "workspace-contained": {"decision": "task_authority", "empty": "deny:requires_task_authority", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "git_push": {
+      "workspace-contained": {"decision": "intent", "empty": "deny:requires_intent", "granted": "deny:requires_intent"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "git_force_push": {
+      "workspace-contained": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "forge_write": {
+      "workspace-contained": {"decision": "intent", "empty": "deny:requires_intent", "granted": "deny:requires_intent"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "release_publish": {
+      "workspace-contained": {"decision": "intent", "empty": "deny:requires_intent", "granted": "deny:requires_intent"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "secrets_access": {
+      "workspace-contained": {"decision": "capability", "capability": "secrets", "risk": "high", "empty": "deny:capability_not_granted", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "empty": "ask", "granted": "ask"}
+    },
+    "docker_socket": {
+      "workspace-contained": {"decision": "capability", "capability": "docker_socket", "risk": "high", "empty": "deny:capability_not_granted", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "risk": "high", "empty": "ask", "granted": "ask"}
+    },
+    "external_services": {
+      "workspace-contained": {"decision": "capability", "capability": "external_services", "risk": "high", "empty": "deny:capability_not_granted", "granted": "allow"},
+      "read-only": {"decision": "deny", "empty": "deny:operation_denied", "granted": "deny:operation_denied"},
+      "trusted-full-access": {"decision": "ask", "risk": "high", "empty": "ask", "granted": "ask"}
+    }
+  }
+}

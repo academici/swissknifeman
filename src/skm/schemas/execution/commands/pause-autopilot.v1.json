@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:pause-autopilot:v1",
+  "title": "PauseAutopilot",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "stop_after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "PauseAutopilot",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "PauseAutopilot"
+    }
+  }
+}

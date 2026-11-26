@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:api:page:v1",
+  "title": "Page",
+  "description": "HTTP API v1 page contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {}
+    },
+    "next": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "items",
+    "next",
+    "limit"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.api",
+      "class": "Page",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "api.ts",
+      "name": "Page"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+# Agent profile of the core source pack: resources/packs/core/agent-profiles/executor.toml
+# Schema: urn:skm:extensions:agent-profile:v1 (examples/schemas/extensions/agent-profile.v1.json);
+# spec: working/spec/modules/extensions.md §4.6, context.md §4.4.1 (inheritance matrix), runtimes.md §4.3.1, §4.11.
+# Legacy: packages/orch/roles/executor.json (implementation, filesystem write, shell full, network none). Bounded fixes are operation bounded_fix of this profile (runtimes §4.11), not a separate bounded-implementer role.
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "executor"
+version = "2.0.0"
+role = "executor"
+title = "Executor"
+description = "Implements one task inside its write scope, proves it with the tests of what it changed and reports a closed result."
+result_schema = "urn:skm:execution:role-result:executor:v1"
+llm = true
+
+# Routing class and effort; config_isolation is added by routing itself when inherit_user_global = false.
+[routing]
+model_class = "implementation"
+effort = "high"
+required_capabilities = ["headless_execution", "structured_result", "workspace_binding", "stream_events", "reliable_cancellation"]
+optional_capabilities = ["session_resume", "usage_reporting", "tool_interception"]
+
+[isolation]
+profile = "worktree"
+
+# policy_profile is the policy profile id (policy.md §4.5); layer only narrows it (urn:skm:policy:permission-layer:v1).
+[permissions]
+policy_profile = "workspace-contained"
+
+[permissions.layer.tools]
+allow = ["fs.read", "fs.write", "fs.edit", "fs.delete", "shell.run"]
+
+# The executor never commits or pushes: the integrate stage does (execution.md).
+[permissions.layer.effects]
+allow = []
+need_approval = []
+
+# Prompt blocks per block type, in render order inside the type (keys of prompt_block resources).
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["executor/role"]
+task_contract = ["executor/task_contract", "shared/work_policy"]
+result_contract = ["executor/result_contract"]
+research = ["shared/raw_block"]
+
+[context]
+include = ["previous_attempt", "context_map", "steering", "skills", "skill_index", "materials", "repo_instructions", "research", "history"]
+inherit_user_global = false
+repo_instructions = "full"
+repo_instruction_sections = []
+skills_mode = "auto"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 8000
+history_max_steps = 3
+memory_top_k = 0
+include_optional_materials = true
+
+[limits]
+timeout_seconds = 3600
+idle_timeout_seconds = 600
+max_turns = 200
+max_output_tokens = 32000
+max_result_retries = 2

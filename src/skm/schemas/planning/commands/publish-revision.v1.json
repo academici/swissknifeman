@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:command:publish-revision:v1",
+  "title": "PublishRevision",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "draft_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expected_content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "plan_id",
+    "draft_id",
+    "expected_edit_version",
+    "expected_content_digest",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.commands",
+      "class": "PublishRevision",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PublishRevision"
+    }
+  },
+  "description": "planning owner schema: PublishRevision."
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:result:record-note-written:v1",
+  "title": "RecordNoteWrittenResult",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recorded": {
+      "type": "boolean"
+    },
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "vault_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "recorded",
+    "note_id",
+    "vault_id",
+    "generation"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.results",
+      "class": "RecordNoteWrittenResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "RecordNoteWrittenResult"
+    }
+  }
+}

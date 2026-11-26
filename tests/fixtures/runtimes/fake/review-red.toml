@@ -1,0 +1,12 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "review-red"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:reviewer:v1\", \"verdict\": \"red\", \"summary\": \"Synthetic review\", \"findings\": [{\"id\": \"F1\", \"severity\": \"major\", \"confidence\": \"high\", \"basis\": \"correctness\", \"category\": \"correctness\", \"message\": \"Wrong answer\", \"failure_scenario\": \"answer() returns 41 instead of 42\", \"location\": {\"mount\": \"main\", \"path\": \"src/app.py\", \"line_start\": 2}}], \"residual_risk\": \"Synthetic fixture only.\"}"

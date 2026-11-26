@@ -1,0 +1,99 @@
+{
+  "contract": "urn:skm:execution:execution-history:v1",
+  "value": {
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "through_seq": 12,
+    "builder_version": 1,
+    "scanned_through_seq": 12,
+    "entries": [
+      {
+        "seq": 1,
+        "event_id": "01928f61-0000-7000-8000-000000000010",
+        "event_type": "urn:skm:execution:event:task-created:v1",
+        "occurred_at": "2026-10-26T08:00:00Z",
+        "recorded_at": "2026-10-26T08:00:00Z",
+        "nodes": [
+          {
+            "ref": {
+              "kind": "task",
+              "id": "01928f61-0000-7000-8000-000000000002"
+            },
+            "state": "blocked",
+            "coverage": "complete",
+            "prompt": "private-document-canary-without-token-pattern"
+          }
+        ],
+        "edges": [
+          {
+            "kind": "contains",
+            "source": {
+              "kind": "run",
+              "id": "01928f61-0000-7000-8000-000000000001"
+            },
+            "target": {
+              "kind": "task",
+              "id": "01928f61-0000-7000-8000-000000000002"
+            }
+          }
+        ],
+        "coverage": "complete",
+        "reason_codes": []
+      },
+      {
+        "seq": 12,
+        "event_id": "01928f61-0000-7000-8000-000000000011",
+        "event_type": "urn:skm:execution:event:step-observation-recorded:v1",
+        "occurred_at": "2026-10-26T08:00:00Z",
+        "recorded_at": "2026-10-26T08:00:00Z",
+        "nodes": [
+          {
+            "ref": {
+              "kind": "step",
+              "id": "01928f61-0000-7000-8000-000000000005"
+            },
+            "state": "succeeded",
+            "coverage": "complete",
+            "runtime_observation": {
+              "schema": "urn:skm:runtimes:runtime-observation:v1",
+              "request_id": "01928f61-0000-7000-8000-000000000005",
+              "binding": {
+                "runtime_id": "fake",
+                "runtime_version": null,
+                "adapter_version": null,
+                "executable_sha256": null,
+                "verification_key": null,
+                "provider_reported_model": null,
+                "model_source": "unavailable"
+              },
+              "timing": {
+                "clock_domain_id": "01928f61-4444-7aaa-8bbb-2c3d4e5f6a7c",
+                "duration_ms": 42,
+                "first_observed_at": "2026-10-26T10:00:00.000Z",
+                "last_observed_at": "2026-10-26T10:00:00.042Z"
+              },
+              "capture": {
+                "coverage": "complete",
+                "bytes_seen": 128,
+                "bytes_retained": 128,
+                "bytes_dropped": 0,
+                "truncated": false,
+                "gaps": [],
+                "parser_flags": [],
+                "live_events_dropped": null
+              },
+              "tools": {
+                "coverage": "unavailable",
+                "observed_calls": null
+              }
+            }
+          }
+        ],
+        "edges": [],
+        "coverage": "complete",
+        "reason_codes": []
+      }
+    ],
+    "next_after": null,
+    "coverage": "complete"
+  }
+}

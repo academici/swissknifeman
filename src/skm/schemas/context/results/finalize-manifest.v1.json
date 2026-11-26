@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:result:finalize-manifest:v1",
+  "title": "FinalizeManifestResult",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "state": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "delta"
+      ]
+    },
+    "task_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "prompt_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "total_tokens_estimate": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "state",
+    "mode",
+    "task_digest",
+    "prompt_digest",
+    "total_tokens_estimate"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.results",
+      "class": "FinalizeManifestResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "FinalizeManifestResult"
+    }
+  }
+}

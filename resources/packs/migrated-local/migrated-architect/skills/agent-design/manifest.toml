@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "agent-design"
+version = "0.2.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+
+[provenance]
+source = "local"

@@ -1,0 +1,778 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:defs:v1",
+  "title": "Defs",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "$defs": {
+    "worker-claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assignment_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "attempt_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "worker_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "assignment_id",
+        "attempt_id",
+        "worker_id",
+        "fencing_token"
+      ]
+    },
+    "json-value": {
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      ]
+    },
+    "usage": {
+      "description": "Single usage definition owned by runtimes (K9): urn:skm:runtimes:usage-report:v1.",
+      "$ref": "urn:skm:runtimes:usage-report:v1"
+    },
+    "output-manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "skm-output-v2"
+        },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/output-mount"
+          }
+        },
+        "changed_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/changed-path"
+          }
+        },
+        "outside_write_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/changed-path"
+          }
+        },
+        "excluded_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/changed-path"
+          }
+        },
+        "tree_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "patch_file_version_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diff_stats": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "insertions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "deletions": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "files",
+            "insertions",
+            "deletions"
+          ]
+        },
+        "empty": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "algorithm",
+        "mounts",
+        "changed_paths",
+        "outside_write_scope",
+        "excluded_paths",
+        "tree_digest",
+        "diff_stats",
+        "empty"
+      ],
+      "description": "New seals use skm-output-v2. tree_digest is SHA-256 typed path/tree identity payload per adapters §3.6; manifest_digest separately hashes this entire canonical JSON document. Raw byte order and SHA lengths are validated semantically."
+    },
+    "check-result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_execution_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "check_spec_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "running",
+            "passed",
+            "failed",
+            "manual_pending",
+            "error",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "type": "string"
+        },
+        "evidence_file_version_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "reused_from": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "check_spec_id",
+        "state"
+      ]
+    },
+    "stage-instruction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "run_stage",
+            "release",
+            "wait"
+          ]
+        },
+        "stage_id": {
+          "type": "string"
+        },
+        "stage_type": {
+          "type": "string",
+          "enum": [
+            "prepare_environment",
+            "agent_step",
+            "run_checks",
+            "agent_review",
+            "advisor_consult",
+            "integrate",
+            "phase_gate",
+            "plan_acceptance"
+          ]
+        },
+        "mode": {
+          "type": "string"
+        },
+        "round_no": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "params": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        },
+        "input_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "not_before": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "route_override": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "environment": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        },
+        "release_reason": {
+          "type": "string",
+          "enum": [
+            "waiting",
+            "done",
+            "paused",
+            "cancelled",
+            "retry_later"
+          ]
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "staged-file": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "File staged by SkmClient.upload_blob; the server registers the file version after the fence (K8).",
+      "properties": {
+        "staged_blob": {
+          "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "staged_blob",
+        "filename",
+        "media_type"
+      ]
+    },
+    "evidence-item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string",
+          "enum": [
+            "step",
+            "check_execution",
+            "review",
+            "output",
+            "attempt"
+          ]
+        },
+        "owner_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "evidence",
+            "transcript",
+            "prompt",
+            "raw_result",
+            "patch",
+            "fix_brief",
+            "diagnostic",
+            "coverage_report",
+            "report",
+            "diff"
+          ]
+        },
+        "staged_blob": {
+          "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "owner",
+        "owner_id",
+        "role",
+        "staged_blob",
+        "filename",
+        "media_type"
+      ]
+    },
+    "process-identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pid": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "pgid": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "boot_id": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "session_ref": {
+          "type": "string"
+        },
+        "start_ticks": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "ownership": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/process-ownership"
+        }
+      },
+      "required": [
+        "pid",
+        "pgid",
+        "started_at",
+        "ownership"
+      ]
+    },
+    "changed-path": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path_bytes": {
+          "type": "string",
+          "minLength": 2,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Canonical unpadded base64url of relative raw Git path bytes; display is not identity. Semantic validator rejects NUL, empty/dot/dotdot segments and noncanonical encoding."
+        },
+        "change": {
+          "enum": [
+            "added",
+            "modified",
+            "deleted",
+            "renamed"
+          ]
+        },
+        "old_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "old_path_bytes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 2,
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "description": "Canonical unpadded base64url of relative raw Git path bytes; display is not identity. Semantic validator rejects NUL, empty/dot/dotdot segments and noncanonical encoding."
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^(absent|(100644|100755|120000) ([0-9a-f]{40}|[0-9a-f]{64}))$"
+        }
+      },
+      "required": [
+        "mount",
+        "path",
+        "path_bytes",
+        "change",
+        "fingerprint"
+      ],
+      "description": "Authoritative Git path, raw byte identity, immutable fingerprint. Rename requires old_path and old_path_bytes; digest expands rename to delete+add."
+    },
+    "output-mount": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "object_format": {
+          "enum": [
+            "sha1",
+            "sha256"
+          ]
+        },
+        "base_commit": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "head_commit": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        }
+      },
+      "required": [
+        "mount",
+        "repository_id",
+        "object_format",
+        "base_commit",
+        "head_commit",
+        "tree_sha"
+      ]
+    },
+    "baseline-entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mount": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "source_head_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "dirty_patch_file_version_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mount",
+        "repository_id",
+        "commit_sha",
+        "source_head_sha",
+        "dirty_patch_file_version_id"
+      ]
+    },
+    "git-commit-request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "after_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "baseline_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "output_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "output_digests": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          }
+        },
+        "commit_shas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+          }
+        },
+        "assignment_fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "slot_fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "writer_epoch_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        }
+      },
+      "required": [
+        "repository_id",
+        "target_branch",
+        "before_sha",
+        "after_sha",
+        "tree_sha",
+        "baseline_sha",
+        "output_ids",
+        "output_digests",
+        "commit_shas",
+        "assignment_fencing_token",
+        "slot_fencing_token",
+        "writer_epoch_sha"
+      ],
+      "description": "Immutable candidate publication envelope; server verifies accepted outputs, matching arrays, claim/slot generations and request digest before executing. Empty commit_shas only for before_sha=after_sha no-op."
+    },
+    "git-commit-receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "before_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "after_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "commit_shas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+          }
+        },
+        "target_branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "output_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "request_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "writer_epoch_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "receipt_ref": {
+          "type": "string",
+          "pattern": "^refs/skm/effects/[0-9a-f-]+$"
+        },
+        "receipt_commit_sha": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "ref",
+        "before_sha",
+        "after_sha",
+        "tree_sha",
+        "commit_shas",
+        "target_branch",
+        "output_ids",
+        "request_digest",
+        "writer_epoch_sha",
+        "receipt_ref",
+        "receipt_commit_sha",
+        "at"
+      ]
+    },
+    "process-ownership": {
+      "$ref": "urn:skm:runtimes:agent-request:v1#/$defs/process-ownership"
+    },
+    "effect-admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "admission_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "effect_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "request_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "slot_fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "server_now": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "admit_until": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "admission_id",
+        "effect_id",
+        "request_digest",
+        "slot_fencing_token",
+        "server_now",
+        "admit_until"
+      ],
+      "description": "Fresh git_commit/executing guard result, valid until min(lease,slot,server_now+5s). Writer binds exact effect/request/epoch and durably consumes this admission once. Cached response is not new authority."
+    },
+    "effect-record-result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "effect_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "state": {
+          "enum": [
+            "intended",
+            "executing",
+            "succeeded",
+            "failed",
+            "outcome_unknown"
+          ]
+        },
+        "admission": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/effect-admission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "effect_id",
+        "state",
+        "admission"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "Defs",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "Defs"
+    }
+  }
+}

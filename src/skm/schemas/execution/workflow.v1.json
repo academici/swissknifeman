@@ -1,0 +1,489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:workflow:v1",
+  "title": "WorkflowDefinition",
+  "description": "A versioned workflow resource: ordered stages from a closed set of stage types, declarative parameters, per-task-kind applicability and a closed predicate set. Interpreted by execution.domain.workflow.engine.advance().",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "applies_to",
+    "stage"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:workflow:v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "applies_to": {
+      "description": "work_kind values of tasks this workflow may run",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/work_kind"
+      }
+    },
+    "requires_roles": {
+      "description": "Roles whose agent profiles must be pinned in the execution bundle",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/role"
+      }
+    },
+    "stage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/stage"
+      }
+    }
+  },
+  "$defs": {
+    "work_kind": {
+      "enum": [
+        "code",
+        "docs",
+        "research",
+        "config",
+        "test",
+        "review",
+        "ops"
+      ]
+    },
+    "role": {
+      "description": "Seven roles. There is no report_fixer role: form repair is deterministic and an invalid result is retried by the same role (execution.md §5.8, C3).",
+      "enum": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ]
+    },
+    "task_kind": {
+      "enum": [
+        "unit",
+        "item",
+        "item_gate",
+        "phase_gate",
+        "plan_acceptance",
+        "integration",
+        "followup",
+        "group_review",
+        "plan_audit",
+        "adhoc"
+      ]
+    },
+    "stage_type": {
+      "enum": [
+        "prepare_environment",
+        "agent_step",
+        "run_checks",
+        "agent_review",
+        "advisor_consult",
+        "human_gate",
+        "acceptance_gate",
+        "phase_gate",
+        "plan_acceptance",
+        "integrate"
+      ]
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "type": {
+          "$ref": "#/$defs/stage_type"
+        },
+        "role": {
+          "$ref": "#/$defs/role"
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        },
+        "for_kinds": {
+          "description": "Task kinds the stage applies to. Default: unit, item, integration, followup. phase_gate and plan_acceptance stages apply only to their own kinds whatever this list says.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/task_kind"
+          }
+        },
+        "when": {
+          "$ref": "#/$defs/condition"
+        },
+        "skip_when": {
+          "$ref": "#/$defs/condition"
+        },
+        "params": {
+          "$ref": "#/$defs/params"
+        },
+        "on": {
+          "$ref": "#/$defs/on"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "agent_step"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "scout",
+                  "executor",
+                  "triager",
+                  "researcher",
+                  "registrar"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "agent_review"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "const": "reviewer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "advisor_consult"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "const": "advisor"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "prepare_environment",
+                  "run_checks",
+                  "human_gate",
+                  "acceptance_gate",
+                  "phase_gate",
+                  "plan_acceptance",
+                  "integrate"
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "role"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline_strategy": {
+          "enum": [
+            "integration_branch_head",
+            "revision_pinned",
+            "gate_range",
+            "review_request"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "task",
+            "gate",
+            "rerun_after_integration"
+          ]
+        },
+        "audit_scope": {
+          "description": "Range outputs (gates, review requests) are always reviewed with audit_scope range.",
+          "enum": [
+            "corrected",
+            "full",
+            "range"
+          ]
+        },
+        "reviewer_with_fix": {
+          "type": "boolean",
+          "description": "Opt in to scoped review fixes on an agent_review stage. A changed snapshot requires task checks and a fresh read-only review."
+        },
+        "profile": {
+          "description": "Agent profile key of the role for this stage (review: reviewer | security; advisor: advisor | advisor-critic | plan-auditor).",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{1,60}$"
+        },
+        "push": {
+          "enum": [
+            "none",
+            "intent"
+          ]
+        },
+        "gate_kind": {
+          "enum": [
+            "manual_check",
+            "approval"
+          ]
+        },
+        "blocks_next_phase": {
+          "type": "boolean"
+        },
+        "coverage": {
+          "enum": [
+            "required",
+            "advisory"
+          ]
+        },
+        "retries": {
+          "description": "Upper bound of infra retries of this stage; may only lower execution.step.max_infra_retries.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      }
+    },
+    "on": {
+      "description": "Outcome handlers. Absent keys take the engine defaults of execution.md §5.1.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checks_failed": {
+          "enum": [
+            "rework",
+            "escalate",
+            "fail"
+          ]
+        },
+        "checks_error": {
+          "enum": [
+            "retry_once_then_escalate",
+            "escalate",
+            "fail"
+          ]
+        },
+        "verdict_attention": {
+          "enum": [
+            "triage",
+            "ask_owner"
+          ]
+        },
+        "verdict_red": {
+          "enum": [
+            "triage",
+            "escalate"
+          ]
+        },
+        "result_invalid": {
+          "enum": [
+            "retry_then_escalate",
+            "escalate",
+            "skip_if_optional"
+          ]
+        },
+        "conflict": {
+          "enum": [
+            "integration_task",
+            "escalate"
+          ]
+        }
+      }
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/predicate"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "all"
+          ],
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/predicate"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "any"
+          ],
+          "properties": {
+            "any": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/predicate"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "predicate": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "route_flag": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "review_mode": {
+          "enum": [
+            "required",
+            "self",
+            "waived"
+          ]
+        },
+        "review_verdict": {
+          "enum": [
+            "green",
+            "attention",
+            "red"
+          ]
+        },
+        "work_kind": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/work_kind"
+          }
+        },
+        "check_outcome": {
+          "enum": [
+            "passed",
+            "failed",
+            "error"
+          ]
+        },
+        "rounds_below": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "counter",
+            "limit"
+          ],
+          "properties": {
+            "counter": {
+              "enum": [
+                "review_rounds",
+                "check_fix_rounds"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "has_open_questions": {
+          "type": "boolean"
+        },
+        "task_kind": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/task_kind"
+          }
+        },
+        "risk_at_least": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "run_kind": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "plan",
+              "review_request",
+              "readiness_audit",
+              "adhoc"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "WorkflowDefinitionDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "WorkflowDefinition"
+    }
+  }
+}

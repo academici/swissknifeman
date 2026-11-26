@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:pending-continuation:v1",
+  "title": "PendingContinuation",
+  "description": "Server-private attempts.continuation application cursor, not a worker DTO or a new domain lifecycle. The whole canonical value is <=65536 bytes; SQL JSONB-text <=131072 bytes is only a defensive backstop. NULL is stored outside this schema and never authorizes inference or replay of legacy work. An advance cursor records unapplied trusted triggers; a stage cursor records an already-applied semantic RunStage. Selection effects and cursor replacement are atomic; consuming stage and creating StageRecord are atomic. Semantic validation requires distinct trigger source_event_id values, exact source ownership, equality with cause.source_event_id when supplied, and registered host stage/parameter contracts. Never store delivery input_digest, configuration snapshots/digests, manifests, reservations, tokens, secrets, raw command bodies or host locators in this cursor or its params.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/advance"
+    },
+    {
+      "$ref": "#/$defs/stage"
+    }
+  ],
+  "$defs": {
+    "authoritative-cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause",
+      "properties": {
+        "trigger_kind": {
+          "not": {
+            "const": "observation"
+          }
+        }
+      }
+    },
+    "deferred-cause": {
+      "$ref": "#/$defs/authoritative-cause",
+      "properties": {
+        "advance_rule": {
+          "const": null
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_event_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "cause": {
+          "$ref": "#/$defs/deferred-cause"
+        }
+      },
+      "required": [
+        "source_event_id",
+        "cause"
+      ]
+    },
+    "advance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "continuation_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "const": "advance"
+        },
+        "triggers": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/trigger"
+          },
+          "description": "Exact trusted trigger records in committed event order. Source event IDs must be distinct even when cause values differ; that projection uniqueness and stream ownership are semantic checks."
+        }
+      },
+      "required": [
+        "schema_version",
+        "continuation_id",
+        "kind",
+        "triggers"
+      ]
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "continuation_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "const": "stage"
+        },
+        "cause": {
+          "$ref": "#/$defs/authoritative-cause"
+        },
+        "stage": {
+          "$ref": "#/$defs/semantic-stage"
+        }
+      },
+      "required": [
+        "schema_version",
+        "continuation_id",
+        "kind",
+        "cause",
+        "stage"
+      ]
+    },
+    "semantic-stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stage_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,31}$"
+        },
+        "stage_type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,40}$",
+          "not": {
+            "enum": [
+              "acceptance_gate",
+              "phase_gate",
+              "plan_acceptance",
+              "human_gate"
+            ]
+          },
+          "description": "Registered host StageHandler type from the pinned workflow, including supported plugin types. Control-plane stages run within apply_action and are never queued as a host continuation."
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "retry",
+            "rework",
+            "final_correction",
+            "continue_with_answer",
+            "resume_interrupted",
+            "retriage_with_advice",
+            "reconcile"
+          ]
+        },
+        "round_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "params": {
+          "type": "object",
+          "maxProperties": 128,
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          },
+          "description": "Normalized semantic parameters, validated against the pinned registered stage contract before persistence. The cursor byte cap applies recursively; transport fields, raw bodies, credentials and host locators are forbidden by semantic validation."
+        },
+        "not_before": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "route_override": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/route-ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "feedback_refs": {
+          "$ref": "#/$defs/feedback-refs"
+        },
+        "input_output_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retry_of_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stage_id",
+        "stage_type",
+        "mode",
+        "round_no",
+        "params",
+        "not_before",
+        "route_override",
+        "feedback_refs",
+        "input_output_id",
+        "retry_of_id"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "retry_of_id": {
+                "type": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mode": {
+                "const": "retry"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "route-ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "effort"
+      ]
+    },
+    "feedback-refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fix_brief_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schema_errors_step_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "answer_request_ids": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "advice_step_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "interrupted_stage_record_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "fix_brief_id",
+        "schema_errors_step_id",
+        "answer_request_ids",
+        "advice_step_id",
+        "interrupted_stage_record_id"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "PendingContinuation",
+      "kind": "typeddict"
+    }
+  }
+}

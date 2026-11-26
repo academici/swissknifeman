@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:result:rebase-draft:v1",
+  "title": "RebaseDraftResult",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "changed": {
+      "type": "boolean"
+    },
+    "edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "previous_base_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "base_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "taken_from_current": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kept_from_draft": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "resolved": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ]
+    }
+  },
+  "required": [
+    "draft_id",
+    "plan_id",
+    "changed",
+    "edit_version",
+    "previous_base_revision_id",
+    "base_revision_id",
+    "taken_from_current",
+    "kept_from_draft",
+    "resolved",
+    "counts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.results",
+      "class": "RebaseDraftResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "RebaseDraftResult"
+    }
+  }
+}

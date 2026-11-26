@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:event:principal-created:v1",
+  "title": "PrincipalCreated",
+  "description": "access event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/principal_kind"
+    },
+    "display_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "principal_id",
+    "kind",
+    "display_name"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.events",
+      "class": "PrincipalCreated",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "PrincipalCreated"
+    }
+  }
+}

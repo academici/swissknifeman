@@ -1,0 +1,20 @@
+# urn:skm:runtimes:capabilities:v1 of the fixture runtime (step 2a: read through RECORD, never imported).
+# TOML has no null: every nullable member carries a value.
+runtime_id = "fixture_rt"
+adapter_version = "0.1.0"
+read_only_network = false
+self_loads = []
+
+[config_isolation]
+env = {}
+args = []
+credential_mounts = []
+writable_home_dirs = []
+
+[[records]]
+capability = "headless_execution"
+status = "native"
+evidence = "fixture:skm-plugin-fixture"
+tested_runtime_version = "0.1.0"
+limitations = ""
+last_verified_at = 2026-10-01

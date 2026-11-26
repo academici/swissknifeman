@@ -1,0 +1,26 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "js-code-style"
+version = "0.1.0"
+kind = "domain"
+risk = "high"
+license = "MIT"
+roles = ["executor"]
+exclusive_group = "js-style"
+
+[triggers]
+paths = ["*.ts", "*.tsx", "*.js", "*.vue"]
+
+[provenance]
+source = "upstream"
+repo = "spatie/guidelines.spatie.be"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "b82877bd948bfb91fb04dc28b47a39f1897927f7ca06a043071a7b11d7ae1a02"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/spatie/guidelines.spatie.be/master/content/code-style/javascript.md"
+sha256 = "a40b449cfb43361d877e8b53dab243e8e089979c0321e118c7aae7a76074c507"
+fetched_at = "2026-06-12"

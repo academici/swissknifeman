@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:fix-brief:v1",
+  "title": "FixBrief",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:fix-brief:v1"
+    },
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "source_review_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_check_round": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_finding_chars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_inline_evidence_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_total_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "max_findings",
+        "max_finding_chars",
+        "max_inline_evidence_bytes",
+        "max_total_bytes"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "finding_key": {
+            "type": "string"
+          },
+          "local_id": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mount": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "line_start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "line_end": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "mount",
+              "path",
+              "line_start",
+              "line_end"
+            ]
+          },
+          "problem": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          },
+          "reproduction": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "finding_key",
+          "local_id",
+          "severity",
+          "category",
+          "location",
+          "problem",
+          "fix",
+          "observed",
+          "reproduction"
+        ]
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "deferred_finding_keys": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "full_report_file_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "task_id",
+    "attempt_id",
+    "source_review_id",
+    "source_check_round",
+    "limits",
+    "checks",
+    "deferred_finding_keys",
+    "full_report_file_version_id",
+    "digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "FixBrief",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "FixBrief"
+    }
+  }
+}

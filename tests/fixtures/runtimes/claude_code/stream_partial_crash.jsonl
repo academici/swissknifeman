@@ -1,0 +1,5 @@
+{"type":"system","subtype":"init","session_id":"sess_crash_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"assistant","message":{"id":"msg_turn_1","model":"claude-sonnet-4-5-20250929","content":[{"type":"text","text":"Starting analysis."}],"usage":{"input_tokens":110,"output_tokens":15,"cache_read_input_tokens":20,"cache_creation_input_tokens":5}}}
+{"type":"assistant","message":{"id":"msg_turn_1","model":"claude-sonnet-4-5-20250929","content":[{"type":"tool_use","id":"toolu_01read","name":"Read","input":{"file_path":"/workspace/app.py"}}],"usage":{"input_tokens":110,"output_tokens":40,"cache_read_input_tokens":20,"cache_creation_input_tokens":5}}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_01read","is_error":false,"content":"def main(): pass"}]}}
+{"type":"assistant","message":{"id":"msg_turn_2","model":"claude-sonnet-4-5-20250929","content":[{"type":"text","text":"Continuing before unexpected crash."}],"usage":{"input_tokens":200,"output_tokens":25,"cache_read_input_tokens":100,"cache_creation_input_tokens":0}}}

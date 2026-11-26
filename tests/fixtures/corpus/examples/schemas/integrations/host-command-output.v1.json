@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-command-output:v1",
+  "title": "HostCommandOutput",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host-command-output:v1"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "deny",
+        "ask",
+        "none"
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "additional_context": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "decision"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "HostCommandOutput",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostCommandOutput"
+    }
+  }
+}

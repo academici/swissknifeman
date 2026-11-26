@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-publication-preview:v1",
+  "title": "skm_plan_publication_preview output",
+  "description": "Output for the skm_plan_publication_preview MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/source"
+    },
+    "base_revision_id": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/base_revision_id"
+    },
+    "document_digest": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/document_digest"
+    },
+    "content_digest": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/content_digest"
+    },
+    "pinned_materials": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/pinned_materials"
+    },
+    "diff": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/diff"
+    },
+    "validation": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/validation"
+    },
+    "no_changes": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/no_changes"
+    },
+    "publishable": {
+      "$ref": "urn:skm:planning:view:publication-preview:v1#/properties/publishable"
+    },
+    "pinned_materials_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "source",
+    "base_revision_id",
+    "document_digest",
+    "content_digest",
+    "pinned_materials",
+    "diff",
+    "validation",
+    "no_changes",
+    "publishable"
+  ]
+}

@@ -1,0 +1,37 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "success"
+exit_code = 0
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[[step]]
+action = "emit"
+event = { type = "tool_requested", call_id = "c1", tool = "Edit", args_preview = "src/app.py" }
+
+[[step]]
+action = "write_file"
+path = "src/app.py"
+content = "def answer() -> int:\n    return 42\n"
+
+[[step]]
+action = "emit"
+event = { type = "tool_completed", call_id = "c1", status = "ok" }
+
+[[step]]
+action = "emit"
+event = { type = "text_delta", text = "Implemented answer()." }
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:executor:v1\", \"status\": \"done\", \"summary\": \"Implemented answer()\", \"changed_paths\": [{\"mount\": \"main\", \"path\": \"src/app.py\", \"change\": \"added\"}], \"checks_run\": [], \"open_issues\": [], \"self_check\": {\"performed\": false}}"
+
+[usage]
+input_tokens = 1200
+output_tokens = 300
+cache_write_tokens = 0
+cache_read_tokens = 0
+cost_usd_micros = 1200

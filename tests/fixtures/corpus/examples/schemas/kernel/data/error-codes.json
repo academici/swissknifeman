@@ -1,0 +1,1215 @@
+{
+  "schema": "urn:skm:kernel:error-catalog:v1",
+  "version": 1,
+  "categories": [
+    {
+      "category": "not_found",
+      "http_status": 404,
+      "cli_exit": 1
+    },
+    {
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1
+    },
+    {
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6
+    },
+    {
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6
+    },
+    {
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5
+    },
+    {
+      "category": "unauthenticated",
+      "http_status": 401,
+      "cli_exit": 5
+    },
+    {
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6
+    },
+    {
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3
+    },
+    {
+      "category": "outcome_unknown",
+      "http_status": 500,
+      "cli_exit": 6
+    },
+    {
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4
+    },
+    {
+      "category": "internal",
+      "http_status": 500,
+      "cli_exit": 70
+    }
+  ],
+  "codes": [
+    {
+      "code": "NOT_FOUND",
+      "category": "not_found",
+      "http_status": 404,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "любая сущность не найдена (details.kind, details.ref)"
+    },
+    {
+      "code": "AMBIGUOUS_REFERENCE",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "ссылка (alias/slug) соответствует нескольким"
+    },
+    {
+      "code": "SCHEMA_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "DTO/документ не прошёл схему (details.issues)"
+    },
+    {
+      "code": "INVALID_REFERENCE",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "строка не разбирается как ссылка нужного вида"
+    },
+    {
+      "code": "UNAUTHENTICATED",
+      "category": "unauthenticated",
+      "http_status": 401,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "нет/неверный/истёкший токен"
+    },
+    {
+      "code": "FORBIDDEN",
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "нет права (details.permission, details.scope)"
+    },
+    {
+      "code": "VERSION_CONFLICT",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "expected_version ≠ actual"
+    },
+    {
+      "code": "IDEMPOTENCY_KEY_REUSED",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "тот же ключ с другим телом"
+    },
+    {
+      "code": "ALREADY_EXISTS",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "уникальность (slug, alias, digest версии)"
+    },
+    {
+      "code": "ID_CONFLICT",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "импорт с keep_ids и занятым id"
+    },
+    {
+      "code": "MODULE_DISABLED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "команда опционального выключенного модуля"
+    },
+    {
+      "code": "CONFIG_UNKNOWN_KEY",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "ключа нет в реестре"
+    },
+    {
+      "code": "CONFIG_SCOPE_NOT_ALLOWED",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "уровень не разрешён для ключа"
+    },
+    {
+      "code": "CONFIG_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "значение/итог не проходит схему ключа"
+    },
+    {
+      "code": "CONFIG_LOCKED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "дальний уровень заблокировал ключ"
+    },
+    {
+      "code": "CONFIG_NARROWING_VIOLATION",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "narrow-ключ шире дальнего уровня"
+    },
+    {
+      "code": "CONFIG_REGISTRY_INVALID",
+      "category": "internal",
+      "http_status": 500,
+      "cli_exit": 70,
+      "retryable": false,
+      "description": "реестр не собрался (ошибка сборки)"
+    },
+    {
+      "code": "BOOTSTRAP_MISSING",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "нет bootstrap-конфига (подсказка skm init)"
+    },
+    {
+      "code": "SCHEMA_TOO_NEW",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "БД новее кода"
+    },
+    {
+      "code": "MIGRATION_CHECKSUM_MISMATCH",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "изменён применённый файл миграции"
+    },
+    {
+      "code": "PROJECT_ARCHIVED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "операция над архивной/приостановленной областью (workspace или project; details.kind)"
+    },
+    {
+      "code": "CHECKOUT_UNBOUND",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "нет привязки checkout для (project, mount, host)"
+    },
+    {
+      "code": "CHECKOUT_MISMATCH",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "remotes checkout не соответствуют репозиторию"
+    },
+    {
+      "code": "REPOSITORY_UNSAFE",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "правила safety репозитория нарушены"
+    },
+    {
+      "code": "BLOB_DIGEST_MISMATCH",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "байты не совпали с заявленным digest"
+    },
+    {
+      "code": "FILE_TRASHED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "версия к удалённому файлу"
+    },
+    {
+      "code": "FILE_VERSION_NOT_READY",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "материал не готов/недоступен"
+    },
+    {
+      "code": "EXTENSION_WIDENS_PERMISSIONS",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "ресурс пытается расширить права"
+    },
+    {
+      "code": "EXTENSION_DIGEST_CONFLICT",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "та же версия ресурса с другим digest"
+    },
+    {
+      "code": "RESOURCE_QUARANTINED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "ресурс в карантине"
+    },
+    {
+      "code": "DEPENDENCY_CYCLE",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "цикл в графе (details.cycle)"
+    },
+    {
+      "code": "PLAN_NOT_READY",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "валидация с ошибками (details.findings)"
+    },
+    {
+      "code": "PLAN_ARCHIVED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "изменения архивного плана"
+    },
+    {
+      "code": "DRAFT_NOT_OPEN",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "draft опубликован/брошен"
+    },
+    {
+      "code": "BASE_REVISION_CHANGED",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "draft основан на устаревшей ревизии"
+    },
+    {
+      "code": "NO_CHANGES",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "публикация без изменений спецификации"
+    },
+    {
+      "code": "READINESS_REQUIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "старт без свежего readiness report"
+    },
+    {
+      "code": "RUN_NOT_ACTIVE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "команда к терминальному/неактивному run"
+    },
+    {
+      "code": "INVALID_TRANSITION",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "недопустимый переход состояния (details.from, to)"
+    },
+    {
+      "code": "LEASE_LOST",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "неверный fencing token/lease истёк"
+    },
+    {
+      "code": "NOTHING_TO_CLAIM",
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4,
+      "retryable": true,
+      "description": "нет доступной работы (исход для worker)"
+    },
+    {
+      "code": "MANUAL_PENDING",
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4,
+      "retryable": false,
+      "description": "ждёт verdict человека"
+    },
+    {
+      "code": "APPROVAL_REQUIRED",
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4,
+      "retryable": false,
+      "description": "нужен approval intent"
+    },
+    {
+      "code": "WAITING_FOR_ANSWER",
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4,
+      "retryable": false,
+      "description": "открыт decision request"
+    },
+    {
+      "code": "APPROVAL_MISMATCH",
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "approval к другим аргументам/истёк/использован"
+    },
+    {
+      "code": "BUDGET_EXHAUSTED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "лимит бюджета"
+    },
+    {
+      "code": "REWORK_LIMIT_REACHED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "исчерпаны rework rounds"
+    },
+    {
+      "code": "NOT_ACCEPTABLE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "инвариант приёмки не выполнен (details.reasons)"
+    },
+    {
+      "code": "WRITE_SCOPE_VIOLATION",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "изменения вне declared write scope"
+    },
+    {
+      "code": "RESULT_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "результат роли не прошёл схему после heal формы (повтор той же роли — result_retry; details.schema_errors)"
+    },
+    {
+      "code": "REPAIR_SEMANTIC_DRIFT",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "repair изменил смысл"
+    },
+    {
+      "code": "CONTEXT_OVER_BUDGET",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "обязательные блоки не влезают"
+    },
+    {
+      "code": "CAPABILITY_UNAVAILABLE",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "runtime/цель/плагин не имеет capability или компонент не загружен (details.capability, details.reason_code)"
+    },
+    {
+      "code": "SANDBOX_UNAVAILABLE",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "профиль изоляции недоступен на хосте (details.profile)"
+    },
+    {
+      "code": "RUNTIME_NOT_INSTALLED",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "бинарь runtime не найден на хосте"
+    },
+    {
+      "code": "RUNTIME_AUTH_EXPIRED",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "runtime не аутентифицирован"
+    },
+    {
+      "code": "RATE_LIMITED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "провайдер ограничил частоту (retryable)"
+    },
+    {
+      "code": "QUOTA_EXHAUSTED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "квота провайдера"
+    },
+    {
+      "code": "RUNTIME_CRASHED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "процесс runtime упал"
+    },
+    {
+      "code": "RUNTIME_TIMEOUT",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "таймаут сессии"
+    },
+    {
+      "code": "CANCEL_IGNORED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "runtime проигнорировал отмену"
+    },
+    {
+      "code": "INTEGRATION_CONFLICT",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "конфликт при интеграции в ветку"
+    },
+    {
+      "code": "INTEGRATION_RECHECK_FAILED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "checks rerun_after_integration красные после интеграции; задача не accepted (K3)"
+    },
+    {
+      "code": "INTEGRATION_HOST_MISMATCH",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "интеграция пары (run, repository) закреплена за другим хостом (K6)"
+    },
+    {
+      "code": "OUTCOME_UNKNOWN",
+      "category": "outcome_unknown",
+      "http_status": 500,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "внешний эффект без receipt"
+    },
+    {
+      "code": "PROJECTION_CONFLICT",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "managed-файл изменён пользователем"
+    },
+    {
+      "code": "HOOK_BACKEND_UNAVAILABLE",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "hook не смог связаться с конфигом (enforcement → deny)"
+    },
+    {
+      "code": "MEMORY_LIMIT_REACHED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "лимит записей памяти в scope"
+    },
+    {
+      "code": "BACKEND_UNAVAILABLE",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "БД/API недоступны (retryable)"
+    },
+    {
+      "code": "SERIALIZATION_FAILURE",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": true,
+      "description": "40001/40P01 после исчерпания ретраев (retryable)"
+    },
+    {
+      "code": "INTERNAL_ERROR",
+      "category": "internal",
+      "http_status": 500,
+      "cli_exit": 70,
+      "retryable": false,
+      "description": "непредвиденная ошибка (details.request_id)"
+    },
+    {
+      "code": "SCHEMA_NOT_MIGRATED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "БД старее кода: миграции не применены (подсказка skm db migrate; SQLSTATE 42P01/42703/3F000)"
+    },
+    {
+      "code": "CLIENT_TOO_OLD",
+      "category": "precondition",
+      "http_status": 426,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "версия клиента/worker ниже api.min_client_version / execution.worker.min_version"
+    },
+    {
+      "code": "SECRET_UNAVAILABLE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "SecretRef не разрешился (details.ref без значения)"
+    },
+    {
+      "code": "SECRET_PERMISSIONS",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "файл секрета доступен группе/другим"
+    },
+    {
+      "code": "HOST_REJECTED",
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "заголовок Host не входит в api.allowed_hosts"
+    },
+    {
+      "code": "ORIGIN_REJECTED",
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "Origin не входит в api.cors.origins"
+    },
+    {
+      "code": "PAYLOAD_TOO_LARGE",
+      "category": "validation",
+      "http_status": 413,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "тело запроса больше api.limits.max_body_bytes"
+    },
+    {
+      "code": "UNSUPPORTED_MEDIA_TYPE",
+      "category": "validation",
+      "http_status": 415,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "неподдерживаемый Content-Type"
+    },
+    {
+      "code": "LENGTH_REQUIRED",
+      "category": "validation",
+      "http_status": 411,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "загрузка байтов без Content-Length"
+    },
+    {
+      "code": "PRECONDITION_REQUIRED",
+      "category": "precondition",
+      "http_status": 428,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "изменяющий запрос без обязательного If-Match / Idempotency-Key"
+    },
+    {
+      "code": "TOO_MANY_STREAMS",
+      "category": "precondition",
+      "http_status": 429,
+      "cli_exit": 6,
+      "retryable": true,
+      "description": "превышен api.sse.max_streams_per_token"
+    },
+    {
+      "code": "INSTANCE_UNKNOWN",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "профиль инстанса не найден в bootstrap (--instance, SKM_INSTANCE, skm use)"
+    },
+    {
+      "code": "NO_PROJECT_SCOPE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "MCP-сервер запущен без привязки к проекту"
+    },
+    {
+      "code": "CONFIG_OP_NOT_ALLOWED",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "операция записи недопустима стратегией ключа (например append к не-массиву)"
+    },
+    {
+      "code": "CONFIRMATION_REQUIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "запись ключа с x-skm.confirm без confirmed=true"
+    },
+    {
+      "code": "LAST_OWNER_REQUIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "нельзя убрать/отключить последнего owner инстанса"
+    },
+    {
+      "code": "CONTENT_UNSAFE",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "правило безопасности содержимого CS-* с действием block (details.findings)"
+    },
+    {
+      "code": "BLOB_TOO_LARGE",
+      "category": "validation",
+      "http_status": 413,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "превышен artifacts.upload.max_bytes"
+    },
+    {
+      "code": "STAGED_BLOB_CONSUMED",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "staged blob уже связан другой командой"
+    },
+    {
+      "code": "STAGED_BLOB_EXPIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "staged blob истёк и удалён janitor-ом"
+    },
+    {
+      "code": "EXTENSION_OVERRIDE_NOT_DECLARED",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "ресурс перекрывает чужой ключ без объявления override"
+    },
+    {
+      "code": "EXTENSION_INCOMPATIBLE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "requires_skm не выполнен или недопустимое поле для trust пакета"
+    },
+    {
+      "code": "EXTENSION_PROFILE_ROLE_MISMATCH",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "выбранный профиль агента объявлен для другой роли"
+    },
+    {
+      "code": "FIELD_OWNED",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "изменение владеемого поля (id, key, item.phase, check.owner)"
+    },
+    {
+      "code": "REBASE_CONFLICTS",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "rebase черновика нашёл пересекающиеся изменения (details.conflicts)"
+    },
+    {
+      "code": "CONTEXT_INPUT_MISSING",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "обязательный host input не прочитан фазой B"
+    },
+    {
+      "code": "CONTEXT_MANIFEST_TAMPERED",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "финализация не совпала с пересчётом сервера (digest/бюджет)"
+    },
+    {
+      "code": "CONTEXT_CONFLICT",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "несовместимые skills/блоки выбраны одновременно (conflicts_with)"
+    },
+    {
+      "code": "CONTEXT_MATERIAL_UNAVAILABLE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "обязательный материал недоступен для сборки"
+    },
+    {
+      "code": "CONTEXT_TEMPLATE_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "prompt block не рендерится (неизвестная переменная/синтаксис)"
+    },
+    {
+      "code": "CONTEXT_NOT_FINALIZED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "manifest шага ещё draft: runtime не стартует, результат не принимается"
+    },
+    {
+      "code": "RESEARCH_SOURCE_UNAVAILABLE",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "research-источник недоступен"
+    },
+    {
+      "code": "RESEARCH_SOURCE_TIMEOUT",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "research-источник не ответил вовремя"
+    },
+    {
+      "code": "RESEARCH_SOURCE_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "ответ research-источника не прошёл контракт"
+    },
+    {
+      "code": "RUNTIME_FORBIDDEN",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "провайдер отказал в доступе (класс authorization)"
+    },
+    {
+      "code": "RUNTIME_INVALID_REQUEST",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "провайдер отверг запрос (класс invalid_request)"
+    },
+    {
+      "code": "MODEL_UNAVAILABLE",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "модель недоступна у провайдера/аккаунта (fallback маршрута решает execution)"
+    },
+    {
+      "code": "CONTENT_REFUSED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "провайдер отказал по content policy"
+    },
+    {
+      "code": "RUNTIME_TRANSPORT",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "сетевой/транспортный сбой провайдера"
+    },
+    {
+      "code": "RUNTIME_STREAM_INCOMPLETE",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "процесс runtime завершился без нативного терминального события (в т.ч. exit 0); результат не принимается"
+    },
+    {
+      "code": "RUNTIME_OVERLOADED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": true,
+      "description": "провайдер перегружен (provider_internal)"
+    },
+    {
+      "code": "CONTEXT_OVERFLOW",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "вход не помещается в окно контекста модели"
+    },
+    {
+      "code": "RUNTIME_FAILURE_UNCLASSIFIED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "отказ runtime не распознан правилами классификации"
+    },
+    {
+      "code": "SESSION_CANCELLED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "сессия runtime отменена по запросу (не авария)"
+    },
+    {
+      "code": "ROUTE_UNDERSHOOT",
+      "category": "capability",
+      "http_status": 422,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "доступный маршрут ниже минимального класса/effort пункта"
+    },
+    {
+      "code": "ADMISSION_REFUSED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "операция не допущена (нет output для review/final_close, resume невозможен)"
+    },
+    {
+      "code": "CHECKS_MUTATED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "проверки изменили worktree после seal output"
+    },
+    {
+      "code": "DISK_LOW",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "мало места на хосте для среды попытки"
+    },
+    {
+      "code": "SLOT_BUSY",
+      "category": "waiting",
+      "http_status": 200,
+      "cli_exit": 4,
+      "retryable": false,
+      "description": "integration slot занят (исход для worker)"
+    },
+    {
+      "code": "NO_TASKS",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "ревизия не даёт исполняемых задач"
+    },
+    {
+      "code": "EMERGENCY_STOPPED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "проект в emergency stop (start_run, request_review, resume_run)"
+    },
+    {
+      "code": "AUTOPILOT_NOT_ENABLED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "execution.autopilot.enabled = false в scope"
+    },
+    {
+      "code": "RECOVERY_CIRCUIT_OPEN",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "превышен лимит восстановлений в окне (stop_code run)"
+    },
+    {
+      "code": "RUNTIME_ARTIFACT_IN_COMMIT",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "в коммит интеграции попал runtime-артефакт"
+    },
+    {
+      "code": "DECISION_REQUIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "skip задачи без принятого решения ревизии"
+    },
+    {
+      "code": "INTEGRATION_BRANCH_BUSY",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "ветка интеграции выведена в другом worktree"
+    },
+    {
+      "code": "CHECKOUT_BUSY",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "checkout занят другой попыткой (existing_checkout)"
+    },
+    {
+      "code": "CHECK_TIMEOUT",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "команда проверки превысила таймаут (state error)"
+    },
+    {
+      "code": "CHECK_COMMAND_NOT_FOUND",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "команда проверки не найдена"
+    },
+    {
+      "code": "CHECK_KILLED",
+      "category": "backend",
+      "http_status": 503,
+      "cli_exit": 3,
+      "retryable": false,
+      "description": "процесс проверки убит сигналом"
+    },
+    {
+      "code": "CHECK_MISCONFIGURED",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "неизвестный mount, shell не разрешён"
+    },
+    {
+      "code": "INTEGRATION_UNSAFE_TARGET",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "путь цели вне checkout/домашнего каталога или symlink-выход"
+    },
+    {
+      "code": "INTEGRATION_BOUNDARY_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "managed-границы файла не извлекаются"
+    },
+    {
+      "code": "INTEGRATION_PATH_COLLISION",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "два источника пишут один путь"
+    },
+    {
+      "code": "INTEGRATION_DESIRED_TOO_LARGE",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "desired проекции больше integrations.desired.max_bytes"
+    },
+    {
+      "code": "INTEGRATION_TRUSTED_REFUSED",
+      "category": "forbidden",
+      "http_status": 403,
+      "cli_exit": 5,
+      "retryable": false,
+      "description": "trusted-full-access проекция запрещена в scope"
+    },
+    {
+      "code": "HOOK_PAYLOAD_INVALID",
+      "category": "validation",
+      "http_status": 422,
+      "cli_exit": 1,
+      "retryable": false,
+      "description": "payload hook-события клиента не прошёл схему"
+    },
+    {
+      "code": "HOOK_SUBSCRIPTION_LOCATION",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "операция недоступна для подписки с этим execution_location (host-подписки проверяет host op)"
+    },
+    {
+      "code": "MEMORY_SCOPE_REQUIRED",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "операция памяти без проекта/scope"
+    },
+    {
+      "code": "EXPORT_VAULT_NOT_FOUND",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "хранилище vault не найдено по лестнице поиска"
+    },
+    {
+      "code": "EXPORT_VAULT_MISSING",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "путь vault задан, но каталога нет"
+    },
+    {
+      "code": "EXPORT_VAULT_PROJECT_UNKNOWN",
+      "category": "precondition",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "папка проекта в vault не определена"
+    },
+    {
+      "code": "EXPORT_NOTE_NO_FREE_NAME",
+      "category": "conflict",
+      "http_status": 409,
+      "cli_exit": 6,
+      "retryable": false,
+      "description": "нет свободного имени файла заметки"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:shop:defs:v1",
+  "$defs": {
+    "id": {"type": "string", "format": "uuid"},
+    "sku": {"type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$"}
+  }
+}

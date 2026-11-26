@@ -1,0 +1,4 @@
+rules:
+  # `$/` local action references are not understood by actionlint yet; `./` resolves to the same checkout.
+  self-repository:
+    disable: true

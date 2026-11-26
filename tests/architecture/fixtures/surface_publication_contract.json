@@ -1,0 +1,2168 @@
+{
+  "owners": [
+    "I-08.2",
+    "I-10.1b",
+    "I-10.1c",
+    "I-10.2",
+    "I-11.1",
+    "I-11.2",
+    "I-11.4",
+    "I-12.2",
+    "I-12.3",
+    "P11.02.b",
+    "P11.02.c",
+    "P11.02.e",
+    "P11.02.f",
+    "P11.04.b",
+    "P12.05.a",
+    "P13",
+    "P13.01.c",
+    "P13.02.b",
+    "P13.03.c",
+    "P15",
+    "P15.01.a"
+  ],
+  "routes": [
+    {
+      "operation": "access.create_principal",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/principals",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.create_token",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/tokens",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.disable_principal",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/principals/{principal_id}/disable",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.get_principal",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/principals/{principal_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.grant_membership",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/memberships",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.list_memberships",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/memberships",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.list_principals",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/principals",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.list_tokens",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/tokens",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.revoke_membership",
+      "owner": "P11.02.b",
+      "method": "DELETE",
+      "path": "/api/v1/memberships/{scope_id}/{principal_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.revoke_token",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/tokens/{token_id}/revoke",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.rotate_token",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/tokens/{token_id}/rotate",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "access.whoami",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/me",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.add_file",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/files",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.add_file",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/files",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.add_file_version",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/files/{file_id}/versions",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.find_orphan_blobs",
+      "owner": "P15",
+      "method": "GET",
+      "path": "/api/v1/admin/orphan-blobs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.get_file",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/files/{file_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.get_file_version",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/file-versions/{file_version_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.list_file_versions",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/files/{file_id}/versions",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.list_files",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/files",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.open_file_version_content",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/file-versions/{file_version_id}/content",
+      "evidence": "table",
+      "wired": "blob"
+    },
+    {
+      "operation": "artifacts.prune_orphan_objects",
+      "owner": "P15",
+      "method": "POST",
+      "path": "/api/v1/admin/orphan-blobs/prune",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.record_staged_blob",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/blobs",
+      "evidence": "table",
+      "wired": "blob"
+    },
+    {
+      "operation": "artifacts.restore_file",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/files/{file_id}/restore",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "artifacts.trash_file",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/files/{file_id}/trash",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.assemble_context",
+      "owner": "I-08.2",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/context-manifests",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.diff_contexts",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/steps/{step_id}/context/diff",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.diff_contexts",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/context-manifests/{target_manifest_id}/diff",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.explain_context",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/steps/{step_id}/context",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.explain_context",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/context-manifests/{manifest_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.finalize_manifest",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/context-manifests/{manifest_id}/finalize",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.check_research_access",
+      "owner": "I-11.2",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/research-access",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.find_research_cache",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/research-queries",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.get_context_text",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/context-manifests/{manifest_id}/text",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.get_research_query",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/research-queries/{query_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.list_external_sources",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/external-sources",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "context.record_research_result",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/research-queries",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.accept_deviation",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/deviations",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.acquire_integration_slot",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/integration-slots",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.answer_decision_request",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/decision-requests/{request_id}/answer",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.begin_stage",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/stages",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.cancel_run",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/cancel",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.carry_forward_result",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/tasks/{task_id}/carry-forward",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.claim_assignment",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/claim",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.drain_autopilot",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/autopilot/drain",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.explain_autopilot",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/autopilot/explain",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_attempt",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/attempts/{attempt_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_autopilot_status",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/autopilot",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_fix_brief",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/fix-briefs/{fix_brief_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_readiness_report",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/readiness-reports/{report_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_revision_visa",
+      "owner": "I-11.4",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/visa",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_review_receipt",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/review-receipt",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_review_roi",
+      "owner": "I-12.3",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/analytics/review-roi",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_run",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_execution_detail",
+      "owner": "P12.05.a",
+      "method": "GET",
+      "path": "/api/v1/execution/detail",
+      "evidence": "named-route",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_run_budget",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/budget",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_run_health",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/health",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_run_history",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/history",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_run_timeline",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/timeline",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.verify_stage_access",
+      "owner": "P11.04.b",
+      "method": "GET",
+      "path": "/api/v1/worker/stages/{stage_record_id}/access",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_step",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/steps/{step_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_task",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/tasks/{task_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.list_decision_requests",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/inbox",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.list_execution_environments",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/hosts/{host_id}/execution-environments",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.list_runs",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/runs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.list_task_attempts",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/tasks/{task_id}/attempts",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.list_tasks",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/tasks",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.mark_environments_removed",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/hosts/{host_id}/execution-environments/removed",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.pause_autopilot",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/autopilot/pause",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.pause_run",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/pause",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.reconcile_external_effect",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/admin/external-effects/{effect_id}/reconcile",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.reconfigure_run",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/reconfigure",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.record_external_effect",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/external-effects",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.record_manual_verdict",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/check-executions/{check_execution_id}/verdict",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.record_stage_result",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/stages/{stage_record_id}/result",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.record_step_note",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/steps/{step_id}/notes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.release_assignment",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/release",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.release_integration_slot",
+      "owner": "P11.02.c",
+      "method": "DELETE",
+      "path": "/api/v1/worker/integration-slots/{slot_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.renew_lease",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/heartbeat",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.report_attempt_failure",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/failure",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.request_review",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/review-requests",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.restart_task",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/tasks/{task_id}/restart",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.resume_run",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/resume",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.run_adhoc",
+      "owner": "I-08.2",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/runs/adhoc",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.seal_output",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/assignments/{assignment_id}/outputs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.skip_task",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/tasks/{task_id}/skip",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.start_autopilot",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/autopilot/start",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.approve_revision",
+      "owner": "I-11.1",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/revision-visas",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.start_run",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/runs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.stop_autopilot",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/autopilot/stop",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.validate_for_execution",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/readiness",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.list_pending_notes",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/vault-notes/pending",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.list_vault_notes",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/vault-notes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.record_note_written",
+      "owner": "P13",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/vault-notes/{note_id}/writes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.render_plan_markdown",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/export.md",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.render_run_report",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/report.md",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "exports.requeue_note",
+      "owner": "P13",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/vault-notes/{note_id}/requeue",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.get_pack",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/extensions/packs/{pack_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.get_resource_version",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/extensions/resource-versions/{resource_version_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.install_pack",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/extensions/packs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.list_packs",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/extensions/packs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.list_resources",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/extensions/resources",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.quarantine_resource",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/extensions/resource-versions/{resource_version_id}/quarantine",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.release_quarantine",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/extensions/resource-versions/{resource_version_id}/release",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.resolve_resource",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/extensions/resolve",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.sync_builtin_packs",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/extensions/packs/sync-builtin",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "extensions.uninstall_pack_version",
+      "owner": "P11.02.f",
+      "method": "DELETE",
+      "path": "/api/v1/extensions/pack-versions/{pack_version_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.get_applied_state",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/projections/applied",
+      "evidence": "integrations-path",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.get_desired_projection",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/integrations/desired-projection",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.get_hook_policy",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/integrations/hook-policy",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.list_hook_deliveries",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/hook-deliveries",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.list_hook_subscriptions",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/hook-subscriptions",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.list_projections",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/projections",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.record_drift",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/projections/drift",
+      "evidence": "named-route",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.record_projection_applied",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/projections/applied",
+      "evidence": "integrations-path",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.record_projection_applied",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/projections",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.remove_projection",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/projections/{projection_id}/removal",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.retry_hook_deliveries",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/hook-deliveries/retry",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "integrations.test_hook_subscription",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/hook-subscriptions/{subscription_id}/test",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.deprecate_lesson",
+      "owner": "P13.01.c",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/lessons/{lesson_id}/deprecate",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.forget",
+      "owner": "P13.01.c",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/memory/{entry_id}/forget",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.get_lesson",
+      "owner": "P13.01.c",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/lessons/{lesson_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.graph_neighbors",
+      "owner": "P13.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/neighbors",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.graph_path",
+      "owner": "P13.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/path",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.graph_stats",
+      "owner": "P13.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/stats",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.graph_subgraph",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/subgraph",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.import_graph",
+      "owner": "P13.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/import",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.list_graph_indexes",
+      "owner": "P13",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/graph/indexes",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.list_lessons",
+      "owner": "P13.01.c",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/lessons",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.list_memory",
+      "owner": "P13.01.c",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/memory/entries",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.remember",
+      "owner": "P13.01.c",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/memory",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "knowledge.search_memory",
+      "owner": "P13.01.c",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/memory",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.get_candidate",
+      "owner": "P13.03.c",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/lesson-candidates/{candidate_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.list_candidates",
+      "owner": "P13.03.c",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/lesson-candidates",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.list_signals",
+      "owner": "P13.03.c",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/lesson-candidates/{candidate_id}/signals",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.pathology_stats",
+      "owner": "P13.03.c",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/learning/pathology-stats",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.promote_candidate",
+      "owner": "P13.03.c",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/lesson-candidates/{candidate_id}/promote",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.record_activity",
+      "owner": "P13.03.c",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/learning/activity",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.recompute_confidence",
+      "owner": "P13.03.c",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/learning/recompute",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "learning.review_candidate",
+      "owner": "P13.03.c",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/lesson-candidates/{candidate_id}/reviews",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.abandon_draft",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/abandon",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.archive_plan",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/archive",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.design_plan",
+      "owner": "I-11.1",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/design-briefs",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.create_plan",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/plans",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.diff_revisions",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/diff",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.diff_revisions",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/diff",
+      "evidence": "draft-query",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.export_specification",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/export",
+      "evidence": "draft-query",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.export_specification",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/export",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.get_draft",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.get_entity",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/entities/{ref}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.get_entity",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/entities/{ref}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.get_plan",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.get_revision",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.import_specification",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/plans/import",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.list_drafts",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.list_entities",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/entities",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.list_plans",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/plans",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.list_revisions",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.open_draft",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.plan_stats",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/stats",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.plan_stats",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/stats",
+      "evidence": "draft-query",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.preview_publication",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/publication-preview",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.publish_revision",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/publish",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.read_text",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/text",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.ready_preview",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/ready-preview",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.ready_preview",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/ready-preview",
+      "evidence": "draft-query",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.rebase_draft",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/rebase",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.resolve_plan_ref",
+      "owner": "P11.02.e",
+      "method": "GET",
+      "path": "/api/v1/plans/resolve",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.restore_revision",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/restore",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.save_draft",
+      "owner": "P11.02.e",
+      "method": "PUT",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.save_draft",
+      "owner": "P11.02.e",
+      "method": "PATCH",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.save_draft",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/changes",
+      "evidence": "inline",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.simulate",
+      "owner": "I-11.4",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/revisions/{revision_id}/simulate",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.simulate",
+      "owner": "I-11.4",
+      "method": "GET",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/simulate",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "planning.validate_draft",
+      "owner": "P11.02.e",
+      "method": "POST",
+      "path": "/api/v1/plans/{plan_id}/drafts/{draft_id}/validate",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.doctor",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/health/details",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.doctor",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/doctor",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.list_dead_outbox",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/admin/outbox/dead",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.migration_status",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/admin/migrations",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.repair_storage_safe",
+      "owner": "P15.01.a",
+      "method": "POST",
+      "path": "/api/v1/admin/storage/repair",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.retry_outbox",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/admin/outbox/{outbox_id}/retry",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "platform.verify_storage",
+      "owner": "P15.01.a",
+      "method": "GET",
+      "path": "/api/v1/admin/storage/verify",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.approve_intent",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/policy/intents/{intent_id}/approve",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.check_tool_call",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/policy/check-tool-call",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.deny_intent",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/policy/intents/{intent_id}/deny",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.effective_permissions",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/policy/effective",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.explain_permissions",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/policy/explain",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.get_intent",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/policy/intents/{intent_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.list_intents",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/policy/intents",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.list_profiles",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/policy/profiles",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.propose_intent",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/worker/intents",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.record_intent_outcome",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/worker/intents/{intent_id}/outcome",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.record_tool_decisions",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/policy/tool-decisions",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "policy.start_intent_execution",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/worker/intents/{intent_id}/start",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.explain_routing",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/runtimes/routing",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.get_capabilities",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/runtimes/{runtime_id}/capabilities",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.list_models",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/runtimes/models",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.list_runtimes",
+      "owner": "P11.02.f",
+      "method": "GET",
+      "path": "/api/v1/runtimes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.record_capability_verification",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/runtimes/{runtime_id}/capability-verifications",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "runtimes.record_host_runtimes",
+      "owner": "P11.02.f",
+      "method": "POST",
+      "path": "/api/v1/hosts/{host_id}/runtimes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.explain_config",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/effective",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.explain_config",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/explain",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.export_config",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/export",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.export_config",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/config",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.get_generation",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/generation",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.get_history",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/history",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.get_host_config",
+      "owner": "P11.02.c",
+      "method": "GET",
+      "path": "/api/v1/worker/hosts/{host_id}/config",
+      "evidence": "named-route",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.get_schema",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/schema",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.get_value",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/entries/{scope}/{key}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.import_config",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/config/import",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.import_config",
+      "owner": "P11.02.b",
+      "method": "PUT",
+      "path": "/api/v1/projects/{project_id}/config",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.list_entries",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/config/entries",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.lock_value",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/config/entries/{scope}/{key}/lock",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.remove_value",
+      "owner": "P11.02.b",
+      "method": "DELETE",
+      "path": "/api/v1/config/entries/{scope}/{key}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.set_value",
+      "owner": "P11.02.b",
+      "method": "PUT",
+      "path": "/api/v1/config/entries/{scope}/{key}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.unlock_value",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/config/entries/{scope}/{key}/unlock",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "settings.unset_value",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/config/entries/{scope}/{key}/unset",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.add_repository_remote",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/repositories/{repository_id}/remotes",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.archive_project",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/archive",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.archive_workspace",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/archive",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.attach_repository",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/projects/{project_id}/repositories",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.bind_checkout",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/checkout-bindings",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.create_project",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/projects",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.create_workspace",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.detach_repository",
+      "owner": "P11.02.b",
+      "method": "DELETE",
+      "path": "/api/v1/projects/{project_id}/repositories/{mount_name}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.get_host",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/hosts/{host_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.get_project",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.get_workspace",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_hosts",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/hosts",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_project_repositories",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/repositories",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_projects",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/projects",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_repositories",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/repositories",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_workers",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces/{workspace_id}/workers",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.list_workspaces",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/workspaces",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.match_checkout",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/checkout-bindings/match",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.record_checkout_verification",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/checkout-bindings/{binding_id}/verification",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.record_worker_heartbeat",
+      "owner": "P11.02.c",
+      "method": "POST",
+      "path": "/api/v1/worker/heartbeat",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.register_host",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/hosts",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.register_repository",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/repositories",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.register_worker",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workspaces/{workspace_id}/workers",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.resolve_checkout",
+      "owner": "P11.02.b",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/checkout",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "workspace.set_worker_state",
+      "owner": "P11.02.b",
+      "method": "POST",
+      "path": "/api/v1/workers/{worker_id}/state",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.abort_step",
+      "owner": "I-12.2",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/tasks/{task_id}/abort-step",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.override_actor",
+      "owner": "I-12.2",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/tasks/{task_id}/override-actor",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.reroute_task",
+      "owner": "I-12.2",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/tasks/{task_id}/reroute",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.steer_task",
+      "owner": "I-12.2",
+      "method": "POST",
+      "path": "/api/v1/runs/{run_id}/tasks/{task_id}/steer",
+      "evidence": "table",
+      "wired": "route"
+    },
+    {
+      "operation": "execution.get_task_live_control",
+      "owner": "I-12.2",
+      "method": "GET",
+      "path": "/api/v1/runs/{run_id}/tasks/{task_id}/live-control",
+      "evidence": "table",
+      "wired": "route"
+    }
+  ],
+  "cli": [
+    {
+      "command": "exec",
+      "operation": "execution.run_adhoc",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "pipe",
+      "operation": "execution.run_adhoc",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "route pick",
+      "operation": "runtimes.explain_routing",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "context assemble",
+      "operation": "context.assemble_context",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "context explain",
+      "operation": "context.explain_context",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "context diff",
+      "operation": "context.diff_contexts",
+      "owner": "I-08.2"
+    },
+    {
+      "command": "plan simulate",
+      "operation": "planning.simulate",
+      "owner": "I-11.4"
+    }
+  ],
+  "mcp": [
+    {
+      "tool": "skm_run_adhoc",
+      "operation": "execution.run_adhoc",
+      "owner": "I-08.2",
+      "permission": "run.start"
+    },
+    {
+      "tool": "skm_context_assemble",
+      "operation": "context.assemble_context",
+      "owner": "I-08.2",
+      "permission": "context.assemble"
+    }
+  ],
+  "auth_routes": [
+    {
+      "operation_id": "auth_get_csrf",
+      "owner": "I-10.1b",
+      "method": "GET",
+      "path": "/api/v1/auth/csrf",
+      "public": true,
+      "requires_csrf": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_login",
+      "owner": "I-10.1b",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "public": true,
+      "requires_csrf": true,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_logout",
+      "owner": "I-10.1b",
+      "method": "POST",
+      "path": "/api/v1/auth/logout",
+      "public": false,
+      "requires_csrf": true,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_get_session",
+      "owner": "I-10.1b",
+      "method": "GET",
+      "path": "/api/v1/auth/session",
+      "public": false,
+      "requires_csrf": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_reload_session",
+      "owner": "I-10.1b",
+      "method": "POST",
+      "path": "/api/v1/auth/session/reload",
+      "public": false,
+      "requires_csrf": true,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_create_pairing",
+      "owner": "I-10.2",
+      "method": "POST",
+      "path": "/api/v1/auth/pairing",
+      "public": false,
+      "requires_csrf": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "auth_exchange_pairing",
+      "owner": "I-10.1b",
+      "method": "POST",
+      "path": "/api/v1/auth/pairing/exchange",
+      "public": true,
+      "requires_csrf": false,
+      "wired": "route"
+    }
+  ],
+  "stream_routes": [
+    {
+      "operation_id": "platform_stream_events",
+      "owner": "I-10.1c",
+      "method": "GET",
+      "path": "/api/v1/events",
+      "security": [
+        {"bearer": []},
+        {"sessionCookie": []}
+      ],
+      "worker_only": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "platform_stream_project_events",
+      "owner": "I-10.1c",
+      "method": "GET",
+      "path": "/api/v1/projects/{project_id}/events/stream",
+      "security": [
+        {"bearer": []},
+        {"sessionCookie": []}
+      ],
+      "worker_only": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "execution_stream_attempt_live",
+      "owner": "I-10.1c",
+      "method": "GET",
+      "path": "/api/v1/attempts/{attempt_id}/live",
+      "security": [
+        {"bearer": []},
+        {"sessionCookie": []}
+      ],
+      "worker_only": false,
+      "wired": "route"
+    },
+    {
+      "operation_id": "execution_publish_attempt_live",
+      "owner": "I-10.1c",
+      "method": "POST",
+      "path": "/api/v1/worker/attempts/{attempt_id}/live",
+      "security": [
+        {"bearer": []}
+      ],
+      "worker_only": true,
+      "wired": "route"
+    }
+  ]
+}

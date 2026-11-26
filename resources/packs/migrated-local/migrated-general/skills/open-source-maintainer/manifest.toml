@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "open-source-maintainer"
+version = "0.2.0"
+kind = "persona"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "voice-ai"
+version = "0.1.0"
+kind = "reference"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["researcher"]
+
+[provenance]
+source = "local"

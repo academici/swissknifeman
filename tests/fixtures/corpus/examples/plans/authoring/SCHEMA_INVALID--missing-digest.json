@@ -1,0 +1,9 @@
+{
+  "contract": "urn:skm:planning:command:publish-revision:v1",
+  "request": {
+    "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+    "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+    "expected_edit_version": 8,
+    "reason": "Apply resolved audit changes"
+  }
+}

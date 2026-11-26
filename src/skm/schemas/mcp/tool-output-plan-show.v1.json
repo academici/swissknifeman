@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-show:v1",
+  "title": "skm_plan_show output",
+  "description": "Output for the skm_plan_show MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "revision_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "goal": {
+      "type": "string"
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "key",
+                "title",
+                "units"
+              ]
+            }
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "items"
+        ]
+      }
+    },
+    "requirements_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checks_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phases_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "plan_id",
+    "alias",
+    "title",
+    "revision_no",
+    "goal",
+    "requirements_count",
+    "checks_count"
+  ]
+}

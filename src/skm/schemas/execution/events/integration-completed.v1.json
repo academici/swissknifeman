@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:integration-completed:v1",
+  "title": "IntegrationCompleted",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "output_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      }
+    },
+    "commit_shas": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/json-value"
+      }
+    },
+    "target_branch": {
+      "$ref": "#/$defs/json-value"
+    },
+    "integration_receipts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/json-value"
+      }
+    },
+    "commit_mode": {
+      "$ref": "#/$defs/json-value"
+    },
+    "strategy": {
+      "$ref": "#/$defs/json-value"
+    },
+    "excluded_paths_count": {
+      "$ref": "#/$defs/json-value"
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "task_id",
+    "attempt_id",
+    "output_ids",
+    "commit_shas",
+    "target_branch",
+    "integration_receipts",
+    "commit_mode",
+    "strategy",
+    "excluded_paths_count"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "IntegrationCompleted",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "IntegrationCompleted"
+    }
+  },
+  "$defs": {
+    "json-value": {
+      "description": "JSON metadata local to this event; no runtime request or secret-bearing schema closure.",
+      "anyOf": [
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json-value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  }
+}

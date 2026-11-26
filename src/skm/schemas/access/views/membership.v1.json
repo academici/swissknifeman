@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:view:membership:v1",
+  "title": "MembershipView",
+  "description": "access view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "scope_kind": {
+      "type": "string",
+      "enum": [
+        "instance",
+        "workspace",
+        "project",
+        "plan",
+        "run",
+        "host"
+      ]
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "role": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/role"
+    },
+    "granted_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "scope_id",
+    "scope_kind",
+    "principal_id",
+    "display_name",
+    "role",
+    "granted_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.views",
+      "class": "MembershipView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "MembershipView"
+    }
+  }
+}

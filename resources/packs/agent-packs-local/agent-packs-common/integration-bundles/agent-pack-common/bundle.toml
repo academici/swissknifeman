@@ -1,0 +1,110 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-common"
+version = "1.0.1"
+title = "Migrated Agent Pack: Common Engineering Workflow"
+description = "Neutral cross-stack review checklist, verification rules, and inert development loop workflow migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-code-auditor.md"
+path = ".claude/agents/{prefix}-code-auditor.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-code-auditor.toml"
+path = ".codex/agents/{prefix}-code-auditor.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-code-auditor.md"
+path = ".cursor/agents/{prefix}-code-auditor.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/common.md"
+path = ".claude/rules/common.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/common.md"
+path = ".codex/rules/common.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/common.mdc"
+path = ".cursor/rules/common.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/common.md"
+path = ".grok/rules/common.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "workflows"
+source = "workflows/dev-loop.js"
+path = ".claude/workflows/dev-loop.js"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "workflows"
+source = "workflows/dev-loop.js"
+path = ".codex/workflows/dev-loop.js"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "workflows"
+source = "workflows/dev-loop.js"
+path = ".cursor/workflows/dev-loop.js"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "workflows"
+source = "workflows/dev-loop.js"
+path = ".grok/workflows/dev-loop.js"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "instructions"
+source = "instructions/workflow-notes.md"
+path = "CLAUDE.md"
+ownership = "managed_block"
+block_id = "bundle.agent-pack-common"
+
+[[assets]]
+target = "codex"
+surface = "instructions"
+source = "instructions/workflow-notes.md"
+path = "AGENTS.md"
+ownership = "managed_block"
+block_id = "bundle.agent-pack-common"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/common.md"
+path = ".agents/rules/common.md"
+ownership = "managed_file"

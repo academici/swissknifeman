@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:logging:v1",
+  "title": "Logging settings",
+  "description": "Settings section 'logging' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "logging",
+    "owner": "platform",
+    "title": "Logging",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "LoggingSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "LoggingSettings"
+    }
+  },
+  "properties": {
+    "level": {
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warning",
+        "error"
+      ],
+      "default": "info",
+      "description": "Minimum level of operational logs on this host.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "json",
+        "text"
+      ],
+      "default": "json",
+      "description": "Log line format: JSON lines (default) or human text for local debugging.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 20,
+          "widget": "select"
+        }
+      }
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "description": "Log file path; absent (default) writes to stderr. ~ and ${state_dir} are expanded.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": true,
+        "pack": true,
+        "confirm": false,
+        "path": true,
+        "ui": {
+          "group": "Logging",
+          "order": 30,
+          "widget": "path"
+        }
+      }
+    },
+    "component_levels": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "debug",
+          "info",
+          "warning",
+          "error"
+        ]
+      },
+      "default": {},
+      "description": "Per-component level overrides, e.g. {\"adapters.postgres\": \"debug\"}.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "deep_merge",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 40,
+          "widget": "map"
+        }
+      }
+    },
+    "redact_patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Extra regular expressions whose matches are masked in logs, events and errors (secrets are always masked).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "append_unique",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 50,
+          "widget": "tags"
+        }
+      }
+    },
+    "retention_days": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3650,
+      "default": 30,
+      "description": "Days to keep rotated log files under state_dir/logs; 0 keeps them forever.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 60,
+          "widget": "number"
+        }
+      }
+    },
+    "detail": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "debug"
+      ],
+      "default": "normal",
+      "description": "Diagnostic volume of this process: debug adds only typed safe metadata (IDs, counts, durations, digests and closed codes), never DTO/payload previews or raw content. Source masks apply before projection and Redactor after it; lifecycle events and audit are written in both modes.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 70,
+          "widget": "select"
+        }
+      }
+    },
+    "file_max_bytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 4294967296,
+      "default": 52428800,
+      "description": "Rotate the log file when it reaches this size.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 80,
+          "widget": "number"
+        }
+      }
+    },
+    "file_backups": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 5,
+      "description": "Rotated log files kept next to the current one (retention_days applies as well).",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Logging",
+          "order": 90,
+          "widget": "number"
+        }
+      }
+    }
+  }
+}

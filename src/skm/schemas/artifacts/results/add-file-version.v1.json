@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:result:add-file-version:v1",
+  "title": "AddFileVersionResult",
+  "description": "artifacts result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "file_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "version_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "safety": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/safety_report"
+    }
+  },
+  "required": [
+    "file_id",
+    "file_version_id",
+    "version_no",
+    "safety"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.results",
+      "class": "AddFileVersionResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "AddFileVersionResult"
+    }
+  }
+}

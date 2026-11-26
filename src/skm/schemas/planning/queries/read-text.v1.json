@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:query:read-text:v1",
+  "title": "ReadText",
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "revision_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "draft_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "pointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~[01])*)*$",
+      "maxLength": 2048
+    },
+    "offset_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "max_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536,
+      "default": 16384
+    }
+  },
+  "required": [
+    "plan_id",
+    "target",
+    "pointer"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "draft_id",
+        "expected_edit_version"
+      ],
+      "not": {
+        "required": [
+          "revision_id"
+        ]
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "ReadText",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ReadText"
+    }
+  },
+  "description": "planning owner schema: ReadText."
+}

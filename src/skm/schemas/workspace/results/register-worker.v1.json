@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:result:register-worker:v1",
+  "title": "RegisterWorkerResult",
+  "description": "workspace result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "token_secret": {
+      "type": "string",
+      "x-skm-secret": true
+    }
+  },
+  "required": [
+    "worker_id",
+    "principal_id",
+    "token_secret"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.results",
+      "class": "RegisterWorkerResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RegisterWorkerResult"
+    }
+  }
+}

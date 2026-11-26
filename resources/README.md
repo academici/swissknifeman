@@ -1,0 +1,1 @@
+Resource source tree. Packaging maps this directory to skm/_resources (E16). Only directory slots are present in P00; P09 owners supply validated, versioned pack data. There is no installable core pack until P09.02.a.

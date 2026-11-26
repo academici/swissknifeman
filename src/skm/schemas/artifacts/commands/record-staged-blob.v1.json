@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:command:record-staged-blob:v1",
+  "title": "RecordStagedBlob",
+  "description": "artifacts command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "size": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "detected_media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "backend_id": {
+      "type": "string"
+    },
+    "storage_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "digest",
+    "size",
+    "media_type",
+    "detected_media_type",
+    "backend_id",
+    "storage_key"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.commands",
+      "class": "RecordStagedBlob",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "RecordStagedBlob"
+    }
+  }
+}

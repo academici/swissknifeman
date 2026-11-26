@@ -1,0 +1,55 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "registrar"
+version = "2.0.0"
+role = "registrar"
+title = "Registrar"
+description = "Writes the commit message of an accepted task from the machine contract. Deterministic template by default (llm = false)."
+result_schema = "urn:skm:execution:role-result:registrar:v1"
+llm = false
+
+[routing]
+model_class = "economy"
+effort = "low"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = []
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = []
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["registrar/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["registrar/result_contract"]
+
+[context]
+include = []
+inherit_user_global = false
+repo_instructions = "none"
+repo_instruction_sections = []
+skills_mode = "none"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 0
+history_max_steps = 0
+memory_top_k = 0
+include_optional_materials = false
+
+[context.budgets]
+supporting = 0
+retrieval = 0
+
+[limits]
+timeout_seconds = 300
+idle_timeout_seconds = 120
+max_turns = 4
+max_output_tokens = 2000
+max_result_retries = 1

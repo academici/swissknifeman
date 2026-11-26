@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:specification-export:v1",
+  "title": "SpecificationExportView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "document": {
+      "$ref": "urn:skm:planning:specification:v1"
+    },
+    "export_meta": {
+      "$ref": "urn:skm:planning:command:import-specification:v1#/$defs/export-meta"
+    }
+  },
+  "required": [
+    "document",
+    "export_meta"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "SpecificationExportView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "SpecificationExportView"
+    }
+  }
+}

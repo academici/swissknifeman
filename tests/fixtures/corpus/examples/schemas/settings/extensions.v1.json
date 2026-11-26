@@ -1,0 +1,548 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:extensions:v1",
+  "title": "Extensions settings",
+  "description": "Settings section 'extensions' owned by extensions. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "extensions",
+    "owner": "extensions",
+    "title": "Extensions",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.settings",
+      "class": "ExtensionsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExtensionsSettings"
+    }
+  },
+  "properties": {
+    "packs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "core"
+          ],
+          "description": "Installed packs active in this scope (accumulates over levels; the core pack is always active).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Packs",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "versions": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "default": {},
+          "description": "Version constraint per pack slug (for example \">=1.2,<2\"); absent: newest active version.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Packs",
+              "order": 20,
+              "widget": "map"
+            }
+          }
+        },
+        "search_dirs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Host directories scanned by `skm ext install --from-dirs` for pack folders.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "path": true,
+            "ui": {
+              "group": "Packs",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "priority": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": -1000,
+            "maximum": 1000
+          },
+          "default": {},
+          "description": "Override of pack priority (higher wins on resource and pack-level config conflicts).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Packs",
+              "order": 40,
+              "widget": "map"
+            }
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pinned": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z_]+:[a-z0-9][a-z0-9_./-]{0,120}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(sha256:[0-9a-f]{64}|[0-9]+\\.[0-9]+\\.[0-9]+([-+][0-9A-Za-z.-]+)?)$"
+          },
+          "default": {},
+          "description": "Resource \"<kind>:<key>\" -> digest or exact version used instead of the newest active version.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "deep_merge",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Resources",
+              "order": 10,
+              "widget": "map"
+            }
+          }
+        }
+      }
+    },
+    "compat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "on_incompatible": {
+          "type": "string",
+          "enum": [
+            "quarantine",
+            "refuse"
+          ],
+          "default": "quarantine",
+          "description": "What install does with a resource that fails compatibility rules.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Trust",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "allowed_licenses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9.+-]{2,64}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "Apache-2.0",
+            "BSD-2-Clause",
+            "BSD-3-Clause",
+            "CC-BY-4.0",
+            "CC0-1.0",
+            "ISC",
+            "MIT",
+            "MPL-2.0",
+            "Unlicense"
+          ],
+          "description": "SPDX licenses accepted for installed resources.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Compatibility",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "max_skill_tokens": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 50000,
+          "default": 8000,
+          "description": "Estimated tokens of one skill body above which install reports SKILL_TOO_LARGE.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Compatibility",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_steering_tokens": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 10000,
+          "default": 2000,
+          "description": "Estimated tokens of one steering resource above which install reports it.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Compatibility",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "extra_known_tools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Tool names accepted in skill allowed-tools besides the built-in list.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Compatibility",
+              "order": 40,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_archive_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 2147483648,
+          "default": 52428800,
+          "description": "Largest pack archive accepted by install.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Install",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_archive_files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 5000,
+          "description": "Most files in one pack archive.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Install",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "sync_on_start": {
+      "type": "boolean",
+      "default": true,
+      "description": "Register built-in and search_dirs packs when the process starts.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Install",
+          "order": 30,
+          "widget": "toggle"
+        }
+      }
+    },
+    "role_profiles": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(scout|executor|reviewer|triager|advisor|researcher|registrar)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9_./-]{1,120}$"
+      },
+      "default": {},
+      "description": "Agent profile resource key per role; absent: the default profile key of the role (for example executor-transparent at project level).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan"
+        ],
+        "merge": "deep_merge",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Profiles",
+          "order": 10,
+          "widget": "map"
+        }
+      }
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_interval_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365,
+          "default": 14,
+          "description": "Days between upstream checks of resources with provenance strategy notify; 0 disables.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Upstream",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "fetch_timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120,
+          "default": 20,
+          "description": "Timeout of one upstream fetch.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Upstream",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

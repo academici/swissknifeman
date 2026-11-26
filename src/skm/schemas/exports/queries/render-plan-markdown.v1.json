@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:query:render-plan-markdown:v1",
+  "title": "RenderPlanMarkdown",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_no": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "plan_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.queries",
+      "class": "RenderPlanMarkdown",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "RenderPlanMarkdown"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "competitive-analysis"
+version = "0.1.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["advisor", "researcher"]
+requires = ["idea-discovery"]
+exclusive_group = "founder-pipeline"
+
+[provenance]
+source = "local"

@@ -1,0 +1,12 @@
+source: packages/aicore/schemas/digest/v1/vectors.json
+commit: 0d6a393
+snapshot-sha256: de6d74a9817c10c9ede14703ca5511b12a5c49f642bbfb42dbaea9d6c2c054eb
+algorithm-source: packages/aicore/lib/aicore/util/digest.py
+algorithm-sha256: 9f1fc3eec2f61205f7639a3f6f4a5d8d99d479ace943cb900386a58e2a49a3a2
+tests-source: packages/aicore/tests/test_digest.py
+tests-sha256: dba6a3fa675bc5e614b30232dbf2f5881839209609ffb0feed4341682b3d3d26
+copy: vectors.json is copied byte-for-byte, including UTF-8 and its final newline.
+contract: digest/v1; canonicalization_version=1; compact UTF-8, code-point key order,
+  mandatory JSON escapes, no Unicode normalization, no floats, sha256: lowercase hex.
+port: canonical_json_bytes -> canonical_bytes; sha256_tagged -> digest_bytes;
+  canonical_value, sha256_hex, digest_json and is_tagged_digest preserve donor rules.

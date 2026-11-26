@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:event:resource-released:v1",
+  "title": "ResourceReleased",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "resource_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "released_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 0
+    }
+  },
+  "required": [
+    "resource_version_id",
+    "kind",
+    "key",
+    "released_by",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.events",
+      "class": "ResourceReleased",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ResourceReleased"
+    }
+  }
+}

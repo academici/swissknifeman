@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-quality-security"
+version = "1.0.1"
+title = "Migrated Neutral Skills: Quality, Research & Security"
+description = "Reproducibly migrated neutral authored skills for Quality, Research & Security (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "quality-split"
+max = 1
+description = "Correctness and risk, needless complexity, plans and specs, safe migration: never one quality prompt."

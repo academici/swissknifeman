@@ -1,0 +1,23 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-package-docs"
+version = "0.3.1"
+kind = "workflow"
+risk = "high"
+license = "MIT"
+roles = ["registrar"]
+exclusive_group = "php-packages"
+
+[provenance]
+source = "upstream"
+repo = "WendellAdriel/laravel-expressive"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "e967a0b2bf07d0cc2e670f94711a328e31a87707257897d8638b70cc34f04c59"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-docs/SKILL.md"
+sha256 = "384188f9c74102ac5fc246494a74db9dc7e23e75f4efe1867d2eb16d006127ad"
+fetched_at = "2026-06-12"

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:command:lock-value:v1",
+  "title": "LockValue",
+  "description": "settings command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "allOf": [
+        {
+          "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+        },
+        {
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": [
+                "instance",
+                "workspace"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+    },
+    "expected_row_version": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "default": ""
+    },
+    "confirmed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "scope",
+    "key"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.commands",
+      "class": "LockValue",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "LockValue"
+    }
+  }
+}

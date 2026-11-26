@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-python-backend"
+version = "1.0.1"
+title = "Migrated Agent Pack: Python Backend"
+description = "Neutral Python backend architecture, typing, transaction boundary, and pytest rules migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-python-reviewer.md"
+path = ".claude/agents/{prefix}-python-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-python-reviewer.toml"
+path = ".codex/agents/{prefix}-python-reviewer.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-python-reviewer.md"
+path = ".cursor/agents/{prefix}-python-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/python-backend.md"
+path = ".claude/rules/python-backend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/python-backend.md"
+path = ".codex/rules/python-backend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/python-backend.mdc"
+path = ".cursor/rules/python-backend.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/python-backend.md"
+path = ".grok/rules/python-backend.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/python-backend.md"
+path = ".agents/rules/python-backend.md"
+ownership = "managed_file"

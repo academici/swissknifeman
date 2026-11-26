@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:command:repair-storage-safe:v1",
+  "title": "RepairStorageSafe",
+  "description": "platform command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.commands",
+      "class": "RepairStorageSafe",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "RepairStorageSafe"
+    }
+  }
+}

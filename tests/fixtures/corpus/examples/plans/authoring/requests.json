@@ -1,0 +1,97 @@
+{
+  "text_field_before": "Keep the run pinned.\nAudit the new draft. 🧪\n",
+  "exchanges": [
+    {
+      "contract": "urn:skm:planning:query:list-entities:v1",
+      "request": {
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "revision_id": "0192f5c7-0000-7000-8000-000000000301",
+        "kinds": [
+          "item"
+        ],
+        "limit": 50
+      }
+    },
+    {
+      "contract": "urn:skm:planning:query:list-entities:v1",
+      "request": {
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+        "expected_edit_version": 7,
+        "limit": 50
+      }
+    },
+    {
+      "contract": "urn:skm:planning:query:read-text:v1",
+      "request": {
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+        "expected_edit_version": 7,
+        "target": "plan",
+        "pointer": "/context_md",
+        "max_bytes": 20
+      }
+    },
+    {
+      "contract": "urn:skm:planning:change:replace-text:v1",
+      "request": {
+        "op": "replace_text",
+        "target": "plan",
+        "pointer": "/context_md",
+        "expected_text_digest": "sha256:c4bfcb9fafd1d56a8a9832102e03b00d08c5894bcf6e16e816166e036c82b326",
+        "old_text": "Audit the new draft.",
+        "new_text": "Validate the prepared candidate."
+      }
+    },
+    {
+      "contract": "urn:skm:planning:query:preview-publication:v1",
+      "request": {
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+        "expected_edit_version": 8
+      }
+    },
+    {
+      "contract": "urn:skm:planning:command:publish-revision:v1",
+      "request": {
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+        "expected_edit_version": 8,
+        "expected_content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "reason": "Apply resolved audit changes"
+      }
+    },
+    {
+      "contract": "urn:skm:planning:command:import-specification:v1",
+      "request": {
+        "project_id": "0192f5c5-0b33-7c44-9a00-2b3c4d5e6f70",
+        "document": {
+          "schema": "urn:skm:planning:specification:v1",
+          "title": "Audited plan",
+          "goal": "Preserve the source base during import.",
+          "phases": [],
+          "items": []
+        },
+        "mode": "new_draft",
+        "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+        "source_base_revision_id": "0192f5c7-0000-7000-8000-000000000301",
+        "export_meta": {
+          "format": "urn:skm:planning:specification:v1",
+          "source": {
+            "kind": "revision",
+            "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+            "plan_alias": "PLAN7",
+            "revision_id": "0192f5c7-0000-7000-8000-000000000301",
+            "revision_no": 1
+          },
+          "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "exported_at": "2026-10-26T00:00:00Z",
+          "exported_by": "0192f5c5-0000-7000-8000-000000000001",
+          "skm_version": "2.0.0",
+          "materials": []
+        }
+      },
+      "expectation": "Base remains R1 even if head is R2; publication requires explicit rebase."
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:task-context:v1",
+  "title": "skm_task_context output",
+  "description": "Output for the skm_task_context MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task_key": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "instructions_md": {
+      "type": "string"
+    },
+    "write_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reads": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "statement"
+        ]
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "kind"
+        ]
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {}
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "profile"
+      ]
+    },
+    "previous_findings": {
+      "type": "array",
+      "items": {}
+    },
+    "answers": {
+      "type": "array",
+      "items": {}
+    },
+    "write_scope_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "reads_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "criteria_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "checks_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "decisions_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "previous_findings_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    },
+    "answers_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "task_key",
+    "goal",
+    "instructions_md",
+    "write_scope",
+    "reads",
+    "criteria",
+    "checks",
+    "decisions",
+    "review",
+    "previous_findings",
+    "answers"
+  ]
+}

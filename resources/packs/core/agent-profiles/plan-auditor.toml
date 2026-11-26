@@ -1,0 +1,51 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "plan-auditor"
+version = "2.0.0"
+role = "advisor"
+title = "Plan-Auditor"
+description = "Audits plan completeness, dependencies, acceptance coverage, resources and budget assumptions."
+result_schema = "urn:skm:execution:role-result:advisor:v1"
+llm = true
+
+[routing]
+model_class = "frontier"
+effort = "high"
+required_capabilities = ["headless_execution", "structured_result"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read", "shell.run"]
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["advisor/role", "advisor/plan_auditor"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["advisor/result_contract"]
+
+[context]
+include = ["steering", "materials", "repo_instructions", "skills", "history"]
+inherit_user_global = false
+repo_instructions = "constraints"
+repo_instruction_sections = ["Constraints", "Decisions"]
+skills_mode = "allowlist"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 6000
+history_max_steps = 5
+memory_top_k = 0
+include_optional_materials = true
+
+[limits]
+timeout_seconds = 1800
+idle_timeout_seconds = 600
+max_turns = 80
+max_output_tokens = 16000
+max_result_retries = 2

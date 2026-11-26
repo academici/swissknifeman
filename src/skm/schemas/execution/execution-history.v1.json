@@ -1,0 +1,1299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:execution-history:v1",
+  "title": "HistoryPage",
+  "description": "Safe projection only, never raw event payload. Canonical response <=1MiB; semantic checks ensure seq<=through_seq, monotonic scan, stable cursor binding, current auth and bounded refs. Events-only builder; absent old facts mean partial/unavailable. No file content or audit bodies. Page semantic caps: <=1600 nodes, <=3200 edges, <=1MiB canonical bytes. Final next_after=null implies scanned_through_seq=through_seq. Each scanned source event has an entry with explicit coverage/reason_codes, including non-history/legacy events; no silent source gaps.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "through_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "builder_version": {
+      "const": 1
+    },
+    "scanned_through_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      },
+      "maxItems": 200
+    },
+    "next_after": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "coverage": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "unavailable"
+      ]
+    }
+  },
+  "required": [
+    "run_id",
+    "through_seq",
+    "builder_version",
+    "scanned_through_seq",
+    "entries",
+    "next_after",
+    "coverage"
+  ],
+  "$defs": {
+    "node-ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "run",
+            "task",
+            "attempt",
+            "stage",
+            "step",
+            "output",
+            "check",
+            "review",
+            "decision_request",
+            "decision",
+            "effect",
+            "recovery",
+            "fix_brief",
+            "finding",
+            "reconfiguration"
+          ]
+        },
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "local",
+            "unloaded",
+            "foreign_opaque"
+          ]
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "visibility"
+            ],
+            "properties": {
+              "visibility": {
+                "const": "foreign_opaque"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "id"
+            ]
+          }
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/node-ref"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/node-ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "abandoned",
+            "accepted",
+            "answered",
+            "applied",
+            "assigned",
+            "assumed",
+            "awaiting_decision",
+            "blocked",
+            "cancelled",
+            "checking",
+            "completed",
+            "confirmed",
+            "context_draft",
+            "created",
+            "deferred",
+            "denied",
+            "error",
+            "executing",
+            "expired",
+            "failed",
+            "integrating",
+            "intended",
+            "interrupted",
+            "manual_pending",
+            "not_needed",
+            "open",
+            "outcome_unknown",
+            "ownership_lost",
+            "passed",
+            "paused",
+            "pending",
+            "preparing",
+            "ready",
+            "rejected",
+            "resolved",
+            "reviewing",
+            "rework_required",
+            "running",
+            "sealed",
+            "skipped",
+            "stale",
+            "started",
+            "submitted",
+            "succeeded",
+            "superseded",
+            "unknown",
+            "waiting",
+            "waived"
+          ]
+        },
+        "task_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "attempt_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "stage_record_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "plan_revision_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "entity_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "scout",
+            "executor",
+            "reviewer",
+            "triager",
+            "advisor",
+            "researcher",
+            "registrar"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "retry",
+            "rework",
+            "final_correction",
+            "continue_with_answer",
+            "resume_interrupted",
+            "retriage_with_advice",
+            "reconcile"
+          ]
+        },
+        "round_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reason_code": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[A-Z][A-Z0-9_]*$"
+        },
+        "advance_rule": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^[A-Z][A-Za-z0-9_]{0,31}$"
+        },
+        "input_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "route_snapshot": {
+          "$ref": "urn:skm:execution:route-snapshot:v1"
+        },
+        "runtime_observation": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:runtimes:runtime-observation:v1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "task_kind": {
+          "type": "string",
+          "enum": [
+            "unit",
+            "item",
+            "item_gate",
+            "phase_gate",
+            "plan_acceptance",
+            "integration",
+            "followup",
+            "group_review",
+            "plan_audit",
+            "adhoc"
+          ]
+        },
+        "timing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "started_at": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "finished_at": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "duration_ms": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "clock_domain_id": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "basis": {
+              "type": "string",
+              "enum": [
+                "db_transition",
+                "host_monotonic",
+                "provider_claim",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "started_at",
+            "finished_at",
+            "duration_ms",
+            "clock_domain_id",
+            "basis"
+          ]
+        },
+        "binding_consistency": {
+          "type": "string",
+          "enum": [
+            "matched",
+            "mismatch",
+            "unavailable"
+          ]
+        }
+      },
+      "required": [
+        "ref",
+        "coverage"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "run"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "created",
+                  "ready",
+                  "running",
+                  "waiting",
+                  "paused",
+                  "succeeded",
+                  "failed",
+                  "cancelled"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "task"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "blocked",
+                  "ready",
+                  "assigned",
+                  "executing",
+                  "checking",
+                  "manual_pending",
+                  "reviewing",
+                  "rework_required",
+                  "awaiting_decision",
+                  "integrating",
+                  "accepted",
+                  "failed",
+                  "cancelled",
+                  "superseded",
+                  "skipped"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "attempt"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "preparing",
+                  "running",
+                  "waiting",
+                  "submitted",
+                  "completed",
+                  "ownership_lost",
+                  "abandoned"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "stage"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "started",
+                  "context_draft",
+                  "running",
+                  "completed",
+                  "failed",
+                  "interrupted",
+                  "skipped"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "step"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "started",
+                  "succeeded",
+                  "failed",
+                  "cancelled"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "check"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "pending",
+                  "running",
+                  "passed",
+                  "failed",
+                  "manual_pending",
+                  "error",
+                  "cancelled",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "review"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "started",
+                  "completed",
+                  "failed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "decision_request"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "open",
+                  "answered",
+                  "applied",
+                  "assumed",
+                  "denied",
+                  "stale",
+                  "expired",
+                  "cancelled"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "decision"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "applied",
+                  "superseded"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "effect"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "intended",
+                  "executing",
+                  "succeeded",
+                  "failed",
+                  "outcome_unknown"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "finding"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "open",
+                  "confirmed",
+                  "rejected",
+                  "resolved",
+                  "waived",
+                  "deferred"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "output"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "sealed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "fix_brief"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "sealed"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "reconfiguration"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "applied"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ref": {
+                "properties": {
+                  "kind": {
+                    "const": "recovery"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "running",
+                  "completed",
+                  "failed",
+                  "not_needed"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "contains",
+            "triggers",
+            "consumes",
+            "produces",
+            "evaluates",
+            "reworks",
+            "retries",
+            "supersedes",
+            "reuses",
+            "approved_by",
+            "observed_by"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/node-ref"
+        },
+        "target": {
+          "$ref": "#/$defs/node-ref"
+        }
+      },
+      "required": [
+        "kind",
+        "source",
+        "target"
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "event_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "event_type": {
+          "type": "string",
+          "maxLength": 180,
+          "pattern": "^urn:skm:[a-z][a-z0-9-]*:event:[a-z][a-z0-9-]*:v[1-9][0-9]*$"
+        },
+        "occurred_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "recorded_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "maxItems": 32
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/edge"
+          },
+          "maxItems": 200
+        },
+        "cause": {
+          "$ref": "#/$defs/cause"
+        },
+        "monitor_evaluation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "evaluation_id": {
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+            },
+            "monitor_id": {
+              "type": "string",
+              "enum": [
+                "scheduler",
+                "lease_sweeper",
+                "timeout_enforcer",
+                "stall_detector",
+                "autopilot"
+              ]
+            },
+            "rule_id": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "rule_version": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+            },
+            "target_stage_record_id": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fencing_token": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "thresholds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "maxLength": 160,
+                    "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "boolean"
+                    ]
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              },
+              "maxItems": 32
+            },
+            "config_digest": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            "input_watermark": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "input_coverage": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "partial",
+                "unavailable"
+              ]
+            },
+            "last_signal_at": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scheduled_at": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            "started_at": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            "finished_at": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "healthy",
+                "waiting",
+                "suspected",
+                "unknown",
+                "action_required",
+                "error"
+              ]
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "none",
+                "snapshot",
+                "cancel",
+                "recover",
+                "pause"
+              ]
+            },
+            "action_request_id": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "recovery_record_id": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason_code": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            },
+            "config_generation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "recovery_mode": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "notify",
+                    "stop_only",
+                    "resume"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "evaluation_id",
+            "monitor_id",
+            "rule_id",
+            "rule_version",
+            "target_stage_record_id",
+            "fencing_token",
+            "thresholds",
+            "config_digest",
+            "input_watermark",
+            "input_coverage",
+            "last_signal_at",
+            "scheduled_at",
+            "started_at",
+            "finished_at",
+            "verdict",
+            "action",
+            "action_request_id",
+            "recovery_record_id",
+            "reason_code",
+            "config_generation",
+            "recovery_mode"
+          ]
+        },
+        "wait": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "previous_code": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64,
+                  "pattern": "^[A-Z][A-Z0-9_]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "code": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64,
+                  "pattern": "^[A-Z][A-Z0-9_]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "started_at": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "finished_at": {
+              "anyOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "previous_code",
+            "code",
+            "started_at",
+            "finished_at"
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "enum": [
+              "NO_HISTORY_DELTA",
+              "LEGACY_FIELDS_MISSING",
+              "UNSUPPORTED_EVENT_TYPE",
+              "PAYLOAD_UNREPRESENTABLE",
+              "FOREIGN_REFERENCE_RESTRICTED",
+              "OBSERVATION_UNAVAILABLE",
+              "BINDING_MISMATCH"
+            ]
+          }
+        }
+      },
+      "required": [
+        "seq",
+        "event_id",
+        "event_type",
+        "occurred_at",
+        "recorded_at",
+        "nodes",
+        "edges",
+        "coverage",
+        "reason_codes"
+      ]
+    },
+    "cause": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trigger_kind": {
+          "type": "string",
+          "enum": [
+            "manual_start",
+            "dependency_satisfied",
+            "stage_outcome",
+            "check_failed",
+            "review_findings",
+            "retry",
+            "lease_recovery",
+            "operator_resume",
+            "reconfigure",
+            "observation",
+            "run_start",
+            "followup",
+            "integration",
+            "wait_changed",
+            "monitor",
+            "policy_resolved",
+            "carry_forward",
+            "cancel",
+            "timeout",
+            "timer",
+            "subscription",
+            "restart",
+            "skip",
+            "decision_answered",
+            "manual_verdict"
+          ]
+        },
+        "advance_rule": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 32,
+              "pattern": "^[A-Z][A-Za-z0-9_]{0,31}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "maxItems": 32
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity-ref"
+          },
+          "maxItems": 200
+        },
+        "command_id": {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+        },
+        "source_event_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        }
+      },
+      "required": [
+        "trigger_kind",
+        "advance_rule",
+        "reason_codes",
+        "refs"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "trigger_kind": {
+                "const": "observation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "advance_rule": {
+                "const": null
+              }
+            }
+          }
+        }
+      ]
+    },
+    "facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          },
+          "maxItems": 32
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/edge"
+          },
+          "maxItems": 200
+        }
+      },
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "description": "Builder output structure only. Not an independently emitted generic source payload; nodes/edges derive from each closed source event."
+    },
+    "entity-ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "run",
+            "task",
+            "attempt",
+            "stage",
+            "step",
+            "output",
+            "check",
+            "review",
+            "decision_request",
+            "decision",
+            "effect",
+            "recovery",
+            "fix_brief",
+            "finding",
+            "reconfiguration"
+          ]
+        },
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "HistoryPage",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "HistoryPage"
+    }
+  }
+}

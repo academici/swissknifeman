@@ -1,0 +1,30 @@
+{
+  "skill": "parametric-config",
+  "snippets": [
+    {
+      "file": "config.py",
+      "description": "dataclass-part parameters (generic Part): dimensions/tolerances/material in mm, grouped by entity (ModelConfig/ShellConfig/JointConfig/ThreadConfig), profile nodes, derived functions without bpy, instances below + call derive_all",
+      "tags": ["dataclass", "config", "units", "tolerances", "parameters"]
+    },
+    {
+      "file": "check.py",
+      "description": "Validation of parameter invariants without running Blender: [OK]/[FAIL], exit-code; checking heights, joining radii according to tolerance, minimum wall thickness FDM/SLA, fit clearance and clearancevs-thread depth",
+      "tags": ["validation", "invariants", "no-bpy", "fdm", "tolerances"]
+    },
+    {
+      "file": "profile.py",
+      "description": "Profile of nodes (z,r): derive_all (conversion of dependent dimensions + last node synchronization), linear silhouette interpolation, revolve_profile via SCREW axis Z with lazy import bpy/bmesh and conversion mm",
+      "tags": ["profile", "revolve", "screw", "interpolation", "lazy-bpy", "units"]
+    },
+    {
+      "file": "config-and-profile.md",
+      "description": "Configs and silhouette: naming configs, profile_knots (local Z), translation to world Z, derive_all, import order config↔profile, global spline vs in parts",
+      "tags": ["config", "profile", "derive_all", "knots", "spline"]
+    },
+    {
+      "file": "internals.md",
+      "description": "Internals: device spl (zs/rs/ms, Monotone Cubic Hermite), order and closure of points pts, diagnostics non-manifold, r_inner_floor, bounding box, units, test file architecture",
+      "tags": ["internals", "spl", "pts", "non-manifold", "bounding-box", "tests"]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:sync-projections:v1",
+  "title": "SyncProjectionsResult",
+  "description": "Projection outcomes and Git exclude changes for the synchronized checkouts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "checkouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "project_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "mount": {
+            "type": "string"
+          },
+          "exclude_updated": {
+            "type": "boolean"
+          },
+          "outcomes": {
+            "$ref": "urn:skm:integrations:host-result:apply-projection:v1"
+          }
+        },
+        "required": [
+          "project_id",
+          "mount",
+          "exclude_updated",
+          "outcomes"
+        ]
+      }
+    }
+  },
+  "required": [
+    "checkouts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "SyncProjectionsResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "SyncProjectionsResult"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "work_policy": {
+        "role_intensity": {
+          "reviewer": "heavy"
+        }
+      }
+    },
+    {
+      "key": "P1.2",
+      "phase": "P1",
+      "title": "Item P1.2",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "work_policy": {
+        "verification_intensity": "light"
+      }
+    },
+    {
+      "key": "P1.3",
+      "phase": "P1",
+      "title": "Item P1.3",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "route": {
+        "class": "frontier",
+        "effort": "max"
+      },
+      "work_policy": {
+        "role_intensity": {
+          "executor": "light"
+        }
+      }
+    }
+  ],
+  "units": [
+    {
+      "key": "P1.1/U1",
+      "title": "Unit",
+      "goal": "Do it.",
+      "work_policy": {
+        "role_intensity": {
+          "triager": "medium"
+        }
+      }
+    }
+  ]
+}

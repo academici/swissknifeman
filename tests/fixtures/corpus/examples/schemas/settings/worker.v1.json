@@ -1,0 +1,763 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:worker:v1",
+  "title": "Worker settings",
+  "description": "Settings section 'worker' owned by execution. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "worker",
+    "owner": "execution",
+    "title": "Worker",
+    "validators": [
+      {
+        "id": "worker.isolation_default",
+        "keys": [
+          "worker.isolation.available",
+          "worker.isolation.default_profile"
+        ],
+        "rule": "default_profile in available"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.settings",
+      "class": "WorkerSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "WorkerSettings"
+    }
+  },
+  "properties": {
+    "capacity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64,
+      "default": 2,
+      "description": "Assignments this host's worker executes at the same time.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Capacity",
+          "order": 10,
+          "widget": "number"
+        }
+      }
+    },
+    "disk_min_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 17592186044416,
+      "default": 5368709120,
+      "description": "Free space kept on each worker filesystem after outstanding bounded-write reservations; checked before claim, stage and host writes (doctor reports it).",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Capacity",
+          "order": 20,
+          "widget": "number"
+        }
+      }
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9_.-]{0,40}$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Free labels advertised in worker capabilities and matched by assignment requirements.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Capacity",
+          "order": 30,
+          "widget": "tags"
+        }
+      }
+    },
+    "environments": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retain": {
+          "type": "string",
+          "enum": [
+            "never",
+            "failed",
+            "always"
+          ],
+          "default": "failed",
+          "description": "Keep attempt worktrees after the attempt ends: never, only failed, always.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Paths",
+              "order": 10,
+              "widget": "select"
+            }
+          }
+        },
+        "retain_days": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365,
+          "default": 7,
+          "description": "Days retained environments are kept before cleanup; 0 = until manual cleanup.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Paths",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "git_worktree",
+              "existing_checkout",
+              "managed_clone"
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "git_worktree"
+          ],
+          "description": "Environment kinds this worker provides; the scheduler matches execution.environment.kind against it (existing_checkout must be listed explicitly).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Paths",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "worktree",
+                  "landlock",
+                  "container"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+              }
+            ]
+          },
+          "uniqueItems": true,
+          "default": [
+            "worktree"
+          ],
+          "description": "Isolation profiles this host provides (detected at worker start; listing an unavailable one is reported).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "worker.isolation_default"
+            ],
+            "ui": {
+              "group": "Isolation",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "default_profile": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "none",
+                "worktree",
+                "landlock",
+                "container"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+            }
+          ],
+          "default": "worktree",
+          "description": "Profile used when the role's policy profile does not require one; none is never chosen automatically.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "worker.isolation_default"
+            ],
+            "ui": {
+              "group": "Isolation",
+              "order": 20,
+              "widget": "text"
+            }
+          }
+        },
+        "container": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "image": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9./:_-]{1,200}@sha256:[0-9a-f]{64}$",
+              "description": "Container image with the runtime CLIs, pinned by digest.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": true,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 30,
+                  "widget": "text"
+                }
+              }
+            },
+            "tmp_size": {
+              "type": "string",
+              "pattern": "^[0-9]{1,6}[kmg]$",
+              "default": "1g",
+              "description": "Size of the container tmpfs /tmp.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 40,
+                  "widget": "text"
+                }
+              }
+            },
+            "pids_limit": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 65536,
+              "default": 512,
+              "description": "Process limit of the container.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 50,
+                  "widget": "number"
+                }
+              }
+            },
+            "memory": {
+              "type": "string",
+              "pattern": "^[0-9]{1,6}[kmg]$",
+              "default": "4g",
+              "description": "Memory limit of the container.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 60,
+                  "widget": "text"
+                }
+              }
+            },
+            "cpus": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 256,
+              "default": 2,
+              "description": "CPU limit of the container.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 70,
+                  "widget": "number"
+                }
+              }
+            },
+            "network": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]{1,64}$",
+              "description": "Pre-created docker network with the egress proxy used for network mode allowlist; absent: allowlist is unavailable in containers.",
+              "x-skm": {
+                "chain": "host",
+                "levels": [
+                  "instance",
+                  "host"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": false,
+                "lockable": true,
+                "nullable": true,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Isolation",
+                  "order": 80,
+                  "widget": "text"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "poll_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000,
+          "default": 2000,
+          "description": "Wait between empty claims.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Loop",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "author_name": {
+          "type": "string",
+          "maxLength": 120,
+          "minLength": 1,
+          "default": "SKM Worker",
+          "description": "Author and committer name of commits made by SKM.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 10,
+              "widget": "text"
+            }
+          }
+        },
+        "author_email": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@[^@\\s]+$",
+          "default": "worker@skm.invalid",
+          "description": "Author and committer email of commits made by SKM.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 20,
+              "widget": "text"
+            }
+          }
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 600,
+          "default": 60,
+          "description": "Timeout of an ordinary git call.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "long_timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 7200,
+          "default": 600,
+          "description": "Timeout of git calls marked long (clone, fetch, push, gc).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "min_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+          "default": "2.38",
+          "description": "Oldest git accepted on this host (worktree and sparse features).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 50,
+              "widget": "text"
+            }
+          }
+        },
+        "remote_env_allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "SSH_AUTH_SOCK",
+            "GIT_SSH_COMMAND"
+          ],
+          "description": "Environment variables passed to network git calls.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 60,
+              "widget": "tags"
+            }
+          }
+        },
+        "use_credential_helper": {
+          "type": "boolean",
+          "default": false,
+          "description": "Let network git calls use the host's credential helper (never interactive).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Git",
+              "order": 70,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "transcripts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retain_local_hours": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8760,
+          "default": 24,
+          "description": "Hours local transcript originals are kept after upload; 0 deletes them right after upload.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Transcripts",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

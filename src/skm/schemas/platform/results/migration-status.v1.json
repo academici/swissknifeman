@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:result:migration-status:v1",
+  "title": "MigrationStatusResult",
+  "description": "platform result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "known_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "db_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "not_migrated",
+        "too_new"
+      ]
+    },
+    "migrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "applied",
+              "pending",
+              "modified",
+              "unknown"
+            ]
+          },
+          "applied_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "version",
+          "name",
+          "state"
+        ]
+      }
+    }
+  },
+  "required": [
+    "known_version",
+    "db_version",
+    "state",
+    "migrations"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.results",
+      "class": "MigrationStatusResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "MigrationStatusResult"
+    }
+  }
+}

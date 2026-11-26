@@ -1,0 +1,23 @@
+# Workflow resource of the core pack: resources/packs/core/workflows/plan-audit.toml
+# Semantic readiness audit (execution.md §5.12, G28): one plan_audit task of a readiness_audit run; the advisor profile
+# plan-auditor walks its checklist; row I6 writes a new readiness report that supersedes the deterministic one.
+schema = "urn:skm:execution:workflow:v1"
+id = "plan-audit"
+version = "1.0.0"
+title = "Plan audit"
+description = "prepare (revision-pinned, read-only) -> advisor_consult with the plan-auditor profile."
+applies_to = ["review"]
+requires_roles = ["advisor"]
+
+[[stage]]
+id = "prepare"
+type = "prepare_environment"
+for_kinds = ["plan_audit"]
+params = { baseline_strategy = "revision_pinned" }
+
+[[stage]]
+id = "audit"
+type = "advisor_consult"
+role = "advisor"
+for_kinds = ["plan_audit"]
+params = { profile = "plan-auditor" }

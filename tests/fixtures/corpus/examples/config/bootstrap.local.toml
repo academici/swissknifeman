@@ -1,0 +1,29 @@
+# ~/.config/skm/bootstrap.toml — written by `skm init` on a developer machine (embedded mode).
+# Only what is needed before the database is reachable. Every other setting lives in the
+# settings levels (skm config …). Validated against urn:skm:config:bootstrap:v1.
+schema = "urn:skm:config:bootstrap:v1"
+instance_id = "0192f5c4-7a10-7c3e-9b1a-5d2f0e8a4c11"
+
+[access]
+mode = "embedded"
+
+[database]
+# The URL contains a password, so the file holds only a reference. SKM_DATABASE_URL in the
+# environment overrides it with the URL itself (used by `make` targets and CI).
+url = "secret://env/SKM_DATABASE_URL"
+migrate_on_start = true
+application_name = "skm"
+
+[secrets]
+token_pepper = "secret://file/~/.local/state/skm/secrets/token-pepper"   # state_dir/secrets/ (0700), file 0600
+
+[paths]
+state_dir = "~/.local/state/skm"
+blobs_root = "~/.local/share/skm/blobs"
+worktrees_root = "${state_dir}/worktrees"        # defaults shown; `skm local clean --worktrees` empties it
+materialized_root = "${state_dir}/materialized"
+backups_root = "${state_dir}/backups"
+
+[host]
+id = "auto"          # registered by a person (`skm init` / `skm host register`), then rewritten to the uuid; `skm worker start` refuses "auto" (host_not_registered)
+name = "dev-laptop"

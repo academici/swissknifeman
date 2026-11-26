@@ -1,0 +1,10 @@
+---
+description: Verification and Change Discipline
+alwaysApply: true
+---
+# Verification and Change Discipline
+
+- Read relevant module contracts and existing tests before proposing edits.
+- Keep changes minimal, deterministic, and scoped to declared write boundaries.
+- Run targeted verification checks and report concrete command evidence.
+- Preserve foreign checkout files and never bypass safety or review gates.

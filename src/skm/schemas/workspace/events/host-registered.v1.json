@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:host-registered:v1",
+  "title": "HostRegistered",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "platform": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_platform"
+    }
+  },
+  "required": [
+    "host_id",
+    "name",
+    "platform"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "HostRegistered",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "HostRegistered"
+    }
+  }
+}

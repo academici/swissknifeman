@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:query:get-review-receipt:v1",
+  "title": "GetReviewReceipt",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount": {
+      "type": "string"
+    },
+    "tree_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.queries",
+      "class": "GetReviewReceipt",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "GetReviewReceipt"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "run_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "request_id"
+            ]
+          },
+          {
+            "required": [
+              "project_id"
+            ]
+          },
+          {
+            "required": [
+              "mount"
+            ]
+          },
+          {
+            "required": [
+              "tree_digest"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "request_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "run_id"
+            ]
+          },
+          {
+            "required": [
+              "project_id"
+            ]
+          },
+          {
+            "required": [
+              "mount"
+            ]
+          },
+          {
+            "required": [
+              "tree_digest"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "project_id",
+        "mount",
+        "tree_digest"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "run_id"
+            ]
+          },
+          {
+            "required": [
+              "request_id"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:local-memory-record:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "classification": {"const": "HOST_PRIVATE"},
+    "status": {"enum": ["recorded", "deduplicated", "rate_limited"]}
+  },
+  "required": ["classification", "status"]
+}

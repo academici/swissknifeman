@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "agent-packs-node-frontend"
+version = "1.0.1"
+title = "Migrated Agent Pack: Node and TypeScript Frontend"
+description = "Neutral TypeScript UI state, accessibility, component isolation, and test conventions migrated as pure data."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

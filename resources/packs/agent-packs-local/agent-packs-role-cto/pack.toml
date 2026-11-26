@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "agent-packs-role-cto"
+version = "1.0.1"
+title = "Migrated Agent Pack: Architecture and Risk Advisor"
+description = "Neutral system architecture, operational risk, and technology trade-off advisory lens migrated as pure data."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

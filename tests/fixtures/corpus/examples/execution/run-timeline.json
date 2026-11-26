@@ -1,0 +1,553 @@
+{
+  "query": "execution.get_run_timeline",
+  "request": {
+    "run_id": "0193a000-0000-7000-8000-000000000001",
+    "after_seq": 1000,
+    "limit": 50
+  },
+  "scenario": "Task P1.2 (item 'Rotation service', review required) of run 0193a000-0000-7000-8000-000000000001 from ready to accepted with one rework round by review findings.",
+  "result": {
+    "items": [
+      {
+        "seq": 1001,
+        "at": "2026-10-25T11:58:00Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "code": "TaskReady",
+        "summary": "P1.2 ready: prerequisite P1.1#gate accepted",
+        "refs": {
+          "reason": "prerequisites",
+          "prerequisite_task_ids": [
+            "0193a000-0000-7000-8000-000000000011"
+          ]
+        }
+      },
+      {
+        "seq": 1002,
+        "at": "2026-10-25T11:58:01Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "TaskAssigned",
+        "summary": "attempt 1 created, assignment available",
+        "refs": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "attempt_no": 1,
+          "requirements": {
+            "labels": [
+              "linux"
+            ],
+            "environment_kind": "git_worktree",
+            "isolation_profiles": [
+              "worktree"
+            ]
+          }
+        }
+      },
+      {
+        "seq": 1003,
+        "at": "2026-10-25T11:58:02Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "AssignmentLeased",
+        "summary": "leased by worker on host dev-1, fencing token 1",
+        "refs": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "host_id": "01928f60-1111-7aaa-8bbb-2c3d4e5f6a7b",
+          "fencing_token": 1
+        }
+      },
+      {
+        "seq": 1004,
+        "at": "2026-10-25T11:58:03Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "AttemptStarted",
+        "summary": "attempt 1 started (T3 assigned -> executing)",
+        "refs": {}
+      },
+      {
+        "seq": 1005,
+        "at": "2026-10-25T11:58:03Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "prepare (prepare_environment, normal)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0001",
+          "baseline_strategy": "integration_branch_head"
+        }
+      },
+      {
+        "seq": 1006,
+        "at": "2026-10-25T11:58:09Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "prepare -> success: git_worktree skm/attempt/0193a000-0000-7000-8000-0000000a0012 at skm/integration/0193a000-0000-7000-8000-000000000001 3e1f9a2",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0001",
+          "environment_id": "0193a000-0000-7000-8000-0000000a1012"
+        }
+      },
+      {
+        "seq": 1007,
+        "at": "2026-10-25T11:58:10Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "execute (agent_step executor, normal); session new (NO_PREVIOUS_SESSION); context draft 0193a000-…-120001",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+          "step_id": "0193a000-0000-7000-8000-0000000d0001",
+          "session_mode": "new"
+        }
+      },
+      {
+        "seq": 1008,
+        "at": "2026-10-25T11:59:41Z",
+        "kind": "step",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "STEP_STARTED",
+        "summary": "context finalized (final, 21 480 tokens), runtime claude_code started",
+        "refs": {
+          "step_id": "0193a000-0000-7000-8000-0000000d0001",
+          "context_manifest_id": "0193a000-0000-7000-8000-000000120001"
+        }
+      },
+      {
+        "seq": 1009,
+        "at": "2026-10-25T12:20:04Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "OutputSealed",
+        "summary": "output 1: 2 files changed, 0 outside write scope, 0 excluded",
+        "refs": {
+          "output_id": "0193a000-0000-7000-8000-0000000e0001",
+          "seq": 1,
+          "source": "executor"
+        }
+      },
+      {
+        "seq": 1010,
+        "at": "2026-10-25T12:20:05Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "execute -> success; usage 23 880 in / 4 120 out, $0.41 (reported)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+          "advance_row": "C1"
+        }
+      },
+      {
+        "seq": 1011,
+        "at": "2026-10-25T12:20:06Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "checks (run_checks scope task, round 1)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0003"
+        }
+      },
+      {
+        "seq": 1012,
+        "at": "2026-10-25T12:20:31Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "CheckCompleted",
+        "summary": "P1.2:V1 passed",
+        "refs": {
+          "output_id": "0193a000-0000-7000-8000-0000000e0001",
+          "round_no": 1,
+          "results": [
+            {
+              "check_key": "P1.2:V1",
+              "state": "passed",
+              "reused": false
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1013,
+        "at": "2026-10-25T12:20:31Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "checks -> success",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0003",
+          "advance_row": "D1"
+        }
+      },
+      {
+        "seq": 1014,
+        "at": "2026-10-25T12:20:32Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "review round 1 (agent_review, profile security: risk feature security on **/auth/**)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0004",
+          "review_id": "0193a000-0000-7000-8000-0000000f0001",
+          "profile_key": "security"
+        }
+      },
+      {
+        "seq": 1015,
+        "at": "2026-10-25T12:29:53Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "ReviewCompleted",
+        "summary": "verdict attention: F1 major (time), F2 nit",
+        "refs": {
+          "review_id": "0193a000-0000-7000-8000-0000000f0001",
+          "verdict": "attention",
+          "finding_counts": {
+            "blocker": 0,
+            "major": 1,
+            "minor": 0,
+            "nit": 1
+          },
+          "new_finding_keys": [
+            "fk-3b9e1c0a7d2f4e61",
+            "fk-a04c7e19d2b85f30"
+          ]
+        }
+      },
+      {
+        "seq": 1016,
+        "at": "2026-10-25T12:29:54Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "review -> verdict_attention",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0004",
+          "advance_row": "F2"
+        }
+      },
+      {
+        "seq": 1017,
+        "at": "2026-10-25T12:29:55Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "triage (agent_step triager)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0005",
+          "step_id": "0193a000-0000-7000-8000-0000000d0003"
+        }
+      },
+      {
+        "seq": 1018,
+        "at": "2026-10-25T12:34:41Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "triage -> success: F1 confirmed (fix_now, reproduced exit 1), F2 rejected",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0005",
+          "advance_row": "H1"
+        }
+      },
+      {
+        "seq": 1019,
+        "at": "2026-10-25T12:34:41Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "TaskReworkRequired",
+        "summary": "rework round 1 by review findings; fix brief 0193a000-…-170001 (1 item, not truncated)",
+        "refs": {
+          "reason": "review_findings",
+          "round": 1,
+          "fix_brief_id": "0193a000-0000-7000-8000-000000170001"
+        }
+      },
+      {
+        "seq": 1020,
+        "at": "2026-10-25T12:34:42Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "execute round 2 (rework); session resume cc-sess-7f3a (row SE9)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0006",
+          "step_id": "0193a000-0000-7000-8000-0000000d0004",
+          "session_mode": "resume",
+          "resume_ref": "cc-sess-7f3a"
+        }
+      },
+      {
+        "seq": 1021,
+        "at": "2026-10-25T12:42:50Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "OutputSealed",
+        "summary": "output 2: 2 files changed (src/auth/rotation.py, tests/auth/test_rotation.py)",
+        "refs": {
+          "output_id": "0193a000-0000-7000-8000-0000000e0002",
+          "seq": 2,
+          "source": "executor"
+        }
+      },
+      {
+        "seq": 1022,
+        "at": "2026-10-25T12:42:51Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "execute -> success",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0006",
+          "advance_row": "C1"
+        }
+      },
+      {
+        "seq": 1023,
+        "at": "2026-10-25T12:42:52Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "checks round 2",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0007"
+        }
+      },
+      {
+        "seq": 1024,
+        "at": "2026-10-25T12:43:18Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "CheckCompleted",
+        "summary": "P1.2:V1 passed (new test test_expiry_uses_database_time included)",
+        "refs": {
+          "output_id": "0193a000-0000-7000-8000-0000000e0002",
+          "round_no": 2,
+          "results": [
+            {
+              "check_key": "P1.2:V1",
+              "state": "passed",
+              "reused": false
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1025,
+        "at": "2026-10-25T12:43:18Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "checks -> success",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0007",
+          "advance_row": "D1"
+        }
+      },
+      {
+        "seq": 1026,
+        "at": "2026-10-25T12:43:19Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "review round 2 (audit_scope corrected: changed paths since round 1 + locations of confirmed findings)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0008",
+          "review_id": "0193a000-0000-7000-8000-0000000f0002",
+          "base_output_id": "0193a000-0000-7000-8000-0000000e0001"
+        }
+      },
+      {
+        "seq": 1027,
+        "at": "2026-10-25T12:48:11Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "ReviewCompleted",
+        "summary": "verdict green; fk-3b9e1c0a7d2f4e61 not repeated and its location changed -> resolved",
+        "refs": {
+          "review_id": "0193a000-0000-7000-8000-0000000f0002",
+          "verdict": "green",
+          "finding_counts": {
+            "blocker": 0,
+            "major": 0,
+            "minor": 0,
+            "nit": 0
+          },
+          "new_finding_keys": []
+        }
+      },
+      {
+        "seq": 1028,
+        "at": "2026-10-25T12:48:11Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "review -> verdict_green",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0008",
+          "advance_row": "F1"
+        }
+      },
+      {
+        "seq": 1029,
+        "at": "2026-10-25T12:48:11Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "accept (acceptance_gate, control plane): A1–A12 hold",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0009",
+          "acceptance_decision_id": "0193a000-0000-7000-8000-000000190001"
+        }
+      },
+      {
+        "seq": 1030,
+        "at": "2026-10-25T12:48:11Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "AcceptanceDecided",
+        "summary": "acceptance decided with clearance green on output 2 (T13 -> integrating); not terminal until integration and rechecks (K3)",
+        "refs": {
+          "acceptance_decision_id": "0193a000-0000-7000-8000-000000190001",
+          "output_id": "0193a000-0000-7000-8000-0000000e0002",
+          "clearance": "green"
+        }
+      },
+      {
+        "seq": 1031,
+        "at": "2026-10-25T12:48:12Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageStarted",
+        "summary": "integrate (squash, final_only) under integration slot api@skm/integration/0193a000-0000-7000-8000-000000000001",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0010",
+          "slot_id": "0193a000-0000-7000-8000-0000001a0001"
+        }
+      },
+      {
+        "seq": 1032,
+        "at": "2026-10-25T12:48:20Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "ExternalEffectRecorded",
+        "summary": "git_commit succeeded 7d4e2a9c",
+        "refs": {
+          "effect_id": "0193a000-0000-7000-8000-0000001b0001",
+          "kind": "git_commit",
+          "state": "succeeded",
+          "ref": "7d4e2a9c1b3f5e6a7d8c9b0a1f2e3d4c5b6a7980"
+        }
+      },
+      {
+        "seq": 1033,
+        "at": "2026-10-25T12:48:21Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "IntegrationCompleted",
+        "summary": "1 commit; trailers SKM-Run, SKM-Plan, SKM-Revision, SKM-Task, SKM-Attempt, SKM-Output, SKM-Review",
+        "refs": {
+          "commit_shas": [
+            "7d4e2a9c1b3f5e6a7d8c9b0a1f2e3d4c5b6a7980"
+          ],
+          "output_ids": [
+            "0193a000-0000-7000-8000-0000000e0002"
+          ],
+          "commit_mode": "final_only",
+          "strategy": "squash",
+          "excluded_paths_count": 0
+        }
+      },
+      {
+        "seq": 1034,
+        "at": "2026-10-25T12:48:21Z",
+        "kind": "stage",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "StageCompleted",
+        "summary": "integrate -> success; no checks of P1.2 have rerun_after_integration, recheck not applicable (row K5 -> Done)",
+        "refs": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0010",
+          "advance_row": "K5",
+          "diagnostics": [
+            {
+              "code": "RECHECK_NOT_APPLICABLE",
+              "stage_id": "recheck"
+            }
+          ]
+        }
+      },
+      {
+        "seq": 1035,
+        "at": "2026-10-25T12:48:22Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000012",
+        "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+        "code": "TaskAccepted",
+        "summary": "P1.2 accepted (T19): integrated and nothing to recheck; dependents may open",
+        "refs": {
+          "output_id": "0193a000-0000-7000-8000-0000000e0002",
+          "clearance": "green",
+          "carried_forward": false
+        }
+      },
+      {
+        "seq": 1036,
+        "at": "2026-10-25T12:48:23Z",
+        "kind": "event",
+        "task_id": "0193a000-0000-7000-8000-000000000013",
+        "code": "TaskReady",
+        "summary": "P1#gate ready: all members accepted",
+        "refs": {
+          "task_id": "0193a000-0000-7000-8000-000000000013",
+          "display_key": "P1#gate",
+          "reason": "prerequisites"
+        }
+      }
+    ],
+    "next_cursor": null
+  },
+  "commit_message_example": "feat(auth): rotate refresh tokens and revoke the family on reuse\n\nRotationService.rotate issues a one-time token in the same family and marks the old one used in one\ntransaction; presenting a used token revokes the family. Expiry is compared with database time.\n\nSKM-Run: 0193a000-0000-7000-8000-000000000001\nSKM-Plan: 0192f5c4-0000-7000-8000-000000000c00\nSKM-Revision: 1\nSKM-Task: P1.2\nSKM-Attempt: 0193a000-0000-7000-8000-0000000a0012\nSKM-Output: 0193a000-0000-7000-8000-0000000e0002\nSKM-Review: 0193a000-0000-7000-8000-0000000f0002",
+  "notes": [
+    "Source: only the run stream of domain_events; seq is its stream_seq and the keyset cursor (execution.md §8). kind is a classification of the event type (StageStarted/StageCompleted -> stage, StageRecovered -> recovery).",
+    "Skipped stages and diagnostics travel in the payload of StageStarted.skipped_stage_ids / StageCompleted.diagnostics; there is no separate source.",
+    "AcceptanceDecided (seq 1030) is not terminal: TaskAccepted and TaskReady of dependents come only after integrate and the rerun_after_integration checks (K3).",
+    "Control-plane stages (acceptance_gate here) are created and completed in one transaction, so they have no separate StageStarted entry.",
+    "release_assignment emits no event; the worker's release after K5 is visible only as the assignment state."
+  ]
+}

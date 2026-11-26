@@ -1,0 +1,14 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-data"
+version = "0.1.1"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[triggers]
+paths = ["*Data.php", "app/Data/**/*.php", "src/Data/**/*.php"]
+deps = ["composer:spatie/laravel-data"]
+
+[provenance]
+source = "local"

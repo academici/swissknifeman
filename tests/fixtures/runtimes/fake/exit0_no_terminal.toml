@@ -1,0 +1,9 @@
+# Synthetic fixture; extracted JSON in text cannot substitute for a native terminal.
+scenario = "exit0_no_terminal"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "text_delta", text = '{"status":"done"}' }

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:command:install-pack:v1",
+  "title": "InstallPack",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "payload": {
+      "$ref": "urn:skm:extensions:pack-payload:v1"
+    },
+    "origin_label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "trust": {
+      "type": "string",
+      "enum": [
+        "operator",
+        "third_party"
+      ],
+      "default": "third_party"
+    },
+    "allow_quarantine": {
+      "type": "boolean",
+      "default": true
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "payload",
+    "origin_label"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.commands",
+      "class": "InstallPack",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "InstallPack"
+    }
+  }
+}

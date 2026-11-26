@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:event:plan-revision-restored:v1",
+  "title": "PlanRevisionRestored",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "restored_from_revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "restored_from_revision_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "content_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "plan_id",
+    "revision_id",
+    "revision_no",
+    "restored_from_revision_id",
+    "restored_from_revision_no",
+    "content_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.events",
+      "class": "PlanRevisionRestored",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanRevisionRestored"
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:command:record-drift:v1",
+  "title": "RecordDrift",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "checkout_binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "desired_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "base_row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relative_path": {
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/FileDecisionKind"
+          },
+          "diagnostic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "relative_path",
+          "decision",
+          "diagnostic"
+        ]
+      }
+    }
+  },
+  "required": [
+    "project_id",
+    "checkout_binding_id",
+    "target",
+    "desired_digest",
+    "base_row_version",
+    "files"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.commands",
+      "class": "RecordDrift",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RecordDrift"
+    }
+  }
+}

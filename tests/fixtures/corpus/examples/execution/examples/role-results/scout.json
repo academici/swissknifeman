@@ -1,0 +1,45 @@
+{
+  "schema": "urn:skm:execution:role-result:scout:v1",
+  "status": "complete",
+  "summary": "Token storage from P1.1 is in src/auth/token_repository.py (TokenRepository.get_for_update, mark_used, revoke_family). Rotation has no module yet; the refresh route calls TokenRepository directly and will switch to RotationService in P2.1.",
+  "relevant_paths": [
+    {
+      "mount": "api",
+      "path": "src/auth/token_repository.py",
+      "why": "Storage API the service must use; get_for_update already takes SELECT ... FOR UPDATE."
+    },
+    {
+      "mount": "api",
+      "path": "src/auth/models.py",
+      "why": "RefreshToken(family_id, used_at, revoked_at) dataclass."
+    },
+    {
+      "mount": "api",
+      "path": "tests/auth/conftest.py",
+      "why": "db_session and clock fixtures to reuse in test_rotation.py."
+    }
+  ],
+  "entry_points": [
+    {
+      "mount": "api",
+      "path": "src/http/auth_routes.py",
+      "why": "Current caller of the repository (changes only in P2.1)."
+    }
+  ],
+  "risks": [
+    "Clock skew between API nodes: compare expiry with database time (now() in SQL), not the process clock."
+  ],
+  "suggested_checks": [
+    {
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "tests/auth",
+        "-q"
+      ],
+      "why": "Repository tests from P1.1 must stay green."
+    }
+  ],
+  "open_questions": []
+}

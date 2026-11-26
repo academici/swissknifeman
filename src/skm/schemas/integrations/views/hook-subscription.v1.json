@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:view:hook-subscription:v1",
+  "title": "HookSubscriptionView",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "class": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+    },
+    "kind": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/SubscriptionKind"
+    },
+    "execution_location": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/ExecutionLocation"
+    },
+    "event_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "target_summary": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    },
+    "defined_at": {
+      "type": "string"
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "id",
+    "class",
+    "kind",
+    "execution_location",
+    "event_types",
+    "target_summary",
+    "enabled",
+    "valid",
+    "violations",
+    "defined_at",
+    "digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.views",
+      "class": "HookSubscriptionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HookSubscriptionView"
+    }
+  }
+}

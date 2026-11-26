@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:event:hook-delivery-failed:v1",
+  "title": "HookDeliveryFailed",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "delivery_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "subscription_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "event_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "class": {
+      "type": "string",
+      "enum": [
+        "enforcement",
+        "workflow",
+        "observation"
+      ]
+    },
+    "failure_policy": {
+      "type": "string",
+      "enum": [
+        "deny",
+        "warn",
+        "retry"
+      ]
+    },
+    "blocking": {
+      "type": "boolean"
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason": {
+      "type": "string"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "delivery_id",
+    "subscription_id",
+    "subscription_digest",
+    "event_id",
+    "event_type",
+    "class",
+    "failure_policy",
+    "blocking",
+    "attempts",
+    "reason",
+    "status"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.events",
+      "class": "HookDeliveryFailed",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HookDeliveryFailed"
+    }
+  },
+  "x-skm-hookable": false
+}

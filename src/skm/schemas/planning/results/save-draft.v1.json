@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:result:save-draft:v1",
+  "title": "SaveDraftResult",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "document_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "assigned_ids": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entity_kind": {
+            "type": "string",
+            "enum": [
+              "phase",
+              "item",
+              "unit",
+              "requirement",
+              "criterion",
+              "check",
+              "decision",
+              "material"
+            ]
+          },
+          "display_key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "entity_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "required": [
+          "entity_kind",
+          "display_key",
+          "entity_id"
+        ]
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 0
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 0
+          },
+          "entity_key": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pointer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "message",
+          "entity_key",
+          "entity_id",
+          "pointer",
+          "details"
+        ]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "rule_failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rule": {
+            "type": "string",
+            "minLength": 0
+          },
+          "error_type": {
+            "type": "string",
+            "minLength": 0
+          },
+          "message": {
+            "type": "string",
+            "minLength": 0
+          },
+          "plugin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "rule",
+          "error_type",
+          "message",
+          "plugin"
+        ]
+      }
+    }
+  },
+  "required": [
+    "draft_id",
+    "edit_version",
+    "document_digest",
+    "assigned_ids",
+    "notes",
+    "findings",
+    "counts",
+    "rule_failures"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.results",
+      "class": "SaveDraftResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "SaveDraftResult"
+    }
+  }
+}

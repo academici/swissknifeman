@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:scope-grant:v1",
+  "title": "ScopeGrantSpec",
+  "description": "A permission ceiling rooted at one scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:access:defs:v1#/$defs/permission"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  },
+  "required": [
+    "scope_id",
+    "permissions"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.commands",
+      "class": "ScopeGrantSpec",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "ScopeGrantSpec"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:api:health:v1",
+  "title": "Health",
+  "description": "HTTP API v1 health contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "live",
+        "ready",
+        "not_ready"
+      ]
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "database": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "fail"
+          ]
+        },
+        "schema": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "not_migrated",
+            "too_new",
+            "invalid"
+          ]
+        },
+        "background": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "fail"
+          ]
+        }
+      },
+      "required": [
+        "database",
+        "schema",
+        "background"
+      ]
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.api",
+      "class": "Health",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "api.ts",
+      "name": "Health"
+    }
+  }
+}

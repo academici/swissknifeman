@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:intent-args-git-push:v1",
+  "title": "IntentArgsGitPush",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "remote": {
+      "type": "string",
+      "minLength": 0
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "transport": {
+          "type": "string",
+          "minLength": 0
+        },
+        "hostname": {
+          "type": "string",
+          "minLength": 0
+        },
+        "effective_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "repository_path": {
+          "type": "string",
+          "minLength": 0
+        }
+      },
+      "required": [
+        "transport",
+        "hostname",
+        "effective_port",
+        "repository_path"
+      ]
+    },
+    "binding_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "binding_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "host_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "repository_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "locator_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        }
+      },
+      "required": [
+        "binding_id",
+        "host_id",
+        "repository_id",
+        "locator_digest"
+      ]
+    },
+    "target_ref": {
+      "type": "string",
+      "minLength": 0
+    },
+    "before_sha": {
+      "type": "string",
+      "minLength": 0
+    },
+    "after_sha": {
+      "type": "string",
+      "minLength": 0
+    },
+    "refspecs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      },
+      "minItems": 1
+    },
+    "force": {
+      "const": false
+    }
+  },
+  "required": [
+    "repository_id",
+    "remote",
+    "endpoint",
+    "binding_identity",
+    "target_ref",
+    "before_sha",
+    "after_sha",
+    "refspecs",
+    "force"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "IntentArgsGitPush",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentArgsGitPush"
+    }
+  }
+}

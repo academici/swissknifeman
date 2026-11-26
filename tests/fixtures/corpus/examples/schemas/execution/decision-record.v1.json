@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:decision-record:v1",
+  "title": "DecisionRecord",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:decision-record:v1"
+    },
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "category": {
+      "type": "string"
+    },
+    "gate_categories": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "authority": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "selected_option": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "value": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requires_owner": {
+      "type": "boolean"
+    },
+    "question_key": {
+      "type": "string"
+    },
+    "question_input_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "workspace_id",
+    "project_id",
+    "run_id",
+    "task_id",
+    "request_id",
+    "category",
+    "gate_categories",
+    "authority",
+    "status",
+    "selected_option",
+    "value",
+    "rationale",
+    "evidence_refs",
+    "assumptions",
+    "requires_owner",
+    "question_key",
+    "question_input_digest",
+    "created_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "DecisionRecord",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "DecisionRecord"
+    }
+  }
+}

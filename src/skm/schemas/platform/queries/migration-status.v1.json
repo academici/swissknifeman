@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:query:migration-status:v1",
+  "title": "MigrationStatus",
+  "description": "platform query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {},
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.queries",
+      "class": "MigrationStatus",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "MigrationStatus"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "content-creative"
+version = "1.0.0"
+kind = "router"
+risk = "low"
+license = "MIT"
+roles = ["advisor"]
+
+[provenance]
+source = "upstream"
+repo = "get-zeked/content-creative-super-skill"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "cf44f0977bb229f1a6ac1b1a31a81ba97aa123158c9fba33237a4e0bb48bb79b"
+audit_verdict = "attention"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "references/full.md"
+url = "https://raw.githubusercontent.com/get-zeked/content-creative-super-skill/main/SKILL.md"
+sha256 = "cf44f0977bb229f1a6ac1b1a31a81ba97aa123158c9fba33237a4e0bb48bb79b"
+fetched_at = "2026-06-11"

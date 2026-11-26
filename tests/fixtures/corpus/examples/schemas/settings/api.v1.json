@@ -1,0 +1,701 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:api:v1",
+  "title": "HTTP API settings",
+  "description": "Settings section 'api' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "api",
+    "owner": "platform",
+    "title": "HTTP API",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "ApiSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ApiSettings"
+    }
+  },
+  "properties": {
+    "bind": {
+      "type": "string",
+      "pattern": "^(\\[[0-9a-fA-F:]+\\]|[A-Za-z0-9.-]{1,253}):[0-9]{1,5}$",
+      "default": "127.0.0.1:8765",
+      "description": "Listen address host:port of skm serve.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": true,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {
+          "group": "Server",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "allowed_hosts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(\\[[0-9a-fA-F:]+\\]|[A-Za-z0-9.*-]{1,253})(:[0-9]{1,5})?$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Accepted Host headers; empty: derived from api.bind for loopback (127.0.0.1, localhost, [::1] with the port).",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {
+          "group": "Server",
+          "order": 20,
+          "widget": "tags"
+        }
+      }
+    },
+    "min_client_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$",
+      "default": "2.0.0",
+      "description": "Clients sending an older SKM-Client-Version get CLIENT_TOO_OLD.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {
+          "group": "Limits",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "max_response_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 268435456,
+      "default": 16777216,
+      "description": "Largest JSON response; larger queries must paginate.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {
+          "group": "Limits",
+          "order": 20,
+          "widget": "number"
+        }
+      }
+    },
+    "schema_check_interval_seconds": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 3600,
+      "default": 30,
+      "description": "How often skm serve compares skm_core.schema_migrations with the known schema version; a newer schema turns readiness to fail (SCHEMA_TOO_NEW).",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "API",
+          "order": 10,
+          "widget": "number"
+        }
+      }
+    },
+    "proxy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trusted": {
+          "type": "boolean",
+          "default": false,
+          "description": "Trust X-Forwarded-* headers from a reverse proxy.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Server",
+              "order": 30,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "threadpool": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 16,
+          "description": "Threads executing bus calls of the API (bootstrap database.pool_max_size must be at least it plus enabled background services and 3).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Server",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grace_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600,
+          "default": 10,
+          "description": "Time to finish requests and stop services on shutdown.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Server",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "cors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "origins": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^https?://[^/]+$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Browser origins allowed by CORS (null origin is always refused); empty: no CORS headers.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Security",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_body_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 67108864,
+          "default": 1048576,
+          "description": "Largest JSON request body; byte uploads use artifacts.upload.max_bytes.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Limits",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 30,
+          "description": "Request timeout of the HTTP client (http access mode; long polls use their own deadline).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": true,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Client",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 50,
+          "description": "Page size when limit is omitted.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Limits",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "max_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000,
+          "default": 500,
+          "description": "Largest allowed page size.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Limits",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "sse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "heartbeat_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "default": 15,
+          "description": "Heartbeat comment interval of idle SSE streams.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "poll_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 60000,
+          "default": 2000,
+          "description": "Fallback poll of the event journal when no NOTIFY arrived (missed notifications, several API processes).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "batch_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000,
+          "default": 200,
+          "description": "Events sent per SSE read.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_streams_per_token": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "default": 8,
+          "description": "Open event streams per token; more fail with 429 TOO_MANY_STREAMS.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "queue_size": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 100000,
+          "default": 1000,
+          "description": "Bounded queue per stream; an overflowing stream is closed and the client reconnects with its cursor.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "live": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "batch_ms": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 10000,
+          "default": 250,
+          "description": "Batching window of live step output frames.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "buffer_events": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000,
+          "default": 2000,
+          "description": "Live step-stream events kept in memory per attempt for reconnects.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Streaming",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_response_tokens": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000,
+          "default": 10000,
+          "description": "Maximum estimated tokens of one MCP response; truncation uses the shared TokenEstimator, no separate chars-per-token setting.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "MCP",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_long_polls": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096,
+          "default": 256,
+          "description": "Concurrent long-poll claim requests per API process; beyond it a claim returns NOTHING_TO_CLAIM at once.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "API",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

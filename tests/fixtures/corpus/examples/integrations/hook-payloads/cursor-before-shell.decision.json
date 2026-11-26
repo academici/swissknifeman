@@ -1,0 +1,19 @@
+{
+  "schema": "urn:skm:integrations:host:hook-decision:v1",
+  "surface": "security.safe_dirs",
+  "mode": "strict",
+  "verdict": "deny",
+  "reason_code": "SAFE_DIRS_OUTSIDE",
+  "user_message": "skm safe_dirs: rm outside the checkout (../shared-cache) is not allowed; add the directory to policy.safe_dirs on this host if it is intended",
+  "agent_message": "skm safe_dirs: rm outside the checkout (../shared-cache) is not allowed; add the directory to policy.safe_dirs on this host if it is intended",
+  "additional_context": null,
+  "client_output": {
+    "exit_code": 0,
+    "stdout": {
+      "permission": "deny",
+      "user_message": "skm safe_dirs: rm outside the checkout (../shared-cache) is not allowed; add the directory to policy.safe_dirs on this host if it is intended",
+      "agent_message": "skm safe_dirs: rm outside the checkout (../shared-cache) is not allowed; add the directory to policy.safe_dirs on this host if it is intended"
+    },
+    "stderr": ""
+  }
+}

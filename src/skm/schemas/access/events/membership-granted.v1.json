@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:event:membership-granted:v1",
+  "title": "MembershipGranted",
+  "description": "access event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "role": {
+      "$ref": "urn:skm:access:defs:v1#/$defs/role"
+    },
+    "previous_role": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:access:defs:v1#/$defs/role"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "scope_id",
+    "principal_id",
+    "role",
+    "previous_role"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.events",
+      "class": "MembershipGranted",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "MembershipGranted"
+    }
+  }
+}

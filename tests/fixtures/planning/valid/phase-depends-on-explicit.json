@@ -1,0 +1,85 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed",
+      "depends_on": []
+    },
+    {
+      "key": "P2",
+      "title": "Phase P2",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    },
+    {
+      "key": "P3",
+      "title": "Phase P3",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed",
+      "depends_on": [
+        "P1"
+      ]
+    },
+    {
+      "key": "P4",
+      "title": "Phase P4",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed",
+      "depends_on": [
+        "P1",
+        "P3"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    },
+    {
+      "key": "P2.1",
+      "phase": "P2",
+      "title": "Item P2.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    },
+    {
+      "key": "P3.1",
+      "phase": "P3",
+      "title": "Item P3.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    },
+    {
+      "key": "P4.1",
+      "phase": "P4",
+      "title": "Item P4.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    }
+  ]
+}

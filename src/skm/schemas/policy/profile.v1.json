@@ -1,0 +1,519 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:profile:v1",
+  "title": "PolicyProfile",
+  "description": "Policy profile: what an agent may do (paths, commands, network, tools, operations, external effects). Built-in files src/skm/modules/policy/profiles/*.toml and entries of policy.profiles. Not an isolation profile. Spec: spec/modules/policy.md §4.5.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "description",
+    "requires_host_flag",
+    "allowed_isolation",
+    "fs",
+    "commands",
+    "network",
+    "tools",
+    "effects",
+    "operations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:policy:profile:v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,40}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "requires_host_flag": {
+      "type": "boolean",
+      "description": "true: usable only on a host with policy.host.allow_unconfined = true."
+    },
+    "allowed_isolation": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/isolation_profile"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "fs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "write"
+      ],
+      "properties": {
+        "read": {
+          "$ref": "#/$defs/path_policy"
+        },
+        "write": {
+          "$ref": "#/$defs/path_policy"
+        }
+      }
+    },
+    "commands": {
+      "$ref": "#/$defs/command_policy"
+    },
+    "network": {
+      "$ref": "#/$defs/network_policy"
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow"
+      ],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool_name"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow",
+        "need_approval"
+      ],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect_kind"
+          },
+          "uniqueItems": true
+        },
+        "need_approval": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect_kind"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "G14 operation table. Every operation is required: a missing key is SCHEMA_INVALID, never 'allow'.",
+      "required": [
+        "modify_write_set",
+        "modify_outside_write_set",
+        "delete_tracked",
+        "delete_own_untracked",
+        "delete_foreign_untracked",
+        "modify_git_dir",
+        "git_discard",
+        "git_push",
+        "git_force_push",
+        "forge_write",
+        "release_publish",
+        "secrets_access",
+        "docker_socket",
+        "external_services"
+      ],
+      "properties": {
+        "modify_write_set": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "modify_outside_write_set": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "delete_tracked": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "delete_own_untracked": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "delete_foreign_untracked": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "modify_git_dir": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "git_discard": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "git_push": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "git_force_push": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "forge_write": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "release_publish": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "secrets_access": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "docker_socket": {
+          "$ref": "#/$defs/operation_rule"
+        },
+        "external_services": {
+          "$ref": "#/$defs/operation_rule"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "isolation_profile": {
+      "x-skm-enum-name": "IsolationProfile",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "none",
+            "worktree",
+            "landlock",
+            "container"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+        }
+      ]
+    },
+    "path_scope": {
+      "type": "string",
+      "enum": [
+        "worktree",
+        "materials",
+        "tmp",
+        "home",
+        "safe_dir",
+        "any"
+      ],
+      "x-skm-enum-name": "PathScope"
+    },
+    "path_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "pattern"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/path_scope"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "pattern": "^(?!/)(?!.*(^|/)\\.\\.(/|$))[^\\u0000]+$",
+          "description": "POSIX glob relative to the scope root: *, **, ?, [..]; no leading '/', no '..'."
+        },
+        "mount": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,39}$",
+          "description": "Only with scope=worktree; absent = any mount."
+        }
+      },
+      "if": {
+        "required": [
+          "mount"
+        ]
+      },
+      "then": {
+        "properties": {
+          "scope": {
+            "const": "worktree"
+          }
+        }
+      }
+    },
+    "path_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow",
+        "deny"
+      ],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path_rule"
+          },
+          "maxItems": 200
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path_rule"
+          },
+          "maxItems": 200
+        }
+      }
+    },
+    "program": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.+-]{1,64}$"
+    },
+    "subcommand": {
+      "type": "string",
+      "pattern": "^(\\*|[a-z0-9][a-z0-9-]{0,63})(:[a-z0-9][a-z0-9-]{0,63})?$",
+      "description": "'sub' (first positional) or 'noun:verb' / '*:verb' (two positionals, gh/glab)."
+    },
+    "regex": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "format": "regex",
+      "description": "Python re, searched in ShellScan.visible_text; compiled by parse_profile (error -> SCHEMA_INVALID with index)."
+    },
+    "command_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "programs",
+        "subcommands",
+        "deny_patterns",
+        "ask_patterns",
+        "inline_interpreters",
+        "trust_inline_interpreters"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowlist",
+            "denylist"
+          ],
+          "x-skm-enum-name": "CommandMode",
+          "x-skm-order": [
+            "denylist",
+            "allowlist",
+            "none"
+          ]
+        },
+        "programs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/program"
+          },
+          "uniqueItems": true,
+          "maxItems": 500
+        },
+        "subcommands": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/program"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/subcommand"
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          }
+        },
+        "deny_patterns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/regex"
+          },
+          "maxItems": 200
+        },
+        "ask_patterns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/regex"
+          },
+          "maxItems": 200
+        },
+        "inline_interpreters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/program"
+          },
+          "uniqueItems": true
+        },
+        "trust_inline_interpreters": {
+          "type": "boolean"
+        }
+      }
+    },
+    "host_pattern": {
+      "type": "string",
+      "pattern": "^(\\*\\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:[0-9]{1,5})?$"
+    },
+    "network_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "hosts"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowlist",
+            "any"
+          ],
+          "x-skm-enum-name": "NetworkMode",
+          "x-skm-order": [
+            "any",
+            "allowlist",
+            "none"
+          ]
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/host_pattern"
+          },
+          "uniqueItems": true,
+          "maxItems": 500
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "allowlist"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "hosts": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "hosts": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    "tool_name": {
+      "type": "string",
+      "pattern": "^(fs\\.(read|write|edit|delete)|shell\\.run|web\\.(fetch|search)|mcp:\\*|mcp:[a-z0-9][a-z0-9_-]{0,63}/(\\*|[A-Za-z0-9_.-]{1,128}))$"
+    },
+    "effect_kind": {
+      "type": "string",
+      "enum": [
+        "git_commit",
+        "git_push",
+        "pr_create",
+        "message",
+        "publish",
+        "fs_write_external"
+      ],
+      "x-skm-enum-name": "EffectKind"
+    },
+    "risk_class": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "x-skm-enum-name": "RiskClass",
+      "x-skm-order": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "access_capability": {
+      "type": "string",
+      "enum": [
+        "secrets",
+        "docker_socket",
+        "external_services"
+      ],
+      "x-skm-enum-name": "AccessCapability"
+    },
+    "operation_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "warn",
+            "ask",
+            "task_authority",
+            "capability",
+            "intent",
+            "deny"
+          ],
+          "x-skm-enum-name": "OperationDecision"
+        },
+        "capability": {
+          "$ref": "#/$defs/access_capability"
+        },
+        "risk": {
+          "$ref": "#/$defs/risk_class"
+        }
+      },
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "capability"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "capability"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "capability"
+          ]
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "PolicyProfileDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "PolicyProfile"
+    }
+  }
+}

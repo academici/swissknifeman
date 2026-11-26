@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:view:get-file:v1",
+  "title": "GetFileView",
+  "description": "artifacts view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "origin": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/file_origin"
+    },
+    "classification": {
+      "$ref": "urn:skm:artifacts:defs:v1#/$defs/classification"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trashed"
+      ]
+    },
+    "current_version": {
+      "$ref": "urn:skm:artifacts:view:file-version:v1"
+    },
+    "row_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "file_id",
+    "workspace_id",
+    "project_id",
+    "title",
+    "origin",
+    "classification",
+    "state",
+    "current_version",
+    "row_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.views",
+      "class": "GetFileView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "GetFileView"
+    }
+  }
+}

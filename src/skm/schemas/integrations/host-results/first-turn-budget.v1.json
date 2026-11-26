@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:first-turn-budget:v1",
+  "title": "FirstTurnBudgetResult",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host-result:first-turn-budget:v1"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "claude_code",
+        "codex",
+        "antigravity",
+        "cursor",
+        "gemini_cli",
+        "grok"
+      ]
+    },
+    "include_plugins": {
+      "type": "boolean"
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warn": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "target",
+        "warn"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "tokens",
+          "method"
+        ]
+      }
+    },
+    "total": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "elevated",
+        "warn",
+        "incomplete"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "target",
+    "thresholds",
+    "sources",
+    "total",
+    "verdict"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "FirstTurnBudgetResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "FirstTurnBudgetResult"
+    }
+  }
+}

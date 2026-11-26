@@ -1,0 +1,66 @@
+# Static capability manifest for the Codex integration target (integrations §4.1, §4.7, §4.8).
+target = "codex"
+tested_client_version = "0.165.0"
+verified_at = "2026-10-26"
+
+[surfaces]
+instructions = "native"
+skills = "native"
+permissions = "native"
+hooks = "native"
+mcp = "native"
+agents = "native"
+
+[hook_surfaces."lifecycle.git_guardrails"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "^Bash$" }]
+
+[hook_surfaces."security.safe_dirs"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "^Bash$" }]
+
+[hook_surfaces."lifecycle.plan_guard"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "^apply_patch$" }]
+
+[hook_surfaces."lifecycle.pack_guard"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "^apply_patch$" }]
+
+[hook_surfaces."lifecycle.changelog_gate"]
+class = "enforcement"
+bindings = [{ event = "PreToolUse", matcher = "^Bash$" }]
+
+[hook_surfaces."lifecycle.review_gate"]
+class = "workflow"
+bindings = [
+  { event = "PreToolUse", matcher = "^Bash$" },
+  { event = "SubagentStop" },
+]
+
+[hook_surfaces."lifecycle.command_log"]
+class = "observation"
+bindings = [{ event = "PreToolUse", matcher = "^Bash$" }]
+
+[hook_surfaces."context.session_start"]
+class = "workflow"
+bindings = [{ event = "SessionStart", matcher = "startup|resume|clear|compact" }]
+
+[hook_surfaces."lifecycle.run_report"]
+class = "observation"
+bindings = [{ event = "SessionEnd" }]
+
+[hook_event_kinds]
+session_start = { event = "SessionStart", matcher = "startup|resume|clear|compact" }
+session_end = { event = "SessionEnd" }
+user_prompt = { event = "UserPromptSubmit" }
+pre_shell = { event = "PreToolUse", matcher = "^Bash$" }
+pre_tool = { event = "PreToolUse", matcher = "^apply_patch$" }
+post_tool = { event = "PostToolUse" }
+permission_request = { event = "PermissionRequest" }
+subagent_stop = { event = "SubagentStop" }
+stop = { event = "Stop" }
+
+[budget]
+skill_listing_max_chars = 8000
+skill_listing_fraction = 0.02

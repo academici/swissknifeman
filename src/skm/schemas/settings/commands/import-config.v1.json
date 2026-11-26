@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:command:import-config:v1",
+  "title": "ImportConfig",
+  "description": "settings command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "toml",
+        "json"
+      ]
+    },
+    "document": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "Unvalidated JSON input. Parser/preview collects unknown keys and invalid schema in problems, including for dry-run (settings §A.7.6)."
+        }
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "merge",
+        "replace"
+      ],
+      "default": "merge"
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false
+    },
+    "expected_entries_digest": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "maxLength": 2000,
+      "default": ""
+    },
+    "confirmed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "scope",
+    "format",
+    "document"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.commands",
+      "class": "ImportConfig",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ImportConfig"
+    }
+  }
+}

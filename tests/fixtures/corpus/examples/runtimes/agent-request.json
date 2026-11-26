@@ -1,0 +1,107 @@
+{
+  "request_id": "0193a7c2-5b10-7c11-8a00-3f1e2d4c5b6a",
+  "runtime_id": "claude_code",
+  "model": "sonnet",
+  "effort": "high",
+  "role": "executor",
+  "rendered_prompt": "## System constraints\n\nYou may write only inside: src/webhooks/**, tests/test_delivery.py.\n…\n## Task P2.4/U1: Retry webhook delivery with backoff\n…\n## Result\n\nEnd your session with exactly one JSON document…\n",
+  "prompt_digest": "sha256:5d1c8a0f3b7e92c4a6d8e0f1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5",
+  "result_format": "json",
+  "result_schema_urn": "urn:skm:execution:role-result:executor:v1",
+  "workdir": "/home/dev/.local/state/skm/worktrees/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/main",
+  "permissions": {
+    "fs_read": {
+      "allow": [
+        {
+          "root": "/home/dev/.local/state/skm/worktrees/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/main",
+          "pattern": "**"
+        }
+      ],
+      "deny": []
+    },
+    "fs_write": {
+      "allow": [
+        {
+          "root": "/home/dev/.local/state/skm/worktrees/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/main",
+          "pattern": "src/webhooks/**"
+        },
+        {
+          "root": "/home/dev/.local/state/skm/worktrees/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/main",
+          "pattern": "tests/test_delivery.py"
+        }
+      ],
+      "deny": [
+        {
+          "root": "/home/dev/.local/state/skm/worktrees/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/main",
+          "pattern": ".git/**"
+        }
+      ]
+    },
+    "commands": {
+      "mode": "denylist",
+      "programs": [],
+      "deny_patterns": [
+        "(^|[^0-9A-Za-z_/.-])(sudo|doas|mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)(\\s|$)"
+      ],
+      "ask_patterns": []
+    },
+    "network": {
+      "mode": "allowlist",
+      "hosts": [
+        "pypi.org",
+        "files.pythonhosted.org"
+      ]
+    },
+    "tools": [
+      "fs.read",
+      "fs.write",
+      "fs.edit",
+      "fs.delete",
+      "shell.run"
+    ],
+    "external_effects": []
+  },
+  "isolation_profile": "worktree",
+  "config_mode": "isolated",
+  "client_home": "/home/dev/.local/state/skm/client-homes/0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b/claude_code",
+  "resume_session_ref": null,
+  "session_policy": "persistent",
+  "env_allowlist": [
+    "PATH",
+    "LANG",
+    "LC_ALL",
+    "TERM"
+  ],
+  "extra_env": {
+    "SKM_STEP_ID": "0193a7c2-5b10-7c11-8a00-3f1e2d4c5b6a",
+    "SKM_RUN_ID": "0193a7c0-1000-7a00-8000-0a1b2c3d4e5f"
+  },
+  "secret_env": {
+    "SKM_TOKEN": "***"
+  },
+  "mcp_servers": [],
+  "limits": {
+    "timeout_seconds": 3600,
+    "idle_timeout_seconds": 600,
+    "max_turns": 200,
+    "max_output_tokens": 32000,
+    "max_output_bytes": 67108864
+  },
+  "labels": {
+    "run_id": "0193a7c0-1000-7a00-8000-0a1b2c3d4e5f",
+    "task_id": "0193a7c0-2000-7a00-8000-1a2b3c4d5e6f",
+    "attempt_id": "0193a7c2-4a00-7b00-8000-1c2d3e4f5a6b",
+    "step_id": "0193a7c2-5b10-7c11-8a00-3f1e2d4c5b6a",
+    "operation": "continuation"
+  },
+  "process_owner": {
+    "host_id": "01928f61-3333-7aaa-8bbb-2c3d4e5f6a7c",
+    "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+    "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+    "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+    "unit_kind": "step",
+    "unit_id": "0193a7c2-5b10-7c11-8a00-3f1e2d4c5b6a",
+    "owner_nonce": "fixture-owner-nonce-7f3a",
+    "identity_dir": "/var/lib/skm/worker/identities"
+  }
+}

@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gemini-4-hydrogen"
+version = "2.0.6"
+model_family = "gemini"
+model_id = "gemini-4-hydrogen"
+display_name = "Gemini 4 Hydrogen"
+runtime_ids = ["antigravity"]
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+notes = "2026 Gemini economy family."
+strengths = ["fast scan", "classification", "short summaries"]
+delegation_notes = ["Use for economy scouting.", "Do not assign writes that need a stronger class."]
+forbidden_params = ["candidate_count"]
+
+[prompt_style]
+shape = "conversational"
+instructions = ["Ask one concrete question.", "Bound the answer length."]
+
+[cache_capabilities]
+prompt_cache = "adapted"
+cache_read = true
+cache_write = false
+min_cacheable_tokens = 2048
+
+[compaction_threshold]
+input_tokens = 128000
+reserve_output_tokens = 8000

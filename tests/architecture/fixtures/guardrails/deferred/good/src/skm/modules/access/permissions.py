@@ -1,0 +1,1 @@
+PERMISSIONS = frozenset({'plan.read'})

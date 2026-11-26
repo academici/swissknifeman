@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:event:resource-version-added:v1",
+  "title": "ResourceVersionAdded",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "resource_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "resource_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "version": {
+      "type": "string",
+      "minLength": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "pack_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "resource_version_id",
+    "resource_id",
+    "kind",
+    "key",
+    "version",
+    "digest",
+    "pack_version_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.events",
+      "class": "ResourceVersionAdded",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ResourceVersionAdded"
+    }
+  }
+}

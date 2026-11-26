@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:readiness-report:v1",
+  "title": "ReadinessReport",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:readiness-report:v1"
+    },
+    "id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "ready_with_advisories",
+        "not_ready"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "plan",
+            "phase",
+            "revision",
+            "selection"
+          ]
+        },
+        "phase_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+      }
+    },
+    "inputs_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "policy_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "advisory",
+              "warning",
+              "info"
+            ]
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "refs": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          },
+          "entity_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          },
+          "rule_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ]
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "structural_counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "audit": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "supersedes_report_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "validator_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "work_policies": {
+      "description": "New records require complete work_policies; null is historical diagnostic-only and cannot authorize execution.",
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:work-policy:v1"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "start_request": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "overrides": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+              }
+            },
+            "selection": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "task_keys": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "uniqueItems": true
+                    },
+                    "phases": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "uniqueItems": true
+                    },
+                    "stop_after": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "full",
+                "progressive_per_phase"
+              ]
+            }
+          },
+          "required": [
+            "overrides",
+            "selection"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "workspace_id",
+    "project_id",
+    "plan_id",
+    "revision_id",
+    "status",
+    "inputs_digest",
+    "findings",
+    "created_at",
+    "work_policies",
+    "start_request"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "ReadinessReport",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ReadinessReport"
+    }
+  }
+}

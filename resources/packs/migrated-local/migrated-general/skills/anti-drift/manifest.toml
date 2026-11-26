@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "anti-drift"
+version = "0.6.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+replaced_by = "orch/lib/orch/conductor/progress.py"
+
+[provenance]
+source = "local"

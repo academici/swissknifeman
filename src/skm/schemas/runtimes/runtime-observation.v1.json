@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:runtime-observation:v1",
+  "title": "RuntimeObservation",
+  "description": "Closed wrapper-owned metadata for one StepId/request_id. Semantic boundary: canonical UTF-8 JSON <=16384 bytes; request_id must match its step, provider_reported_model must match RuntimeResult.model, known byte counters must reconcile. No prompt/text/tool arguments, local paths, secret references, argv or credentials. Observation never proves process start/kill, ownership or acceptance. See runtimes.md §4.7.1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "request_id",
+    "binding",
+    "timing",
+    "capture",
+    "tools"
+  ],
+  "$defs": {
+    "nullable-counter": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullable-version": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._+()-]{0,99}$",
+          "maxLength": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullable-digest": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullable-utc": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "maxLength": 40
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "coverage": {
+      "enum": [
+        "complete",
+        "partial",
+        "unavailable"
+      ]
+    }
+  },
+  "properties": {
+    "schema": {
+      "const": "urn:skm:runtimes:runtime-observation:v1"
+    },
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_id",
+        "runtime_version",
+        "adapter_version",
+        "executable_sha256",
+        "verification_key",
+        "provider_reported_model",
+        "model_source"
+      ],
+      "properties": {
+        "runtime_id": {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+        },
+        "runtime_version": {
+          "$ref": "#/$defs/nullable-version"
+        },
+        "adapter_version": {
+          "$ref": "#/$defs/nullable-version"
+        },
+        "executable_sha256": {
+          "$ref": "#/$defs/nullable-digest",
+          "description": "Digest of the executable actually bound to this launch under §4.3, otherwise null; never re-detect from a mutable locator after the run. Wrapper/interpreter binding remains governed by the verification context."
+        },
+        "verification_key": {
+          "$ref": "#/$defs/nullable-digest",
+          "description": "Existing SHA256 canonical VerificationContext key used for this launch, if known; a copied key is metadata, not new positive security evidence."
+        },
+        "provider_reported_model": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$",
+              "not": {
+                "pattern": "^secret://"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Provider claim parsed from the runtime stream/result (RuntimeResult.model), not independent verification and not the requested/resolved model."
+        },
+        "model_source": {
+          "enum": [
+            "provider_stream",
+            "unavailable"
+          ]
+        },
+        "observed_effort": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Effort reported by the provider, when available."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider_reported_model": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "model_source": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "model_source": {
+                "const": "provider_stream"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clock_domain_id",
+        "duration_ms",
+        "first_observed_at",
+        "last_observed_at"
+      ],
+      "properties": {
+        "clock_domain_id": {
+          "oneOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Opaque capture-process epoch, renewed after process restart. Neither StepId nor a cross-host monotonic clock. null when no single process epoch covers the observation."
+        },
+        "duration_ms": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Local monotonic capture-start to final-drain duration within one process epoch; null if unavailable or the summary crosses epochs. Never subtract UTC/provider timestamps."
+        },
+        "first_observed_at": {
+          "$ref": "#/$defs/nullable-utc"
+        },
+        "last_observed_at": {
+          "$ref": "#/$defs/nullable-utc"
+        },
+        "provider_first_at": {
+          "$ref": "#/$defs/nullable-utc",
+          "description": "Optional provider-claimed time of the first observed record, when actually exposed; never substituted for observer UTC."
+        },
+        "provider_last_at": {
+          "$ref": "#/$defs/nullable-utc"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "duration_ms": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "clock_domain_id": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage",
+        "bytes_seen",
+        "bytes_retained",
+        "bytes_dropped",
+        "truncated",
+        "gaps",
+        "parser_flags",
+        "live_events_dropped"
+      ],
+      "properties": {
+        "coverage": {
+          "$ref": "#/$defs/coverage",
+          "description": "Completeness of the local stdout/stderr capture/parser scope; separate from native tool visibility and live delivery."
+        },
+        "bytes_seen": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Raw stdout+stderr ingress bytes actually observed, counted once. Does not estimate bytes never drained/generated."
+        },
+        "bytes_retained": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Ingress bytes admitted to the primary bounded capture before redaction; disk copies/sidecars still share the existing disk reservation."
+        },
+        "bytes_dropped": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Observed ingress bytes not retained; when all three counters are known, seen=retained+dropped. Live event drops are counted separately."
+        },
+        "truncated": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gaps": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "capture_gap",
+              "live_delivery_gap",
+              "provider_sequence_gap",
+              "process_epoch_changed"
+            ]
+          },
+          "description": "Bounded flags, not raw payloads. provider_sequence_gap requires an actual exposed native sequence and proved missing native records; SessionEvent.seq is adapter-owned and cannot establish it. Live-only gaps do not imply incomplete local capture."
+        },
+        "parser_flags": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "invalid_utf8",
+              "malformed_json",
+              "incomplete_tail",
+              "parser_limit"
+            ]
+          }
+        },
+        "live_events_dropped": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Number of bounded live-enqueue failures observed by the wrapper; null when unavailable/no sink. Zero means measured absence of enqueue loss, not proof of remote delivery."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "coverage": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "bytes_seen": {
+                "type": "null"
+              },
+              "bytes_retained": {
+                "type": "null"
+              },
+              "bytes_dropped": {
+                "type": "null"
+              },
+              "truncated": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "live_events_dropped": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "gaps": {
+                "contains": {
+                  "const": "live_delivery_gap"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage",
+        "observed_calls"
+      ],
+      "properties": {
+        "coverage": {
+          "$ref": "#/$defs/coverage",
+          "description": "Provider-native tool visibility for the captured scope, separate from local capture completeness. Native tools not exposed by the CLI remain unavailable/partial."
+        },
+        "observed_calls": {
+          "$ref": "#/$defs/nullable-counter",
+          "description": "Known tool call observations, possibly partial; null for unavailable visibility. An incomplete scope cannot justify an aggregate total of zero."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "coverage": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observed_calls": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "capture": {
+            "properties": {
+              "gaps": {
+                "contains": {
+                  "const": "process_epoch_changed"
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "timing": {
+            "properties": {
+              "duration_ms": {
+                "type": "null"
+              },
+              "clock_domain_id": {
+                "type": "null"
+              }
+            }
+          },
+          "capture": {
+            "properties": {
+              "coverage": {
+                "const": "partial"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.observation",
+      "class": "RuntimeObservationDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RuntimeObservation"
+    }
+  }
+}

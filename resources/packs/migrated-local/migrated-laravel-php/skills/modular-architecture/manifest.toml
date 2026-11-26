@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "modular-architecture"
+version = "0.3.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["laravel"]
+exclusive_group = "php-architecture"
+
+[provenance]
+source = "local"

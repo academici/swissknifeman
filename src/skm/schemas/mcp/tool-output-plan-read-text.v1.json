@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:plan-read-text:v1",
+  "title": "skm_plan_read_text output",
+  "description": "Output for the skm_plan_read_text MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/source"
+    },
+    "target_entity_id": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/target_entity_id"
+    },
+    "pointer": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/pointer"
+    },
+    "text_digest": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/text_digest"
+    },
+    "total_bytes": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/total_bytes"
+    },
+    "offset_bytes": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/offset_bytes"
+    },
+    "end_offset_bytes": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/end_offset_bytes"
+    },
+    "text": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/text"
+    },
+    "truncated": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/truncated"
+    },
+    "omitted_bytes": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/omitted_bytes"
+    },
+    "next_offset_bytes": {
+      "$ref": "urn:skm:planning:view:text-fragment:v1#/properties/next_offset_bytes"
+    },
+    "authoring_receipt": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "source",
+    "target_entity_id",
+    "pointer",
+    "text_digest",
+    "total_bytes",
+    "offset_bytes",
+    "end_offset_bytes",
+    "text",
+    "truncated",
+    "omitted_bytes",
+    "next_offset_bytes"
+  ]
+}

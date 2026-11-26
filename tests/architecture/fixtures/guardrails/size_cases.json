@@ -1,0 +1,6 @@
+[
+  {"lines": 600, "warning": false, "violation": false},
+  {"lines": 601, "warning": true, "violation": false},
+  {"lines": 900, "warning": true, "violation": false},
+  {"lines": 901, "warning": false, "violation": true}
+]

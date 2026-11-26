@@ -1,0 +1,109 @@
+# urn:skm:runtimes:error-rules:v1. First matching rule wins.
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {http_status = [401]}
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Antigravity credentials expired or authentication failed"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["authentication required"]
+retryable = false
+safe_message = "Antigravity authentication is required"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "quota"
+code = "QUOTA_EXHAUSTED"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["individual quota reached.", "quota exhausted", "exhausted your capacity"]
+retryable = false
+safe_message = "Antigravity quota exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = {http_status = [403]}
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Antigravity denied access"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "provider"
+signal_any = {http_status = [429]}
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Antigravity rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = ["invalid model selection"]
+retryable = false
+safe_message = "Requested Antigravity model or effort is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = {http_status = [500, 502, 503, 504, 529]}
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Antigravity is temporarily unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "transport"
+code = "RUNTIME_TRANSPORT"
+scope = "provider"
+signal_any = {retry_category = ["repeated_error_steps"]}
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Antigravity repeated error steps without completing a response"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "antigravity"
+error_class = "timeout"
+code = "RUNTIME_TIMEOUT"
+scope = "provider"
+signal_any = {retry_category = ["print_timeout"]}
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Antigravity stopped with a partial response"
+retry_after_from = "limit_resets_at"

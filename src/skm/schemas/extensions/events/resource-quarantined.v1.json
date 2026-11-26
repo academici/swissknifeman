@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:event:resource-quarantined:v1",
+  "title": "ResourceQuarantined",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "resource_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_kind"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 0
+    },
+    "reason_kind": {
+      "type": "string",
+      "enum": [
+        "compat",
+        "manual"
+      ]
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    }
+  },
+  "required": [
+    "resource_version_id",
+    "kind",
+    "key",
+    "reason_kind",
+    "reasons"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.events",
+      "class": "ResourceQuarantined",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ResourceQuarantined"
+    }
+  }
+}

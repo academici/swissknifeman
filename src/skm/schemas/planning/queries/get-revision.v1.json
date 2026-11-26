@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:query:get-revision:v1",
+  "title": "GetRevision",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "current": {
+      "const": true
+    },
+    "include_document": {
+      "type": "boolean"
+    },
+    "include_tree": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "plan_id"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_no"
+            ]
+          },
+          {
+            "required": [
+              "current"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "revision_no"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "current"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "current"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "revision_no"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "GetRevision",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "GetRevision"
+    }
+  }
+}

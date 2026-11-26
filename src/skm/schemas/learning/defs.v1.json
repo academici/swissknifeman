@@ -1,0 +1,1312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:defs:v1",
+  "title": "LearningDefinitions",
+  "description": "learning contract; semantics: the learning module.",
+  "$defs": {
+    "ConsolidationAction": {
+      "type": "string",
+      "enum": [
+        "add",
+        "update",
+        "noop",
+        "conflict"
+      ]
+    },
+    "ReviewVerdict": {
+      "type": "string",
+      "enum": [
+        "approve",
+        "reject",
+        "edit",
+        "comment"
+      ]
+    },
+    "SourceKind": {
+      "type": "string",
+      "enum": [
+        "attempt",
+        "client_session"
+      ]
+    },
+    "Outcome": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failure",
+        "unknown"
+      ]
+    },
+    "CandidateState": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "candidate",
+        "promoted",
+        "rejected",
+        "deprecated"
+      ]
+    },
+    "ConfidenceTier": {
+      "type": "string",
+      "enum": [
+        "none",
+        "tentative",
+        "moderate",
+        "strong",
+        "core"
+      ]
+    },
+    "Detector": {
+      "type": "string",
+      "enum": [
+        "resolved_failure",
+        "workaround",
+        "pathology",
+        "workflow_relaunch"
+      ]
+    },
+    "PathologyCode": {
+      "type": "string",
+      "enum": [
+        "file_reread",
+        "tool_error_loop",
+        "no_op_run",
+        "no_verify",
+        "cache_miss",
+        "retrieval_stuffing",
+        "protected_write",
+        "static_context",
+        "fanout"
+      ]
+    },
+    "ExposedLessonRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "version": {
+          "type": "string"
+        },
+        "content_digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "content_digest"
+      ]
+    },
+    "DetectorEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "detector_version": {
+          "type": "string"
+        },
+        "input_schema_version": {
+          "type": "string"
+        },
+        "relevant_metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "decision": {
+          "type": "string"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "population": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "exclusions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "alternative_explanations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suggested_investigation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "detector_version",
+        "input_schema_version",
+        "relevant_metrics",
+        "thresholds",
+        "source_refs",
+        "coverage",
+        "decision",
+        "severity",
+        "population",
+        "exclusions",
+        "alternative_explanations",
+        "suggested_investigation"
+      ]
+    },
+    "CandidateReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "reviewer_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "reviewer_kind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "service",
+            "worker"
+          ]
+        },
+        "verdict": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/ReviewVerdict"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edited_trigger": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edited_action": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edited_kind": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposal_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "candidate_id",
+        "reviewer_id",
+        "reviewer_kind",
+        "verdict",
+        "note",
+        "edited_trigger",
+        "edited_action",
+        "edited_kind",
+        "proposal_id",
+        "created_at"
+      ]
+    },
+    "CandidateProposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source_candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source_activity_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source_key": {
+          "type": "string"
+        },
+        "observed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "received_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "detector_version": {
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "update",
+            "conflict"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scope_id",
+        "candidate_id",
+        "source_candidate_id",
+        "source_activity_id",
+        "source_key",
+        "observed_at",
+        "received_at",
+        "kind",
+        "trigger",
+        "action",
+        "fingerprint",
+        "detector_version",
+        "relation"
+      ]
+    },
+    "CheckRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "origin": {
+          "enum": [
+            "agent_shell",
+            "check_execution"
+          ]
+        },
+        "check_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "command",
+        "ok",
+        "origin",
+        "check_key"
+      ]
+    },
+    "ErrorLoop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "snippet": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "length",
+        "snippet"
+      ]
+    },
+    "RereadEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path",
+        "count"
+      ]
+    },
+    "WorkflowRelaunch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "statuses": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "name",
+        "count",
+        "statuses"
+      ]
+    },
+    "AgentUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_read_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "messages": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "label",
+        "input_tokens",
+        "cache_read_tokens",
+        "messages"
+      ]
+    },
+    "ActivitySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source_kind": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/SourceKind"
+        },
+        "source_key": {
+          "type": "string"
+        },
+        "outcome": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/Outcome"
+        },
+        "task_outcome": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:learning:defs:v1#/$defs/Outcome"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exposure_coverage": {
+          "enum": [
+            "complete",
+            "unknown"
+          ]
+        },
+        "exposed_lesson_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/ExposedLessonRef"
+          }
+        },
+        "tools_total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reads_total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reads_unique": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top_rereads": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/RereadEntry"
+          }
+        },
+        "error_loops": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/ErrorLoop"
+          }
+        },
+        "files_changed": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checks": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "urn:skm:learning:defs:v1#/$defs/CheckRun"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retrieval_calls": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retrieval_result_chars": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retrieval_repeated_queries": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage_input": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage_cache_read": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage_cache_write": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cache_hit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agents": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "urn:skm:learning:defs:v1#/$defs/AgentUsage"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "context_window_tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protected_writes": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workarounds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workflow_relaunches": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "urn:skm:learning:defs:v1#/$defs/WorkflowRelaunch"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "source_kind",
+        "source_key",
+        "outcome",
+        "task_outcome",
+        "exposure_coverage",
+        "exposed_lesson_refs",
+        "tools_total",
+        "reads_total",
+        "reads_unique",
+        "top_rereads",
+        "error_loops",
+        "files_changed",
+        "checks",
+        "retrieval_calls",
+        "retrieval_result_chars",
+        "retrieval_repeated_queries",
+        "usage_input",
+        "usage_cache_read",
+        "usage_cache_write",
+        "cache_hit",
+        "agents",
+        "context_window_tokens",
+        "protected_writes",
+        "workarounds",
+        "workflow_relaunches",
+        "observed_at"
+      ]
+    },
+    "ActivityRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source_kind": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/SourceKind"
+        },
+        "source_key": {
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "task_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/Outcome"
+        },
+        "observed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "pathology_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+          }
+        },
+        "summary_digest": {
+          "type": "string"
+        },
+        "task_outcome": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:learning:defs:v1#/$defs/Outcome"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exposure_coverage": {
+          "enum": [
+            "complete",
+            "unknown"
+          ]
+        },
+        "exposed_lesson_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/ExposedLessonRef"
+          }
+        },
+        "detector_evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:learning:defs:v1#/$defs/DetectorEvidence"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "scope_id",
+        "source_kind",
+        "source_key",
+        "run_id",
+        "task_id",
+        "attempt_id",
+        "outcome",
+        "observed_at",
+        "pathology_codes",
+        "summary_digest",
+        "task_outcome",
+        "exposure_coverage",
+        "exposed_lesson_refs",
+        "detector_evidence"
+      ]
+    },
+    "Candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "scope_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "display_key": {
+          "type": "string"
+        },
+        "detector": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/Detector"
+        },
+        "pathology_code": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "review_hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+          }
+        },
+        "fingerprint": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/CandidateState"
+        },
+        "s_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "n_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "known_outcome_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unknown_outcome_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "independent_known_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "independent_success_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exposed_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exposure_unknown_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tests_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tests_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "days_since": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "support_score": {
+          "type": "number"
+        },
+        "freshness": {
+          "type": "number"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "review_status": {
+          "enum": [
+            "unreviewed",
+            "approved",
+            "edited",
+            "rejected"
+          ]
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "confidence_tier": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/ConfidenceTier"
+        },
+        "curated_ready": {
+          "type": "boolean"
+        },
+        "conflicts_with_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "proposed_update": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lesson_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "recomputed_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "scope_id",
+        "display_key",
+        "detector",
+        "pathology_code",
+        "kind",
+        "trigger",
+        "action",
+        "review_hint",
+        "meta",
+        "evidence",
+        "fingerprint",
+        "state",
+        "s_total",
+        "n_total",
+        "known_outcome_total",
+        "unknown_outcome_total",
+        "independent_known_total",
+        "independent_success_total",
+        "exposed_total",
+        "exposure_unknown_total",
+        "tests_total",
+        "tests_passed",
+        "days_since",
+        "support_score",
+        "freshness",
+        "stale",
+        "review_status",
+        "confidence",
+        "confidence_tier",
+        "curated_ready",
+        "conflicts_with_id",
+        "proposed_update",
+        "lesson_id",
+        "recomputed_at",
+        "row_version"
+      ]
+    },
+    "Signal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "candidate_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "activity_record_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source": {
+          "enum": [
+            "extract"
+          ]
+        },
+        "sessions_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessions_known": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessions_success": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence_dependency": {
+          "enum": [
+            "independent",
+            "exposed",
+            "unknown"
+          ]
+        },
+        "tests_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tests_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "id",
+        "candidate_id",
+        "activity_record_id",
+        "source",
+        "sessions_total",
+        "sessions_known",
+        "sessions_success",
+        "evidence_dependency",
+        "tests_total",
+        "tests_passed",
+        "observed_at"
+      ]
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "detector": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/Detector"
+        },
+        "pathology_code": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonKind"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EvidenceRef"
+          }
+        },
+        "tests_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tests_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "review_hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_basis": {
+          "enum": [
+            "diagnostic_hypothesis"
+          ]
+        }
+      },
+      "required": [
+        "detector",
+        "pathology_code",
+        "kind",
+        "trigger",
+        "action",
+        "evidence",
+        "tests_total",
+        "tests_passed",
+        "meta",
+        "review_hint",
+        "evidence_basis"
+      ]
+    },
+    "PathologyFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "$ref": "urn:skm:learning:defs:v1#/$defs/PathologyCode"
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "attention"
+          ]
+        },
+        "metric": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        },
+        "threshold": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "metric",
+        "threshold",
+        "evidence",
+        "data"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.documents",
+      "class": "LearningDefinitions",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "LearningDefinitions"
+    }
+  }
+}

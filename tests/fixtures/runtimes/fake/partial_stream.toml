@@ -1,0 +1,10 @@
+# Synthetic fixture; nonzero exit wins over an incomplete final JSON fragment.
+scenario = "partial_stream"
+exit_code = 1
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "raw"
+data = '{"type":"fake_result","final_text":'

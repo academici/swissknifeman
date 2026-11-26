@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:command:record-host-runtimes:v1",
+  "title": "RecordHostRuntimes",
+  "description": "Record host inventory or publish a complete, registration-scoped snapshot of model offers.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "installations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime_id": {
+            "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "binary_locator": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "auth_state": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "missing",
+              "expired",
+              "unknown"
+            ]
+          },
+          "detected_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "runtime_id",
+          "version",
+          "binary_locator",
+          "auth_state",
+          "detected_at",
+          "details"
+        ]
+      },
+      "maxItems": 32
+    },
+    "model_offers_observed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp",
+      "description": "UTC observation time of the complete worker model offer snapshot, including an empty snapshot."
+    },
+    "model_offers": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runtime_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,40}$"
+          },
+          "model_id": {
+            "type": "string",
+            "maxLength": 200,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/+-]*$"
+          },
+          "effort": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "xhigh"
+            ]
+          },
+          "observed_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          },
+          "expires_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "runtime_id",
+          "model_id",
+          "effort",
+          "observed_at",
+          "expires_at"
+        ]
+      }
+    },
+    "refresh_model_offers": {
+      "type": "boolean",
+      "default": false,
+      "description": "Publish a complete worker offer snapshot. A publisher supplies an observation time and the explicit offer list, including an empty list to revoke all."
+    }
+  },
+  "required": [
+    "host_id",
+    "installations"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.commands",
+      "class": "RecordHostRuntimes",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RecordHostRuntimes"
+    }
+  }
+}

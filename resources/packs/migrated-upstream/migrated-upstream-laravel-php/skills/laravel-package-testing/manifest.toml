@@ -1,0 +1,27 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-package-testing"
+version = "0.3.1"
+kind = "workflow"
+risk = "high"
+license = "MIT"
+roles = ["executor"]
+exclusive_group = "php-packages"
+
+[triggers]
+paths = ["tests/**/*.php"]
+deps = ["composer:orchestra/testbench"]
+
+[provenance]
+source = "upstream"
+repo = "WendellAdriel/laravel-expressive"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "a332fe240a5322fc46cfbafe4efa03a746a357b9bb99158b96bd82b90052a5bc"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-testing/SKILL.md"
+sha256 = "579ce5a19bac81d0353ddef542084dc4c5eb1191e3efa4a1a27e2d7ae434f794"
+fetched_at = "2026-06-12"

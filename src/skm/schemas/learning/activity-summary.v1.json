@@ -1,0 +1,466 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:activity-summary:v1",
+  "title": "ActivitySummary",
+  "description": "Normative learning contract; details and semantic validation: spec/modules/learning.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tools_total": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reads_total": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reads_unique": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retrieval_calls": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retrieval_result_chars": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retrieval_repeated_queries": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage_input": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage_cache_read": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage_cache_write": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "protected_writes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workarounds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "workflow_relaunches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "statuses": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "required": [
+          "name",
+          "count",
+          "statuses"
+        ]
+      }
+    },
+    "schema": {
+      "const": "urn:skm:learning:activity-summary:v1"
+    },
+    "source_kind": {
+      "type": "string",
+      "enum": [
+        "attempt",
+        "client_session"
+      ]
+    },
+    "source_key": {
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "success",
+        "failure",
+        "unknown"
+      ]
+    },
+    "top_rereads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "path",
+          "count"
+        ]
+      }
+    },
+    "error_loops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "snippet": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "length"
+        ]
+      }
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "agent_shell",
+              "check_execution"
+            ]
+          },
+          "check_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "command",
+          "ok",
+          "origin"
+        ]
+      }
+    },
+    "cache_hit": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cache_read_tokens": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "messages": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "label",
+          "input_tokens",
+          "cache_read_tokens",
+          "messages"
+        ]
+      }
+    },
+    "context_window_tokens": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "adapter_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$",
+      "description": "ID of the adapter that produced the summary."
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Version of the adapter's summary mapping."
+    },
+    "parser_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Version of the parser for the source format."
+    },
+    "source_format": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Format of the source consumed by the parser."
+    },
+    "metric_coverage": {
+      "type": "object",
+      "description": "Adapter-reported coverage per metric. Complete means the summary has a known value, partial means the source evidence is incomplete, and unknown means the metric is unavailable. Omitted coverage is unknown. Outcome and lesson exposure authority are determined separately.",
+      "propertyNames": {
+        "enum": [
+          "tools_total",
+          "reads_total",
+          "reads_unique",
+          "top_rereads",
+          "error_loops",
+          "files_changed",
+          "checks",
+          "retrieval_calls",
+          "retrieval_result_chars",
+          "retrieval_repeated_queries",
+          "usage_input",
+          "usage_cache_read",
+          "usage_cache_write",
+          "cache_hit",
+          "agents",
+          "context_window_tokens",
+          "protected_writes",
+          "workarounds",
+          "workflow_relaunches",
+          "outcome",
+          "task_outcome"
+        ]
+      },
+      "additionalProperties": {
+        "enum": [
+          "complete",
+          "partial",
+          "unknown"
+        ]
+      }
+    },
+    "task_outcome": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "success",
+        "failure",
+        "unknown",
+        null
+      ]
+    },
+    "exposure_coverage": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Server-derived completeness of final step manifests and audit/model source lineage; shared findings or unresolved lineage remain unknown, even with no lesson refs. Caller claims are not trusted."
+    },
+    "exposed_lesson_refs": {
+      "type": "array",
+      "maxItems": 2000,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "content_digest": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "content_digest"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "source_kind",
+    "source_key",
+    "outcome",
+    "observed_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.documents",
+      "class": "ActivitySummary",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "ActivitySummary"
+    }
+  }
+}

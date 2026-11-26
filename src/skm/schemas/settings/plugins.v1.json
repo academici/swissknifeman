@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:plugins:v1",
+  "title": "Plugins settings",
+  "description": "Settings section 'plugins' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "plugins",
+    "owner": "platform",
+    "title": "Plugins",
+    "validators": [
+      {
+        "id": "plugins.subsets",
+        "keys": [
+          "plugins.allowed",
+          "plugins.required",
+          "plugins.control_plane_allowed"
+        ],
+        "rule": "required ⊆ allowed and control_plane_allowed ⊆ allowed"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "PluginsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "PluginsSettings"
+    }
+  },
+  "properties": {
+    "allowed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Plugin ids (skm.plugins entry points) that may be imported; order decides conflicts; empty: no plugin is loaded.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "narrow",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": true,
+        "validators": [
+          "plugins.subsets"
+        ],
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Plugins",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Plugin ids that must load; a failure stops the process start with CAPABILITY_UNAVAILABLE (exit 3).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "validators": [
+          "plugins.subsets"
+        ],
+        "ui": {
+          "group": "Plugins",
+          "order": 20,
+          "widget": "tags"
+        }
+      }
+    },
+    "control_plane_allowed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Plugin ids that may load in the API server process, where the database and secrets are reachable; must also be allowed.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "narrow",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": true,
+        "validators": [
+          "plugins.subsets"
+        ],
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Plugins",
+          "order": 30,
+          "widget": "tags"
+        }
+      }
+    },
+    "override_builtin": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z_]+:[a-z0-9_.-]{1,80}$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Component keys <kind>:<key> that a plugin may register although a built-in component has the same key.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "narrow",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": true,
+        "narrow": {
+          "direction": "intersect"
+        },
+        "ui": {
+          "group": "Plugins",
+          "order": 40,
+          "widget": "tags"
+        }
+      }
+    }
+  }
+}

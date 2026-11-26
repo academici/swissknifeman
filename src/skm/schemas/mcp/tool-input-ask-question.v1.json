@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:ask-question:v1",
+  "title": "skm_ask_question input",
+  "description": "Input for the skm_ask_question MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "text"
+        ]
+      },
+      "maxItems": 6
+    },
+    "why_blocked": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "default": "normal"
+    }
+  },
+  "required": [
+    "question",
+    "why_blocked"
+  ]
+}

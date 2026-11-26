@@ -1,0 +1,30 @@
+{
+  "schema": "urn:skm:execution:role-result:researcher:v1",
+  "status": "complete",
+  "question": "Does RFC 9700 (OAuth 2.0 Security BCP) require revoking the token family on refresh token reuse?",
+  "answer": "It recommends refresh token rotation and says the authorization server should invalidate the active refresh token of the family when a reused (already invalidated) refresh token is presented, because it cannot tell the attacker from the legitimate client.",
+  "claims": [
+    {
+      "text": "On detecting reuse of a rotated refresh token, the server should revoke the active refresh token of that grant.",
+      "confidence": "high",
+      "source_ids": [
+        "S1"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "url",
+      "locator": "https://www.rfc-editor.org/rfc/rfc9700#section-4.14.2",
+      "retrieved_at": "2026-10-25T10:12:00Z",
+      "content_digest": "sha256:4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f",
+      "trust": "primary"
+    }
+  ],
+  "limitations": [
+    "Only the BCP was consulted; provider-specific behaviour was not compared."
+  ],
+  "open_questions": [],
+  "usage_complete": true
+}

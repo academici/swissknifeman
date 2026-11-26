@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:webhook-delivery:v1",
+  "title": "WebhookDelivery",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:webhook-delivery:v1"
+    },
+    "delivery_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "event": {
+      "$ref": "urn:skm:kernel:event-envelope:v1"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sent_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "schema",
+    "delivery_id",
+    "subscription_id",
+    "attempt",
+    "sent_at",
+    "event"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "WebhookDelivery",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "WebhookDelivery"
+    }
+  }
+}

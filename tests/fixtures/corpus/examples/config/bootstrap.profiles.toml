@@ -1,0 +1,26 @@
+# ~/.config/skm/bootstrap.toml with named instance profiles (G17, P11.07): one CLI installation
+# works with a local instance and a team server. Selection order: --instance NAME, SKM_INSTANCE,
+# the instance remembered by `skm use` for the current checkout (cli-context.json), default_instance.
+# Every profile gets its own state directory <paths.state_dir>/instances/<name> unless it sets paths.
+schema = "urn:skm:config:bootstrap:v1"
+default_instance = "personal"
+
+[instances.personal]
+instance_id = "0192f5c4-7a10-7c3e-9b1a-5d2f0e8a4c11"
+access = { mode = "embedded" }
+database = { url = "secret://env/SKM_DATABASE_URL", migrate_on_start = true }
+secrets = { token_pepper = "secret://file/~/.local/state/skm/instances/personal/secrets/token-pepper" }
+host = { id = "auto" }
+
+[instances.team]
+instance_id = "0193aa00-5b6c-7d8e-9f01-23456789abcd"
+access = { mode = "http" }
+api = { endpoint = "https://skm.example.com/api/v1", credential = "secret://keyring/skm-team/cli-token", timeout_seconds = 30 }
+host = { id = "0193aa10-0000-7000-8000-0000000000c1" }
+
+[paths]
+state_dir = "~/.local/state/skm"
+blobs_root = "~/.local/share/skm/blobs"
+
+[host]
+name = "dev-laptop"

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-command-input:v1",
+  "title": "HostCommandInput",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host-command-input:v1"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "class": {
+      "type": "string",
+      "enum": [
+        "enforcement",
+        "workflow",
+        "observation"
+      ]
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "claude_code",
+        "codex",
+        "antigravity",
+        "cursor",
+        "gemini_cli",
+        "grok"
+      ]
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "claude_code",
+            "codex",
+            "antigravity",
+            "cursor",
+            "gemini_cli",
+            "grok"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "session_start",
+            "session_end",
+            "user_prompt",
+            "pre_tool",
+            "post_tool",
+            "pre_shell",
+            "post_shell",
+            "subagent_stop",
+            "stop",
+            "permission_request"
+          ]
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stop_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raw_event_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "kind",
+        "cwd",
+        "paths",
+        "raw_event_name"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "subscription_id",
+    "class",
+    "project_id",
+    "host_id",
+    "target",
+    "event"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "HostCommandInput",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostCommandInput"
+    }
+  }
+}

@@ -1,0 +1,171 @@
+# urn:skm:runtimes:capabilities:v1 for built-in grok runtime adapter (P08.05).
+# TOML has no null literal: every schema-nullable member carries a concrete value.
+runtime_id = "grok"
+adapter_version = "0.1.0"
+read_only_network = true
+
+[config_isolation]
+env = {}
+args = []
+credential_mounts = []
+writable_home_dirs = []
+
+[[self_loads]]
+kind = "user_config"
+locator = "~/.grok"
+files = ["config.toml"]
+when = "start"
+suppressed_by = "never"
+note = "Grok CLI has no flag to suppress ~/.grok/config.toml and requires ~/.grok auth state"
+
+[[self_loads]]
+kind = "plugins"
+locator = "~/.grok/plugins"
+files = []
+when = "start"
+suppressed_by = "never"
+note = "User plugins under ~/.grok cannot be isolated"
+
+[[self_loads]]
+kind = "skills"
+locator = "{workdir}"
+files = [".grok/skills/**", "~/.grok/skills/**", ".claude/skills/**", "~/.agents/skills/**"]
+when = "on_access"
+suppressed_by = "never"
+note = "Grok discovers skills from .grok, .claude, and ~/.agents"
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["AGENTS.md", ".claude/rules/**"]
+when = "start"
+suppressed_by = "never"
+note = "Grok loads AGENTS.md and .claude/rules without suppression flags"
+
+[[self_loads]]
+kind = "project_settings"
+locator = "{workdir}/.grok"
+files = [".grok/**"]
+when = "start"
+suppressed_by = "never"
+note = "Untrusted worktree ./.grok/** settings cannot be suppressed (K16)"
+
+[[records]]
+capability = "headless_execution"
+status = "adapted"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Requires landlock or container isolation for --permission-mode bypassPermissions"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "structured_result"
+status = "adapted"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Final answer extracted from streaming-messages-json result record and validated by host"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "stream_events"
+status = "native"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "session_resume"
+status = "adapted"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Resumes via --resume <session_ref> without isolated client_home"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "tool_interception"
+status = "unsupported"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Headless execution runs with --permission-mode bypassPermissions under host sandbox"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "adapted"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "usage_reporting"
+status = "native"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Vendor total_cost_usd is diagnostic only; normalized cost_usd_micros computed from catalog pricing"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "workspace_binding"
+status = "native"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "native_subagents"
+status = "unknown"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "spawn_subagent token disclosure is not verified"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "mcp_support"
+status = "unknown"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Step-local isolated MCP configuration flags not verified for Grok CLI"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "permission_flags"
+status = "adapted"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Enforcing capability: --disallowed-tools and --disable-web-search require landlock or container"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "sandbox_native"
+status = "unsupported"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Grok CLI provides no native OS sandbox; requires landlock or container"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "effort_control"
+status = "native"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "model_selection"
+status = "native"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "config_isolation"
+status = "unsupported"
+evidence = "fixture:grok/streaming-messages-json.jsonl"
+tested_runtime_version = "0.1.0"
+limitations = "Grok CLI provides no config isolation flags and requires ~/.grok auth state"
+last_verified_at = "2026-10-26"

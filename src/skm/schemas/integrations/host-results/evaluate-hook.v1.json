@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:evaluate-hook:v1",
+  "title": "EvaluateHookResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$ref": "urn:skm:integrations:host:hook-decision:v1",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "EvaluateHookResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "EvaluateHookResult"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:command:retry-outbox:v1",
+  "title": "RetryOutbox",
+  "description": "platform command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "outbox_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "event_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "destination": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.commands",
+      "class": "RetryOutbox",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "RetryOutbox"
+    }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "outbox_id"
+      ]
+    },
+    {
+      "required": [
+        "event_id"
+      ]
+    },
+    {
+      "required": [
+        "destination"
+      ]
+    }
+  ]
+}

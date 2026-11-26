@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gpt-6-sol"
+version = "2.0.6"
+model_family = "gpt"
+model_id = "gpt-6-sol"
+display_name = "GPT-6 Sol"
+runtime_ids = ["codex"]
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+notes = "2026 Codex implementation selector."
+strengths = ["implementation", "patch review", "test repair"]
+delegation_notes = ["Default Codex implementation profile.", "Escalate ambiguous design to Astra."]
+forbidden_params = ["temperature", "top_p"]
+
+[prompt_style]
+shape = "structured"
+instructions = ["Keep instructions ahead of the diff.", "Ask for evidence, not restated plans."]
+
+[cache_capabilities]
+prompt_cache = "native"
+cache_read = true
+cache_write = false
+min_cacheable_tokens = 1024
+
+[compaction_threshold]
+input_tokens = 180000
+reserve_output_tokens = 12000

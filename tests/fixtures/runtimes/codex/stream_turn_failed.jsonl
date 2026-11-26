@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"0199aa00-thread-fail"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"Discarded draft before turn failure"}}
+{"type":"turn.failed","error":{"message":"Selected model is at capacity; please retry with another model"}}

@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "agent-packs-role-maintainer"
+version = "1.0.1"
+title = "Migrated Agent Pack: Repository Maintainer"
+description = "Neutral backward-compatibility, changelog hygiene, and regression stewardship lens migrated as pure data."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:query:get-generation:v1",
+  "title": "GetGeneration",
+  "description": "settings query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.queries",
+      "class": "GetGeneration",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetGeneration"
+    }
+  }
+}

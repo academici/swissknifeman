@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:projection-plan:v1",
+  "title": "HostProjectionPlan",
+  "description": "Normative integrations contract; details and semantic validation: spec/modules/integrations.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:integrations:host:projection-plan:v1"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "checkout_binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "claude_code",
+        "codex",
+        "cursor",
+        "grok"
+      ]
+    },
+    "renderer_version": {
+      "type": "string"
+    },
+    "desired_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "inputs_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "base_projection_row_version": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relative_path": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string",
+            "enum": [
+              "instructions",
+              "skills",
+              "permissions",
+              "hooks",
+              "mcp",
+              "agents"
+            ]
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "noop",
+              "conflict_write_new",
+              "adopt_required",
+              "adopt_clean",
+              "remove_owned",
+              "leave_foreign",
+              "boundary_invalid",
+              "unsafe_target",
+              "missing_restore"
+            ]
+          },
+          "boundary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ownership": {
+                "type": "string",
+                "enum": [
+                  "managed_file",
+                  "managed_block",
+                  "merged_json",
+                  "merged_toml"
+                ]
+              },
+              "block_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "owned_keys": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replace",
+                        "list_union_tagged"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "mode"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "ownership"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "managed_digest_after": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observed_digest": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "conflict_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "relative_path",
+          "surface",
+          "decision",
+          "boundary",
+          "reason"
+        ]
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relative_path": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "boundary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ownership": {
+                "type": "string",
+                "enum": [
+                  "managed_file",
+                  "managed_block",
+                  "merged_json",
+                  "merged_toml"
+                ]
+              },
+              "block_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "owned_keys": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replace",
+                        "list_union_tagged"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "mode"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "ownership"
+            ]
+          },
+          "surface": {
+            "type": "string"
+          },
+          "write_path": {
+            "type": "string"
+          },
+          "expected_observed_whole_digest": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "needs_pre_image": {
+            "type": "boolean"
+          },
+          "managed_digest_after": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bytes_base64": {
+            "type": "string"
+          },
+          "new_bytes_base64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_bytes_digest": {
+            "anyOf": [
+              {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "new_size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "new_bytes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "relative_path",
+          "write_path"
+        ]
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "plan_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "schema",
+    "project_id",
+    "checkout_binding_id",
+    "target",
+    "desired_digest",
+    "decisions",
+    "writes",
+    "plan_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "HostProjectionPlan",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HostProjectionPlan"
+    }
+  }
+}

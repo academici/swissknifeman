@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:worker-state-changed:v1",
+  "title": "WorkerStateChanged",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "from_state": {
+      "type": "string",
+      "enum": [
+        "online",
+        "draining",
+        "offline",
+        "retired"
+      ]
+    },
+    "to_state": {
+      "type": "string",
+      "enum": [
+        "online",
+        "draining",
+        "offline",
+        "retired"
+      ]
+    }
+  },
+  "required": [
+    "worker_id",
+    "from_state",
+    "to_state"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "WorkerStateChanged",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "WorkerStateChanged"
+    }
+  }
+}

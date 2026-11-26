@@ -1,0 +1,792 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:knowledge:v1",
+  "title": "Knowledge settings",
+  "description": "Settings section 'knowledge' owned by knowledge. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "knowledge",
+    "owner": "knowledge",
+    "title": "Knowledge",
+    "validators": [
+      {
+        "id": "knowledge.ttl_order",
+        "keys": [
+          "knowledge.memory.default_ttl_hours",
+          "knowledge.memory.max_ttl_hours"
+        ],
+        "rule": "default_ttl_hours <= max_ttl_hours"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.settings",
+      "class": "KnowledgeSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "KnowledgeSettings"
+    }
+  },
+  "properties": {
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_ttl_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 72,
+          "default": 48,
+          "description": "Lifetime of a memory entry when remember names none.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "knowledge.ttl_order"
+            ],
+            "ui": {
+              "group": "Memory",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_ttl_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 72,
+          "default": 72,
+          "description": "Longest lifetime of a memory entry.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "knowledge.ttl_order"
+            ],
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Memory",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "max_chars": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 2000,
+          "default": 800,
+          "description": "Largest body of a memory entry.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Memory",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_live_per_scope": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 8,
+          "description": "Live (unexpired) entries per scope; remember beyond it fails MEMORY_LIMIT_REACHED.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Memory",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "recall_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20,
+          "description": "Entries returned by one recall from the private scope.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "recall_shared_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 5,
+          "description": "Entries from shared namespaces in one recall; 0 keeps cross-project context off.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(\\*|[a-z0-9][a-z0-9_.-]{0,63})$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Shared namespaces readable from this scope (* = global).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "workspace",
+              "project"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 70,
+              "widget": "tags"
+            }
+          }
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "default": 7,
+          "description": "Days expired entries are kept before physical deletion.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "health_probe_ttl_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 300,
+          "description": "Cache of the memory health probe used by doctor and hooks.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 90,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "budget_chars": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 100000,
+          "default": 4000,
+          "description": "Total size of a memory digest block.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Digest",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "item_max_chars": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 20000,
+          "default": 500,
+          "description": "Size of one digest item.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Digest",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Keep the project graph (nodes and multi-edges).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Graph",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "default"
+          ],
+          "description": "Graph namespaces visible from this scope.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "workspace",
+              "project"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Graph",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "max_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 4,
+          "description": "Traversal depth of one graph query.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Graph",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_nodes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "default": 5000,
+          "description": "Nodes returned by one graph query.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "narrow",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Graph",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "import_max_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 268435456,
+          "default": 33554432,
+          "description": "Largest canonical import_graph command; also the body limit of its HTTP route.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Graph",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "code_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the code-graph adapter (Serena) for projects of this scope.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Code graph",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "uvx",
+            "--from",
+            "git+https://github.com/oraios/serena",
+            "serena",
+            "start-mcp-server",
+            "--project",
+            "{root}"
+          ],
+          "description": "Command of the code-graph MCP server; {root} is the checkout root.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": true,
+            "ui": {
+              "group": "Code graph",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "index_argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "uvx",
+            "--from",
+            "git+https://github.com/oraios/serena",
+            "serena",
+            "project",
+            "index",
+            "{root}"
+          ],
+          "description": "Indexing command of the code graph.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": true,
+            "ui": {
+              "group": "Code graph",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "ignores": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [
+            "vendor",
+            "node_modules",
+            ".git"
+          ],
+          "description": "Paths the code graph does not index.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Code graph",
+              "order": 40,
+              "widget": "tags"
+            }
+          }
+        },
+        "serena_schema_pin": {
+          "type": "string",
+          "maxLength": 200,
+          "default": "",
+          "description": "Expected Serena tool schema digest; a different schema disables the adapter with a doctor warning; empty: no pin.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Code graph",
+              "order": 50,
+              "widget": "text"
+            }
+          }
+        },
+        "stale_after_hours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 720,
+          "default": 24,
+          "description": "An index generation older than this is reported stale in graph answers (freshness).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Code graph",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "keep_generations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 3,
+          "description": "Index generations kept per repository.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Code graph",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "lessons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inject_min_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8,
+          "description": "Curated lessons above this confidence are offered to the context as steering.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Lessons",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

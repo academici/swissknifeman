@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:query:get-intent:v1",
+  "title": "GetIntent",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "include_approval_binding": {
+      "type": "boolean",
+      "description": "Include the policy effect identity and approval defaults for a proposed intent."
+    }
+  },
+  "required": [
+    "intent_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.queries",
+      "class": "GetIntent",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "GetIntent"
+    }
+  }
+}

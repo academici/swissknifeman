@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:result:explain-permissions:v1",
+  "title": "ExplainPermissionsResult",
+  "description": "policy owner contract; see the policy module. The bus carries objects only: the array of policy.explain_permissions is the items member.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 0
+          },
+          "value": {},
+          "contributed_by": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 0
+            }
+          }
+        },
+        "required": [
+          "field",
+          "value",
+          "contributed_by"
+        ]
+      }
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.results",
+      "class": "ExplainPermissionsResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ExplainPermissionsResult"
+    }
+  }
+}

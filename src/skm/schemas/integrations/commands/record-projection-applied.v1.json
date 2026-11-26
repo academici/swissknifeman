@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:command:record-projection-applied:v1",
+  "title": "RecordProjectionApplied",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "checkout_binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "desired_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "inputs_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "renderer_version": {
+      "type": "string"
+    },
+    "base_row_version": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:integrations:defs:v1#/$defs/AppliedFileInput"
+      }
+    },
+    "removed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "failed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "relative_path": {
+            "type": "string"
+          },
+          "error_code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "relative_path",
+          "error_code"
+        ]
+      }
+    },
+    "adopted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "left_modified": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "project_id",
+    "checkout_binding_id",
+    "target",
+    "desired_digest",
+    "inputs_digest",
+    "renderer_version",
+    "base_row_version",
+    "files",
+    "removed",
+    "conflicts",
+    "failed",
+    "adopted",
+    "left_modified"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.commands",
+      "class": "RecordProjectionApplied",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RecordProjectionApplied"
+    }
+  }
+}

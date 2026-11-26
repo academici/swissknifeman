@@ -1,0 +1,22 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "marketing"
+version = "1.0.0"
+kind = "router"
+risk = "low"
+license = "MIT"
+roles = ["advisor"]
+
+[provenance]
+source = "upstream"
+repo = "get-zeked/marketing-super-skill"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "d87c00cb2242ca2cf75fc77dd397c703118749f9f3e19e95a8354329d5091982"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "references/full.md"
+url = "https://raw.githubusercontent.com/get-zeked/marketing-super-skill/main/SKILL.md"
+sha256 = "d87c00cb2242ca2cf75fc77dd397c703118749f9f3e19e95a8354329d5091982"
+fetched_at = "2026-06-11"

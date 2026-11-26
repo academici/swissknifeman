@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:event:repository-registered:v1",
+  "title": "RepositoryRegistered",
+  "description": "workspace event contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "canonical_remote": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "github",
+        "gitlab",
+        "bitbucket",
+        "gitea",
+        "other",
+        "none"
+      ]
+    }
+  },
+  "required": [
+    "repository_id",
+    "workspace_id",
+    "canonical_remote",
+    "provider"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.events",
+      "class": "RepositoryRegistered",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RepositoryRegistered"
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:role-result:registrar:v1",
+  "title": "RegistrarResult",
+  "description": "Commit message of an accepted output. The registrar is deterministic by default (subject from the task title); the LLM variant returns this document. Trailers are added by the integrate stage, never by the role.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "commit"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:role-result:registrar:v1"
+    },
+    "commit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "subject",
+        "body"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "feat",
+            "fix",
+            "refactor",
+            "docs",
+            "test",
+            "build",
+            "chore"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{1,40}$"
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 72,
+          "pattern": "^[^\\n]+$"
+        },
+        "body": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "breaking": {
+          "type": "boolean"
+        }
+      }
+    },
+    "changelog_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "section",
+        "text"
+      ],
+      "properties": {
+        "section": {
+          "enum": [
+            "Added",
+            "Changed",
+            "Fixed",
+            "Removed",
+            "Security"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "RegistrarResultDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RegistrarResultDoc"
+    }
+  }
+}

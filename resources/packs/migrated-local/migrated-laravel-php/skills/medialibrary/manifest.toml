@@ -1,0 +1,13 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "medialibrary"
+version = "0.1.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[triggers]
+deps = ["composer:spatie/laravel-medialibrary"]
+
+[provenance]
+source = "local"

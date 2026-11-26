@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:prompt-block:v1",
+  "title": "PromptBlock",
+  "description": "Normative extensions contract; details and semantic validation: spec/modules/extensions.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:extensions:prompt-block:v1"
+    },
+    "block_type": {
+      "type": "string",
+      "enum": [
+        "resume_note",
+        "system_constraints",
+        "role_contract",
+        "run_rules",
+        "runtime_notes",
+        "task_contract",
+        "acceptance",
+        "requirements",
+        "decisions",
+        "decision_answers",
+        "review_feedback",
+        "previous_attempt",
+        "candidate_diff",
+        "findings_under_review",
+        "context_map",
+        "steering",
+        "skills",
+        "skill_index",
+        "materials",
+        "repo_instructions",
+        "research",
+        "memory",
+        "history",
+        "result_contract"
+      ]
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "block_type",
+    "variables"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.documents",
+      "class": "PromptBlock",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PromptBlock"
+    }
+  }
+}

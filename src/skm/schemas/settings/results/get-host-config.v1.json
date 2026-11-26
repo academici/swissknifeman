@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:result:get-host-config:v1",
+  "title": "GetHostConfigResult",
+  "description": "Allowlisted project limits and runtime and plugin identifiers for a registered worker. Host-specific limits use the stored host chain. Instance limits and allowed identifiers use the stored work chain. Executable paths, account settings, environment and secret references are machine-local.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host_id",
+    "generation",
+    "pack_generation",
+    "digest",
+    "values",
+    "invalid",
+    "plugins"
+  ],
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pack_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest",
+      "description": "Digest of the canonical values object."
+    },
+    "values": {
+      "type": "object",
+      "description": "Effective values of admitted project worker keys.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z0-9_]+)+$"
+      },
+      "additionalProperties": true
+    },
+    "invalid": {
+      "type": "array",
+      "description": "Admitted project worker keys that resolved invalid.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "plugins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed",
+        "required"
+      ],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.results",
+      "class": "GetHostConfigResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetHostConfigResult"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "contract": "urn:skm:execution:event:task-created:v1",
+  "value": {
+    "task_id": "01928f61-0000-7000-8000-000000000002",
+    "kind": "item",
+    "revision_id": "01928f61-0000-7000-8000-000000000007",
+    "entity_id": "01928f61-0000-7000-8000-000000000008",
+    "origin": null,
+    "cause": {
+      "trigger_kind": "run_start",
+      "advance_rule": "K5b",
+      "reason_codes": [],
+      "refs": [
+        {
+          "kind": "run",
+          "id": "01928f61-0000-7000-8000-000000000001"
+        }
+      ]
+    },
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "workspace_id": "01928f61-0000-7000-8000-000000000040",
+    "project_id": "01928f61-0000-7000-8000-000000000041",
+    "initial_state": "blocked",
+    "position": 0,
+    "parent_task_id": null
+  }
+}

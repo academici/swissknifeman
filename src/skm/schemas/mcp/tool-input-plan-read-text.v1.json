@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-read-text:v1",
+  "title": "skm_plan_read_text input",
+  "description": "Input for the skm_plan_read_text MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "pointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~[01])*)*$",
+      "maxLength": 2048
+    },
+    "offset_bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "max_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65536,
+      "default": 16384
+    }
+  },
+  "required": [
+    "plan",
+    "target",
+    "pointer"
+  ],
+  "oneOf": [
+    {
+      "required": [],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "draft_id",
+        "expected_edit_version"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

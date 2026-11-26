@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:drafts:v1",
+  "title": "DraftsView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "array",
+  "items": {
+    "$ref": "urn:skm:planning:view:draft-summary:v1"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "DraftsView",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "DraftsView"
+    }
+  }
+}

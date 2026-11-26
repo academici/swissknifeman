@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "pao"
+version = "1.0.1"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

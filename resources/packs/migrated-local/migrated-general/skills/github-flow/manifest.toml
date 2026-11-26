@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "github-flow"
+version = "0.2.1"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor", "registrar", "triager"]
+requires = ["gh-review", "git-commit-rules", "release-engineering"]
+
+[provenance]
+source = "local"

@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "build-loop"
+version = "0.1.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["config-conventions", "model-rules", "parametric-config", "scene-conventions"]
+
+[provenance]
+source = "local"

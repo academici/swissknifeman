@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:profiles:v1",
+  "title": "ProfilesView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "array",
+  "items": {
+    "$ref": "urn:skm:policy:view:profile:v1"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.views",
+      "class": "ProfilesView",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ProfilesView"
+    }
+  }
+}

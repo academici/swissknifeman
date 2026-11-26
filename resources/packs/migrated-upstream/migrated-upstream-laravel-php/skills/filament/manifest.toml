@@ -1,0 +1,26 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "filament"
+version = "1.0.1"
+kind = "domain"
+risk = "high"
+license = "MIT"
+roles = ["executor"]
+requires = ["laravel", "laravel-structure"]
+
+[triggers]
+deps = ["composer:filament/filament"]
+
+[provenance]
+source = "upstream"
+repo = "filamentphp/filament"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "d78c204a3a72ba67be584668e370dbfaa1cc3c6a11c4911beb865f697d19d771"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/filamentphp/filament/5.x/packages/panels/resources/boost/guidelines/core.blade.php"
+sha256 = "3bcd231ce10d34d273bf934c5dac2a0ca2e6ad62766e75e668b96ba349735422"
+fetched_at = "2026-06-12"

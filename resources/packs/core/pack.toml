@@ -1,0 +1,38 @@
+# Builtin SKM core pack manifest.
+schema = "urn:skm:extensions:pack:v1"
+slug = "core"
+version = "2.0.8"
+title = "SKM core pack"
+description = "Neutral role profiles, prompt blocks, workflows, plan templates, the model catalog and model guideline profiles shipped with SKM."
+publisher = "skm"
+trust = "builtin"
+priority = 0
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[config]
+"context.max_total_tokens" = 150000
+"context.budget.core" = 12000
+"context.budget.supporting" = 30000
+"context.budget.retrieval" = 50000
+"context.skills.budget_tokens" = 8000
+"runtimes.preference" = ["claude_code", "codex"]
+"runtimes.admission.bounded_fix.allowed_extra_paths" = ["CHANGELOG.md", "docs/**"]
+"runtimes.admission.bounded_fix.test_globs" = ["**/tests/**", "**/test_*.py"]
+# Builtin ecosystem ids. This pack value is the base, not a ceiling: the first explicit instance or workspace value establishes the effective allowlist; nearer project, plan and run scopes can only intersect it.
+"ecosystems.ids" = ["python", "node", "php", "cargo", "go", "ruby", "brew", "dart", "jvm"]
+
+[[exclusive_groups]]
+name = "review-method"
+max = 1
+description = "One review method per step: the generic review checklist or a language-specific one, never both."
+
+[[exclusive_groups]]
+name = "python-testing"
+max = 1
+description = "One Python testing style per step."
+
+[[exclusive_groups]]
+name = "research-method"
+max = 1
+description = "One research method per researcher step."

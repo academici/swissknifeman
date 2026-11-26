@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:view:route-explain:v1",
+  "title": "RouteExplainView",
+  "description": "runtimes owner contract; see the runtimes module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+    },
+    "scope": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/scope-ref"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 0
+        },
+        "message": {
+          "type": "string",
+          "minLength": 0
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ]
+    }
+  },
+  "required": [
+    "role",
+    "scope",
+    "admission",
+    "rejected",
+    "config"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.views",
+      "class": "RouteExplainView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "RouteExplainView"
+    }
+  }
+}

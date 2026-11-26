@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "complex-task-orchestrator"
+version = "0.2.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+replaced_by = "orch/configs/run-policies"
+
+[provenance]
+source = "local"

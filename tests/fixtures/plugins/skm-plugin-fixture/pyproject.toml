@@ -1,0 +1,9 @@
+# Test fixture of mechanisms/02-plugins §2 (leaf P01.10); never installed into the product environment.
+# Tests lay it out as an installed distribution (dist-info with METADATA, RECORD, entry_points.txt).
+[project]
+name = "skm-plugin-fixture"
+version = "0.1.0"
+dependencies = ["skm>=0.1.0,<1"]
+
+[project.entry-points."skm.plugins"]
+"acme.fixture" = "skm_plugin_fixture.plugin:MANIFEST"

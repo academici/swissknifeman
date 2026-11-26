@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:event:candidate-promoted:v1",
+  "title": "CandidatePromoted",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "candidate_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "lesson_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "promoted_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "override_low_confidence": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "lesson_id",
+    "promoted_by",
+    "override_low_confidence"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.events",
+      "class": "CandidatePromoted",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "CandidatePromoted"
+    }
+  },
+  "x-skm-hookable": true
+}

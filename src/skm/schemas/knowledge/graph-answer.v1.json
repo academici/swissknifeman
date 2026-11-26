@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:graph-answer:v1",
+  "title": "GraphAnswer",
+  "description": "Normative knowledge contract; details and semantic validation: spec/modules/knowledge.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:knowledge:graph-answer:v1"
+    },
+    "query": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphQueryEcho"
+    },
+    "repository_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "index_generation": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphSourceRef"
+      }
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "relation_kind": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+        },
+        {
+          "enum": [
+            "mixed",
+            "none"
+          ]
+        }
+      ]
+    },
+    "completeness": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/Completeness"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:knowledge:defs:v1#/$defs/Limitation"
+      }
+    },
+    "freshness": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/Freshness"
+    },
+    "basis": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:knowledge:defs:v1#/$defs/AnswerNode"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:knowledge:defs:v1#/$defs/AnswerEdge"
+      }
+    },
+    "path": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stats": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphStats"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "query",
+    "repository_id",
+    "revision",
+    "index_generation",
+    "sources",
+    "languages",
+    "relation_kind",
+    "completeness",
+    "limitations",
+    "freshness",
+    "basis",
+    "nodes",
+    "edges",
+    "path",
+    "stats"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.documents",
+      "class": "GraphAnswer",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "GraphAnswer"
+    }
+  }
+}

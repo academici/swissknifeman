@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:assemble-request:v1",
+  "title": "ContextRequest",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "plan_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "entity_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "project_slug": {
+      "type": "string"
+    },
+    "purpose": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/StepPurpose"
+    },
+    "agent_profile_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "runtime": {
+      "$ref": "#/$defs/RuntimeTarget"
+    },
+    "permissions": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/PermissionsSummary"
+    },
+    "run": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/RunParams"
+    },
+    "execution_blocks": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/ExecutionBlocks"
+    },
+    "resume": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:context:defs:v1#/$defs/ResumeInfo"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "task_risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "research_queries": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:context:defs:v1#/$defs/ResearchQuerySpec"
+      }
+    },
+    "pack_pins": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "workspace_id",
+    "project_id",
+    "plan_id",
+    "revision_id",
+    "entity_id",
+    "project_slug",
+    "purpose",
+    "agent_profile_version_id",
+    "runtime",
+    "permissions",
+    "run",
+    "execution_blocks",
+    "resume",
+    "task_risk",
+    "research_queries",
+    "pack_pins"
+  ],
+  "$defs": {
+    "RuntimeTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime_id": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "context_window_tokens": {
+          "type": "integer"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_params": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "legacy_prompt_phrases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "incompatible_param_groups": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "route_source": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "config_mode": {
+          "enum": [
+            "isolated",
+            "inherit"
+          ]
+        },
+        "self_loads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "degraded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "self_loaded_instruction_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "runtime_id",
+        "model",
+        "context_window_tokens",
+        "capabilities",
+        "tools",
+        "notes",
+        "route_source",
+        "operation",
+        "config_mode",
+        "self_loads",
+        "degraded",
+        "self_loaded_instruction_files"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.documents",
+      "class": "ContextRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ContextRequest"
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:kernel:check-result:v1",
+  "title": "CheckResult",
+  "description": "Normalized doctor finding (kernel-platform §5.2a).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "warn",
+        "fail"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "hint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "details": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "target",
+        "detail",
+        "path"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "status",
+    "message",
+    "hint",
+    "details"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.kernel.generated.documents",
+      "class": "CheckResult",
+      "kind": "dataclass"
+    }
+  }
+}

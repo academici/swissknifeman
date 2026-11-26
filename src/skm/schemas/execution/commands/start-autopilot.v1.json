@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:start-autopilot:v1",
+  "title": "StartAutopilot",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "clear_emergency": {
+      "type": "boolean"
+    },
+    "new_session": {
+      "type": "boolean"
+    },
+    "limits": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_runs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_wall_seconds": {
+              "type": "integer",
+              "minimum": 60
+            },
+            "max_auto_decisions": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "project_id",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "StartAutopilot",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "StartAutopilot"
+    }
+  }
+}

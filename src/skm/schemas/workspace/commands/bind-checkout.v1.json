@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:bind-checkout:v1",
+  "title": "BindCheckout",
+  "description": "Record where a repository lives on a host. Sent by the host operation workspace/host/bind_checkout after workspace.match_checkout; observed_* are facts the host saw. The server re-checks remotes against the repository.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repository_id",
+    "host_id",
+    "local_locator",
+    "observed_toplevel",
+    "observed_remotes",
+    "observed_head",
+    "observed_dirty",
+    "observed_at"
+  ],
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "local_locator": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+    },
+    "observed_toplevel": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_remotes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+      },
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "observed_head": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/git_object_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_dirty": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "BindCheckout",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "BindCheckout"
+    }
+  }
+}

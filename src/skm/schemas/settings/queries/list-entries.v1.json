@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:query:list-entries:v1",
+  "title": "ListEntries",
+  "description": "settings query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "instance",
+        "workspace",
+        "project",
+        "plan",
+        "run",
+        "host"
+      ]
+    },
+    "key_prefix": {
+      "type": "string"
+    },
+    "after": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/page-cursor"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 500,
+      "default": 50
+    }
+  },
+  "required": [],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.queries",
+      "class": "ListEntries",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ListEntries"
+    }
+  }
+}

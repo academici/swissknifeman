@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:ui:v1",
+  "title": "Web UI settings",
+  "description": "Settings section 'ui' owned by platform. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "ui",
+    "owner": "platform",
+    "title": "Web UI",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated.settings",
+      "class": "UiSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "UiSettings"
+    }
+  },
+  "properties": {
+    "theme": {
+      "type": "string",
+      "enum": [
+        "system",
+        "light",
+        "dark"
+      ],
+      "default": "system",
+      "description": "Web UI theme.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Appearance",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "locale": {
+      "type": "string",
+      "enum": [
+        "en",
+        "ru"
+      ],
+      "default": "en",
+      "description": "Web UI language.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Appearance",
+          "order": 20,
+          "widget": "select"
+        }
+      }
+    },
+    "time_display": {
+      "type": "string",
+      "enum": [
+        "local",
+        "utc"
+      ],
+      "default": "local",
+      "description": "How timestamps are shown.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Appearance",
+          "order": 30,
+          "widget": "select"
+        }
+      }
+    },
+    "open_browser": {
+      "type": "boolean",
+      "default": true,
+      "description": "`skm local up` opens the web UI in the default browser.",
+      "x-skm": {
+        "chain": "host",
+        "levels": [
+          "instance",
+          "host"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": false,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Local",
+          "order": 10,
+          "widget": "toggle"
+        }
+      }
+    },
+    "stale_after_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600,
+      "default": 30,
+      "description": "Time after which displayed data is marked stale when the live connection is lost.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Live",
+          "order": 10,
+          "widget": "number"
+        }
+      }
+    },
+    "plans": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tree_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "default": 3,
+          "description": "Levels of the plan tree expanded by default (phase, item, unit).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Plans",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "runs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "live_stream": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the live step stream automatically on the run page.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Runs",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

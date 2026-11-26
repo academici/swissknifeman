@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-output:run-history:v1",
+  "title": "skm_run_history output",
+  "description": "Output for the skm_run_history MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/run_id"
+    },
+    "through_seq": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/through_seq"
+    },
+    "builder_version": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/builder_version"
+    },
+    "scanned_through_seq": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/scanned_through_seq"
+    },
+    "entries": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/entries"
+    },
+    "next_after": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/next_after"
+    },
+    "coverage": {
+      "$ref": "urn:skm:execution:execution-history:v1#/properties/coverage"
+    },
+    "entries_truncated": {
+      "$ref": "urn:skm:mcp:tool-output-truncation-receipt:v1"
+    }
+  },
+  "required": [
+    "run_id",
+    "through_seq",
+    "builder_version",
+    "scanned_through_seq",
+    "entries",
+    "next_after",
+    "coverage"
+  ]
+}

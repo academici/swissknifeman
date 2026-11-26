@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:spec-diff:v1",
+  "title": "SpecDiffView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "from_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "to_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "plan_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pointer": {
+            "type": "string",
+            "minLength": 0
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "add",
+              "remove",
+              "replace"
+            ]
+          },
+          "before": {},
+          "after": {}
+        },
+        "required": [
+          "pointer",
+          "op",
+          "before",
+          "after"
+        ]
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entity_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "entity_kind": {
+            "type": "string",
+            "enum": [
+              "phase",
+              "item",
+              "unit",
+              "requirement",
+              "criterion",
+              "check",
+              "decision",
+              "material"
+            ]
+          },
+          "change": {
+            "type": "string",
+            "enum": [
+              "added",
+              "removed",
+              "changed"
+            ]
+          },
+          "key_before": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "key_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rekeyed": {
+            "type": "boolean"
+          },
+          "moved": {
+            "type": "boolean"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "pointer": {
+                  "type": "string",
+                  "minLength": 0
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [
+                    "add",
+                    "remove",
+                    "replace"
+                  ]
+                },
+                "before": {},
+                "after": {}
+              },
+              "required": [
+                "pointer",
+                "op",
+                "before",
+                "after"
+              ]
+            }
+          }
+        },
+        "required": [
+          "entity_id",
+          "entity_kind",
+          "change",
+          "key_before",
+          "key_after",
+          "rekeyed",
+          "moved",
+          "fields"
+        ]
+      }
+    },
+    "from": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "to": {
+      "type": "object",
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "from_digest",
+    "to_digest",
+    "summary",
+    "plan_fields",
+    "entities",
+    "from",
+    "to"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "SpecDiffView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "SpecDiffView"
+    }
+  }
+}

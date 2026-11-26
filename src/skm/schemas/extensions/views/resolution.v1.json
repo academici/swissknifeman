@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:view:resolution:v1",
+  "title": "ResolutionView",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "chosen": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:extensions:view:resource-version:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pack": {
+            "type": "string",
+            "minLength": 0
+          },
+          "version": {
+            "type": "string",
+            "minLength": 0
+          },
+          "digest": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+          },
+          "verdict": {
+            "type": "string",
+            "minLength": 0
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "required": [
+          "pack",
+          "version",
+          "digest",
+          "verdict",
+          "reason"
+        ]
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "required": [
+    "chosen",
+    "candidates",
+    "diagnostics"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.views",
+      "class": "ResolutionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ResolutionView"
+    }
+  }
+}

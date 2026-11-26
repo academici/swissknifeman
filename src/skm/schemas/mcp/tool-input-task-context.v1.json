@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:task-context:v1",
+  "title": "skm_task_context input",
+  "description": "Input for the skm_task_context MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task": {
+      "type": "string"
+    }
+  }
+}

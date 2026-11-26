@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:view:whoami:v1",
+  "title": "WhoAmIView",
+  "description": "access view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "principal": {
+      "$ref": "urn:skm:access:view:principal:v1"
+    },
+    "token": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:access:view:token-summary:v1"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "memberships": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:access:view:membership:v1"
+      }
+    },
+    "effective_permissions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:access:defs:v1#/$defs/permission"
+      },
+      "uniqueItems": true
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "permissions_by_scope": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "urn:skm:access:defs:v1#/$defs/permission"
+        },
+        "uniqueItems": true
+      }
+    },
+    "events_cursor": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "principal",
+    "token",
+    "memberships",
+    "effective_permissions",
+    "modules",
+    "permissions_by_scope",
+    "events_cursor"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.views",
+      "class": "WhoAmIView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "WhoAmIView"
+    }
+  }
+}

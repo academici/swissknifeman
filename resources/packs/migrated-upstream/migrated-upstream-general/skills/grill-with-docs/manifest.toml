@@ -1,0 +1,24 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "grill-with-docs"
+version = "0.1.0"
+kind = "workflow"
+risk = "medium"
+license = "MIT"
+roles = ["advisor"]
+requires = ["domain-modeling", "spec-interview"]
+replaced_by = "planner/commands/plan-design.md"
+
+[provenance]
+source = "upstream"
+repo = "mattpocock/skills"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "26923e5ebf0747d4e70fa71989ecb279d10031e6a9cc23d6e7250628cc00fb89"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/grill-with-docs/SKILL.md"
+sha256 = "610d091047bcfb9db0f75c057d15538481a721111579fc5ec7f83ad9131a2165"
+fetched_at = "2026-06-26"

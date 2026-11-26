@@ -1,0 +1,16 @@
+# Built-in EventSink "webhook" (integrations §5.8.4). Second attempt of one delivery: SKM-Delivery-Id is the same in all attempts.
+# Signature: v1 = HMAC-SHA256(key = secret, msg = "<t>." + body), lowercase hex. Example secret: "example-secret-do-not-use".
+# Receiver: compare with every v1 in constant time, reject |now - t| > 300 s, deduplicate on SKM-Delivery-Id.
+POST /hooks/skm HTTP/1.1
+Host: ci.example.com
+Content-Type: application/json; charset=utf-8
+User-Agent: skm-webhook/2.0.0
+SKM-Event-Id: 019a4c10-2b3c-7d4e-8f50-6a7b8c9d0e1f
+SKM-Event-Type: urn:skm:execution:event:run-finished:v1
+SKM-Delivery-Id: 019a4c10-3c4d-7e5f-8061-7b8c9d0e1f2a
+SKM-Subscription-Id: ci-notify
+SKM-Attempt: 2
+SKM-Signature: t=1793023343,v1=ca7d39a503d6a3595ec0702ff1c0204573e28da94b08b92f7e2f043d3c66d09e
+X-Team: platform
+
+{"attempt":2,"delivery_id":"019a4c10-3c4d-7e5f-8061-7b8c9d0e1f2a","event":{"actor_id":"01928f50-0000-7000-8000-000000000001","causation_id":"req-7f3a","correlation_id":"corr-19c2","id":"019a4c10-2b3c-7d4e-8f50-6a7b8c9d0e1f","occurred_at":"2026-10-25T14:02:11.204Z","payload":{"project_id":"01928f6e-7a3b-7c41-9d2e-5b8a1f3c4d60","run_id":"019a4b00-1111-7222-8333-444455556666","status":"succeeded","tasks":{"accepted":12,"failed":0,"skipped":0,"total":12}},"recorded_at":"2026-10-25T14:02:11.219Z","request_id":"req-7f3a","schema_version":1,"stream_id":"019a4b00-1111-7222-8333-444455556666","stream_kind":"run","stream_seq":41,"type":"urn:skm:execution:event:run-finished:v1","workspace_id":"01928f50-aaaa-7bbb-8ccc-1d2e3f4a5b6c","workspace_seq":90812},"schema":"urn:skm:integrations:webhook-delivery:v1","sent_at":"2026-10-25T14:02:23.880Z","subscription_id":"ci-notify"}

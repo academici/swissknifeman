@@ -1,0 +1,4 @@
+{
+  "this file": "is a data document validated by a schema, not a schema: it has no $id and the loader must skip it",
+  "skus": ["ABC-0001"]
+}

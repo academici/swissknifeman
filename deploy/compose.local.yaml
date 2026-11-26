@@ -1,0 +1,63 @@
+# Packaged PostgreSQL for skm init and local lifecycle.
+name: skm-local
+services:
+  postgres:
+    image: postgres:16.4
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${SKM_LOCAL_PG_ADMIN_PASSWORD:?}
+      SKM_LOCAL_PG_MODE: ${SKM_LOCAL_PG_MODE:?}
+      SKM_LOCAL_PG_PROJECT_APP: ${SKM_LOCAL_PG_PROJECT_APP:-}
+      SKM_LOCAL_PG_PROJECT_MIGRATOR: ${SKM_LOCAL_PG_PROJECT_MIGRATOR:-}
+      SKM_LOCAL_PG_MACHINE_APP: ${SKM_LOCAL_PG_MACHINE_APP:?}
+      SKM_LOCAL_PG_MACHINE_MIGRATOR: ${SKM_LOCAL_PG_MACHINE_MIGRATOR:?}
+      TZ: UTC
+      PGTZ: UTC
+    command: ["postgres", "-c", "timezone=UTC"]
+    ports:
+      - "127.0.0.1:${SKM_LOCAL_PG_PORT:?}:5432"
+    volumes:
+      - skm-local-pg:/var/lib/postgresql/data
+    configs:
+      - source: local-roles
+        target: /docker-entrypoint-initdb.d/01-local-roles.sh
+    healthcheck:
+      # The entrypoint's temporary initialization server accepts only Unix socket connections.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  skm-local-pg: {}
+configs:
+  local-roles:
+    content: |
+      case "$${SKM_LOCAL_PG_MODE}" in
+        standalone)
+          docker_process_sql <<'SQL'
+      \getenv app_password SKM_LOCAL_PG_PROJECT_APP
+      \getenv migrator_password SKM_LOCAL_PG_PROJECT_MIGRATOR
+      CREATE ROLE skm_app NOLOGIN;
+      CREATE ROLE skm_migrator NOLOGIN;
+      CREATE ROLE skm_app_login LOGIN PASSWORD :'app_password' IN ROLE skm_app;
+      CREATE ROLE skm_migrator_login LOGIN PASSWORD :'migrator_password' IN ROLE skm_migrator;
+      CREATE DATABASE skm_projects OWNER skm_migrator_login TEMPLATE template0;
+      REVOKE ALL ON DATABASE skm_projects FROM PUBLIC;
+      GRANT CONNECT ON DATABASE skm_projects TO skm_app, skm_migrator;
+      SQL
+          ;;
+        client) ;;
+        *) return 1 ;;
+      esac
+      docker_process_sql <<'SQL'
+      \getenv app_password SKM_LOCAL_PG_MACHINE_APP
+      \getenv migrator_password SKM_LOCAL_PG_MACHINE_MIGRATOR
+      CREATE ROLE skm_host_app NOLOGIN;
+      CREATE ROLE skm_host_migrator NOLOGIN;
+      CREATE ROLE skm_host_app_login LOGIN PASSWORD :'app_password' IN ROLE skm_host_app;
+      CREATE ROLE skm_host_migrator_login LOGIN PASSWORD :'migrator_password' IN ROLE skm_host_migrator;
+      CREATE DATABASE skm_host OWNER skm_host_migrator_login TEMPLATE template0;
+      REVOKE ALL ON DATABASE postgres, template0, template1, skm_host FROM PUBLIC;
+      GRANT CONNECT ON DATABASE skm_host TO skm_host_app, skm_host_migrator;
+      SQL

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:plan-ref:v1",
+  "title": "PlanRefView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "alias": {
+      "type": "string",
+      "minLength": 0
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 0
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "review_requests"
+      ]
+    },
+    "superseded_chain": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "truncated": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "plan_id",
+    "alias",
+    "project_id",
+    "title",
+    "purpose",
+    "superseded_chain",
+    "truncated"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "PlanRefView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PlanRefView"
+    }
+  }
+}

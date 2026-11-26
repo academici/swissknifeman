@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "architecture"
+version = "0.2.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+exclusive_group = "architect-stage"
+
+[provenance]
+source = "local"

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:query:export-config:v1",
+  "title": "ExportConfig",
+  "description": "settings query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "portable_only": {
+      "type": "boolean",
+      "default": false
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "toml",
+        "json"
+      ]
+    }
+  },
+  "required": [
+    "scope",
+    "format"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.queries",
+      "class": "ExportConfig",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExportConfig"
+    }
+  }
+}

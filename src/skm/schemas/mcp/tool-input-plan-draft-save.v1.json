@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-draft-save:v1",
+  "title": "skm_plan_draft_save input",
+  "description": "Input for the skm_plan_draft_save MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "document": {
+      "$ref": "urn:skm:planning:specification:v1"
+    },
+    "merge_patch": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:planning:defs:v1#/$defs/draft-change"
+      },
+      "minItems": 1,
+      "maxItems": 500
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    }
+  },
+  "required": [
+    "plan",
+    "draft_id",
+    "expected_edit_version"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "document"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "merge_patch"
+            ]
+          },
+          {
+            "required": [
+              "changes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "merge_patch"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "document"
+            ]
+          },
+          {
+            "required": [
+              "changes"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "changes"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "document"
+            ]
+          },
+          {
+            "required": [
+              "merge_patch"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

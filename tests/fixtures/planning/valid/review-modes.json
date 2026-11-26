@@ -1,0 +1,77 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "required"
+      }
+    },
+    {
+      "key": "P1.2",
+      "phase": "P1",
+      "title": "Item P1.2",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "required",
+        "profile": "code-review",
+        "independence": "human",
+        "reviewer": {
+          "class": "frontier",
+          "effort": "high",
+          "runtime": "claude",
+          "model": "m-1",
+          "note": "Prefer a different family."
+        },
+        "max_rounds": 3,
+        "covers": [
+          "P1.1"
+        ],
+        "required_evidence": [
+          "diff",
+          "checks",
+          "acceptance_coverage",
+          "transcript"
+        ]
+      }
+    },
+    {
+      "key": "P1.3",
+      "phase": "P1",
+      "title": "Item P1.3",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Trivial rename."
+      }
+    },
+    {
+      "key": "P1.4",
+      "phase": "P1",
+      "title": "Item P1.4",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "waived",
+        "reason": "Human review item.",
+        "waived_by": "owner"
+      }
+    }
+  ]
+}

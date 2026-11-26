@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:defs:v1",
+  "title": "ExportsDefinitions",
+  "description": "exports contract; semantics: the exports module.",
+  "$defs": {
+    "NoteKind": {
+      "type": "string",
+      "enum": [
+        "plan_archived",
+        "run_finished"
+      ]
+    },
+    "VaultNoteState": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "VaultProjectMatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "folder": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "via": {
+          "enum": [
+            "catalog",
+            "control_note"
+          ]
+        }
+      },
+      "required": [
+        "folder",
+        "name",
+        "via"
+      ]
+    },
+    "MarkdownDoc": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frontmatter": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "frontmatter",
+        "body"
+      ]
+    },
+    "RunReportMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tasks_accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tasks_failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tasks_skipped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "first_pass_rate": {
+          "type": "number"
+        },
+        "attempts_per_task": {
+          "type": "number"
+        },
+        "check_fix_rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review_rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rework_rounds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "findings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "deviations_accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decisions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "tokens": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "usd": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "active_seconds_by_group": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "wall_seconds": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "tasks_total",
+        "tasks_accepted",
+        "tasks_failed",
+        "tasks_skipped",
+        "first_pass_rate",
+        "attempts_per_task",
+        "check_fix_rounds",
+        "review_rounds",
+        "rework_rounds",
+        "checks",
+        "findings",
+        "deviations_accepted",
+        "decisions",
+        "tokens",
+        "usd",
+        "active_seconds_by_group",
+        "wall_seconds"
+      ]
+    },
+    "VaultIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vault_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "writer_host_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "vault_id",
+        "writer_host_id"
+      ]
+    },
+    "VaultLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "config",
+            "candidate"
+          ]
+        },
+        "obsidian": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "root",
+        "source",
+        "obsidian"
+      ]
+    },
+    "VaultNote": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "kind": {
+          "$ref": "urn:skm:exports:defs:v1#/$defs/NoteKind"
+        },
+        "event_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "source_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "subfolder": {
+          "enum": [
+            "plans",
+            "runs"
+          ]
+        },
+        "body": {
+          "type": "string"
+        },
+        "body_digest": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "urn:skm:exports:defs:v1#/$defs/VaultNoteState"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "created_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "requeued_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "kind",
+        "event_id",
+        "source_id",
+        "name",
+        "subfolder",
+        "body",
+        "body_digest",
+        "state",
+        "created_at"
+      ]
+    },
+    "VaultNoteWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "note_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "vault_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "host_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "relative_path": {
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "created",
+            "verified_existing",
+            "modified_existing"
+          ]
+        },
+        "expected_digest": {
+          "type": "string"
+        },
+        "observed_digest": {
+          "type": "string"
+        },
+        "written_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "note_id",
+        "vault_id",
+        "generation",
+        "host_id",
+        "relative_path",
+        "outcome",
+        "expected_digest",
+        "observed_digest",
+        "written_at"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.documents",
+      "class": "ExportsDefinitions",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "ExportsDefinitions"
+    }
+  }
+}

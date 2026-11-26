@@ -1,0 +1,36 @@
+schema = "urn:skm:execution:workflow:v1"
+id = "research-only"
+version = "2.0.0"
+title = "Research only"
+description = "prepare (read-only use of the environment) -> research -> review when required -> acceptance."
+applies_to = ["research"]
+requires_roles = ["researcher", "reviewer", "triager"]
+
+[[stage]]
+id = "prepare"
+type = "prepare_environment"
+params = { baseline_strategy = "revision_pinned" }
+
+[[stage]]
+id = "research"
+type = "agent_step"
+role = "researcher"
+on = { result_invalid = "retry_then_escalate" }
+
+[[stage]]
+id = "review"
+type = "agent_review"
+role = "reviewer"
+when = { review_mode = "required" }
+params = { audit_scope = "full", profile = "reviewer" }
+on = { verdict_attention = "triage", verdict_red = "triage" }
+
+[[stage]]
+id = "triage"
+type = "agent_step"
+role = "triager"
+when = { any = [ { review_verdict = "red" }, { review_verdict = "attention" } ] }
+
+[[stage]]
+id = "accept"
+type = "acceptance_gate"

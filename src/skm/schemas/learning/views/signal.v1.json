@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:learning:view:signal:v1",
+  "title": "SignalView",
+  "description": "learning contract; semantics: the learning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "signal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "extract"
+      ]
+    },
+    "observed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "sessions_known": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "sessions_success": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "evidence_dependency": {
+      "type": "string",
+      "enum": [
+        "independent",
+        "exposed",
+        "unknown"
+      ]
+    },
+    "tests_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tests_passed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "activity": {
+      "$ref": "urn:skm:learning:defs:v1#/$defs/ActivityRecord"
+    }
+  },
+  "required": [
+    "signal_id",
+    "source",
+    "observed_at",
+    "sessions_known",
+    "sessions_success",
+    "evidence_dependency",
+    "tests_total",
+    "tests_passed",
+    "activity"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.learning.generated.views",
+      "class": "SignalView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "learning.ts",
+      "name": "SignalView"
+    }
+  }
+}

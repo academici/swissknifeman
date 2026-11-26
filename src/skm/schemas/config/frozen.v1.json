@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:config:frozen:v1",
+  "title": "Frozen run configuration",
+  "description": "Snapshot of the run_frozen keys of the run scope taken by StartRun; stored in skm_execution.execution_bundles.config_snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "run_scope_id",
+    "generation",
+    "pack_generation",
+    "registry_digest",
+    "digest",
+    "values",
+    "provenance"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:config:frozen:v1"
+    },
+    "run_scope_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pack_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "registry_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the versioned registry descriptor: section schemas, defaults, merge/reload/normalization semantics, and enabled modules. Unknown descriptors fail closed before execution."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA256 of canonical {schema, registry_digest, values}; binds values to their original interpretation."
+    },
+    "values": {
+      "type": "object",
+      "description": "key -> effective value; keys absent from the map were absent (nullable) at freeze time.",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "key -> label of the winning layer (default, pack:<id>, instance, workspace:<slug>, …).",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated",
+      "class": "FrozenConfigDoc",
+      "kind": "typeddict"
+    }
+  }
+}

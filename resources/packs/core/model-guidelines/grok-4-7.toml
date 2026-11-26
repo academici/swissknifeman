@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "grok-4-7"
+version = "2.0.6"
+model_family = "grok"
+model_id = "grok-4.7"
+display_name = "Grok 4.7"
+runtime_ids = ["grok"]
+classes = ["frontier", "implementation"]
+suited_roles = ["executor", "reviewer", "advisor"]
+notes = "2026 Grok family. Cache writes are not reported."
+strengths = ["coding", "review", "tool use"]
+delegation_notes = ["Keep the prefix stable for cache reads.", "Do not invent a cache-write counter."]
+forbidden_params = ["temperature"]
+
+[prompt_style]
+shape = "prefix_stable"
+instructions = ["Put role rules before the task.", "Name the write scope once."]
+
+[cache_capabilities]
+prompt_cache = "native"
+cache_read = true
+cache_write = false
+min_cacheable_tokens = 1024
+
+[compaction_threshold]
+input_tokens = 180000
+reserve_output_tokens = 12000

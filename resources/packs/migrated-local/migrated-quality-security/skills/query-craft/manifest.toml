@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "query-craft"
+version = "0.1.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

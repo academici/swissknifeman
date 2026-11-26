@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:claim-assignment:v1",
+  "title": "ClaimAssignment",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "worker_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "environment_kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "git_worktree",
+              "existing_checkout",
+              "managed_clone"
+            ]
+          }
+        },
+        "isolation_profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+          }
+        }
+      },
+      "required": [
+        "capabilities",
+        "labels",
+        "environment_kinds",
+        "isolation_profiles"
+      ]
+    },
+    "reaped_steps": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "identity": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/process-identity"
+          },
+          "dead": {
+            "const": true
+          },
+          "env_patch": {
+            "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+          },
+          "stage_record_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "unit_kind": {
+            "enum": [
+              "step",
+              "check",
+              "git_effect"
+            ]
+          },
+          "unit_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        },
+        "required": [
+          "stage_record_id",
+          "unit_kind",
+          "unit_id",
+          "identity",
+          "dead"
+        ]
+      }
+    },
+    "max_wait_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "worker_version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "worker_id",
+    "host_id",
+    "workspace_id",
+    "offer"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "ClaimAssignment",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ClaimAssignment"
+    }
+  }
+}

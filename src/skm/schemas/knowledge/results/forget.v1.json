@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:result:forget:v1",
+  "title": "ForgetResult",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "forgotten": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "forgotten"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.results",
+      "class": "ForgetResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ForgetResult"
+    }
+  }
+}

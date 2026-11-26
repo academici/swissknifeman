@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"sess_401_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"result","subtype":"error_during_execution","session_id":"sess_401_001","is_error":true,"http_status":401,"result":"API Error: 401 authentication_error: OAuth token has expired. Please run /login","usage":{"input_tokens":0,"output_tokens":0,"cache_read_input_tokens":0,"cache_creation_input_tokens":0}}

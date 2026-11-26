@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"019a4f10-7c00-7000-8000-000000000001"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_r1","type":"mcp_tool_call","server":"skm","tool":"status","arguments":{"verbose":false},"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_r1","type":"mcp_tool_call","server":"skm","tool":"status","status":"completed","duration_ms":11}}
+{"type":"item.completed","item":{"id":"item_r2","type":"agent_message","text":"Resumed session completed follow-up verification."}}
+{"type":"turn.completed","usage":{"input_tokens":14500,"cached_input_tokens":12000,"output_tokens":180}}

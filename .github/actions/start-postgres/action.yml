@@ -1,0 +1,63 @@
+name: Prepare the PostgreSQL service for tests
+description: >-
+  Install a PostgreSQL client at least as new as the server (schema snapshots and backups run pg_dump), raise
+  max_connections for parallel xdist workers, trade durability for speed on the throwaway CI database,
+  restart the service container and wait until it accepts connections again.
+
+inputs:
+  container:
+    description: Service container id (job.services.postgres.id).
+    required: true
+
+  client-major:
+    description: Major version of the PostgreSQL client tools to install (>= every server in the matrix).
+    required: false
+    default: '19'
+
+runs:
+  using: composite
+  steps:
+    - name: Install the PostgreSQL client
+      shell: bash
+      env:
+        CLIENT_MAJOR: ${{ inputs.client-major }}
+      run: |
+        set -euo pipefail
+        # The runner image ships an older client; pg_dump refuses a newer server. PGDG carries every major.
+        keyring=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+        if [[ ! -f /etc/apt/sources.list.d/pgdg.list ]]; then
+          sudo install -d "$(dirname "$keyring")"
+          sudo curl -fsSL -o "$keyring" https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=$keyring] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" |
+            sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+        fi
+        sudo apt-get update -qq -o Dir::Etc::sourcelist=sources.list.d/pgdg.list -o Dir::Etc::sourceparts=-
+        sudo apt-get install -y -qq --no-install-recommends "postgresql-client-$CLIENT_MAJOR" > /dev/null
+        # pg_wrapper in /usr/bin follows the runner's own cluster (16); /usr/local/bin comes first on PATH.
+        sudo ln -sf "/usr/lib/postgresql/$CLIENT_MAJOR/bin/"* /usr/local/bin/
+        pg_dump --version
+    - name: Tune and restart PostgreSQL
+      shell: bash
+      env:
+        CONTAINER: ${{ inputs.container }}
+      run: |
+        set -euo pipefail
+        # Same max_connections as deploy/compose.dev.yaml; the durability settings only fit a disposable database.
+        docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -U skm -d skm_test \
+          -c "ALTER SYSTEM SET max_connections = 200" \
+          -c "ALTER SYSTEM SET fsync = off" \
+          -c "ALTER SYSTEM SET synchronous_commit = off" \
+          -c "ALTER SYSTEM SET full_page_writes = off" \
+          -c "ALTER SYSTEM SET timezone = 'UTC'" \
+          -c "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+        docker restart "$CONTAINER" > /dev/null
+        for _ in $(seq 1 60); do
+          if docker exec "$CONTAINER" pg_isready -q -U skm -d skm_test; then
+            docker exec "$CONTAINER" psql -X -At -U skm -d skm_test -c "SELECT version()"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "::error::PostgreSQL did not come back after the restart"
+        docker logs --tail 50 "$CONTAINER"
+        exit 1

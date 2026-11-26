@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:sync-projections:v1",
+  "title": "SyncProjectionsRequest",
+  "description": "Synchronize local checkout projections for a project or workspace.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "enum": [
+        "project",
+        "workspace"
+      ]
+    },
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    }
+  },
+  "required": [
+    "scope",
+    "scope_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "SyncProjectionsRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "SyncProjectionsRequest"
+    }
+  }
+}

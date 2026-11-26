@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:record-external-effect:v1",
+  "title": "RecordExternalEffect",
+  "description": "Normative execution contract; intent/approval/outcome of push/PR are handled by the server in this transaction (K7), the worker never sends intent_id. Details: spec/modules/execution.md §7.2.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "effect_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "git_commit",
+        "git_push",
+        "pr_create",
+        "publish",
+        "fs_write_external",
+        "message"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "intended",
+        "executing",
+        "result"
+      ]
+    },
+    "request_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "succeeded": {
+              "type": "boolean"
+            },
+            "ref": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "response_digest": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            "error": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "commit_shas": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{40}|[0-9a-f]{64})$"
+              }
+            },
+            "git_receipt": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/git-commit-receipt"
+            }
+          },
+          "required": [
+            "succeeded"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "request": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/git-commit-request"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "claim",
+    "kind",
+    "phase",
+    "request_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "RecordExternalEffect",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RecordExternalEffect"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "git_commit"
+          },
+          "phase": {
+            "const": "intended"
+          }
+        },
+        "required": [
+          "kind",
+          "phase"
+        ]
+      },
+      "then": {
+        "required": [
+          "effect_id",
+          "request"
+        ],
+        "properties": {
+          "effect_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "request": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/git-commit-request"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "git_commit"
+          },
+          "phase": {
+            "const": "result"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "succeeded": {
+                "const": true
+              }
+            },
+            "required": [
+              "succeeded"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "phase",
+          "result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "required": [
+              "git_receipt"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

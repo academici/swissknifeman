@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:remote-normalization-vectors:v1",
+  "title": "RemoteNormalizationVectors",
+  "description": "Normative workspace contract; details and semantic validation: spec/modules/workspace.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "const": "urn:skm:workspace:remote-normalization-vectors:v1"
+    },
+    "description": {
+      "type": "string"
+    },
+    "vectors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "expected": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "normalized": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "redacted": {
+            "type": "string"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "input"
+        ]
+      }
+    }
+  },
+  "required": [
+    "$schema",
+    "vectors"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.documents",
+      "class": "RemoteNormalizationVectors",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RemoteNormalizationVectors"
+    }
+  }
+}

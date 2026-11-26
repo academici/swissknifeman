@@ -1,0 +1,56 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "executor"
+version = "2.0.0"
+role = "executor"
+title = "Executor"
+description = "Implements one task inside its write scope, proves it with the tests of what it changed and reports a closed result."
+result_schema = "urn:skm:execution:role-result:executor:v1"
+llm = true
+
+[routing]
+model_class = "implementation"
+effort = "high"
+required_capabilities = ["headless_execution", "structured_result", "workspace_binding", "stream_events", "reliable_cancellation"]
+optional_capabilities = ["session_resume", "usage_reporting", "tool_interception"]
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "workspace-contained"
+
+[permissions.layer.tools]
+allow = ["fs.read", "fs.write", "fs.edit", "fs.delete", "shell.run"]
+
+[permissions.layer.effects]
+allow = []
+need_approval = []
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["executor/role"]
+task_contract = ["executor/task_contract", "shared/work_policy"]
+result_contract = ["executor/result_contract"]
+research = ["shared/raw_block"]
+
+[context]
+include = ["previous_attempt", "context_map", "steering", "skills", "skill_index", "materials", "repo_instructions", "research", "history"]
+inherit_user_global = false
+repo_instructions = "full"
+repo_instruction_sections = []
+skills_mode = "auto"
+skills_include = []
+skills_exclude = []
+skills_budget_tokens = 8000
+history_max_steps = 3
+memory_top_k = 0
+include_optional_materials = true
+
+[limits]
+timeout_seconds = 3600
+idle_timeout_seconds = 600
+max_turns = 200
+max_output_tokens = 32000
+max_result_retries = 2

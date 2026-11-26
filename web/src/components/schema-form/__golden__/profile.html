@@ -1,0 +1,242 @@
+<div class="schema-form">
+<fieldset data-pointer="" data-widget="fieldset" id="_R_2_">
+<legend>Profile</legend>
+<fieldset>
+<legend>Text</legend>
+<div data-pointer="/path" data-widget="path">
+<label for="_R_1gam_">path</label>
+<input id="_R_1gam_" type="text" spellcheck="false" value="~/file">
+</div>
+<div data-pointer="/name" data-widget="text">
+<label for="_R_2gam_">Name<span aria-hidden="true"> *</span>
+</label>
+<input id="_R_2gam_" aria-describedby="_R_2gam_-details" aria-required="true" type="text" spellcheck="true" value="A">
+<div id="_R_2gam_-details">
+<p>Минимум 4 символов</p>
+</div>
+<a href="https://docs.example.org/" rel="noopener noreferrer">Справка (https://docs.example.org)</a>
+</div>
+<div data-pointer="/textarea" data-widget="textarea">
+<label for="_R_3gam_">textarea</label>
+<textarea id="_R_3gam_" rows="4" spellcheck="true">one
+two</textarea>
+</div>
+<div data-pointer="/markdown" data-widget="markdown">
+<label for="_R_4gam_">markdown</label>
+<textarea id="_R_4gam_" rows="4" spellcheck="true">**strong**</textarea>
+</div>
+<div data-pointer="/code" data-widget="code">
+<label for="_R_5gam_">code</label>
+<textarea id="_R_5gam_" rows="4" spellcheck="false">&lt;script&gt;</textarea>
+</div>
+</fieldset>
+<div data-pointer="/number" data-widget="number">
+<label for="_R_1im_">number</label>
+<input id="_R_1im_" type="number" step="any" value="7.5">
+</div>
+<div data-pointer="/slider" data-widget="slider">
+<label for="_R_1qm_">slider</label>
+<input id="_R_1qm_" type="range" min="1" max="4" step="1" value="3">
+<output for="_R_1qm_">3</output>
+</div>
+<div data-pointer="/check" data-widget="checkbox">
+<label for="_R_22m_">check</label>
+<input id="_R_22m_" type="checkbox">
+</div>
+<div data-pointer="/toggle" data-widget="toggle">
+<label for="_R_2am_">toggle</label>
+<input id="_R_2am_" type="checkbox" role="switch" checked="">
+</div>
+<div data-pointer="/switch" data-widget="switch">
+<label for="_R_2im_">switch</label>
+<input id="_R_2im_" type="checkbox" role="switch">
+</div>
+<fieldset data-pointer="/radio" data-widget="radio" id="_R_2qm_">
+<legend>radio</legend>
+<div>
+<input id="_R_2qm_-0" type="radio" name="_R_2qm_" checked="" value="0">
+<label for="_R_2qm_-0">a</label>
+</div>
+<div>
+<input id="_R_2qm_-1" type="radio" name="_R_2qm_" value="1">
+<label for="_R_2qm_-1">b</label>
+</div>
+</fieldset>
+<fieldset data-pointer="/const" data-widget="radio" id="_R_32m_">
+<legend>const</legend>
+<div>
+<input id="_R_32m_-0" type="radio" name="_R_32m_" checked="" value="0">
+<label for="_R_32m_-0">v1</label>
+</div>
+</fieldset>
+<div data-pointer="/select" data-widget="select">
+<label for="_R_3am_">select</label>
+<select id="_R_3am_">
+<option value="0">one</option>
+<option value="1" selected="">two</option>
+</select>
+</div>
+<fieldset data-pointer="/list" data-widget="list" id="_R_3im_">
+<legend>list</legend>
+<button type="button">Добавить элемент</button>
+<ol>
+<li>
+<div data-pointer="/list/0" data-widget="number">
+<label for="_R_1pbim_">Элемент 1</label>
+<input id="_R_1pbim_" type="number" step="any" value="1">
+</div>
+<div>
+<button type="button" disabled="" aria-label="Поднять элемент 1">↑</button>
+<button type="button" disabled="" aria-label="Опустить элемент 1">↓</button>
+<button type="button" aria-label="Удалить элемент 1">Удалить</button>
+</div>
+</li>
+</ol>
+</fieldset>
+<fieldset data-pointer="/cards" data-widget="list" id="_R_3qm_">
+<legend>cards</legend>
+<button type="button">Добавить элемент</button>
+<ol>
+<li>
+<fieldset data-pointer="/cards/0" data-widget="fieldset" id="_R_1pbqm_">
+<legend>Элемент 1</legend>
+<div data-pointer="/cards/0/value" data-widget="text">
+<label for="_R_alpbqm_">value</label>
+<input id="_R_alpbqm_" type="text" spellcheck="true" value="c">
+</div>
+</fieldset>
+<div>
+<button type="button" disabled="" aria-label="Поднять элемент 1">↑</button>
+<button type="button" disabled="" aria-label="Опустить элемент 1">↓</button>
+<button type="button" aria-label="Удалить элемент 1">Удалить</button>
+</div>
+</li>
+</ol>
+</fieldset>
+<fieldset data-pointer="/tags" data-widget="tags" id="_R_42m_">
+<legend>tags</legend>
+<button type="button">Добавить элемент</button>
+<ul>
+<li>
+<div data-pointer="/tags/0" data-widget="text">
+<label for="_R_1pc2m_">Элемент 1</label>
+<input id="_R_1pc2m_" type="text" spellcheck="true" value="tag">
+</div>
+<div>
+<button type="button" disabled="" aria-label="Поднять элемент 1">↑</button>
+<button type="button" disabled="" aria-label="Опустить элемент 1">↓</button>
+<button type="button" aria-label="Удалить элемент 1">Удалить</button>
+</div>
+</li>
+</ul>
+</fieldset>
+<fieldset data-pointer="/table" data-widget="table" id="_R_4am_">
+<legend>table</legend>
+<button type="button">Добавить элемент</button>
+<table>
+<thead>
+<tr>
+<th scope="col">Элемент</th>
+<th scope="col">Действия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<fieldset data-pointer="/table/0" data-widget="fieldset" id="_R_79cam_">
+<legend>Элемент 1</legend>
+<div data-pointer="/table/0/value" data-widget="text">
+<label for="_R_1an9cam_">value</label>
+<input id="_R_1an9cam_" type="text" spellcheck="true" value="table row">
+</div>
+</fieldset>
+</td>
+<td>
+<button type="button" disabled="" aria-label="Поднять элемент 1">↑</button>
+<button type="button" disabled="" aria-label="Опустить элемент 1">↓</button>
+<button type="button" aria-label="Удалить элемент 1">Удалить</button>
+</td>
+</tr>
+</tbody>
+</table>
+</fieldset>
+<fieldset data-pointer="/map" data-widget="map" id="_R_4im_">
+<legend>map</legend>
+<div>
+<label for="_R_1cim_">Новый ключ (map)</label>
+<input id="_R_1cim_" type="text" aria-describedby="_R_1cim_-hint" value="">
+<button type="button">Добавить запись</button>
+<p id="_R_1cim_-hint">Ключ не соответствует шаблону</p>
+</div>
+<fieldset>
+<legend>a/b~</legend>
+<div data-pointer="/map/a~1b~0" data-widget="text">
+<label for="_R_5lcim_">a/b~</label>
+<input id="_R_5lcim_" aria-invalid="true" aria-describedby="_R_5lcim_-details" type="text" spellcheck="true" value="entry">
+<div id="_R_5lcim_-details">
+<ul role="alert">
+<li data-code="invalid" data-issue-pointer="/map/a~1b~0">Исправьте запись</li>
+</ul>
+</div>
+</div>
+<p>Ключ не соответствует шаблону</p>
+<button type="button" aria-label="Удалить запись a/b~">Удалить</button>
+</fieldset>
+</fieldset>
+<fieldset data-pointer="/variant" data-widget="select" id="_R_4qm_">
+<legend>Проверка</legend>
+<div data-pointer="/variant/kind" data-widget="select">
+<label for="_R_5cqm_">kind<span aria-hidden="true"> *</span>
+</label>
+<select id="_R_5cqm_" aria-required="true">
+<option value="0">auto</option>
+<option value="1" selected="">manual</option>
+<option value="2">reviewed</option>
+<option value="3">imported</option>
+</select>
+</div>
+<div data-pointer="/variant/shared" data-widget="text">
+<label for="_R_2pcqm_">shared</label>
+<input id="_R_2pcqm_" type="text" spellcheck="true" value="shared">
+</div>
+<div data-pointer="/variant/reason" data-widget="text">
+<label for="_R_4pcqm_">reason</label>
+<input id="_R_4pcqm_" aria-invalid="true" aria-describedby="_R_4pcqm_-details" type="text" spellcheck="true" value="test">
+<div id="_R_4pcqm_-details">
+<ul role="alert">
+<li data-code="invalid" data-issue-pointer="/variant/reason">Укажите причину</li>
+</ul>
+</div>
+</div>
+</fieldset>
+<div data-pointer="/secret" data-widget="secret">
+<label for="_R_52m_">secret</label>
+<input id="_R_52m_" aria-describedby="_R_52m_-details" type="password" autocomplete="off" spellcheck="false" value="">
+<div id="_R_52m_-details">
+<p>Ожидается ссылка secret://env/…, secret://file/… или secret://keyring/…</p>
+</div>
+</div>
+<fieldset data-pointer="/json" data-widget="json" id="_R_5am_">
+<legend>json</legend>
+<pre tabindex="0">
+<code>{
+  "key": "one\u202etwo"
+}</code>
+</pre>
+<p>Не поддерживается (x-skm.ui.widget: json), редактируйте через import.</p>
+</fieldset>
+<details>
+<summary>Advanced</summary>
+<details>
+<summary>group</summary>
+<fieldset data-pointer="/group" data-widget="collapsed" id="_R_5km_">
+<legend>group</legend>
+<div data-pointer="/group/extra" data-widget="text">
+<label for="_R_ldkm_">extra</label>
+<input id="_R_ldkm_" type="text" spellcheck="true" value="advanced">
+</div>
+</fieldset>
+</details>
+</details>
+</fieldset>
+</div>

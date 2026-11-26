@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:command:rebase-draft:v1",
+  "title": "RebaseDraft",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "onto_revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "resolutions": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "conflict_id": {
+                "type": "string",
+                "minLength": 0
+              },
+              "keep": {
+                "type": "string",
+                "enum": [
+                  "yours",
+                  "theirs"
+                ]
+              }
+            },
+            "required": [
+              "conflict_id",
+              "keep"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "conflict_id": {
+                "type": "string",
+                "minLength": 0
+              },
+              "new_key": {
+                "type": "string",
+                "minLength": 0
+              }
+            },
+            "required": [
+              "conflict_id",
+              "new_key"
+            ]
+          }
+        ]
+      },
+      "maxItems": 500
+    }
+  },
+  "required": [
+    "plan_id",
+    "draft_id",
+    "expected_edit_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.commands",
+      "class": "RebaseDraft",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "RebaseDraft"
+    }
+  }
+}

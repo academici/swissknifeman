@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:plugin-fixture:settings:v1",
+  "title": "Fixture plugin settings",
+  "description": "Settings section of the fixture plugin acme.fixture (mechanisms/02-plugins §6).",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "plugins.acme.fixture",
+    "owner": "acme_fixture",
+    "title": "Fixture plugin"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm_plugin_fixture.settings",
+      "class": "FixtureSettings",
+      "kind": "settings_view"
+    }
+  },
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["quiet", "loud"],
+      "default": "quiet",
+      "description": "How loud the fixture runtime is.",
+      "x-skm": {
+        "chain": "work",
+        "levels": ["instance"],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "ui": {"group": "Fixture plugin", "order": 10, "widget": "select"}
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:task-status:v1",
+  "title": "skm_task_status input",
+  "description": "Input for the skm_task_status MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "task": {
+      "type": "string"
+    },
+    "run": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "task"
+  ]
+}

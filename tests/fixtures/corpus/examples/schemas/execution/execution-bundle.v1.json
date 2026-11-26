@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:execution-bundle:v1",
+  "title": "ExecutionBundle",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:execution-bundle:v1"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "config_snapshot": {
+      "$ref": "urn:skm:config:frozen:v1"
+    },
+    "config_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest",
+      "description": "Equals config_snapshot.digest: binds schema, registry interpretation and frozen values."
+    },
+    "policy_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "resource_pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "resources: pinned resource versions; packs: pack slug -> pack_version_id snapshot of extensions.pinned_pack_versions at start_run (K19).",
+      "properties": {
+        "resources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "skill",
+                  "steering",
+                  "agent_profile",
+                  "workflow",
+                  "plan_template",
+                  "prompt_block",
+                  "integration_bundle",
+                  "runtime_catalog"
+                ]
+              },
+              "key": {
+                "type": "string"
+              },
+              "resource_version_id": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              "digest": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+              }
+            },
+            "required": [
+              "kind",
+              "key",
+              "resource_version_id",
+              "digest"
+            ]
+          }
+        },
+        "packs": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+          },
+          "additionalProperties": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          }
+        }
+      },
+      "required": [
+        "resources",
+        "packs"
+      ]
+    },
+    "selection": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "task_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "phases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "stop_after": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "compiled_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "satisfied": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "display_key": {
+                    "type": "string"
+                  },
+                  "source_task_id": {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                  }
+                },
+                "required": [
+                  "display_key",
+                  "source_task_id"
+                ]
+              }
+            }
+          },
+          "required": [
+            "task_keys",
+            "phases",
+            "compiled_keys",
+            "satisfied"
+          ]
+        }
+      ]
+    },
+    "context_policy": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "review_grouping": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "work_policies": {
+      "description": "New records require complete work_policies; null is historical diagnostic-only and cannot authorize execution.",
+      "anyOf": [
+        {
+          "type": "object",
+          "description": "Complete mapping for compiled task display keys. Historical NULL database values are diagnostic-only and cannot resume.",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:work-policy:v1"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "config_snapshot",
+    "config_digest",
+    "policy_digest",
+    "resource_pins",
+    "selection",
+    "context_policy",
+    "review_grouping",
+    "created_at",
+    "work_policies"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "ExecutionBundle",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ExecutionBundle"
+    }
+  }
+}

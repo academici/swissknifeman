@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:record-checkout-verification:v1",
+  "title": "RecordCheckoutVerification",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_row_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_exists": {
+      "type": "boolean"
+    },
+    "observed_toplevel": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/local_locator"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_remotes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+      },
+      "uniqueItems": true,
+      "maxItems": 32
+    },
+    "observed_head": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/git_object_id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_dirty": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    }
+  },
+  "required": [
+    "binding_id",
+    "expected_row_version",
+    "observed_exists",
+    "observed_toplevel",
+    "observed_remotes",
+    "observed_head",
+    "observed_dirty",
+    "observed_at"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "RecordCheckoutVerification",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RecordCheckoutVerification"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "docker-php"
+version = "0.3.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "docker"
+
+[provenance]
+source = "local"

@@ -1,0 +1,46 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "mcp-builder"
+version = "1.0.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "upstream"
+repo = "anthropics/skills"
+strategy = "replace"
+license = "Apache-2.0"
+upstream_sha = "eee57c3b23fd59391822a06efd0b49ce2592b1fcdea25262896493fd7071b6e6"
+audit_verdict = "attention"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/SKILL.md"
+sha256 = "0f4592dcb53cf2b5d6b7febee6b4152018b565551a1c29e3c612f57b218ab295"
+fetched_at = "2026-07-11"
+
+[[provenance.files]]
+path = "references/mcp_best_practices.md"
+url = "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/mcp_best_practices.md"
+sha256 = "80fb4369a349447cf18ecdd7494fe7938b6065377e9f08c077cec411093a3007"
+fetched_at = "2026-07-11"
+
+[[provenance.files]]
+path = "references/python_mcp_server.md"
+url = "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/python_mcp_server.md"
+sha256 = "2da52f77e675191014ca2e146a4b95aa04d0ca7dd7e2b100322df15ade685e80"
+fetched_at = "2026-07-11"
+
+[[provenance.files]]
+path = "references/node_mcp_server.md"
+url = "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/node_mcp_server.md"
+sha256 = "c3ba35a4f599dd53be9c6555ae72c19a7bf412cd5426576c2c08d42755482c66"
+fetched_at = "2026-07-11"
+
+[[provenance.files]]
+path = "references/evaluation.md"
+url = "https://raw.githubusercontent.com/anthropics/skills/main/skills/mcp-builder/reference/evaluation.md"
+sha256 = "8c99479f8a2d22a636c38e274537aac3610879e26f34e0709825077c4576f427"
+fetched_at = "2026-07-11"

@@ -1,0 +1,51 @@
+schema = "urn:skm:extensions:agent-profile:v1"
+key = "reviewer"
+version = "2.0.0"
+role = "reviewer"
+title = "Reviewer"
+description = "Reads the sealed output of an attempt against the task contract and reports findings with severity and location. Never fixes code itself."
+result_schema = "urn:skm:execution:role-result:reviewer:v1"
+llm = true
+
+[routing]
+model_class = "implementation"
+effort = "high"
+required_capabilities = ["headless_execution", "structured_result", "workspace_binding"]
+optional_capabilities = ["stream_events", "usage_reporting"]
+
+[isolation]
+profile = "worktree"
+
+[permissions]
+policy_profile = "read-only"
+
+[permissions.layer.tools]
+allow = ["fs.read", "shell.run"]
+
+[prompt]
+system_constraints = ["shared/system_constraints"]
+run_rules = ["shared/run_rules"]
+resume_note = ["shared/resume_note"]
+role_contract = ["reviewer/role"]
+task_contract = ["shared/task_contract", "shared/work_policy"]
+result_contract = ["reviewer/result_contract"]
+
+[context]
+include = ["context_map", "materials", "repo_instructions", "skills", "history"]
+inherit_user_global = false
+repo_instructions = "constraints"
+repo_instruction_sections = ["Constraints", "Conventions", "Testing", "Security"]
+skills_mode = "allowlist"
+skills_include = ["code-review", "review-checklist"]
+skills_exclude = []
+skills_budget_tokens = 6000
+history_max_steps = 3
+memory_top_k = 0
+include_optional_materials = true
+
+[limits]
+timeout_seconds = 1800
+idle_timeout_seconds = 600
+max_turns = 120
+max_output_tokens = 16000
+max_result_retries = 2

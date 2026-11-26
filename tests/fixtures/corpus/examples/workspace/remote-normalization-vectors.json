@@ -1,0 +1,176 @@
+{
+  "$schema": "urn:skm:workspace:remote-normalization-vectors:v1",
+  "description": "Vectors for normalize_remote / redact_remote / provider_of (spec/modules/workspace.md §5.1). Ported from packages/aicore/tests/test_workspace.py RemoteTests (lines 282-315) and extended. 'redacted' is checked only when present; provider is provider_of(normalize_remote(input)).",
+  "vectors": [
+    {
+      "input": "git@github.com:academici/swissknifeman.git",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "github.com:academici/swissknifeman.git",
+      "provider": "github",
+      "note": "scp form, .git dropped"
+    },
+    {
+      "input": "https://github.com/academici/swissknifeman.git",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "https://github.com/academici/swissknifeman.git",
+      "provider": "github"
+    },
+    {
+      "input": "ssh://git@github.com/academici/swissknifeman.git",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "ssh://github.com/academici/swissknifeman.git",
+      "provider": "github"
+    },
+    {
+      "input": "https://token@github.com/academici/swissknifeman",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "https://github.com/academici/swissknifeman",
+      "provider": "github",
+      "note": "user info removed"
+    },
+    {
+      "input": "https://user:secret@GitHub.com/academici/swissknifeman/",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "https://GitHub.com/academici/swissknifeman/",
+      "provider": "github",
+      "note": "host lower-cased, trailing slash dropped"
+    },
+    {
+      "input": "git://github.com/academici/swissknifeman.git",
+      "normalized": "github.com/academici/swissknifeman",
+      "provider": "github"
+    },
+    {
+      "input": "ssh://git@github.com:2222/academici/swissknifeman.git",
+      "normalized": "github.com/academici/swissknifeman",
+      "redacted": "ssh://github.com:2222/academici/swissknifeman.git",
+      "provider": "github",
+      "note": "ssh port dropped"
+    },
+    {
+      "input": "http://github.com/academici/swissknifeman.git/",
+      "normalized": "github.com/academici/swissknifeman",
+      "provider": "github",
+      "note": "'/' then '.git' stripped repeatedly"
+    },
+    {
+      "input": "  git@github.com:academici/swissknifeman  ",
+      "normalized": "github.com/academici/swissknifeman",
+      "provider": "github",
+      "note": "surrounding whitespace"
+    },
+    {
+      "input": "git@Example.COM:Owner/Repo.git",
+      "normalized": "example.com/Owner/Repo",
+      "provider": "other",
+      "note": "path case kept, host lowered"
+    },
+    {
+      "input": "https://gitlab.example.com:8443/team/sub/repo.git",
+      "normalized": "gitlab.example.com:8443/team/sub/repo",
+      "provider": "gitlab",
+      "note": "https port kept; host starts with 'gitlab.'"
+    },
+    {
+      "input": "https://gitlab.com/group/sub/project",
+      "normalized": "gitlab.com/group/sub/project",
+      "provider": "gitlab"
+    },
+    {
+      "input": "git@bitbucket.org:team/app.git",
+      "normalized": "bitbucket.org/team/app",
+      "provider": "bitbucket"
+    },
+    {
+      "input": "https://codeberg.org/user/tool.git",
+      "normalized": "codeberg.org/user/tool",
+      "provider": "gitea"
+    },
+    {
+      "input": "git+ssh://git@github.com:22/a/b.git",
+      "normalized": "github.com/a/b",
+      "provider": "github",
+      "note": "git+ssh port dropped"
+    },
+    {
+      "input": "ssh+git://github.com/a/b",
+      "normalized": "github.com/a/b",
+      "provider": "github"
+    },
+    {
+      "input": "/srv/x.git",
+      "normalized": null,
+      "redacted": "/srv/x.git",
+      "provider": "none",
+      "note": "local path"
+    },
+    {
+      "input": "file:///srv/x.git",
+      "normalized": null,
+      "provider": "none",
+      "note": "file scheme is not a network remote"
+    },
+    {
+      "input": "../x.git",
+      "normalized": null,
+      "provider": "none"
+    },
+    {
+      "input": "~/x.git",
+      "normalized": null,
+      "provider": "none"
+    },
+    {
+      "input": "C:\\repos\\x",
+      "normalized": null,
+      "provider": "none",
+      "note": "windows drive path"
+    },
+    {
+      "input": "",
+      "normalized": null,
+      "provider": "none"
+    },
+    {
+      "input": "   ",
+      "normalized": null,
+      "provider": "none"
+    },
+    {
+      "input": "plain",
+      "normalized": null,
+      "provider": "none",
+      "note": "no scheme, no scp colon"
+    },
+    {
+      "input": "https://",
+      "normalized": null,
+      "provider": "none",
+      "note": "no host"
+    },
+    {
+      "input": "https://github.com",
+      "normalized": null,
+      "provider": "none",
+      "note": "no path"
+    },
+    {
+      "input": "git@github.com:",
+      "normalized": null,
+      "provider": "none",
+      "note": "empty path"
+    },
+    {
+      "input": "ftp://example.com/a/b",
+      "normalized": null,
+      "provider": "none",
+      "note": "scheme not in NET_SCHEMES"
+    },
+    {
+      "input": "https://github.com/a b/c",
+      "normalized": null,
+      "provider": "none",
+      "note": "whitespace inside path"
+    }
+  ]
+}

@@ -1,0 +1,1680 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:context:v1",
+  "title": "Context settings",
+  "description": "Settings section 'context' owned by context. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "context",
+    "owner": "context",
+    "title": "Context",
+    "validators": []
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.settings",
+      "class": "ContextSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ContextSettings"
+    }
+  },
+  "properties": {
+    "max_total_tokens": {
+      "type": "integer",
+      "minimum": 4000,
+      "maximum": 1000000,
+      "default": 150000,
+      "description": "Upper bound of the estimated tokens of one assembled context (also bounded by window_fraction of the model window).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "direction": "min"
+        },
+        "ui": {
+          "group": "Budget",
+          "order": 10,
+          "widget": "number"
+        }
+      }
+    },
+    "window_fraction": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 0.95,
+      "default": 0.6,
+      "description": "Share of the routed model's context window a context may use.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "narrow",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "narrow": {
+          "direction": "min"
+        },
+        "ui": {
+          "group": "Budget",
+          "order": 20,
+          "widget": "number"
+        }
+      }
+    },
+    "allow_third_party": {
+      "type": "boolean",
+      "default": true,
+      "description": "Resources of third_party packs may enter contexts.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "narrow",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "narrow": {
+          "direction": "and"
+        },
+        "ui": {
+          "group": "Trust",
+          "order": 10,
+          "widget": "toggle"
+        }
+      }
+    },
+    "inherit_user_global": {
+      "type": "boolean",
+      "default": false,
+      "description": "Runtimes may load the user's global client instructions (for example ~/.claude/CLAUDE.md); the role profile field inherit_user_global can only narrow it (G41).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "narrow",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "narrow": {
+          "direction": "and"
+        },
+        "ui": {
+          "group": "Repository",
+          "order": 10,
+          "widget": "toggle"
+        }
+      }
+    },
+    "max_classification_for_runtime": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "default": "internal",
+      "description": "Most sensitive file classification that may be sent to an external runtime.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "narrow",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": false,
+        "narrow": {
+          "order": [
+            "restricted",
+            "confidential",
+            "internal",
+            "public"
+          ]
+        },
+        "ui": {
+          "group": "Data",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "store_host_block_content": {
+      "type": "boolean",
+      "default": false,
+      "description": "Store host block text in the final manifest artifact (otherwise digests and locators only).",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "replace",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Report",
+          "order": 10,
+          "widget": "toggle"
+        }
+      }
+    },
+    "output_language": {
+      "type": "string",
+      "pattern": "^([a-z]{2}(-[A-Z]{2})?)?$",
+      "default": "",
+      "description": "Language of human-facing text in role results; empty uses workspace.locale.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run"
+        ],
+        "merge": "replace",
+        "reload": "run_frozen",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Rules",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "token_estimator": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "heuristic"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+        }
+      ],
+      "default": "heuristic",
+      "description": "Built-in heuristic, or the qualified key of an enabled token_estimator plugin; both ends must use the same estimator id.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Budget",
+          "order": 30,
+          "widget": "text"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "core": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "default": 12000,
+          "description": "Token budget of core blocks (constraints, role and task contract, requirements).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Budget",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "supporting": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "default": 30000,
+          "description": "Token budget of supporting blocks (steering, skills, decisions, review feedback, history).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Budget",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        },
+        "retrieval": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "default": 50000,
+          "description": "Token budget of retrieval blocks (materials, repository files, research documents, memory).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Budget",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 1000000,
+          "default": 40000,
+          "description": "Largest single block; an oversized mandatory block refuses assembly. Optional reference chunks require explicit range/digest/incompleteness; normative conditions are never truncated.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Budget",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "budget_tokens": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "default": 8000,
+          "description": "Token budget of embedded skill bodies within the supporting class.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        },
+        "max_mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "allowlist",
+            "auto"
+          ],
+          "default": "auto",
+          "description": "Ceiling of the role profile's skills_mode: none, allowlist (named skills only) or auto (also matching triggers).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "auto",
+                "allowlist",
+                "none"
+              ]
+            },
+            "ui": {
+              "group": "Skills",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "max_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50,
+          "default": 8,
+          "description": "Most skills embedded in one context (after selection, by reason priority).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "repo_instructions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "constraints",
+            "full"
+          ],
+          "default": "full",
+          "description": "Repository instruction files in contexts: none; constraints: only their constraint sections; full: whole files (blocks are marked untrusted).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "order": [
+                "full",
+                "constraints",
+                "none"
+              ]
+            },
+            "ui": {
+              "group": "Repository",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 65536,
+          "description": "Total bytes of repository instruction files; beyond it blocks are excluded with a reason.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Repository",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "max_files": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64,
+          "default": 8,
+          "description": "Repository instruction files read per step (symlinks are refused).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Repository",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^/\\\\]{1,128}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "CLAUDE.md",
+            "AGENTS.md"
+          ],
+          "description": "Instruction file names looked up per directory; the order matters (the first existing file wins).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Repository",
+              "order": 50,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_steps": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 3,
+          "description": "Earlier steps of the attempt summarized into the history block.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "History",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Add a memory block from the knowledge module (requires modules.knowledge.enabled).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "top_k": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 5,
+          "description": "Memory entries in the memory block.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Memory",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "work_paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 2000,
+          "default": 300,
+          "description": "Work paths listed in the task contract; more are summarized by directory.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Repository",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "host_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864,
+          "default": 2097152,
+          "description": "Total bytes the host reads for host blocks of one step.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Repository",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        },
+        "file_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216,
+          "default": 262144,
+          "description": "Bytes read from one host file.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Repository",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "extra": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "default": [],
+          "description": "Additional rules appended to the task contract of every step (accumulate over levels).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "append",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Rules",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "top_sources": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 5,
+          "description": "Largest sources listed in the context budget report.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Report",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sources": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "tier",
+              "capabilities"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "pattern": "^([a-z][a-z0-9_]{1,40}|[a-z][a-z0-9_]*\\.[a-z][a-z0-9_.]*)$",
+                "description": "command | filesystem | mcp_stdio | codegraph | context7 | perplexity_api | perplexity_web | web_search | research_source plugin component key"
+              },
+              "tier": {
+                "type": "string",
+                "enum": [
+                  "local_docs",
+                  "codegraph",
+                  "external_search",
+                  "deep_research"
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "search",
+                    "citations",
+                    "synthesis",
+                    "deep"
+                  ]
+                }
+              },
+              "endpoint": {
+                "type": "string",
+                "pattern": "^https://",
+                "maxLength": 2048,
+                "description": "HTTPS endpoint of the isolated Perplexity browser broker. Used only by perplexity_web."
+              },
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "text-v0",
+                  "json-v1"
+                ]
+              },
+              "argv": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "tool": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "roots": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1024
+                },
+                "maxItems": 32
+              },
+              "url_allow": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 253
+                },
+                "maxItems": 64
+              },
+              "timeout_seconds": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3600
+              },
+              "concurrency": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16
+              },
+              "order": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "ttl_seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7776000
+              },
+              "trust_cap": {
+                "type": "string",
+                "enum": [
+                  "repository",
+                  "external",
+                  "third_party"
+                ]
+              },
+              "classification": {
+                "type": "string",
+                "enum": [
+                  "public",
+                  "internal",
+                  "confidential",
+                  "restricted"
+                ]
+              },
+              "env_allow": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Z_][A-Z0-9_]{0,127}$"
+                },
+                "maxItems": 32
+              }
+            }
+          },
+          "default": {},
+          "description": "Research sources by id (host machine levels only: argv starts processes); projects can select or disable sources from this registry.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "ui": {
+              "group": "Research",
+              "order": 10,
+              "widget": "json"
+            }
+          }
+        },
+        "disabled_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Source ids not used in this scope.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan",
+              "run"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sources": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+              },
+              "default": null,
+              "description": "Project RAG source ids selected from the host registry. An empty list disables research.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": false,
+                "nullable": true,
+                "pack": false,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 21,
+                  "widget": "tags"
+                }
+              }
+            },
+            "max_documents": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 50,
+              "default": null,
+              "description": "Project RAG limit for retrieved documents per source.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": false,
+                "nullable": true,
+                "pack": false,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 22,
+                  "widget": "number"
+                }
+              }
+            },
+            "query_max_chars": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 20000,
+              "default": null,
+              "description": "Project RAG limit for normalized query characters.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": false,
+                "nullable": true,
+                "pack": false,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 23,
+                  "widget": "number"
+                }
+              }
+            },
+            "excerpt_max_chars": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "maximum": 20000,
+              "default": null,
+              "description": "Project RAG limit for excerpt characters.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": false,
+                "nullable": true,
+                "pack": false,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 24,
+                  "widget": "number"
+                }
+              }
+            },
+            "allow_deep": {
+              "type": [
+                "boolean",
+                "null"
+              ],
+              "default": null,
+              "description": "Project RAG switch for deep research. False disables it for this project.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": false,
+                "nullable": true,
+                "pack": false,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 25,
+                  "widget": "toggle"
+                }
+              }
+            }
+          }
+        },
+        "fs_roots_allow": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Absolute host directories filesystem sources may read outside checkouts.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "path": true,
+            "ui": {
+              "group": "Research",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "url_deny": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9*.-]{1,253}$"
+          },
+          "uniqueItems": true,
+          "default": [
+            "localhost",
+            "127.*",
+            "10.*",
+            "172.16.*",
+            "192.168.*",
+            "169.254.*",
+            "*.internal",
+            "*.local"
+          ],
+          "description": "Host globs whose documents are dropped from research results (private networks by default).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "union",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 40,
+              "widget": "tags"
+            }
+          }
+        },
+        "allow_deep": {
+          "type": "boolean",
+          "default": false,
+          "description": "Queries may use depth deep (deep_research tier).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "and"
+            },
+            "ui": {
+              "group": "Research",
+              "order": 50,
+              "widget": "toggle"
+            }
+          }
+        },
+        "max_documents": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10,
+          "description": "Documents kept from one research query.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "min_documents": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 3,
+          "description": "Documents after which the ladder stops asking more expensive tiers.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        },
+        "excerpt_max_chars": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 20000,
+          "default": 2000,
+          "description": "Characters of one document excerpt.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        },
+        "query_max_chars": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 20000,
+          "default": 4000,
+          "description": "Longest research query text.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Research",
+              "order": 90,
+              "widget": "number"
+            }
+          }
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "default": 2,
+          "description": "Research rounds of one stage.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Research",
+              "order": 100,
+              "widget": "number"
+            }
+          }
+        },
+        "max_follow_up": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 3,
+          "description": "Follow-up queries of one round.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project",
+              "plan"
+            ],
+            "merge": "narrow",
+            "reload": "run_frozen",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "narrow": {
+              "direction": "min"
+            },
+            "ui": {
+              "group": "Research",
+              "order": 110,
+              "widget": "number"
+            }
+          }
+        },
+        "cache": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Reuse cached results of the same query digest, scope and permissions.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 120,
+                  "widget": "toggle"
+                }
+              }
+            },
+            "default_ttl_seconds": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 2592000,
+              "default": 86400,
+              "description": "Lifetime of a cached result when the source names none.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 130,
+                  "widget": "number"
+                }
+              }
+            },
+            "max_ttl_seconds": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 7776000,
+              "default": 604800,
+              "description": "Longest lifetime of a cached result.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Research",
+                  "order": 140,
+                  "widget": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

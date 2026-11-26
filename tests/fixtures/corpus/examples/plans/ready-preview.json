@@ -1,0 +1,208 @@
+{
+  "revision_id": "0192f5c5-0000-7000-8000-000000000101",
+  "scenarios": [
+    {
+      "name": "fresh",
+      "limit": 2,
+      "assume_done": [],
+      "assume_granted": [],
+      "lanes": [
+        {
+          "lane": "L1",
+          "kind": "task",
+          "tasks": [
+            "P1.1/U1"
+          ],
+          "route": {
+            "class": "implementation",
+            "effort": "medium"
+          }
+        }
+      ],
+      "conflicts": [],
+      "waiting": [
+        {
+          "task": "P1.1/U2",
+          "reason": "dependencies",
+          "detail": [
+            "P1.1/U1"
+          ]
+        },
+        {
+          "task": "P1.1#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P1.1/U1",
+            "P1.1/U2"
+          ]
+        },
+        {
+          "task": "P1.2",
+          "reason": "dependencies",
+          "detail": [
+            "P1.1#gate"
+          ]
+        },
+        {
+          "task": "P1#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P1.1#gate",
+            "P1.2"
+          ]
+        },
+        {
+          "task": "P2.1/U1",
+          "reason": "dependencies",
+          "detail": [
+            "P1#gate"
+          ]
+        },
+        {
+          "task": "P2.1/U2",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1/U1"
+          ]
+        },
+        {
+          "task": "P2.1#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1/U1",
+            "P2.1/U2"
+          ]
+        },
+        {
+          "task": "P2.2/U1",
+          "reason": "dependencies",
+          "detail": [
+            "P1#gate"
+          ]
+        },
+        {
+          "task": "P2.2/U2",
+          "reason": "dependencies",
+          "detail": [
+            "P2.2/U1"
+          ]
+        },
+        {
+          "task": "P2.2#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.2/U1",
+            "P2.2/U2"
+          ]
+        },
+        {
+          "task": "P2.3",
+          "reason": "dependencies",
+          "detail": [
+            "P1#gate",
+            "P2.1#gate",
+            "P2.2#gate"
+          ]
+        },
+        {
+          "task": "P2#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1#gate",
+            "P2.2#gate",
+            "P2.3"
+          ]
+        }
+      ],
+      "deferred": [],
+      "route_groups": [
+        [
+          "L1"
+        ]
+      ]
+    },
+    {
+      "name": "phase-1-accepted",
+      "limit": 2,
+      "assume_done": [
+        "P1.1/U1",
+        "P1.1/U2",
+        "P1.1#gate",
+        "P1.2",
+        "P1#gate"
+      ],
+      "assume_granted": [],
+      "lanes": [
+        {
+          "lane": "L1",
+          "kind": "batch",
+          "batch": "P2/B1",
+          "tasks": [
+            "P2.1/U1",
+            "P2.2/U1"
+          ],
+          "route": {
+            "class": "implementation",
+            "effort": "medium"
+          }
+        }
+      ],
+      "conflicts": [],
+      "waiting": [
+        {
+          "task": "P2.1/U2",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1/U1"
+          ]
+        },
+        {
+          "task": "P2.1#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1/U1",
+            "P2.1/U2"
+          ]
+        },
+        {
+          "task": "P2.2/U2",
+          "reason": "dependencies",
+          "detail": [
+            "P2.2/U1"
+          ]
+        },
+        {
+          "task": "P2.2#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.2/U1",
+            "P2.2/U2"
+          ]
+        },
+        {
+          "task": "P2.3",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1#gate",
+            "P2.2#gate"
+          ]
+        },
+        {
+          "task": "P2#gate",
+          "reason": "dependencies",
+          "detail": [
+            "P2.1#gate",
+            "P2.2#gate",
+            "P2.3"
+          ]
+        }
+      ],
+      "deferred": [],
+      "route_groups": [
+        [
+          "L1"
+        ]
+      ]
+    }
+  ]
+}

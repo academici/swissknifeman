@@ -1,0 +1,180 @@
+# urn:skm:runtimes:capabilities:v1 for built-in claude_code runtime adapter (P08.03).
+# TOML has no null literal: every schema-nullable member carries a concrete value.
+runtime_id = "claude_code"
+adapter_version = "0.1.0"
+read_only_network = true
+
+[config_isolation]
+args = ["--setting-sources", "user", "--settings", "{step_dir}/settings.json"]
+writable_home_dirs = ["projects", "todos", "statsig", "debug", "tmp"]
+
+[config_isolation.env]
+CLAUDE_CONFIG_DIR = "{client_home}"
+HOME = "{client_home}"
+CLAUDE_CODE_DISABLE_CLAUDE_MDS = "1"
+CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1"
+
+[[config_isolation.credential_mounts]]
+source = "~/.claude/.credentials.json"
+target = ".credentials.json"
+required = true
+
+[[self_loads]]
+kind = "user_config"
+locator = "~/.claude"
+files = ["settings.json", "CLAUDE.md"]
+when = "start"
+suppressed_by = "config_isolation"
+note = "Redirected to isolated client_home via CLAUDE_CONFIG_DIR and HOME"
+
+[[self_loads]]
+kind = "plugins"
+locator = "~/.claude/plugins"
+files = []
+when = "start"
+suppressed_by = "config_isolation"
+note = "Suppressed by isolated CLAUDE_CONFIG_DIR and --safe-mode when supported"
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["CLAUDE.md", ".claude/CLAUDE.md"]
+when = "start"
+suppressed_by = "config_isolation"
+note = "Suppressed via CLAUDE_CODE_DISABLE_CLAUDE_MDS=1"
+
+[[self_loads]]
+kind = "project_settings"
+locator = "{workdir}/.claude"
+files = ["settings.json", "settings.local.json"]
+when = "start"
+suppressed_by = "config_isolation"
+note = "Untrusted worktree hooks and allow-rules suppressed by omitting project/local from --setting-sources (K16)"
+
+[[self_loads]]
+kind = "skills"
+locator = "{workdir}/.claude"
+files = [".claude/skills/**", ".claude/agents/**"]
+when = "on_access"
+suppressed_by = "never"
+note = "Suppressed when --safe-mode is verified; otherwise reported via self_loaded_context"
+
+[[records]]
+capability = "headless_execution"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "structured_result"
+status = "adapted"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Final answer extracted from stream-json result record and validated by host"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "stream_events"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "session_resume"
+status = "native"
+evidence = "fixture:claude_code/stream_resume.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Requires persistent session_policy and isolated client_home"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "tool_interception"
+status = "native"
+evidence = "fixture:claude_code/stream_permission_denied.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "adapted"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "usage_reporting"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Subagent token disclosure remains false until verified by live probe"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "workspace_binding"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "native_subagents"
+status = "native"
+evidence = "fixture:claude_code/stream_subagent_task.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Task tool subagent token disclosure requires live probe verification"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "mcp_support"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Step-local mcp.json with --strict-mcp-config and secrets in environment"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "permission_flags"
+status = "native"
+evidence = "fixture:claude_code/stream_permission_denied.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Enforcing capability: requires host verification context"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "sandbox_native"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Enforcing capability: step settings.json sandbox requires host verification"
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "effort_control"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "model_selection"
+status = "native"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = ""
+last_verified_at = "2026-10-26"
+
+[[records]]
+capability = "config_isolation"
+status = "adapted"
+evidence = "fixture:claude_code/stream_basic.jsonl"
+tested_runtime_version = "2.1.266"
+limitations = "Enforcing capability: isolated CLAUDE_CONFIG_DIR and --setting-sources user"
+last_verified_at = "2026-10-26"

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:platform:result:verify-storage:v1",
+  "title": "VerifyStorageResult",
+  "description": "platform result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "checked_levels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "relational",
+          "specification",
+          "execution",
+          "files",
+          "cryptographic",
+          "authorization",
+          "recovery"
+        ]
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "relational",
+              "specification",
+              "execution",
+              "files",
+              "cryptographic",
+              "authorization",
+              "recovery"
+            ]
+          },
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "workspace_id": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          },
+          "referenced_by": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "id"
+              ]
+            }
+          },
+          "repairability": {
+            "type": "string",
+            "enum": [
+              "none",
+              "safe"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "level",
+          "target",
+          "referenced_by",
+          "repairability",
+          "detail"
+        ]
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "error",
+        "warning",
+        "info"
+      ]
+    }
+  },
+  "required": [
+    "checked_levels",
+    "findings",
+    "counts"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.generated.results",
+      "class": "VerifyStorageResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "platform.ts",
+      "name": "VerifyStorageResult"
+    }
+  }
+}

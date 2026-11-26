@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:intent-args-git-commit:v1",
+  "title": "IntentArgsGitCommit",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "branch": {
+      "type": "string",
+      "minLength": 0
+    },
+    "parent_commit": {
+      "type": "string",
+      "minLength": 0
+    },
+    "tree_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "repository_id",
+    "branch",
+    "parent_commit",
+    "tree_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "IntentArgsGitCommit",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentArgsGitCommit"
+    }
+  }
+}

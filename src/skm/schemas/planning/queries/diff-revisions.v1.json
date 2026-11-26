@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:query:diff-revisions:v1",
+  "title": "DiffRevisions",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "to_revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "from_revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "plan_id"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "to_revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "draft_id",
+        "expected_edit_version"
+      ],
+      "not": {
+        "required": [
+          "to_revision_id"
+        ]
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.queries",
+      "class": "DiffRevisions",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "DiffRevisions"
+    }
+  }
+}

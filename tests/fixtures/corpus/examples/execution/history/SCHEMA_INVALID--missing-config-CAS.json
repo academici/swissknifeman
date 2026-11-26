@@ -1,0 +1,10 @@
+{
+  "contract": "urn:skm:execution:command:reconfigure-run:v1",
+  "value": {
+    "run_id": "01928f61-0000-7000-8000-000000000001",
+    "changes": {
+      "execution.parallel.max_units": 1
+    },
+    "reason": "change"
+  }
+}

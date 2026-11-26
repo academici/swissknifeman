@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "agent-packs-common"
+version = "1.0.1"
+title = "Migrated Agent Pack: Common Engineering Workflow"
+description = "Neutral cross-stack review checklist, verification rules, and inert development loop workflow migrated as pure data."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

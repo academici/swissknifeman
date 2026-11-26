@@ -1,0 +1,111 @@
+{
+  "$id": "urn:skm:execution:role-result:researcher:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Researcher role result per context §5.14(10) and §17(12). Claims cite host-assigned document_ids from this step research batches; sources_used names batch source IDs. Execution validates membership; the role cannot invent source records.",
+  "properties": {
+    "claims": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "document_ids": {
+            "items": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "document_ids"
+        ],
+        "type": "object"
+      },
+      "maxItems": 50,
+      "type": "array"
+    },
+    "contradictions": {
+      "items": {
+        "maxLength": 1000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "type": "array"
+    },
+    "follow_up_queries": {
+      "items": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "type": "array"
+    },
+    "query": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema": {
+      "const": "urn:skm:execution:role-result:researcher:v1"
+    },
+    "sources_used": {
+      "items": {
+        "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "type": "string"
+      },
+      "maxItems": 50,
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "blocked"
+      ]
+    },
+    "unknowns": {
+      "items": {
+        "maxLength": 1000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 20,
+      "type": "array"
+    },
+    "usage_complete": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "query",
+    "claims",
+    "contradictions",
+    "unknowns",
+    "sources_used",
+    "follow_up_queries"
+  ],
+  "title": "ResearcherResult",
+  "type": "object",
+  "x-skm-codegen": {
+    "python": {
+      "class": "ResearcherResultDoc",
+      "kind": "typeddict",
+      "module": "skm.modules.execution.generated.documents"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ResearcherResultDoc"
+    }
+  }
+}

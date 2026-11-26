@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "vue-composition-api"
+version = "0.2.1"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "vue-core"
+
+[triggers]
+paths = ["*.vue"]
+deps = ["npm:vue"]
+
+[provenance]
+source = "local"

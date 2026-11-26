@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:command:import-graph:v1",
+  "title": "ImportGraph",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{1,40}$"
+    },
+    "repository_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dirty": {
+          "type": "boolean"
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "basis_default": {
+          "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+        },
+        "tool_name": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        },
+        "indexed_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "completeness": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/Limitation"
+          }
+        },
+        "files_indexed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_skipped": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "dirty",
+        "languages",
+        "basis_default",
+        "tool_name",
+        "tool_version",
+        "indexed_at",
+        "completeness",
+        "limitations",
+        "files_indexed",
+        "files_skipped"
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "node_key": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/NodeType"
+          },
+          "attrs": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "required": [
+          "node_key",
+          "type",
+          "attrs"
+        ]
+      },
+      "maxItems": 20000
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "src_key": {
+            "type": "string"
+          },
+          "dst_key": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/EdgeType"
+          },
+          "attrs": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          },
+          "source_key": {
+            "type": "string"
+          },
+          "basis": {
+            "$ref": "urn:skm:knowledge:defs:v1#/$defs/GraphBasis"
+          }
+        },
+        "required": [
+          "src_key",
+          "dst_key",
+          "type",
+          "attrs",
+          "source_key"
+        ]
+      },
+      "maxItems": 50000
+    },
+    "replace": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "project_id",
+    "source",
+    "repository_id",
+    "index",
+    "nodes",
+    "edges"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.commands",
+      "class": "ImportGraph",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ImportGraph"
+    }
+  }
+}

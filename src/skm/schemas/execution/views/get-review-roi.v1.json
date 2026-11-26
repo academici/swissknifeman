@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:view:get-review-roi:v1",
+  "title": "ReviewRoiView",
+  "description": "Observed review activity, finding outcomes and measured reviewer costs. Estimating causal return requires a labeled comparison sample.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "completed_agent_reviews": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Completed review records with an agent reviewer."
+    },
+    "completed_human_reviews": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Completed review records with a human reviewer."
+    },
+    "unique_findings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct finding keys per task across completed reviews."
+    },
+    "resolved_findings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct findings whose latest record is resolved."
+    },
+    "rejected_findings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct findings whose latest record is rejected."
+    },
+    "finished_reviewer_steps": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Terminal reviewer steps, including failed and cancelled invocations."
+    },
+    "priced_reviewer_steps": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Terminal reviewer steps with reported usage and a computed catalog price."
+    },
+    "timed_reviewer_steps": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Terminal reviewer steps with a recorded monotonic capture duration."
+    },
+    "observed_cost_usd": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]+[.][0-9]{6}$",
+      "description": "Sum of USD cost for priced steps, or null when no step is priced."
+    },
+    "observed_duration_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Sum of capture durations for timed steps, or null when none is timed."
+    }
+  },
+  "required": [
+    "run_id",
+    "completed_agent_reviews",
+    "completed_human_reviews",
+    "unique_findings",
+    "resolved_findings",
+    "rejected_findings",
+    "finished_reviewer_steps",
+    "priced_reviewer_steps",
+    "timed_reviewer_steps",
+    "observed_cost_usd",
+    "observed_duration_ms"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.views",
+      "class": "ReviewRoiView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ReviewRoiView"
+    }
+  }
+}

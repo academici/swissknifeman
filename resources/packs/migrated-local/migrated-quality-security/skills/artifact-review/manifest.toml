@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "artifact-review"
+version = "0.2.0"
+kind = "workflow"
+risk = "low"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "quality-split"
+
+[provenance]
+source = "local"

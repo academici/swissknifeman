@@ -1,0 +1,533 @@
+{
+  "compiler_version": 1,
+  "revision_id": "0192f5c5-0000-7000-8000-000000000101",
+  "tasks": [
+    {
+      "task_key": "P1.1/U1",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-00000000001e",
+      "entity_kind": "unit",
+      "phase": "P1",
+      "item": "P1.1",
+      "checks": [
+        {
+          "check_key": "P1.1:V2",
+          "check_id": "0192f5c4-0000-7000-8000-000000000029"
+        }
+      ],
+      "review": null,
+      "criteria": [],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "migrations/versions/*.py"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P1.1/U2",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-00000000001f",
+      "entity_kind": "unit",
+      "phase": "P1",
+      "item": "P1.1",
+      "checks": [
+        {
+          "check_key": "P1.1:V1",
+          "check_id": "0192f5c4-0000-7000-8000-000000000028"
+        }
+      ],
+      "review": null,
+      "criteria": [],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/auth/token_repository.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_token_repository.py"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P1.1#gate",
+      "task_kind": "item_gate",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000014",
+      "entity_kind": "item",
+      "phase": "P1",
+      "item": "P1.1",
+      "checks": [],
+      "review": "required",
+      "criteria": [],
+      "route": null,
+      "write_scope": [],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P1.2",
+      "task_kind": "item",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000015",
+      "entity_kind": "item",
+      "phase": "P1",
+      "item": "P1.2",
+      "checks": [
+        {
+          "check_key": "P1.2:V1",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002a"
+        }
+      ],
+      "review": "required",
+      "criteria": [
+        "AC1"
+      ],
+      "route": {
+        "class": "frontier",
+        "effort": "high",
+        "correction": {
+          "class": "implementation",
+          "effort": "high"
+        }
+      },
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/auth/rotation.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_rotation.py"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P1#gate",
+      "task_kind": "phase_gate",
+      "entity_id": "0192f5c4-0000-7000-8000-00000000000a",
+      "entity_kind": "phase",
+      "phase": "P1",
+      "item": null,
+      "checks": [
+        {
+          "check_key": "P1:V1",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002b"
+        }
+      ],
+      "review": null,
+      "criteria": [],
+      "route": null,
+      "write_scope": [],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.1/U1",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000020",
+      "entity_kind": "unit",
+      "phase": "P2",
+      "item": "P2.1",
+      "checks": [],
+      "review": null,
+      "criteria": [],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/http/auth_routes.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "docs/api/refresh.md"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.1/U2",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000021",
+      "entity_kind": "unit",
+      "phase": "P2",
+      "item": "P2.1",
+      "checks": [
+        {
+          "check_key": "P2.1:V1",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002c"
+        }
+      ],
+      "review": null,
+      "criteria": [
+        "AC2"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "tests/api/test_refresh_endpoint.py"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.1#gate",
+      "task_kind": "item_gate",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000016",
+      "entity_kind": "item",
+      "phase": "P2",
+      "item": "P2.1",
+      "checks": [],
+      "review": "required",
+      "criteria": [],
+      "route": null,
+      "write_scope": [],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.2/U1",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000022",
+      "entity_kind": "unit",
+      "phase": "P2",
+      "item": "P2.2",
+      "checks": [],
+      "review": null,
+      "criteria": [],
+      "route": {
+        "class": "implementation",
+        "effort": "medium",
+        "runtime": "codex",
+        "model": "gpt-5-codex"
+      },
+      "write_scope": [
+        {
+          "mount": "web",
+          "pattern": "src/auth/refresh.ts"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.2/U2",
+      "task_kind": "unit",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000023",
+      "entity_kind": "unit",
+      "phase": "P2",
+      "item": "P2.2",
+      "checks": [
+        {
+          "check_key": "P2.2:V1",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002d"
+        }
+      ],
+      "review": null,
+      "criteria": [],
+      "route": {
+        "class": "implementation",
+        "effort": "medium",
+        "runtime": "codex",
+        "model": "gpt-5-codex"
+      },
+      "write_scope": [
+        {
+          "mount": "web",
+          "pattern": "src/auth/refresh.test.ts"
+        }
+      ],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.2#gate",
+      "task_kind": "item_gate",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000017",
+      "entity_kind": "item",
+      "phase": "P2",
+      "item": "P2.2",
+      "checks": [],
+      "review": "required",
+      "criteria": [
+        "AC3"
+      ],
+      "route": null,
+      "write_scope": [],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2.3",
+      "task_kind": "item",
+      "entity_id": "0192f5c4-0000-7000-8000-000000000018",
+      "entity_kind": "item",
+      "phase": "P2",
+      "item": "P2.3",
+      "checks": [
+        {
+          "check_key": "P2.3:V1",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002e"
+        },
+        {
+          "check_key": "P2.3:V2",
+          "check_id": "0192f5c4-0000-7000-8000-00000000002f"
+        }
+      ],
+      "review": "waived",
+      "criteria": [
+        "AC4"
+      ],
+      "route": {
+        "class": "economy",
+        "effort": "low"
+      },
+      "write_scope": null,
+      "authority": "owner_gate",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    },
+    {
+      "task_key": "P2#gate",
+      "task_kind": "phase_gate",
+      "entity_id": "0192f5c4-0000-7000-8000-00000000000b",
+      "entity_kind": "phase",
+      "phase": "P2",
+      "item": null,
+      "checks": [],
+      "review": null,
+      "criteria": [],
+      "route": null,
+      "write_scope": [],
+      "authority": "routine",
+      "item_work_policy": null,
+      "unit_work_policy": null
+    }
+  ],
+  "edges": [
+    {
+      "dependent": "P1.1/U2",
+      "prerequisite": "P1.1/U1",
+      "reasons": [
+        "unit_depends_on"
+      ]
+    },
+    {
+      "dependent": "P1.1#gate",
+      "prerequisite": "P1.1/U1",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P1.1#gate",
+      "prerequisite": "P1.1/U2",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P1.2",
+      "prerequisite": "P1.1#gate",
+      "reasons": [
+        "item_depends_on"
+      ]
+    },
+    {
+      "dependent": "P1#gate",
+      "prerequisite": "P1.1#gate",
+      "reasons": [
+        "phase_member"
+      ]
+    },
+    {
+      "dependent": "P1#gate",
+      "prerequisite": "P1.2",
+      "reasons": [
+        "phase_member"
+      ]
+    },
+    {
+      "dependent": "P2.1/U1",
+      "prerequisite": "P1#gate",
+      "reasons": [
+        "phase_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.1/U2",
+      "prerequisite": "P2.1/U1",
+      "reasons": [
+        "unit_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.1#gate",
+      "prerequisite": "P2.1/U1",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P2.1#gate",
+      "prerequisite": "P2.1/U2",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P2.2/U1",
+      "prerequisite": "P1#gate",
+      "reasons": [
+        "phase_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.2/U2",
+      "prerequisite": "P2.2/U1",
+      "reasons": [
+        "unit_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.2#gate",
+      "prerequisite": "P2.2/U1",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P2.2#gate",
+      "prerequisite": "P2.2/U2",
+      "reasons": [
+        "item_member"
+      ]
+    },
+    {
+      "dependent": "P2.3",
+      "prerequisite": "P1#gate",
+      "reasons": [
+        "phase_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.3",
+      "prerequisite": "P2.1#gate",
+      "reasons": [
+        "batch_order",
+        "item_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2.3",
+      "prerequisite": "P2.2#gate",
+      "reasons": [
+        "batch_order",
+        "item_depends_on"
+      ]
+    },
+    {
+      "dependent": "P2#gate",
+      "prerequisite": "P2.1#gate",
+      "reasons": [
+        "phase_member"
+      ]
+    },
+    {
+      "dependent": "P2#gate",
+      "prerequisite": "P2.2#gate",
+      "reasons": [
+        "phase_member"
+      ]
+    },
+    {
+      "dependent": "P2#gate",
+      "prerequisite": "P2.3",
+      "reasons": [
+        "phase_member"
+      ]
+    }
+  ],
+  "batch_groups": [
+    {
+      "phase": "P1",
+      "batch": "B1",
+      "mode": "recommended",
+      "tasks": [
+        "P1.1/U1",
+        "P1.1/U2",
+        "P1.1#gate",
+        "P1.2"
+      ]
+    },
+    {
+      "phase": "P2",
+      "batch": "B1",
+      "mode": "required",
+      "tasks": [
+        "P2.1/U1",
+        "P2.1/U2",
+        "P2.1#gate",
+        "P2.2/U1",
+        "P2.2/U2",
+        "P2.2#gate"
+      ]
+    },
+    {
+      "phase": "P2",
+      "batch": "B2",
+      "mode": "recommended",
+      "tasks": [
+        "P2.3"
+      ]
+    }
+  ],
+  "topological_order": [
+    "P1.1/U1",
+    "P1.1/U2",
+    "P1.1#gate",
+    "P1.2",
+    "P1#gate",
+    "P2.1/U1",
+    "P2.1/U2",
+    "P2.1#gate",
+    "P2.2/U1",
+    "P2.2/U2",
+    "P2.2#gate",
+    "P2.3",
+    "P2#gate"
+  ]
+}

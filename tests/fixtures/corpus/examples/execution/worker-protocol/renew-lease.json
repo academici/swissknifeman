@@ -1,0 +1,127 @@
+{
+  "command": "execution.renew_lease",
+  "http": "POST /api/v1/worker/assignments/0193a000-0000-7000-8000-0000000b0012/renew",
+  "exchanges": [
+    {
+      "title": "runtime started after finalize_manifest (stage context_draft -> running)",
+      "idempotency_key": "0193a000-0000-7000-8000-0000000b0012:renew_lease:7",
+      "request": {
+        "claim": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "fencing_token": 1
+        },
+        "progress": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+          "step_id": "0193a000-0000-7000-8000-0000000d0001",
+          "phase": "runtime_started"
+        }
+      },
+      "response": {
+        "lease_expires_at": "2026-10-25T12:01:42Z",
+        "cancel_requested": false,
+        "snapshot_requested": false
+      }
+    },
+    {
+      "title": "heartbeat while the agent works",
+      "idempotency_key": "0193a000-0000-7000-8000-0000000b0012:renew_lease:8",
+      "request": {
+        "claim": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "fencing_token": 1
+        },
+        "progress": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+          "step_id": "0193a000-0000-7000-8000-0000000d0001",
+          "last_runtime_event_at": "2026-10-25T12:00:10Z",
+          "cpu_active": true,
+          "repeated_command_count": 0,
+          "tool_running": "Bash",
+          "process": {
+            "pid": 48211,
+            "pgid": 48211,
+            "started_at": "2026-10-25T11:59:41Z",
+            "session_ref": "cc-sess-7f3a",
+            "boot_id": "5f1c2e7a-3b4d-4e6f-8a9b-0c1d2e3f4a5b",
+            "start_ticks": 38742910,
+            "ownership": {
+              "kind": "cgroup",
+              "ref": "skm/worker-01928f61/step-0193a000-0000-7000-8000-0000000d0001",
+              "owner": {
+                "host_id": "01928f61-3333-7aaa-8bbb-2c3d4e5f6a7c",
+                "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+                "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+                "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+                "unit_kind": "step",
+                "unit_id": "0193a000-0000-7000-8000-0000000d0001",
+                "owner_nonce": "fixture-owner-nonce-7f3a",
+                "identity_dir": "/var/lib/skm/worker/identities"
+              }
+            }
+          },
+          "usage_so_far": {
+            "input_tokens": 18200,
+            "output_tokens": 2100,
+            "cache_read_tokens": 40000,
+            "cache_write_tokens": 0,
+            "reasoning_tokens": null,
+            "cost_usd_micros": null,
+            "status": "estimated",
+            "source": "stream:delta",
+            "subagents": {
+              "used": false,
+              "disclosed": true
+            }
+          }
+        }
+      },
+      "response": {
+        "lease_expires_at": "2026-10-25T12:02:12Z",
+        "cancel_requested": false,
+        "snapshot_requested": false
+      }
+    },
+    {
+      "title": "recovery step 2 of execution.md §5.17: the control plane asks for a diagnostic snapshot",
+      "idempotency_key": "0193a000-0000-7000-8000-0000000b0012:renew_lease:131",
+      "request": {
+        "claim": {
+          "assignment_id": "0193a000-0000-7000-8000-0000000b0012",
+          "attempt_id": "0193a000-0000-7000-8000-0000000a0012",
+          "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+          "fencing_token": 1
+        },
+        "progress": {
+          "stage_record_id": "0193a000-0000-7000-8000-0000000c0002",
+          "step_id": "0193a000-0000-7000-8000-0000000d0001",
+          "last_runtime_event_at": "2026-10-25T12:00:10Z",
+          "cpu_active": false,
+          "repeated_command_count": 6
+        }
+      },
+      "response": {
+        "lease_expires_at": "2026-10-25T13:31:12Z",
+        "cancel_requested": false,
+        "snapshot_requested": true
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": "LEASE_LOST",
+      "when": "fencing_token is not the current one, the lease expired or the assignment is not leased"
+    },
+    {
+      "code": "CONTEXT_NOT_FINALIZED",
+      "when": "phase runtime_started while the step's context manifest is still draft"
+    },
+    {
+      "code": "BUDGET_EXHAUSTED",
+      "when": "final prompt reservation after host blocks exceeds a block limit; runtime must not start"
+    }
+  ]
+}

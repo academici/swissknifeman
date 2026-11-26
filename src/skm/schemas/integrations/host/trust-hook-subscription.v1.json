@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:trust-hook-subscription:v1",
+  "title": "TrustHookSubscriptionRequest",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "revoke": {
+      "type": "boolean",
+      "default": false
+    },
+    "expected_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest",
+      "description": "Digest reviewed by the operator; a changed subscription refuses trust without writing host configuration."
+    }
+  },
+  "required": [
+    "project_id",
+    "subscription_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "TrustHookSubscriptionRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "TrustHookSubscriptionRequest"
+    }
+  }
+}

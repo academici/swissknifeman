@@ -1,0 +1,247 @@
+{
+  "schema": "urn:skm:config:explain:v1",
+  "scope": {
+    "level": "plan",
+    "scope_id": "01930aa1-2b3c-7d4e-8f50-6a7b8c9d0e1f",
+    "label": "plan:PLAN7"
+  },
+  "chain_kind": "work",
+  "chain": [
+    {
+      "level": "default"
+    },
+    {
+      "level": "pack",
+      "pack_id": "example-overlay",
+      "pack_priority": 10
+    },
+    {
+      "level": "instance",
+      "scope_id": "0192f5c4-7a10-7c3e-9b1a-5d2f0e8a4c11",
+      "label": "instance"
+    },
+    {
+      "level": "workspace",
+      "scope_id": "0192f5d0-0000-7000-8000-0000000000aa",
+      "label": "workspace:personal"
+    },
+    {
+      "level": "project",
+      "scope_id": "0192f5d0-0000-7000-8000-0000000000bb",
+      "label": "project:skm"
+    },
+    {
+      "level": "plan",
+      "scope_id": "01930aa1-2b3c-7d4e-8f50-6a7b8c9d0e1f",
+      "label": "plan:PLAN7"
+    }
+  ],
+  "generation": 42,
+  "pack_generation": 3,
+  "digest": "sha256:4f6c1c0d2c9a8a1f0b8a9b5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f8091",
+  "keys": [
+    {
+      "key": "execution.review.max_rounds",
+      "present": true,
+      "value": 3,
+      "merge": "narrow",
+      "reload": "run_frozen",
+      "sensitivity": "public",
+      "winner": {
+        "level": "workspace",
+        "scope_id": "0192f5d0-0000-7000-8000-0000000000aa",
+        "label": "workspace:personal",
+        "entry_id": "0192f6a0-0000-7000-8000-000000000101",
+        "row_version": 3
+      },
+      "locked_by": {
+        "level": "workspace",
+        "scope_id": "0192f5d0-0000-7000-8000-0000000000aa",
+        "label": "workspace:personal"
+      },
+      "contributions": [
+        {
+          "layer": {
+            "level": "default"
+          },
+          "op": "default",
+          "value": 2,
+          "status": "shadowed"
+        },
+        {
+          "layer": {
+            "level": "pack",
+            "pack_id": "example-overlay",
+            "pack_priority": 10
+          },
+          "op": "set",
+          "value": 3,
+          "status": "shadowed"
+        },
+        {
+          "layer": {
+            "level": "instance",
+            "label": "instance",
+            "entry_id": "0192f6a0-0000-7000-8000-000000000100",
+            "row_version": 1
+          },
+          "op": "set",
+          "value": 4,
+          "locked": false,
+          "status": "used"
+        },
+        {
+          "layer": {
+            "level": "workspace",
+            "label": "workspace:personal",
+            "entry_id": "0192f6a0-0000-7000-8000-000000000101",
+            "row_version": 3
+          },
+          "op": "set",
+          "value": 3,
+          "locked": true,
+          "status": "winner"
+        },
+        {
+          "layer": {
+            "level": "project",
+            "label": "project:skm",
+            "entry_id": "0192f6a0-0000-7000-8000-000000000102",
+            "row_version": 1
+          },
+          "op": "set",
+          "value": 5,
+          "locked": false,
+          "status": "ignored",
+          "reason": "locked_above"
+        },
+        {
+          "layer": {
+            "level": "plan",
+            "label": "plan:PLAN7",
+            "entry_id": "0192f6a0-0000-7000-8000-000000000103",
+            "row_version": 2
+          },
+          "op": "set",
+          "value": 1,
+          "locked": false,
+          "status": "ignored",
+          "reason": "locked_above"
+        }
+      ],
+      "diagnostics": [
+        {
+          "code": "CONFIG_LOCKED",
+          "severity": "warning",
+          "key": "execution.review.max_rounds",
+          "message": "2 contributions below workspace:personal are ignored: the key is locked there",
+          "layer": {
+            "level": "workspace",
+            "label": "workspace:personal"
+          }
+        }
+      ]
+    },
+    {
+      "key": "storage.statement_timeout_ms",
+      "present": true,
+      "value": 30000,
+      "merge": "replace",
+      "reload": "live",
+      "sensitivity": "public",
+      "winner": {
+        "level": "default"
+      },
+      "contributions": [
+        {
+          "layer": {
+            "level": "default"
+          },
+          "op": "default",
+          "value": 30000,
+          "status": "winner"
+        }
+      ]
+    },
+    {
+      "key": "hooks.subscriptions",
+      "present": true,
+      "value": {
+        "notify-chat": {
+          "enabled": true,
+          "class": "observation",
+          "kind": "webhook",
+          "execution_location": "control_plane",
+          "event_types": [
+            "urn:skm:execution:event:run-finished:v1"
+          ],
+          "target": {
+            "url": "https://hooks.example.com/skm",
+            "secret": "secret://env/SKM_HOOK_SECRET"
+          },
+          "timeout_ms": 10000,
+          "retry": {
+            "max_attempts": 5,
+            "backoff": {
+              "initial_ms": 1000,
+              "factor": 2.0,
+              "max_ms": 300000
+            }
+          },
+          "failure_policy": "retry"
+        }
+      },
+      "merge": "deep_merge",
+      "reload": "live",
+      "sensitivity": "public",
+      "winner": {
+        "level": "workspace",
+        "label": "workspace:personal"
+      },
+      "contributions": [
+        {
+          "layer": {
+            "level": "default"
+          },
+          "op": "default",
+          "value": {},
+          "status": "used"
+        },
+        {
+          "layer": {
+            "level": "workspace",
+            "label": "workspace:personal"
+          },
+          "op": "set",
+          "value": {
+            "notify-chat": {
+              "enabled": true,
+              "class": "observation",
+              "kind": "webhook",
+              "execution_location": "control_plane",
+              "event_types": [
+                "urn:skm:execution:event:run-finished:v1"
+              ],
+              "target": {
+                "url": "https://hooks.example.com/skm",
+                "secret": "secret://env/SKM_HOOK_SECRET"
+              },
+              "timeout_ms": 10000,
+              "retry": {
+                "max_attempts": 5,
+                "backoff": {
+                  "initial_ms": 1000,
+                  "factor": 2.0,
+                  "max_ms": 300000
+                }
+              },
+              "failure_policy": "retry"
+            }
+          },
+          "status": "winner"
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

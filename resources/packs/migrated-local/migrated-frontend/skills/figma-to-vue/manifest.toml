@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "figma-to-vue"
+version = "0.1.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["figma-mcp-core"]
+requires_tools = ["mcp__figma__tools"]
+
+[provenance]
+source = "local"

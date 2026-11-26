@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-entity:v1",
+  "title": "skm_plan_entity input",
+  "description": "Input for the skm_plan_entity MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "draft_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "expected_edit_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "entity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "plan",
+    "entity"
+  ],
+  "oneOf": [
+    {
+      "required": [],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          },
+          {
+            "required": [
+              "revision"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "revision_id"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          },
+          {
+            "required": [
+              "revision"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "draft_id",
+        "expected_edit_version"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "revision"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "required": [
+        "revision"
+      ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "revision_id"
+            ]
+          },
+          {
+            "required": [
+              "draft_id"
+            ]
+          },
+          {
+            "required": [
+              "expected_edit_version"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

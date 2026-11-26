@@ -1,0 +1,20 @@
+{
+  "skill": "tailwind-conventions",
+  "snippets": [
+    {
+      "file": "app.css",
+      "description": "Tailwind v4 CSS-first config: @import tailwindcss, @source, @custom-variant dark, @theme-tokens (--color-*, --spacing-*, --radius-*), :root/.dark palettes, border compatibility layer + difference block v4<->v3 for migration",
+      "tags": ["tailwind-v4", "theme", "tokens", "dark-mode", "css-first"]
+    },
+    {
+      "file": "cn.ts",
+      "description": "Utility cn() = twMerge(clsx(...)) for conditional and dynamic classes; utility conflict resolution, merging props.class, application examples",
+      "tags": ["cn", "clsx", "tailwind-merge", "conditional-classes"]
+    },
+    {
+      "file": ".prettierrc",
+      "description": "Prettier with prettier-plugin-tailwindcss and tailwindFunctions [clsx, cn, cva, tv] + tailwindStylesheet for auto-sorting classes in Tailwind v4",
+      "tags": ["prettier", "class-sorting", "tailwindFunctions", "config"]
+    }
+  ]
+}

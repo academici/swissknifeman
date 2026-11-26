@@ -1,0 +1,19 @@
+{
+  "schema": "urn:skm:integrations:host:hook-decision:v1",
+  "surface": "lifecycle.git_guardrails",
+  "mode": "strict",
+  "verdict": "deny",
+  "reason_code": "HOOK_PAYLOAD_INVALID",
+  "user_message": "skm hook: payload without tool_input.command; enforcement fails closed",
+  "client_output": {
+    "exit_code": 0,
+    "stdout": {
+      "hookSpecificOutput": {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": "skm hook: payload without tool_input.command; enforcement fails closed"
+      }
+    },
+    "stderr": ""
+  }
+}

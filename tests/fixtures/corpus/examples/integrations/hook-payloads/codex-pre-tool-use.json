@@ -1,0 +1,13 @@
+{
+  "session_id": "019a3b2c-4d5e-7f60-8a9b-0c1d2e3f4a5b",
+  "transcript_path": null,
+  "cwd": "/home/dev/demo",
+  "hook_event_name": "PreToolUse",
+  "model": "gpt-5-codex",
+  "permission_mode": "workspace-write",
+  "source": "cli",
+  "tool_name": "apply_patch",
+  "tool_input": {
+    "input": "*** Begin Patch\n*** Update File: .claude/skills/skm-memory/SKILL.md\n@@\n-old line\n+new line\n*** End Patch\n"
+  }
+}

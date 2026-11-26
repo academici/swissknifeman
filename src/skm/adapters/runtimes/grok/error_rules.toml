@@ -1,0 +1,280 @@
+# urn:skm:runtimes:error-rules:v1 for built-in grok runtime adapter (P08.05).
+# Evaluated in file order; first matching rule wins.
+
+[[rules]]
+runtime_id = "grok"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = { http_status = [401] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Grok CLI authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "authentication"
+code = "RUNTIME_AUTH_EXPIRED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "authentication_error",
+    "invalid api key",
+    "invalid xai_api_key",
+    "unauthorized",
+    "oauth token has expired",
+    "not logged in",
+    "failed to authenticate",
+]
+retryable = false
+safe_message = "Grok CLI authentication failed or credentials expired"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = { http_status = [403] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Grok CLI access denied by provider authorization policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "authorization"
+code = "RUNTIME_FORBIDDEN"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "permission_error",
+    "account has been disabled",
+    "team has been disabled",
+    "not authorized to use",
+]
+retryable = false
+safe_message = "Grok CLI access denied by provider authorization policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "quota"
+code = "QUOTA_EXHAUSTED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "credit balance is too low",
+    "insufficient credits",
+    "monthly spending limit",
+    "billing hard limit",
+    "quota exceeded",
+]
+retryable = false
+safe_message = "Grok account quota or billing balance exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = { http_status = [429] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Grok provider rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = { retry_category = ["rate_limit"] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Grok provider rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = { limit_status = ["rejected"] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Grok rate limit window exhausted"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "rate_limit"
+code = "RATE_LIMITED"
+scope = "account"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "rate_limit_error",
+    "rate limit",
+    "too many requests",
+    "hit your limit",
+]
+retryable = true
+safe_message = "Grok provider rate limit reached"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = { http_status = [529, 500, 502, 503, 504] }
+signal_not_in = {}
+text_contains_any = []
+retryable = true
+safe_message = "Grok provider is temporarily overloaded or unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "provider_internal"
+code = "RUNTIME_OVERLOADED"
+scope = "provider"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "overloaded_error",
+    "temporarily overloaded",
+    "internal server error",
+    "bad gateway",
+    "service unavailable",
+]
+retryable = true
+safe_message = "Grok provider is temporarily overloaded or unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "context_limit"
+code = "CONTEXT_OVERFLOW"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "prompt is too long",
+    "context_length_exceeded",
+    "maximum context length",
+    "context window exceeded",
+]
+retryable = false
+safe_message = "Grok prompt exceeded model context window"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = { http_status = [404] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Requested Grok model is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "model_unavailable"
+code = "MODEL_UNAVAILABLE"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "model not found",
+    "unknown model",
+    "does not have access to model",
+]
+retryable = false
+safe_message = "Requested Grok model is unavailable"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "content_policy"
+code = "CONTENT_REFUSED"
+scope = "request"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "content filtering policy",
+    "output blocked by content filtering",
+    "violates usage policy",
+]
+retryable = false
+safe_message = "Request refused by Grok content policy"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "timeout"
+code = "RUNTIME_TIMEOUT"
+scope = "provider"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "etimedout",
+    "econnrefused",
+    "econnreset",
+    "enotfound",
+    "eai_again",
+    "connect error",
+    "connection error",
+    "connect timeout",
+    "connection timed out",
+    "request timed out",
+    "network timeout",
+    "socket hang up",
+    "fetch failed",
+]
+retryable = true
+safe_message = "Network connection to Grok provider timed out"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "transport"
+code = "RUNTIME_TRANSPORT"
+scope = "provider"
+signal_any = {}
+signal_not_in = {}
+text_contains_any = [
+    "ssl error",
+    "tls handshake",
+    "certificate verify failed",
+    "broken pipe",
+]
+retryable = true
+safe_message = "Transport connection to Grok provider failed"
+retry_after_from = "limit_resets_at"
+
+[[rules]]
+runtime_id = "grok"
+error_class = "invalid_request"
+code = "RUNTIME_INVALID_REQUEST"
+scope = "request"
+signal_any = { http_status = [400] }
+signal_not_in = {}
+text_contains_any = []
+retryable = false
+safe_message = "Grok provider rejected the request parameters"
+retry_after_from = "limit_resets_at"

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:result:import-graph:v1",
+  "title": "ImportGraphResult",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "index_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nodes_upserted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nodes_removed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "edges_added": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "edges_removed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "edges_rejected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+        }
+      }
+    }
+  },
+  "required": [
+    "index_id",
+    "generation",
+    "nodes_upserted",
+    "nodes_removed",
+    "edges_added",
+    "edges_removed",
+    "edges_rejected"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.results",
+      "class": "ImportGraphResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ImportGraphResult"
+    }
+  }
+}

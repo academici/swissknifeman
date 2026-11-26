@@ -1,0 +1,15 @@
+{
+  "schema": "urn:skm:integrations:host:hook-decision:v1",
+  "surface": "lifecycle.git_guardrails",
+  "mode": "strict",
+  "verdict": "none",
+  "reason_code": null,
+  "user_message": null,
+  "agent_message": null,
+  "additional_context": null,
+  "client_output": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

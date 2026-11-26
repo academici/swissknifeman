@@ -1,0 +1,42 @@
+# Document for `skm config import project-import.toml --scope project:skm [--dry-run] [--replace]`.
+# Format: one TOML table per section, keys nested as in the registry. Special top-level arrays:
+#   unset  — keys reset to their default at this level (op=unset: farther levels are skipped)
+#   lock   — keys of this document stored with locked=true (only instance/workspace scopes)
+# Special table:
+#   [append] "<key>" = [items] — op=append for array keys with merge=replace (appends to the
+#                                 value produced by farther levels)
+# Inside maps with merge=deep_merge an entry { "$unset" = true } removes that entry from the
+# accumulated map. Unknown keys are an error (CONFIG_UNKNOWN_KEY); the whole document is
+# validated before anything is written.
+schema = "urn:skm:settings:document:v1"
+
+unset = ["execution.consilium.members"]
+
+[execution.review]
+max_rounds = 2
+
+[execution.workflow]
+profile = "reviewed-development"
+profile_by_work_kind = { docs = "quick-fix", research = { "$unset" = true } }
+
+[execution.integration]
+branch = "skm/integration"
+commit_scope = "skm"
+
+[budgets.run]
+max_usd = 15.0
+
+[integrations]
+targets = ["claude_code", "codex"]
+
+[integrations.skills]
+include = ["release-discipline", "skill-authoring"]
+
+[integrations.hooks]
+mode = { changelog_gate = "strict" }
+
+[context.rules]
+extra = ["Write code, comments and docs of this repository in English."]
+
+[append]
+"execution.generation.command" = ["python3", "tools/gen.py"]

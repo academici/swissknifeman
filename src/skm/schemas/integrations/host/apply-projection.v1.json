@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:apply-projection:v1",
+  "title": "ApplyProjectionRequest",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plans": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:integrations:host:projection-plan:v1"
+      }
+    },
+    "restore_pre_image": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "plans"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "ApplyProjectionRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "ApplyProjectionRequest"
+    }
+  }
+}

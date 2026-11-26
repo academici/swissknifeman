@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:defs:v1",
+  "title": "Artifacts definitions",
+  "$defs": {
+    "content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ],
+      "x-skm-enum-name": "Classification",
+      "x-skm-order": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "file_origin": {
+      "type": "string",
+      "enum": [
+        "upload",
+        "evidence",
+        "transcript",
+        "patch",
+        "report",
+        "import",
+        "capture"
+      ],
+      "x-skm-enum-name": "FileOrigin"
+    },
+    "binding_role": {
+      "type": "string",
+      "enum": [
+        "input",
+        "reference",
+        "deliverable",
+        "evidence",
+        "transcript",
+        "patch",
+        "report",
+        "log"
+      ],
+      "x-skm-enum-name": "BindingRole"
+    },
+    "staged_blob_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "staged_blob_id",
+        "workspace_id",
+        "digest",
+        "size",
+        "media_type"
+      ],
+      "properties": {
+        "staged_blob_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "digest": {
+          "$ref": "#/$defs/content_digest"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      }
+    },
+    "version_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "upload",
+            "evidence",
+            "import",
+            "capture",
+            "generated"
+          ]
+        },
+        "ref": {
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "captured_at": {
+          "oneOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    },
+    "safety_rule": {
+      "type": "string",
+      "enum": [
+        "CS-SECRET-NAME",
+        "CS-SECRET-CONTENT",
+        "CS-ABSOLUTE-PATH",
+        "CS-HOME-PATH",
+        "CS-BINARY",
+        "CS-NOT-SCANNED",
+        "CS-SYMLINK",
+        "CS-MEDIA-MISMATCH",
+        "CS-EXECUTABLE"
+      ]
+    },
+    "safety_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verdict",
+        "findings",
+        "acknowledged",
+        "binary"
+      ],
+      "properties": {
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "warn",
+            "block"
+          ]
+        },
+        "binary": {
+          "type": "boolean"
+        },
+        "acknowledged": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/safety_rule"
+          },
+          "uniqueItems": true
+        },
+        "findings": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rule",
+              "level",
+              "detail"
+            ],
+            "properties": {
+              "rule": {
+                "$ref": "#/$defs/safety_rule"
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "block",
+                  "warn",
+                  "info"
+                ]
+              },
+              "detail": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "line": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pointer": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

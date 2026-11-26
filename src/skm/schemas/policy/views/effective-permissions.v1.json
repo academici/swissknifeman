@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:effective-permissions:v1",
+  "title": "EffectivePermissionsView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "permissions": {
+      "$ref": "urn:skm:policy:view:permission-set:v1"
+    },
+    "authority": {
+      "$ref": "urn:skm:policy:task-authority:v1"
+    }
+  },
+  "required": [
+    "permissions",
+    "authority"
+  ]
+}

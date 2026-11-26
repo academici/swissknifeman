@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:finalized-context:v1",
+  "title": "FinalizedContext",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "manifest": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/ContextManifest"
+    },
+    "rendered_prompt": {
+      "type": "string"
+    },
+    "prompt_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "selection": {
+      "$ref": "urn:skm:context:defs:v1#/$defs/Selection"
+    }
+  },
+  "required": [
+    "manifest",
+    "rendered_prompt",
+    "prompt_digest",
+    "selection"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.documents",
+      "class": "FinalizedContext",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "FinalizedContext"
+    }
+  }
+}

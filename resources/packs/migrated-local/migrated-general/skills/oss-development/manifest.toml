@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "oss-development"
+version = "0.1.1"
+kind = "router"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor", "reviewer", "registrar"]
+
+[provenance]
+source = "local"

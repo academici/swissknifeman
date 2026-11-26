@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-packages"
+version = "0.3.1"
+kind = "router"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "php-packages"
+conflicts_with = ["laravel-package-compatibility", "laravel-package-docs", "laravel-package-expressive", "laravel-package-generate-skill", "laravel-package-release", "laravel-package-scaffold", "laravel-package-service-provider", "laravel-package-testing"]
+
+[provenance]
+source = "local"

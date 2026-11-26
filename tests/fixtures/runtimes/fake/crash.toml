@@ -1,0 +1,9 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "crash"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "exit"
+exit_code = 7

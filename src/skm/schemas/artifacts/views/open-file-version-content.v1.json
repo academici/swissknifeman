@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:view:open-file-version-content:v1",
+  "title": "OpenFileVersionContentView",
+  "description": "artifacts view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "location": {
+      "type": "object",
+      "description": "JsonObject: owner does not specify its internal shape."
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "filename": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "location",
+    "size_bytes",
+    "digest",
+    "media_type",
+    "filename"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.views",
+      "class": "OpenFileVersionContentView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "OpenFileVersionContentView"
+    }
+  }
+}

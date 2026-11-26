@@ -1,0 +1,146 @@
+# urn:skm:runtimes:capabilities:v1
+runtime_id = "gemini_cli"
+adapter_version = "0.1.0"
+read_only_network = true
+
+[config_isolation]
+env = {}
+args = []
+credential_mounts = []
+writable_home_dirs = []
+
+[[self_loads]]
+kind = "project_instructions"
+locator = "{workdir}"
+files = ["GEMINI.md", "**/GEMINI.md"]
+when = "start"
+suppressed_by = "never"
+note = "Gemini CLI discovers context in the checkout and parent directories"
+
+[[self_loads]]
+kind = "skills"
+locator = "{workdir}"
+files = [".gemini/skills/**", ".agents/skills/**"]
+when = "on_access"
+suppressed_by = "never"
+note = "Gemini CLI discovers skills in trusted workspaces"
+
+[[records]]
+capability = "headless_execution"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Single-turn API-key launch on a read-only Landlock checkout"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "structured_result"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The host validates JSON in the final assistant response"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "stream_events"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Session, assistant text, tool observations and cumulative terminal usage"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "session_resume"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The private client home is scoped to one attempt"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "tool_interception"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Tool events are observations and cannot authorize a call"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "reliable_cancellation"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Host supervision and cleanup bind cancellation to the process group"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "usage_reporting"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Aggregate result stats; fresh input requires a reported cache split"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "workspace_binding"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The launcher binds the CLI to the requested read-only checkout"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "native_subagents"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The supervised launch enables a fixed read-only tool set"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "mcp_support"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The supervised launch does not configure MCP servers"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "permission_flags"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Read-only plan mode does not implement the SKM permission contract"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "sandbox_native"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The adapter uses the host Landlock wrapper"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "effort_control"
+status = "unsupported"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The adapter has no verified mapping for SKM effort"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "model_selection"
+status = "native"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "The CLI model selector must match the init event"
+last_verified_at = "2026-11-23"
+
+[[records]]
+capability = "config_isolation"
+status = "adapted"
+evidence = "Gemini CLI v0.68.0 headless protocol and offline adapter tests"
+tested_runtime_version = "0.68.0"
+limitations = "Fresh private home and guarded startup; enforcing support requires host verification"
+last_verified_at = "2026-11-23"

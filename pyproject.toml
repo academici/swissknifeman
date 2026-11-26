@@ -1,0 +1,90 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skm"
+version = "0.1.0"
+description = "Swiss Knife Man: provider-neutral control plane for planned, reviewed AI-assisted development"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+authors = [{ name = "Swiss Knife Man contributors" }]
+classifiers = [
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+]
+dependencies = [
+  "psycopg[binary,pool]>=3.2,<4",
+  "jsonschema>=4.23,<5",
+  "referencing>=0.35",
+  "starlette>=0.41,<1",
+  "uvicorn>=0.32,<1",
+  "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+secrets = ["keyring>=25"]
+
+[project.scripts]
+skm = "skm.entrypoints.cli.main:console_main"
+skm-hook = "skm.entrypoints.hook.main:main"
+skm-hookd = "skm.entrypoints.hook.daemon:main"
+
+[project.entry-points."skm.plugins"]
+# Built-in adapters are wired in bootstrap; third-party plugins register here.
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "hypothesis>=6.112",
+  "ruff>=0.7",
+  "pyright>=1.1.385",
+  "coverage[toml]>=7.6",
+  "pytest-xdist>=3.8.0",
+  "pytest-timeout>=2.4",
+]
+
+[tool.hatch.build]
+exclude = ["**/tests", "**/__pycache__", "**/*.pyc"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skm"]
+only-include = ["src/skm", "resources", "deploy/compose.local.yaml", "web/dist"]
+artifacts = ["/web/dist/**"]
+dev-mode-dirs = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""
+"resources" = "skm/_resources"
+"deploy" = "skm/_deploy"
+"web/dist" = "skm/_web"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/skm", "resources", "deploy/compose.local.yaml", "README.md", "CHANGELOG.md", "LICENSE"]
+
+[tool.hatch.build.targets.sdist.force-include]
+"web/dist" = "web/dist"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "."]
+addopts = ["--strict-markers", "--strict-config", "-ra", "--import-mode=importlib"]
+xfail_strict = true
+markers = [
+  "pg: needs PostgreSQL (SKM_TEST_DATABASE_URL)",
+  "integration: real local IO with an isolated HOME",
+  "slow: longer than 2 seconds",
+  "e2e: end-to-end with real processes",
+  "evals: live paid runtime calls (SKM_EVALS=1)",
+  "perf: performance measurements, not in make check",
+]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["skm"]

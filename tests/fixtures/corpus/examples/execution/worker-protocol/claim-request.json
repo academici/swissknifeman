@@ -1,0 +1,31 @@
+{
+  "command": "execution.claim_assignment",
+  "http": "POST /api/v1/worker/assignments/claim",
+  "idempotency_key": "claim:01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c:0193a0ff-0000-7000-8000-000000000017",
+  "request": {
+    "worker_id": "01928f61-2222-7aaa-8bbb-2c3d4e5f6a7c",
+    "host_id": "01928f60-1111-7aaa-8bbb-2c3d4e5f6a7b",
+    "workspace_id": "0192f5c5-0a10-7b22-8f00-1a2b3c4d5e6f",
+    "offer": {
+      "capabilities": [
+        "runtime:claude_code",
+        "runtime:codex",
+        "structured_result",
+        "session_resume"
+      ],
+      "labels": [
+        "linux",
+        "gpu-none"
+      ],
+      "environment_kinds": [
+        "git_worktree"
+      ],
+      "isolation_profiles": [
+        "worktree",
+        "landlock"
+      ]
+    },
+    "reaped_steps": [],
+    "max_wait_seconds": 25
+  }
+}

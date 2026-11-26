@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:view:pack:v1",
+  "title": "PackView",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pack_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "slug": {
+      "type": "string",
+      "minLength": 0
+    },
+    "title": {
+      "type": "string",
+      "minLength": 0
+    },
+    "trust": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/pack_trust"
+    },
+    "priority": {
+      "type": "integer"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "version": {
+            "type": "string",
+            "minLength": 0
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "retired"
+            ]
+          },
+          "installed_at": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+          }
+        },
+        "required": [
+          "version_id",
+          "version",
+          "state",
+          "installed_at"
+        ]
+      }
+    },
+    "manifest": {
+      "$ref": "urn:skm:extensions:pack:v1"
+    },
+    "resources_by_kind": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "required": [
+    "pack_id",
+    "slug",
+    "title",
+    "trust",
+    "priority",
+    "versions",
+    "manifest",
+    "resources_by_kind"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.views",
+      "class": "PackView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "PackView"
+    }
+  }
+}

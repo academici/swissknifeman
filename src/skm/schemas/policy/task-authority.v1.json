@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:task-authority:v1",
+  "title": "TaskAuthority",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "write_scope": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:policy:profile:v1#/$defs/path_rule"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "delete_scope": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/path_rule"
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/access_capability"
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "write_scope",
+    "delete_scope",
+    "operations",
+    "capabilities"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "TaskAuthority",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "TaskAuthority"
+    }
+  }
+}

@@ -1,0 +1,518 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:exports:v1",
+  "title": "Exports settings",
+  "description": "Settings section 'exports' owned by exports. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "exports",
+    "owner": "exports",
+    "title": "Exports",
+    "validators": [
+      {
+        "id": "exports.notes_ttl_order",
+        "keys": [
+          "exports.notes.pending_ttl_days",
+          "exports.notes.retention_days"
+        ],
+        "rule": "pending_ttl_days <= retention_days"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.settings",
+      "class": "ExportsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExportsSettings"
+    }
+  },
+  "properties": {
+    "vault": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Explicit Obsidian vault directory on this host; ~ is expanded; absent: probe vault.candidates.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": true,
+            "pack": true,
+            "confirm": false,
+            "path": true,
+            "ui": {
+              "group": "Vault",
+              "order": 10,
+              "widget": "path"
+            }
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1024
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Directories probed in order when vault.path is absent; skm export vault reports the first containing .obsidian.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "path": true,
+            "ui": {
+              "group": "Vault",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        },
+        "projects_dir": {
+          "type": "string",
+          "pattern": "^[^/][^\\\\0]{0,200}$",
+          "default": "Projects",
+          "description": "Vault folder that holds project notes.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Vault",
+              "order": 30,
+              "widget": "text"
+            }
+          }
+        },
+        "lock_deadline_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "default": 10,
+          "description": "Wait for the vault write lock before the export is retried later.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Vault",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        },
+        "push_interval_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400,
+          "default": 300,
+          "description": "Interval of the bound writer-host export service; 0 disables the service (exports run only on command).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "restart",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Vault",
+              "order": 50,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_archived": {
+          "type": "boolean",
+          "default": true,
+          "description": "Write a note when a plan is archived.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "run_finished": {
+          "type": "string",
+          "enum": [
+            "off",
+            "failed_only",
+            "all"
+          ],
+          "default": "off",
+          "description": "Write a note when a run finishes: never, only failed runs, or all runs.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 20,
+              "widget": "select"
+            }
+          }
+        },
+        "plans_folder": {
+          "type": "string",
+          "pattern": "^[^/~][^\\\\]{0,200}$",
+          "default": "SKM/Plans",
+          "description": "Vault-relative folder of plan notes (no .. segments).",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 30,
+              "widget": "text"
+            }
+          }
+        },
+        "runs_folder": {
+          "type": "string",
+          "pattern": "^[^/~][^\\\\]{0,200}$",
+          "default": "SKM/Runs",
+          "description": "Vault-relative folder of run notes.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 40,
+              "widget": "text"
+            }
+          }
+        },
+        "fallback_folder": {
+          "type": "string",
+          "pattern": "^[^/~][^\\\\]{0,200}$",
+          "default": "SKM/Unsorted",
+          "description": "Folder for notes whose project has no folder mapping; ambiguous or invalid mappings block delivery.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 50,
+              "widget": "text"
+            }
+          }
+        },
+        "max_suffix": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 1000,
+          "description": "Highest numeric suffix tried for a free note name.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Notes",
+              "order": 60,
+              "widget": "number"
+            }
+          }
+        },
+        "pending_ttl_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "default": 30,
+          "description": "Delivery window of each generation from materialization or requeue; expired notes stay diagnostic, not successful; must not exceed retention_days.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "exports.notes_ttl_order"
+            ],
+            "ui": {
+              "group": "Notes",
+              "order": 70,
+              "widget": "number"
+            }
+          }
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 7,
+          "maximum": 3650,
+          "default": 90,
+          "description": "Days note and receipt history is kept from latest materialization or requeue; purge never shortens the delivery window or deletes vault files.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "validators": [
+              "exports.notes_ttl_order"
+            ],
+            "ui": {
+              "group": "Notes",
+              "order": 80,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "docs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [
+            "docs/**/*.md",
+            "README.md"
+          ],
+          "description": "Repository globs of documents exported to the vault.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Documents",
+              "order": 10,
+              "widget": "tags"
+            }
+          }
+        },
+        "vault_subfolder": {
+          "type": "string",
+          "pattern": "^[^/~][^\\\\]{0,200}$",
+          "default": "Docs",
+          "description": "Folder below the project folder that receives exported documents.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Docs",
+              "order": 10,
+              "widget": "text"
+            }
+          }
+        },
+        "max_file_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1073741824,
+          "default": 10485760,
+          "description": "Largest document exported; fixed operation caps for scan entries, file count, total bytes and time also apply to dry-run.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Docs",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

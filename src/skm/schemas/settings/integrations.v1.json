@@ -1,0 +1,891 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:integrations:v1",
+  "title": "Integrations settings",
+  "description": "Settings section 'integrations' owned by integrations. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "integrations",
+    "owner": "integrations",
+    "title": "Integrations",
+    "validators": [
+      {
+        "id": "integrations.budget_order",
+        "keys": [
+          "integrations.budget.first_turn.target",
+          "integrations.budget.first_turn.warn"
+        ],
+        "rule": "target <= warn"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.settings",
+      "class": "IntegrationsSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "IntegrationsSettings"
+    }
+  },
+  "properties": {
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "claude_code",
+          "codex",
+          "antigravity",
+          "cursor",
+          "gemini_cli",
+          "grok"
+        ]
+      },
+      "uniqueItems": true,
+      "default": [
+        "claude_code"
+      ],
+      "description": "Clients whose native files a projection writes in checkouts of this project.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "replace",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Targets",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "permission_profile": {
+      "type": "string",
+      "enum": [
+        "observe",
+        "workspace_contained",
+        "trusted_full_access"
+      ],
+      "default": "workspace_contained",
+      "description": "Permission level rendered into client settings; trusted_full_access needs integrations.trusted_full_access.allowed on the host.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "narrow",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": true,
+        "narrow": {
+          "order": [
+            "trusted_full_access",
+            "workspace_contained",
+            "observe"
+          ]
+        },
+        "ui": {
+          "group": "Permissions",
+          "order": 10,
+          "widget": "select"
+        }
+      }
+    },
+    "bundles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9-]{1,60}$"
+      },
+      "uniqueItems": true,
+      "default": [],
+      "description": "Integration bundles (agent packs) projected into the clients.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "append_unique",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Bundles",
+          "order": 10,
+          "widget": "tags"
+        }
+      }
+    },
+    "conflict_suffix": {
+      "type": "string",
+      "pattern": "^\\.[a-z0-9.-]{1,20}$",
+      "default": ".skm-new",
+      "description": "Suffix of the file written next to a user-modified managed file.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance"
+        ],
+        "merge": "replace",
+        "reload": "restart",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": true,
+        "confirm": false,
+        "ui": {
+          "group": "Drift",
+          "order": 10,
+          "widget": "text"
+        }
+      }
+    },
+    "trusted_full_access": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean",
+          "default": false,
+          "description": "This host may receive trusted_full_access client settings.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": true,
+            "ui": {
+              "group": "Permissions",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        }
+      }
+    },
+    "instructions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Write managed instruction blocks into client instruction files.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Instructions",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "project_text": {
+          "type": "string",
+          "maxLength": 8000,
+          "default": "",
+          "description": "Project text placed in the instructions.project managed block.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Instructions",
+              "order": 20,
+              "widget": "textarea"
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Project skills into client skill folders.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "include_core": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the skills of the core pack.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        },
+        "presets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{1,60}$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Named skill sets (pack presets) expanded before include/exclude.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 30,
+              "widget": "tags"
+            }
+          }
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_./-]{1,120}$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Skill keys (or pack/key) projected into client skill folders.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 40,
+              "widget": "tags"
+            }
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_./-]{1,120}$"
+          },
+          "uniqueItems": true,
+          "default": [],
+          "description": "Skill keys removed from the projected set.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "append_unique",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Skills",
+              "order": 50,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include_skm": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add the skm MCP server to client MCP settings.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "MCP",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "servers": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 64
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http",
+                  "sse"
+                ]
+              },
+              "env_refs": {
+                "type": "object",
+                "additionalProperties": {
+                  "$ref": "urn:skm:config:secret-ref:v1"
+                }
+              },
+              "tool_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "command"
+                ]
+              },
+              {
+                "required": [
+                  "url"
+                ]
+              }
+            ]
+          },
+          "default": {},
+          "description": "MCP servers written into client MCP settings; environment values only as secret references.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "MCP",
+              "order": 20,
+              "widget": "json"
+            }
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pack_prefix": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,15}$",
+          "default": "skm",
+          "description": "Prefix of projected agent names.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Bundles",
+              "order": 20,
+              "widget": "text"
+            }
+          }
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "first_turn": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "target": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 200000,
+              "default": 16000,
+              "description": "Target resident tokens of the first turn in a client.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "validators": [
+                  "integrations.budget_order"
+                ],
+                "ui": {
+                  "group": "Budget",
+                  "order": 10,
+                  "widget": "number"
+                }
+              }
+            },
+            "warn": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 400000,
+              "default": 23000,
+              "description": "Resident tokens of the first turn above which the budget check warns (owner verdict needed).",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance",
+                  "workspace",
+                  "project"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "validators": [
+                  "integrations.budget_order"
+                ],
+                "ui": {
+                  "group": "Budget",
+                  "order": 20,
+                  "widget": "number"
+                }
+              }
+            }
+          }
+        },
+        "skill_listing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "fraction": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 0.5,
+              "default": 0.01,
+              "description": "Share of the context window the client's skill listing may take.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Budget",
+                  "order": 30,
+                  "widget": "number"
+                }
+              }
+            },
+            "context_window": {
+              "type": "integer",
+              "minimum": 8000,
+              "maximum": 10000000,
+              "default": 1000000,
+              "description": "Context window assumed for the skill listing share.",
+              "x-skm": {
+                "chain": "work",
+                "levels": [
+                  "instance"
+                ],
+                "merge": "replace",
+                "reload": "live",
+                "override": false,
+                "sensitivity": "public",
+                "portable": true,
+                "lockable": true,
+                "nullable": false,
+                "pack": true,
+                "confirm": false,
+                "ui": {
+                  "group": "Budget",
+                  "order": 40,
+                  "widget": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "desired": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 268435456,
+          "default": 8388608,
+          "description": "Largest desired projection document.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Limits",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(git_guardrails|safe_dirs|plan_guard|pack_guard|managed_guard|changelog_gate|review_gate|command_log|session_start|run_report)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "off",
+              "warn",
+              "strict"
+            ]
+          },
+          "default": {
+            "git_guardrails": "strict",
+            "safe_dirs": "strict",
+            "plan_guard": "strict",
+            "pack_guard": "warn",
+            "managed_guard": "warn",
+            "changelog_gate": "off",
+            "review_gate": "warn",
+            "command_log": "off",
+            "session_start": "warn",
+            "run_report": "off"
+          },
+          "description": "Mode per client hook surface evaluated by skm-hook.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance",
+              "workspace",
+              "project"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Hooks",
+              "order": 10,
+              "widget": "json"
+            }
+          }
+        },
+        "changelog_files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true,
+          "default": [
+            "CHANGELOG.md"
+          ],
+          "description": "Files the changelog_gate surface expects to change with a release-relevant commit.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "project"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": false,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Hooks",
+              "order": 20,
+              "widget": "tags"
+            }
+          }
+        }
+      }
+    },
+    "hook": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 10000,
+          "default": 2000,
+          "description": "Deadline of one skm-hook evaluation; on expiry the client gets the fail-safe answer of the surface.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": true,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Hooks",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        },
+        "cache_ttl_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600,
+          "default": 30,
+          "description": "Lifetime of the cached hook policy on the host; 0 disables the cache.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": true,
+            "confirm": false,
+            "ui": {
+              "group": "Hooks",
+              "order": 40,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

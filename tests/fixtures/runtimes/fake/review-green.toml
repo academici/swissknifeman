@@ -1,0 +1,12 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "review-green"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:reviewer:v1\", \"verdict\": \"green\", \"summary\": \"Synthetic review\", \"findings\": [], \"residual_risk\": \"Synthetic fixture only.\"}"

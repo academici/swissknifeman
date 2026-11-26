@@ -1,0 +1,23 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "performance"
+version = "0.1.0"
+kind = "workflow"
+risk = "low"
+license = "MIT"
+roles = ["executor"]
+replaced_by = "orch/lib/orch/conductor/prompts"
+
+[provenance]
+source = "upstream"
+repo = "get-zeked/token-efficient"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "57c3a0552e238530a8e81d78c411c0c99852f4a3ba318ed226ed27ead69a7253"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/get-zeked/token-efficient/main/SKILL.md"
+sha256 = "69f2a7fa8f287847947321e990e48d51468a36a3e3ad3ac9805dfb4650803738"
+fetched_at = "2026-06-11"

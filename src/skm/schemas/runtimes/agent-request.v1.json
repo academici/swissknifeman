@@ -1,0 +1,608 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:agent-request:v1",
+  "title": "AgentRequest",
+  "description": "What a host operation hands to AgentRuntime.start (spec/modules/runtimes.md §4.5). Invariants not expressible here are checked by validate_request: every fs root lies inside workdir (grant_outside_worktree, S-55), client_home lies outside workdir, resume needs capability session_resume. Example: examples/runtimes/agent-request.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "request_id",
+    "runtime_id",
+    "model",
+    "effort",
+    "role",
+    "rendered_prompt",
+    "prompt_digest",
+    "result_format",
+    "result_schema_urn",
+    "workdir",
+    "permissions",
+    "isolation_profile",
+    "config_mode",
+    "client_home",
+    "resume_session_ref",
+    "session_policy",
+    "env_allowlist",
+    "extra_env",
+    "secret_env",
+    "mcp_servers",
+    "limits",
+    "labels",
+    "process_owner"
+  ],
+  "$defs": {
+    "path_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "pattern"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "path_rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow",
+        "deny"
+      ],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path_rule"
+          }
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path_rule"
+          }
+        }
+      }
+    },
+    "process-owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "worker_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "attempt_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "stage_record_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "unit_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "unit_kind": {
+          "enum": [
+            "step",
+            "check",
+            "git_effect"
+          ]
+        },
+        "owner_nonce": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 128
+        },
+        "identity_dir": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "host_id",
+        "worker_id",
+        "attempt_id",
+        "stage_record_id",
+        "unit_kind",
+        "unit_id",
+        "owner_nonce",
+        "identity_dir"
+      ]
+    },
+    "process-ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/process-owner"
+        },
+        "kind": {
+          "enum": [
+            "cgroup",
+            "container",
+            "pgroup_best_effort"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "daemon_identity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "owner",
+        "kind",
+        "ref"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "container"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "daemon_identity"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "request_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "runtime_id": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "effort": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:extensions:defs:v1#/$defs/effort"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "role": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+    },
+    "rendered_prompt": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prompt_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "result_format": {
+      "type": "string",
+      "enum": [
+        "json",
+        "text"
+      ]
+    },
+    "result_schema_urn": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^urn:skm:"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "workdir": {
+      "type": "string",
+      "pattern": "^/",
+      "minLength": 2,
+      "maxLength": 4096
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fs_read",
+        "fs_write",
+        "commands",
+        "network",
+        "tools",
+        "external_effects"
+      ],
+      "properties": {
+        "fs_read": {
+          "$ref": "#/$defs/path_rules"
+        },
+        "fs_write": {
+          "$ref": "#/$defs/path_rules"
+        },
+        "commands": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "programs",
+            "deny_patterns",
+            "ask_patterns"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "allowlist",
+                "denylist",
+                "any"
+              ]
+            },
+            "programs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "deny_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ask_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "hosts"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "allowlist",
+                "any"
+              ]
+            },
+            "hosts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "external_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "isolation_profile": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "none",
+            "worktree",
+            "landlock",
+            "container"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+:[a-z0-9_-]+$"
+        }
+      ]
+    },
+    "config_mode": {
+      "type": "string",
+      "enum": [
+        "isolated",
+        "inherit"
+      ]
+    },
+    "client_home": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resume_session_ref": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "session_policy": {
+      "type": "string",
+      "enum": [
+        "ephemeral",
+        "persistent"
+      ],
+      "description": "session_policy_for (runtimes.md §4.11 p.3a): ephemeral — the client does not persist the session."
+    },
+    "env_allowlist": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z_][A-Z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "extra_env": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Z_][A-Z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 4096
+      },
+      "description": "Values are SecretRef (secret://...) or literals without secrets (SKM_RUN_ID, SKM_STEP_ID, SKM_API); SKM tokens go only through secret_env."
+    },
+    "secret_env": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "SKM_TOKEN": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "x-skm-secret": true,
+          "writeOnly": true
+        }
+      },
+      "description": "Secrets for the session only (K17): the assignment token SKM_TOKEN. Registered in the adapter Redactor; never in labels, argv, transcript or logs; any serialized request (fixture, debug dump) carries \"***\" instead of the value. The assignment token never authorizes the worker protocol."
+    },
+    "mcp_servers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "command",
+          "env",
+          "secret_env_names"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{0,62}$"
+          },
+          "command": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "env": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/secret-ref"
+            }
+          },
+          "secret_env_names": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SKM_TOKEN"
+              ]
+            },
+            "uniqueItems": true,
+            "description": "Names from secret_env passed to the MCP server process (SKM_TOKEN for the SKM MCP server)."
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timeout_seconds",
+        "idle_timeout_seconds",
+        "max_turns",
+        "max_output_tokens",
+        "max_output_bytes"
+      ],
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 30,
+          "maximum": 14400
+        },
+        "idle_timeout_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600
+        },
+        "max_turns": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_output_tokens": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 1073741824
+        }
+      }
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 200
+      }
+    },
+    "process_owner": {
+      "$ref": "#/$defs/process-owner"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "config_mode": {
+            "const": "isolated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "client_home": {
+            "type": "string",
+            "pattern": "^/",
+            "minLength": 2,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "config_mode": {
+            "const": "inherit"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "client_home": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result_format": {
+            "const": "json"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result_schema_urn": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "resume_session_ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resume_session_ref"
+        ]
+      },
+      "then": {
+        "properties": {
+          "session_policy": {
+            "const": "persistent"
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.request",
+      "class": "AgentRequestDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "AgentRequest"
+    }
+  }
+}

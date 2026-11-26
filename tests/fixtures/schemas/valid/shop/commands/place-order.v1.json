@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:shop:command:place-order:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["order_id", "sku", "quantity"],
+  "properties": {
+    "order_id": {"$ref": "urn:skm:shop:defs:v1#/$defs/id"},
+    "sku": {"$ref": "urn:skm:shop:defs:v1#/$defs/sku"},
+    "quantity": {"$ref": "#/$defs/quantity"},
+    "placed_at": {"type": "string", "format": "date-time"},
+    "contact": {"type": "string", "format": "email"},
+    "channel": {
+      "oneOf": [
+        {"type": "string", "enum": ["web", "shop"]},
+        {"type": "object", "required": ["partner"], "properties": {"partner": {"type": "string"}}}
+      ]
+    }
+  },
+  "$defs": {
+    "quantity": {"type": "integer", "minimum": 1, "maximum": 100}
+  }
+}

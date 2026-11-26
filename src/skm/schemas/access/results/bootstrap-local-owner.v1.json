@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:access:result:bootstrap-local-owner:v1",
+  "title": "BootstrapLocalOwnerResult",
+  "description": "access result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "principal_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "created": {
+      "type": "boolean"
+    },
+    "token_secret": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-skm-secret": true
+    }
+  },
+  "required": [
+    "principal_id",
+    "created",
+    "token_secret"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.access.generated.results",
+      "class": "BootstrapLocalOwnerResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "access.ts",
+      "name": "BootstrapLocalOwnerResult"
+    }
+  }
+}

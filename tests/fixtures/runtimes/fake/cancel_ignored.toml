@@ -1,0 +1,11 @@
+# Synthetic fixture; requires explicit best-effort admission.
+scenario = "cancel_ignored"
+ignore_signals = true
+hang = true
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-cancel" }

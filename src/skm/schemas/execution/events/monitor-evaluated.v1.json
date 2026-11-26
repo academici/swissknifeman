@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:event:monitor-evaluated:v1",
+  "title": "MonitorEvaluated",
+  "description": "Trusted execution emitter records closed domain fields and cause in the transition UoW. The history builder derives nodes/edges; no independently emitted generic facts snapshot. Observation is metadata, never lifecycle authority. Payload <=256KiB. See execution-history.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "evaluation_id": {
+      "type": "string",
+      "maxLength": 64,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+    },
+    "monitor_id": {
+      "type": "string",
+      "enum": [
+        "scheduler",
+        "lease_sweeper",
+        "timeout_enforcer",
+        "stall_detector",
+        "autopilot"
+      ]
+    },
+    "rule_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+    },
+    "rule_version": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"
+    },
+    "target_stage_record_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fencing_token": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+          },
+          "value": {
+            "type": [
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      },
+      "maxItems": 32
+    },
+    "config_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "input_watermark": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_coverage": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "partial",
+        "unavailable"
+      ]
+    },
+    "last_signal_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scheduled_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "started_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "finished_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "waiting",
+        "suspected",
+        "unknown",
+        "action_required",
+        "error"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "snapshot",
+        "cancel",
+        "recover",
+        "pause"
+      ]
+    },
+    "action_request_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recovery_record_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "cause": {
+      "$ref": "urn:skm:execution:execution-history:v1#/$defs/cause"
+    },
+    "run_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "config_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recovery_mode": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "notify",
+            "stop_only",
+            "resume"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "evaluation_id",
+    "monitor_id",
+    "rule_id",
+    "rule_version",
+    "target_stage_record_id",
+    "fencing_token",
+    "thresholds",
+    "config_digest",
+    "input_watermark",
+    "input_coverage",
+    "last_signal_at",
+    "scheduled_at",
+    "started_at",
+    "finished_at",
+    "verdict",
+    "action",
+    "action_request_id",
+    "recovery_record_id",
+    "reason_code",
+    "cause",
+    "run_id",
+    "workspace_id",
+    "project_id",
+    "config_generation",
+    "recovery_mode"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.events",
+      "class": "MonitorEvaluated",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "MonitorEvaluated"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "cause": {
+          "properties": {
+            "trigger_kind": {
+              "not": {
+                "const": "observation"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:demo:event:echoed:v1",
+  "title": "Echoed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["workspace_id", "text"],
+  "properties": {
+    "workspace_id": {"type": "string", "format": "uuid"},
+    "text": {"type": "string", "minLength": 1, "maxLength": 200}
+  }
+}

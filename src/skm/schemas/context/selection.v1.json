@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:selection:v1",
+  "title": "Selection",
+  "description": "context contract declarations; semantic rules belong to the context module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "included": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string",
+            "enum": [
+              "not_found",
+              "too_large",
+              "binary_content",
+              "encoding_invalid",
+              "path_invalid",
+              "classification_forbidden",
+              "file_version_not_ready",
+              "quarantined",
+              "trust_forbidden",
+              "unknown_skill",
+              "version_unavailable",
+              "excluded",
+              "role_not_allowed",
+              "tool_missing",
+              "kind_not_preloaded",
+              "duplicated_by_role_contract",
+              "adapter_not_supported",
+              "capability_missing",
+              "exclusive_group",
+              "over_skill_budget",
+              "trigger_not_met",
+              "role_not_applicable",
+              "scope_mismatch",
+              "conflict_lower_priority",
+              "no_matching_sections",
+              "host_budget_exceeded",
+              "optional_disabled",
+              "history_window",
+              "type_not_in_policy",
+              "full_prompt",
+              "over_budget_core",
+              "over_budget_supporting",
+              "over_budget_retrieval",
+              "over_total_budget",
+              "skills_disabled",
+              "over_skill_count",
+              "symlink_refused",
+              "repo_instructions_max_files",
+              "runtime_self_loaded",
+              "in_resumed_session"
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        ],
+        "minItems": 3,
+        "maxItems": 3
+      }
+    },
+    "class_usage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "total_tokens": {
+      "type": "integer"
+    },
+    "task_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "mode": {
+      "enum": [
+        "full",
+        "delta"
+      ]
+    }
+  },
+  "required": [
+    "included",
+    "excluded",
+    "class_usage",
+    "total_tokens",
+    "task_digest",
+    "mode"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.documents",
+      "class": "Selection",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "Selection"
+    }
+  }
+}

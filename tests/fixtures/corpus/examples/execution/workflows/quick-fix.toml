@@ -1,0 +1,51 @@
+# Workflow resource of the core pack: resources/packs/core/workflows/quick-fix.toml
+# Small bounded fixes: no scout, review only when the plan requires it or the risk score is high.
+# No phase/plan gate stages: readiness rule R13 refuses a plan whose gates carry required checks or a required review.
+schema = "urn:skm:execution:workflow:v1"
+id = "quick-fix"
+version = "2.0.0"
+title = "Quick fix"
+description = "prepare -> execute -> checks -> review when required or risk >= 60 -> acceptance -> integrate."
+applies_to = ["code", "config", "test", "docs", "ops"]
+requires_roles = ["executor", "reviewer", "triager", "registrar"]
+
+[[stage]]
+id = "prepare"
+type = "prepare_environment"
+params = { baseline_strategy = "integration_branch_head" }
+
+[[stage]]
+id = "execute"
+type = "agent_step"
+role = "executor"
+on = { result_invalid = "retry_then_escalate" }
+
+[[stage]]
+id = "checks"
+type = "run_checks"
+params = { scope = "task" }
+on = { checks_failed = "rework", checks_error = "retry_once_then_escalate" }
+
+[[stage]]
+id = "review"
+type = "agent_review"
+role = "reviewer"
+when = { any = [ { review_mode = "required" }, { risk_at_least = 60 } ] }
+params = { audit_scope = "full", profile = "reviewer" }
+on = { verdict_attention = "triage", verdict_red = "triage" }
+
+[[stage]]
+id = "triage"
+type = "agent_step"
+role = "triager"
+when = { any = [ { review_verdict = "red" }, { review_verdict = "attention" } ] }
+
+[[stage]]
+id = "accept"
+type = "acceptance_gate"
+
+[[stage]]
+id = "integrate"
+type = "integrate"
+params = { push = "none" }
+on = { conflict = "integration_task" }

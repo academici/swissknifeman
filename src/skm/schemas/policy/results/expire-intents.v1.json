@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:result:expire-intents:v1",
+  "title": "ExpireIntentsResult",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "expired": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "expired"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.results",
+      "class": "ExpireIntentsResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "ExpireIntentsResult"
+    }
+  }
+}

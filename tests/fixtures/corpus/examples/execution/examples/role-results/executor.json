@@ -1,0 +1,48 @@
+{
+  "schema": "urn:skm:execution:role-result:executor:v1",
+  "status": "done",
+  "summary": "Added RotationService.rotate(token) that issues a new one-time token in the same family and marks the old one used inside one transaction; a reused token revokes the whole family. Tests cover rotation, reuse and expiry with database time.",
+  "changed_paths": [
+    {
+      "mount": "api",
+      "path": "src/auth/rotation.py",
+      "change": "added"
+    },
+    {
+      "mount": "api",
+      "path": "tests/auth/test_rotation.py",
+      "change": "added"
+    }
+  ],
+  "evidence": [
+    "pytest tests/auth/test_rotation.py -q: 6 passed"
+  ],
+  "checks_run": [
+    {
+      "id": "V1",
+      "cmd": "python -m pytest tests/auth/test_rotation.py -q",
+      "exit": 0
+    }
+  ],
+  "open_issues": [],
+  "questions": [],
+  "self_check": {
+    "performed": true,
+    "notes": "Token values are never logged; only family_id appears in log lines.",
+    "criteria": [
+      {
+        "criterion_key": "AC1",
+        "status": "met",
+        "evidence": "test_reuse_revokes_family"
+      }
+    ]
+  },
+  "recommend_review": {
+    "recommended": true,
+    "reason": "Security-relevant: token reuse detection."
+  },
+  "subagents": {
+    "used": false,
+    "disclosed": true
+  }
+}

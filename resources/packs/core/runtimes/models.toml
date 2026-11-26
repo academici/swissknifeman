@@ -1,0 +1,353 @@
+# Neutral built-in model catalog shipped with the SKM core pack.
+# Pricing stays omitted unless verified against an authoritative provider source.
+schema = "urn:skm:runtimes:model-catalog:v1"
+catalog_version = "2.0.2"
+
+[runtimes.claude_code]
+class_selectors = { economy = ["haiku"], implementation = ["sonnet"], frontier = ["opus"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = "2026-09-17"
+inventory_source = "claude --help @ 2.1.266"
+
+[[runtimes.claude_code.models]]
+id = "haiku"
+display_name = "Claude Haiku (CLI alias)"
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+context_window_tokens = 200000
+patterns = [".*haiku.*"]
+status = "confirmed"
+verified_at = "2026-09-17"
+source = "claude --help @ 2.1.266"
+notes = "Alias resolved by the CLI to the current Haiku model."
+
+[[runtimes.claude_code.models]]
+id = "sonnet"
+display_name = "Claude Sonnet (CLI alias)"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 200000
+patterns = [".*sonnet.*"]
+status = "unverified"
+verified_at = "2026-09-17"
+source = "claude --help @ 2.1.266"
+notes = ""
+
+[[runtimes.claude_code.models]]
+id = "opus"
+display_name = "Claude Opus (CLI alias)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 200000
+patterns = [".*opus.*"]
+status = "unverified"
+verified_at = "2026-09-17"
+source = "claude --help @ 2.1.266"
+notes = ""
+
+[runtimes.codex]
+class_selectors = { economy = ["gpt-6-luna", "gpt-5.6-luna"], implementation = ["gpt-6-sol"], frontier = ["gpt-6-astra"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = "2026-10-22"
+inventory_source = "https://developers.openai.com/api/docs/models/gpt-6-luna and the local Codex model cache on 2026-10-22"
+
+[[runtimes.codex.models]]
+id = "gpt-6-luna"
+display_name = "GPT-6 Luna"
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+context_window_tokens = 128000
+status = "confirmed"
+verified_at = "2026-10-22"
+source = "https://developers.openai.com/api/docs/models/gpt-6-luna"
+notes = "Preferred Codex economy selector. Context window not taken from the source: placeholder until verified."
+
+[[runtimes.codex.models]]
+id = "gpt-5.6-luna"
+display_name = "GPT-5.6 Luna"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-10-22"
+source = "legacy model-catalog.json"
+notes = "Previous economy pin; kept, not preferred."
+
+[[runtimes.codex.models]]
+id = "gpt-5.6-terra"
+display_name = "GPT-5.6 Terra"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-10-22"
+source = "legacy model-catalog.json"
+notes = ""
+
+[[runtimes.codex.models]]
+id = "gpt-6.1-terra"
+display_name = "GPT-6.1 Terra"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer"]
+context_window_tokens = 500000
+status = "confirmed"
+verified_at = "2026-11-20"
+source = "Local Codex model cache (listed selector and default context window)"
+notes = "Exact selector. Default model-class routing remains unchanged."
+
+[[runtimes.codex.models]]
+id = "gpt-6-sol"
+display_name = "GPT-6 Sol"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+patterns = ["gpt-6(\\.\\d+)*-sol"]
+status = "unverified"
+verified_at = "2026-10-22"
+source = "Codex provider thread state (legacy record)"
+notes = "Pattern recognizes suffixed selectors such as gpt-6.2-sol."
+
+[[runtimes.codex.models]]
+id = "gpt-6-astra"
+display_name = "GPT-6 Astra"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+patterns = ["gpt-6(\\.\\d+)*-astra"]
+status = "unverified"
+verified_at = "2026-10-22"
+source = "legacy model-catalog.json"
+notes = ""
+
+[runtimes.grok]
+class_selectors = { economy = ["grok-4.5"], implementation = ["grok-4.6"], frontier = ["grok-4.7"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = "2026-10-03"
+inventory_source = "grok --help / grok models"
+
+[[runtimes.grok.models]]
+id = "grok-4.5"
+display_name = "Grok 4.5"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.5.*"]
+status = "unverified"
+verified_at = "2026-10-03"
+source = "grok models"
+notes = ""
+
+[[runtimes.grok.models]]
+id = "grok-4.6"
+display_name = "Grok 4.6"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.6.*"]
+status = "unverified"
+verified_at = "2026-10-03"
+source = "grok models"
+notes = ""
+
+[[runtimes.grok.models]]
+id = "grok-4.7"
+display_name = "Grok 4.7"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.7.*"]
+status = "unverified"
+verified_at = "2026-10-03"
+source = "grok models"
+notes = ""
+
+[runtimes.cursor]
+class_selectors = { economy = ["composer-2.5-fast"], implementation = ["composer-2.5"], frontier = ["claude-opus-5-thinking-high", "grok-4.7", "grok-4.6"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = "2026-09-17"
+inventory_source = "agent --list-models @ 2026.09.15-d2fe57e"
+
+[[runtimes.cursor.models]]
+id = "composer-2.5-fast"
+display_name = "Composer 2.5 Fast"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-09-17"
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "composer-2.5"
+display_name = "Composer 2.5"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-09-17"
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "claude-opus-5-thinking-high"
+display_name = "Claude Opus 5 thinking high (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-09-17"
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "grok-4.7"
+display_name = "Grok 4.7 (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-09-17"
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "grok-4.6"
+display_name = "Grok 4.6 (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = "2026-09-17"
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[runtimes.antigravity]
+class_selectors = { economy = ["claude-sonnet-5-5"], implementation = ["claude-sonnet-5-5"], frontier = ["claude-opus-5-5"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = "2026-11-22"
+inventory_source = "I-00.0 live agy model inventory"
+
+[[runtimes.antigravity.models]]
+id = "claude-sonnet-5-5"
+display_name = "Claude Sonnet 5.5 via Antigravity"
+classes = ["economy", "implementation"]
+suited_roles = ["reviewer", "triager", "scout"]
+context_window_tokens = 32768
+patterns = ["claude-sonnet-5-5-(low|medium|high)"]
+status = "unverified"
+verified_at = "2026-11-20"
+source = "agy 1.5.13 models and SKM 0.36.0 class selectors"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high."
+
+[[runtimes.antigravity.models]]
+id = "gemini-4-neon"
+display_name = "Gemini 4 Neon via Antigravity"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 32768
+patterns = ["gemini-4-neon-(low|medium|high|xhigh)"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high, xhigh."
+
+[[runtimes.antigravity.models]]
+id = "gemini-4-carbon"
+display_name = "Gemini 4 Carbon via Antigravity"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 32768
+patterns = ["gemini-4-carbon-(low|medium|high)"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high."
+
+[[runtimes.antigravity.models]]
+id = "gemini-4-argon"
+display_name = "Gemini 4 Argon via Antigravity"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer"]
+context_window_tokens = 32768
+patterns = ["gemini-4-argon-(low|medium|high)"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high."
+
+[[runtimes.antigravity.models]]
+id = "gemini-4-hydrogen"
+display_name = "Gemini 4 Hydrogen via Antigravity"
+classes = ["frontier"]
+suited_roles = ["reviewer", "advisor"]
+context_window_tokens = 32768
+patterns = ["gemini-4-hydrogen-(low|medium|high|xhigh)"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high, xhigh."
+
+[[runtimes.antigravity.models]]
+id = "gemini-3.8-flash"
+display_name = "Gemini 3.8 Flash via Antigravity"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 32768
+patterns = ["gemini-3\\.8-flash-(low|medium|high)"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high."
+
+[[runtimes.antigravity.models]]
+id = "gpt-oss-120b"
+display_name = "GPT-OSS 120B via Antigravity"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer"]
+context_window_tokens = 32768
+patterns = ["gpt-oss-120b-medium"]
+status = "confirmed"
+verified_at = "2026-11-22"
+source = "I-00.0 live agy model inventory"
+notes = "SKM uses a conservative 32K budget. Listed effort: medium."
+
+[[runtimes.antigravity.models]]
+id = "claude-opus-5-5"
+display_name = "Claude Opus 5.5 via Antigravity"
+classes = ["implementation", "frontier"]
+suited_roles = ["reviewer", "advisor"]
+context_window_tokens = 32768
+patterns = ["claude-opus-5-5-(low|medium|high)"]
+status = "unverified"
+verified_at = "2026-11-20"
+source = "agy 1.5.13 models and SKM 0.36.0 class selectors"
+notes = "SKM uses a conservative 32K budget. Listed efforts: low, medium, high."
+
+[runtimes.gemini_cli]
+class_selectors = { economy = ["gemini-3.8-flash"], implementation = ["gemini-3.8-flash"], frontier = ["gemini-3.1-pro-preview"] }
+effort_selectors = {}
+inventory_verified_at = "2026-11-23"
+inventory_source = "Gemini CLI configuration and model selection documentation"
+
+[[runtimes.gemini_cli.models]]
+id = "gemini-3.8-flash"
+display_name = "Gemini 3.8 Flash via Gemini CLI"
+classes = ["economy", "implementation"]
+suited_roles = ["scout", "researcher", "reviewer", "triager"]
+context_window_tokens = 32768
+status = "unverified"
+verified_at = "2026-11-23"
+source = "https://geminicli.com/docs/reference/configuration/"
+notes = "Conservative SKM context budget; provider account access is unverified."
+
+[[runtimes.gemini_cli.models]]
+id = "gemini-3.1-pro-preview"
+display_name = "Gemini 3.1 Pro Preview via Gemini CLI"
+classes = ["frontier"]
+suited_roles = ["reviewer", "advisor"]
+context_window_tokens = 32768
+status = "unverified"
+verified_at = "2026-11-23"
+source = "https://geminicli.com/docs/get-started/gemini-3/"
+notes = "Conservative SKM context budget; preview availability depends on the provider account."

@@ -1,0 +1,230 @@
+# Model catalog of the core pack: src/skm/_resources/packs/core/runtimes/models.toml
+# (resource kind runtime_catalog, key "models"; schema urn:skm:runtimes:model-catalog:v1; spec runtimes.md §4.2).
+# Migrated from packages/aicore/configs/model-catalog.json (catalog_version 1.0.0) WITHOUT the owner's personal pool
+# extension of 2026-10-01 (claude_code "fable", codex "gpt-6.1-sol", cursor family patterns): that goes to the
+# owner's overlay pack (role_routing / an operator runtime_catalog that overrides this resource).
+# Legacy "roles" mixed classes and hints: classes = {economy, implementation, frontier} ∩ roles;
+# suited_roles: explore -> scout, researcher; implementation -> executor; review -> reviewer, triager;
+# design -> advisor; audit -> reviewer.
+# Prices: the legacy catalog has none ("No price table, no currency"). pricing stays absent until verified;
+# cost_usd_micros is then null and budgets in usd follow budgets.unknown_usage_policy.
+# context_window_tokens: new data. Values marked status = "unverified" are conservative placeholders that P09.02
+# must verify against provider documentation before the catalog is published (the doctor warns while unverified).
+schema = "urn:skm:runtimes:model-catalog:v1"
+catalog_version = "2.0.0"
+
+[runtimes.claude_code]
+class_selectors = { economy = ["haiku"], implementation = ["sonnet"], frontier = ["opus"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = 2026-09-17
+inventory_source = "claude --help @ 2.1.266"
+
+[[runtimes.claude_code.models]]
+id = "haiku"
+display_name = "Claude Haiku (CLI alias)"
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+context_window_tokens = 200000
+patterns = [".*haiku.*"]
+status = "confirmed"
+verified_at = 2026-09-17
+source = "claude --help @ 2.1.266"
+notes = "Alias resolved by the CLI to the current Haiku model."
+
+[[runtimes.claude_code.models]]
+id = "sonnet"
+display_name = "Claude Sonnet (CLI alias)"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 200000
+patterns = [".*sonnet.*"]
+status = "unverified"
+verified_at = 2026-09-17
+source = "claude --help @ 2.1.266"
+notes = ""
+
+[[runtimes.claude_code.models]]
+id = "opus"
+display_name = "Claude Opus (CLI alias)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 200000
+patterns = [".*opus.*"]
+status = "unverified"
+verified_at = 2026-09-17
+source = "claude --help @ 2.1.266"
+notes = ""
+# Format of a verified price (decimal strings, USD per million tokens):
+# [runtimes.claude_code.models.pricing]
+# input_per_mtok_usd = "15.00"
+# output_per_mtok_usd = "75.00"
+# cache_read_per_mtok_usd = "1.50"
+# cache_write_per_mtok_usd = "18.75"
+# currency = "USD"
+# verified_at = 2026-11-02
+# source = "https://<provider pricing page>"
+
+[runtimes.codex]
+class_selectors = { economy = ["gpt-6-luna", "gpt-5.6-luna"], implementation = ["gpt-6-sol"], frontier = ["gpt-6-astra"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = 2026-10-22
+inventory_source = "https://developers.openai.com/api/docs/models/gpt-6-luna and the local Codex model cache on 2026-10-22"
+
+[[runtimes.codex.models]]
+id = "gpt-6-luna"
+display_name = "GPT-6 Luna"
+classes = ["economy"]
+suited_roles = ["scout", "researcher", "registrar"]
+context_window_tokens = 128000
+status = "confirmed"
+verified_at = 2026-10-22
+source = "https://developers.openai.com/api/docs/models/gpt-6-luna"
+notes = "Preferred Codex economy selector. Context window not taken from the source: placeholder until verified."
+
+[[runtimes.codex.models]]
+id = "gpt-5.6-luna"
+display_name = "GPT-5.6 Luna"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-10-22
+source = "legacy model-catalog.json"
+notes = "Previous economy pin; kept, not preferred."
+
+[[runtimes.codex.models]]
+id = "gpt-5.6-terra"
+display_name = "GPT-5.6 Terra"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-10-22
+source = "legacy model-catalog.json"
+notes = ""
+
+[[runtimes.codex.models]]
+id = "gpt-6-sol"
+display_name = "GPT-6 Sol"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-10-22
+source = "Codex provider thread state (legacy record)"
+notes = ""
+
+[[runtimes.codex.models]]
+id = "gpt-6-astra"
+display_name = "GPT-6 Astra"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+patterns = ["gpt-6(\\.\\d+)*-astra"]
+status = "unverified"
+verified_at = 2026-10-22
+source = "legacy model-catalog.json"
+notes = ""
+
+[runtimes.grok]
+class_selectors = { economy = ["grok-4.5"], implementation = ["grok-4.6"], frontier = ["grok-4.7"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = 2026-10-03
+inventory_source = "grok --help / grok models"
+
+[[runtimes.grok.models]]
+id = "grok-4.5"
+display_name = "Grok 4.5"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.5.*"]
+status = "unverified"
+verified_at = 2026-10-03
+source = "grok models"
+notes = ""
+
+[[runtimes.grok.models]]
+id = "grok-4.6"
+display_name = "Grok 4.6"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.6.*"]
+status = "unverified"
+verified_at = 2026-10-03
+source = "grok models"
+notes = ""
+
+[[runtimes.grok.models]]
+id = "grok-4.7"
+display_name = "Grok 4.7"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+patterns = ["grok-4\\.7.*"]
+status = "unverified"
+verified_at = 2026-10-03
+source = "grok models"
+notes = ""
+
+[runtimes.cursor]
+class_selectors = { economy = ["composer-2.5-fast"], implementation = ["composer-2.5"], frontier = ["claude-opus-5-thinking-high", "grok-4.7", "grok-4.6"] }
+effort_selectors = { low = "low", medium = "medium", high = "high", xhigh = "xhigh" }
+inventory_verified_at = 2026-09-17
+inventory_source = "agent --list-models @ 2026.09.15-d2fe57e"
+
+[[runtimes.cursor.models]]
+id = "composer-2.5-fast"
+display_name = "Composer 2.5 Fast"
+classes = ["economy"]
+suited_roles = ["scout", "researcher"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-09-17
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "composer-2.5"
+display_name = "Composer 2.5"
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer", "triager"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-09-17
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "claude-opus-5-thinking-high"
+display_name = "Claude Opus 5 thinking high (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-09-17
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = "The family pattern claude-(opus|fable)-.* of the legacy entry is part of the owner's 2026-10-01 pool (overlay)."
+
+[[runtimes.cursor.models]]
+id = "grok-4.7"
+display_name = "Grok 4.7 (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-09-17
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""
+
+[[runtimes.cursor.models]]
+id = "grok-4.6"
+display_name = "Grok 4.6 (via Cursor)"
+classes = ["implementation", "frontier"]
+suited_roles = ["executor", "reviewer"]
+context_window_tokens = 128000
+status = "unverified"
+verified_at = 2026-09-17
+source = "agent --list-models @ 2026.09.15-d2fe57e"
+notes = ""

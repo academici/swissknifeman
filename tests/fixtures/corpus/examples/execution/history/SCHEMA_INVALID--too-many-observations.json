@@ -1,0 +1,52 @@
+{
+  "contract": "urn:skm:execution:command:record-stage-result:v1",
+  "value": {
+    "claim": {
+      "assignment_id": "01928f61-0000-7000-8000-000000000030",
+      "attempt_id": "01928f61-0000-7000-8000-000000000003",
+      "worker_id": "01928f61-0000-7000-8000-000000000031",
+      "fencing_token": 1
+    },
+    "stage_record_id": "01928f61-0000-7000-8000-000000000004",
+    "outcome_kind": "success",
+    "outcome": {},
+    "observations": [
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000100",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000101",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000102",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000103",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000104",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000105",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000106",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000107",
+        "observation": null
+      },
+      {
+        "step_id": "01928f61-0000-7000-8000-000000000108",
+        "observation": null
+      }
+    ]
+  }
+}

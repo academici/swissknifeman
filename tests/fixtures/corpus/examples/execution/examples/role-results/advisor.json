@@ -1,0 +1,41 @@
+{
+  "schema": "urn:skm:execution:role-result:advisor:v1",
+  "mode": "advice",
+  "problem_ref": "question:0193a000-0000-7000-8000-000000130001@1",
+  "options": [
+    {
+      "id": "revoke-family",
+      "label": "Revoke the whole family on reuse",
+      "pros": "Matches R1 and the owner's brief M1.",
+      "cons": "A user with two tabs racing a refresh is logged out."
+    },
+    {
+      "id": "grace-window",
+      "label": "Allow reuse within 10 s",
+      "pros": "Fewer accidental logouts.",
+      "cons": "Contradicts R1 ('already used is rejected')."
+    }
+  ],
+  "recommendation": {
+    "option_id": "revoke-family",
+    "text": "Revoke the family. R1 is a must requirement and decision D1 already chose strict rotation; the race is handled in P2.2 by a single-flight refresh in the web client."
+  },
+  "confidence": "high",
+  "category": "bounded_ambiguity",
+  "needs_owner": false,
+  "rationale": "The requirement text and the recorded decision settle the question; the trade-off is already assigned to another item.",
+  "assumptions": [
+    "P2.2 implements single-flight refresh as planned."
+  ],
+  "sources": [
+    {
+      "kind": "decision",
+      "ref": "D1",
+      "note": "strict one-time rotation"
+    },
+    {
+      "kind": "material",
+      "ref": "material/storage-design#rotation"
+    }
+  ]
+}

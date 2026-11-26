@@ -1,0 +1,26 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gpt-oss-120b"
+version = "2.0.6"
+model_family = "gpt_oss"
+model_id = "gpt-oss-120b"
+display_name = "GPT-OSS 120B"
+runtime_ids = ["codex"]
+classes = ["implementation"]
+suited_roles = ["executor", "reviewer"]
+notes = "2026 open-weight 120B profile. Cache support stays unknown."
+strengths = ["local implementation", "offline review"]
+delegation_notes = ["Treat prompt cache as unknown until the host reports it.", "Do not assume provider cache prices."]
+forbidden_params = ["temperature", "top_p", "presence_penalty"]
+
+[prompt_style]
+shape = "structured"
+instructions = ["Give a closed task.", "Avoid provider-specific parameters."]
+
+[cache_capabilities]
+prompt_cache = "unknown"
+cache_read = false
+cache_write = false
+
+[compaction_threshold]
+input_tokens = 32000
+reserve_output_tokens = 4000

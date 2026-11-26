@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:view:graph-indexes-result:v1",
+  "title": "GraphIndexesResult",
+  "description": "The bus result for listing the latest visible graph indexes.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "$ref": "urn:skm:knowledge:view:graph-indexes:v1"
+    }
+  },
+  "required": ["items"]
+}

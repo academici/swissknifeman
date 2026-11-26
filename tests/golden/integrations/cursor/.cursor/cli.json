@@ -1,0 +1,26 @@
+{
+  "editor": {
+    "vimMode": true
+  },
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(src/**)",
+      "Write(tests/**)",
+      "Shell(uv run pytest)",
+      "Shell(uv run ruff)",
+      "Shell(git status)",
+      "Shell(git diff)",
+      "WebFetch(docs.python.org)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/.env*)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa*)",
+      "Write(**/.env*)",
+      "Write(**/*.key)",
+      "Write(**/*.pem)"
+    ]
+  }
+}

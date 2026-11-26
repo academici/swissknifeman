@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:renew-lease:v1",
+  "title": "RenewLease",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "claim": {
+      "$ref": "urn:skm:execution:defs:v1#/$defs/worker-claim"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stage_record_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "step_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "phase": {
+          "const": "runtime_started"
+        },
+        "last_runtime_event_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cpu_active": {
+          "type": "boolean"
+        },
+        "repeated_command_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tool_running": {
+          "type": "string"
+        },
+        "process": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/process-identity"
+        },
+        "worktree_dirty": {
+          "type": "boolean"
+        },
+        "snapshot": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/staged-file"
+        },
+        "usage_so_far": {
+          "$ref": "urn:skm:runtimes:usage-report:v1"
+        },
+        "tool_calls": {
+          "$ref": "#/$defs/tool-call-batch"
+        }
+      },
+      "dependentRequired": {
+        "phase": [
+          "stage_record_id",
+          "step_id"
+        ],
+        "tool_calls": [
+          "stage_record_id",
+          "step_id"
+        ]
+      }
+    }
+  },
+  "required": [
+    "claim"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "RenewLease",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RenewLease"
+    }
+  },
+  "$defs": {
+    "tool-call-batch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "calls": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/tool-call"
+          }
+        }
+      },
+      "required": [
+        "coverage",
+        "calls"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "coverage": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calls": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "tool-call": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "tool": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "^[^\\u0000]+$"
+        },
+        "duration_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        }
+      },
+      "required": [
+        "call_id",
+        "duration_ms"
+      ]
+    }
+  }
+}

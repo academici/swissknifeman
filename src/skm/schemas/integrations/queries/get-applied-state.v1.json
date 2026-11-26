@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:query:get-applied-state:v1",
+  "title": "GetAppliedState",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "checkout_binding_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    }
+  },
+  "required": [
+    "project_id",
+    "checkout_binding_id",
+    "target"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.queries",
+      "class": "GetAppliedState",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "GetAppliedState"
+    }
+  }
+}

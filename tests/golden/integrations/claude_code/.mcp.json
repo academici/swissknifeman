@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "postgres-local": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "secret://env/GITHUB_TOKEN"
+      }
+    },
+    "skm": {
+      "command": "skm",
+      "args": [
+        "mcp",
+        "serve"
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "legal-compliance"
+version = "0.1.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor", "reviewer"]
+requires = ["architecture"]
+
+[provenance]
+source = "local"

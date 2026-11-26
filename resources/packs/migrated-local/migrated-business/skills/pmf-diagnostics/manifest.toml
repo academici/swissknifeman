@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "pmf-diagnostics"
+version = "0.1.0"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+requires = ["product-roadmap"]
+
+[provenance]
+source = "local"

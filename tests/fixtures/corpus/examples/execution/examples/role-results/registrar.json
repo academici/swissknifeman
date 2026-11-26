@@ -1,0 +1,14 @@
+{
+  "schema": "urn:skm:execution:role-result:registrar:v1",
+  "commit": {
+    "type": "feat",
+    "scope": "auth",
+    "subject": "rotate refresh tokens and revoke the family on reuse",
+    "body": "RotationService.rotate issues a one-time token in the same family and marks the old one used in one\ntransaction; presenting a used token revokes the family. Expiry is compared with database time.",
+    "breaking": false
+  },
+  "changelog_entry": {
+    "section": "Security",
+    "text": "Refresh tokens are one-time; reuse revokes the session family."
+  }
+}

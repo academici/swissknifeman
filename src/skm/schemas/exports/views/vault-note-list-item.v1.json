@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:exports:view:vault-note-list-item:v1",
+  "title": "VaultNoteListItemView",
+  "description": "exports contract; semantics: the exports module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "note_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "kind": {
+      "$ref": "urn:skm:exports:defs:v1#/$defs/NoteKind"
+    },
+    "name": {
+      "type": "string"
+    },
+    "state": {
+      "$ref": "urn:skm:exports:defs:v1#/$defs/VaultNoteState"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "requeued_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "delivery_deadline": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:exports:defs:v1#/$defs/VaultNoteWrite"
+      }
+    }
+  },
+  "required": [
+    "note_id",
+    "kind",
+    "name",
+    "state",
+    "generation",
+    "created_at",
+    "requeued_at",
+    "delivery_deadline",
+    "writes"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.exports.generated.views",
+      "class": "VaultNoteListItemView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "exports.ts",
+      "name": "VaultNoteListItemView"
+    }
+  }
+}

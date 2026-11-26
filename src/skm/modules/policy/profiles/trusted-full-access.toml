@@ -1,0 +1,81 @@
+# Built-in policy profile (urn:skm:policy:profile:v1).
+# Copy of src/skm/modules/policy/profiles/trusted-full-access.toml; spec: working/spec/modules/policy.md §4.5.
+# Interactive work of the operator on a trusted host: everything is reachable, every risky operation asks the
+# human (unattended agents therefore get Deny for them). Usable only when the host sets
+# policy.host.allow_unconfined = true; the only profile that may run with isolation "none".
+# SKM state (state_dir, blobs, backups, other worktrees) stays protected regardless of this profile.
+schema = "urn:skm:policy:profile:v1"
+id = "trusted-full-access"
+version = "1.0.0"
+description = "Full access for interactive work on a trusted host; risky operations ask the human."
+requires_host_flag = true
+allowed_isolation = ["none", "worktree", "landlock", "container"]
+
+[fs.read]
+allow = [
+  { scope = "worktree", pattern = "**" },
+  { scope = "materials", pattern = "**" },
+  { scope = "tmp", pattern = "**" },
+  { scope = "home", pattern = "**" },
+  { scope = "safe_dir", pattern = "**" },
+  { scope = "any", pattern = "**" },
+]
+deny = []
+
+[fs.write]
+allow = [
+  { scope = "worktree", pattern = "**" },
+  { scope = "tmp", pattern = "**" },
+  { scope = "home", pattern = "**" },
+  { scope = "safe_dir", pattern = "**" },
+  { scope = "any", pattern = "**" },
+]
+deny = []
+
+[commands]
+mode = "denylist"
+programs = []
+inline_interpreters = ["python", "python3", "node", "deno", "ruby", "perl", "php"]
+trust_inline_interpreters = true
+deny_patterns = [
+  '(^|[^0-9A-Za-z_/.-])(mkfs|mkswap|reboot|shutdown|poweroff|halt|fdisk|parted)(\s|$)',
+  '(^|[^0-9A-Za-z_/.-])(telinit|init)\s+[0-6sS](\s|$)',
+  '(^|[^0-9A-Za-z_/.-])dd\s+[^|;&]*(of=|if=/dev/)',
+  ':\s*\(\)\s*\{[^}]*:[^}]*\|',
+  '>\s*/dev/(sd|nvme|disk|mmcblk)',
+]
+ask_patterns = [
+  '(^|[^0-9A-Za-z_/.-])(sudo|doas)(\s|$)',
+  '\|\s*(ba|z|k)?sh(\s|$)',
+]
+
+[commands.subcommands]
+
+[network]
+# The instance/workspace ceiling governs registry reachability for this profile.
+mode = "any"
+hosts = []
+
+[tools]
+allow = ["fs.read", "fs.write", "fs.edit", "fs.delete", "shell.run", "web.fetch", "web.search", "mcp:*"]
+
+[effects]
+allow = ["git_commit", "git_push", "pr_create", "message", "publish", "fs_write_external"]
+need_approval = ["git_push", "pr_create", "message", "publish", "fs_write_external"]
+
+[operations]
+modify_write_set         = { decision = "allow" }
+modify_outside_write_set = { decision = "allow" }
+delete_tracked           = { decision = "ask" }
+delete_own_untracked     = { decision = "allow" }
+delete_foreign_untracked = { decision = "ask" }
+modify_git_dir           = { decision = "ask" }
+git_discard              = { decision = "ask" }
+git_push                 = { decision = "ask" }
+git_force_push           = { decision = "ask" }
+forge_write              = { decision = "ask" }
+# Package publication uses the classifier's operation gate across ecosystems.
+release_publish          = { decision = "ask" }
+secrets_access           = { decision = "ask" }
+docker_socket            = { decision = "ask", risk = "high" }
+external_services        = { decision = "ask", risk = "high" }

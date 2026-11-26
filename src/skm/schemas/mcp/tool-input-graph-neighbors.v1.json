@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:graph-neighbors:v1",
+  "title": "skm_graph_neighbors input",
+  "description": "Project-scoped input for skm_graph_neighbors.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "edge_types": {
+      "$ref": "urn:skm:knowledge:query:graph-neighbors:v1#/properties/edge_types"
+    },
+    "at_revision": {
+      "$ref": "urn:skm:knowledge:query:graph-neighbors:v1#/properties/at_revision"
+    },
+    "node_key": {
+      "$ref": "urn:skm:knowledge:query:graph-neighbors:v1#/properties/node_key"
+    },
+    "depth": {
+      "$ref": "urn:skm:knowledge:query:graph-neighbors:v1#/properties/depth"
+    },
+    "direction": {
+      "$ref": "urn:skm:knowledge:query:graph-neighbors:v1#/properties/direction"
+    }
+  },
+  "required": [
+    "node_key"
+  ]
+}

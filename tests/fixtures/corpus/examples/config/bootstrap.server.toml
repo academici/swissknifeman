@@ -1,0 +1,46 @@
+# /etc/skm/bootstrap.toml on the control-plane server (skm serve). Workers on laptops use an
+# http-mode bootstrap instead (see the second document below, normally a separate file).
+schema = "urn:skm:config:bootstrap:v1"
+instance_id = "0192f5c4-7a10-7c3e-9b1a-5d2f0e8a4c11"
+
+[access]
+mode = "embedded"
+
+[database]
+url = "secret://file//run/secrets/skm-database-url"
+migrate_on_start = false   # migrations are applied by `skm db migrate` with the migrator role
+# DSN of the migrator role (skm_migrator) used only by the local `skm db migrate`; never by skm serve or the API.
+migrator_url = "secret://file//run/secrets/skm-migrator-url"
+# Pool of skm serve; omit pool_max_size to get api.threadpool.size + background services + 3 (kernel-platform §5.3).
+pool_min_size = 2
+pool_max_size = 32
+pool_timeout_seconds = 10
+
+[secrets]
+token_pepper = "secret://file//run/secrets/skm-token-pepper"
+
+[paths]
+state_dir = "/var/lib/skm/state"
+blobs_root = "/var/lib/skm/blobs"
+
+[host]
+id = "0192f5c5-1d20-7f00-8a33-1b2c3d4e5f60"
+name = "skm-server-1"
+
+# ---------------------------------------------------------------------------------------------
+# ~/.config/skm/bootstrap.toml on a laptop that runs only `skm worker` and the CLI against the
+# server (http mode). Kept here as a comment block to show both shapes side by side:
+#
+# schema = "urn:skm:config:bootstrap:v1"
+# instance_id = "0192f5c4-7a10-7c3e-9b1a-5d2f0e8a4c11"
+# [access]
+# mode = "http"
+# [api]
+# endpoint = "https://skm.example.com/api/v1"
+# credential = "secret://keyring/skm-prod/worker-token"
+# timeout_seconds = 30
+# [paths]
+# state_dir = "~/.local/state/skm"
+# [host]
+# id = "0192f5c6-0000-7000-8000-00000000babe"
+# name = "dev-laptop"

@@ -1,0 +1,20 @@
+schema = "urn:skm:extensions:plan-template:v1"
+key = "feature"
+version = "2.0.0"
+title = "Feature plan"
+description = "Template for feature development with design, implementation, and review phases."
+
+[inputs_schema]
+type = "object"
+required = ["title", "goal"]
+additionalProperties = false
+
+[inputs_schema.properties.title]
+type = "string"
+minLength = 1
+maxLength = 120
+
+[inputs_schema.properties.goal]
+type = "string"
+minLength = 1
+maxLength = 1000

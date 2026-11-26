@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:command:retry-hook-deliveries:v1",
+  "title": "RetryHookDeliveries",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspace_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "delivery_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+      },
+      "minItems": 1,
+      "maxItems": 500
+    },
+    "subscription_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.commands",
+      "class": "RetryHookDeliveries",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RetryHookDeliveries"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "delivery_ids"
+      ],
+      "not": {
+        "required": [
+          "subscription_id"
+        ]
+      }
+    },
+    {
+      "required": [
+        "subscription_id"
+      ],
+      "not": {
+        "required": [
+          "delivery_ids"
+        ]
+      }
+    }
+  ]
+}

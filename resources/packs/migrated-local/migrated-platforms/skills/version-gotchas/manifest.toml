@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "version-gotchas"
+version = "0.1.0"
+kind = "reference"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+
+[provenance]
+source = "local"

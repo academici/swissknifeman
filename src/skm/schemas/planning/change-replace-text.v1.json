@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "urn:skm:planning:change:replace-text:v1",
+  "title": "ReplaceTextChange",
+  "x-skm-example-only": true,
+  "properties": {
+    "op": {
+      "const": "replace_text"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "pointer": {
+      "type": "string",
+      "pattern": "^(?:/(?:[^~/]|~[01])*)*$",
+      "maxLength": 2048
+    },
+    "expected_text_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "old_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "new_text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "op",
+    "target",
+    "pointer",
+    "expected_text_digest",
+    "old_text",
+    "new_text"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.documents",
+      "class": "ReplaceTextChange",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ReplaceTextChange"
+    }
+  },
+  "description": "planning owner schema: ReplaceTextChange."
+}

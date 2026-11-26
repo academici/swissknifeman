@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "migrated-upstream-business"
+version = "1.0.1"
+title = "Migrated Upstream Skills: Product, Strategy & Operations"
+description = "Reproducibly migrated upstream-mirrored third-party skills for Product, Strategy & Operations (inert third_party data pack)."
+publisher = "skm-migrated"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"
+
+[[exclusive_groups]]
+name = "pm-pipeline"
+max = 1
+description = "Sequential workflow stages, not a giant prompt."

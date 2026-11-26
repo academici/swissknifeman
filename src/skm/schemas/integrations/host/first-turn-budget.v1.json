@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host:first-turn-budget:v1",
+  "title": "FirstTurnBudgetRequest",
+  "description": "First-turn budget host request; integrations spec section 8 and approved Q2 alignment.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "include_plugins": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "project_id",
+    "target",
+    "include_plugins"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "FirstTurnBudgetRequest",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "FirstTurnBudgetRequest"
+    }
+  }
+}

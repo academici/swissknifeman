@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:result:register-repository:v1",
+  "title": "RegisterRepositoryResult",
+  "description": "workspace result contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "canonical_remote": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:workspace:defs:v1#/$defs/normalized_remote"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "github",
+        "gitlab",
+        "bitbucket",
+        "gitea",
+        "other",
+        "none"
+      ]
+    }
+  },
+  "required": [
+    "repository_id",
+    "canonical_remote",
+    "provider"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.results",
+      "class": "RegisterRepositoryResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RegisterRepositoryResult"
+    }
+  }
+}

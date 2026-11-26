@@ -1,0 +1,17 @@
+# Synthetic fixture, never live capability evidence.
+scenario = "check-rework"
+
+[[step]]
+action = "read_stdin"
+
+[[step]]
+action = "emit"
+event = { type = "session_started", session_ref = "fake-sess-success", model = "fake-model" }
+
+[[step]]
+action = "write_file"
+path = "src/app.py"
+content = "def answer() -> int:\n    return 41\n"
+
+[result]
+text = "{\"schema\": \"urn:skm:execution:role-result:executor:v1\", \"status\": \"done\", \"summary\": \"Synthetic output requiring check rework\", \"changed_paths\": [{\"mount\": \"main\", \"path\": \"src/app.py\", \"change\": \"added\"}], \"checks_run\": [], \"open_issues\": [], \"self_check\": {\"performed\": false}}"

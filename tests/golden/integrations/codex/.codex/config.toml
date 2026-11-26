@@ -1,0 +1,16 @@
+# Project Codex configuration. Keys owned by skm (merged_toml): approval_policy, sandbox_mode, [mcp_servers.skm].
+# Everything else belongs to people and is kept byte for byte.
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "medium"
+
+[features]
+hooks = true
+
+[mcp_servers.skm]
+command = "skm"
+args = ["mcp"]
+
+[mcp_servers.docs-search]
+command = "npx"
+args = ["-y", "@example/docs-mcp"]

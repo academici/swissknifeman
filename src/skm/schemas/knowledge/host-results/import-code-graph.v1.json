@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:host-result:import-code-graph:v1",
+  "title": "ImportCodeGraphResult",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.host",
+      "class": "ImportCodeGraphResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "ImportCodeGraphResult"
+    }
+  }
+}

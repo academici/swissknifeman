@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:role-result:advisor:v1",
+  "title": "AdvisorResult",
+  "description": "Advice of the advisor role (profiles advisor, advisor-critic) or the plan audit (profile plan-auditor, mode plan_audit). Holding (held) is decided by code from needs_owner, category, computed gate categories and confidence (execution.md §5.10).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mode",
+    "problem_ref",
+    "confidence",
+    "needs_owner",
+    "rationale",
+    "sources"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:execution:role-result:advisor:v1"
+    },
+    "mode": {
+      "enum": [
+        "advice",
+        "critique",
+        "plan_audit"
+      ]
+    },
+    "problem_ref": {
+      "type": "string",
+      "pattern": "^(question:[0-9a-f-]{36}@[0-9]+|checks:[0-9]+|findings:[0-9]+|readiness:[0-9a-f-]{36})$"
+    },
+    "options": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "pros": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "cons": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      }
+    },
+    "confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "category": {
+      "enum": [
+        "local_reversible",
+        "bounded_ambiguity",
+        "cross_module",
+        "architectural",
+        "authority_required",
+        "external_fact"
+      ]
+    },
+    "needs_owner": {
+      "type": "boolean"
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "assumptions": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    },
+    "sources": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "ref"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "file",
+              "check",
+              "finding",
+              "decision",
+              "url",
+              "material"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "verdict": {
+      "enum": [
+        "green",
+        "attention",
+        "red"
+      ]
+    },
+    "checklist": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "item_id",
+          "outcome",
+          "note"
+        ],
+        "properties": {
+          "item_id": {
+            "enum": [
+              "coverage",
+              "conflicting_decisions",
+              "producer_missing",
+              "check_after_gate",
+              "vagueness",
+              "migration_strategy",
+              "mixing",
+              "rollback",
+              "unknowns_research",
+              "checkpoints"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "ok",
+              "concern",
+              "blocker"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "entity_ids": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "advice",
+              "critique"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "recommendation",
+          "category"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "critique"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "sources": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "plan_audit"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "verdict",
+          "checklist"
+        ],
+        "properties": {
+          "checklist": {
+            "minItems": 10
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "AdvisorResultDoc",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "AdvisorResultDoc"
+    }
+  }
+}

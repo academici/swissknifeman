@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:view:get-generation:v1",
+  "title": "GetGenerationView",
+  "description": "settings view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "generation"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "GetGenerationView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "GetGenerationView"
+    }
+  }
+}

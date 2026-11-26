@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:query:explain-config:v1",
+  "title": "ExplainConfig",
+  "description": "settings query contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "keys": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*){1,3}$"
+      }
+    },
+    "section": {
+      "type": "string"
+    },
+    "include_defaults_only": {
+      "type": "boolean",
+      "default": true
+    },
+    "detail": {
+      "type": "string",
+      "enum": [
+        "value",
+        "full"
+      ],
+      "default": "full"
+    }
+  },
+  "required": [
+    "scope"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.queries",
+      "class": "ExplainConfig",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExplainConfig"
+    }
+  }
+}

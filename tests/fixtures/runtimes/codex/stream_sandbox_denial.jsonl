@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"0199aa00-thread-sandbox"}
+{"type":"turn.started"}
+{"type":"item.started","item":{"id":"item_s1","type":"command_execution","command":"rm -rf /etc/hosts","status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_s1","type":"command_execution","command":"rm -rf /etc/hosts","exit_code":1,"status":"failed","aggregated_output":"rm: cannot remove '/etc/hosts': Read-only file system (blocked by sandbox policy)","duration_ms":9}}
+{"type":"item.completed","item":{"id":"item_s2","type":"agent_message","text":"Write was blocked by the read-only sandbox."}}
+{"type":"turn.completed","usage":{"input_tokens":1500,"cached_input_tokens":1000,"output_tokens":40}}

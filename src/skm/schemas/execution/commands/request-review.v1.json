@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:command:request-review:v1",
+  "title": "RequestReview",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount": {
+      "type": "string"
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "base_commit": {
+              "type": "string"
+            },
+            "head_commit": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "base_commit",
+            "head_commit"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "base_commit": {
+              "type": "string"
+            },
+            "patch_file_version_id": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "base_commit",
+            "patch_file_version_id"
+          ]
+        }
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "profile_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "mount",
+    "target",
+    "reason"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.commands",
+      "class": "RequestReview",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "RequestReview"
+    }
+  }
+}

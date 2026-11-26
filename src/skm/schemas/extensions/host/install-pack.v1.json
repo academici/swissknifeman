@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:host:install-pack:v1",
+  "title": "InstallPackRequest",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": {},
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.host",
+      "class": "InstallPackRequest",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "InstallPackRequest"
+    }
+  }
+}

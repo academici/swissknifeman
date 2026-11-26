@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"sess_basic_001","model":"claude-sonnet-4-5-20250929","claude_code_version":"2.1.266"}
+{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","rateLimitType":"five_hour","resetsAt":1790003600}}
+{"type":"assistant","session_id":"sess_basic_001","message":{"id":"msg_basic_01","model":"claude-sonnet-4-5-20250929","content":[{"type":"thinking","thinking":"Internal chain of thought stays in transcript only."},{"type":"text","text":"Implemented requested module."}],"usage":{"input_tokens":320,"output_tokens":45,"cache_read_input_tokens":1200,"cache_creation_input_tokens":150}}}
+{"type":"result","subtype":"success","session_id":"sess_basic_001","is_error":false,"stop_reason":"end_turn","result":"Implemented requested module.","total_cost_usd":0.04215,"usage":{"input_tokens":320,"output_tokens":45,"cache_read_input_tokens":1200,"cache_creation_input_tokens":150}}

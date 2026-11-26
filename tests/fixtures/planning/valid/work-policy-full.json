@@ -1,0 +1,51 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      },
+      "work_policy": {
+        "role_intensity": {
+          "scout": "light",
+          "executor": "heavy",
+          "reviewer": "medium",
+          "triager": "medium",
+          "advisor": "medium",
+          "researcher": "medium",
+          "registrar": "medium"
+        },
+        "verification_intensity": "heavy"
+      }
+    }
+  ],
+  "units": [
+    {
+      "key": "P1.1/U1",
+      "title": "Unit",
+      "goal": "Do it.",
+      "work_policy": {
+        "role_intensity": {
+          "executor": "light"
+        },
+        "verification_intensity": "light"
+      }
+    }
+  ]
+}

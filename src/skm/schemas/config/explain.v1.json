@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:config:explain:v1",
+  "title": "Config explain report",
+  "description": "Effective values of a scope with full provenance. Secret values never appear: secret keys show their reference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "chain",
+    "generation",
+    "digest",
+    "keys"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:config:explain:v1"
+    },
+    "scope": {
+      "$ref": "urn:skm:config:entry:v1#/$defs/scope_ref"
+    },
+    "chain_kind": {
+      "type": "string",
+      "enum": [
+        "work",
+        "host"
+      ]
+    },
+    "chain": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/layer_ref"
+      }
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pack_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "keys": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/key_report"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "snapshot_schema": {
+      "const": "urn:skm:config:frozen:v1"
+    },
+    "registry_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "interpretation": {
+      "type": "string",
+      "enum": ["known", "unknown"]
+    }
+  },
+  "$defs": {
+    "layer_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level"
+      ],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": [
+            "default",
+            "pack",
+            "instance",
+            "workspace",
+            "project",
+            "plan",
+            "run",
+            "host",
+            "invocation",
+            "run_bundle",
+            "process"
+          ]
+        },
+        "scope_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "label": {
+          "type": "string"
+        },
+        "pack_id": {
+          "type": "string"
+        },
+        "pack_priority": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "string",
+          "description": "invocation source: env:SKM__…, --set, --config <file>"
+        },
+        "entry_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "contribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "op",
+        "status"
+      ],
+      "properties": {
+        "layer": {
+          "$ref": "#/$defs/layer_ref"
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "set",
+            "unset",
+            "append",
+            "default"
+          ]
+        },
+        "value": {},
+        "locked": {
+          "type": "boolean"
+        },
+        "ceiling": {},
+        "ceiling_from": {
+          "$ref": "#/$defs/layer_ref"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "winner",
+            "used",
+            "shadowed",
+            "ignored"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "locked_above",
+            "scope_not_allowed",
+            "narrowing_violation",
+            "override_not_allowed",
+            "op_not_allowed",
+            "pack_not_allowed"
+          ]
+        }
+      }
+    },
+    "key_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "present",
+        "merge",
+        "reload",
+        "sensitivity",
+        "contributions"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "value": {},
+        "merge": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "replace",
+            "deep_merge",
+            "append",
+            "append_unique",
+            "union",
+            "narrow"
+          ]
+        },
+        "reload": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "live",
+            "run_frozen",
+            "restart"
+          ]
+        },
+        "sensitivity": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "public",
+            "internal",
+            "secret"
+          ]
+        },
+        "winner": {
+          "$ref": "#/$defs/layer_ref"
+        },
+        "locked_by": {
+          "$ref": "#/$defs/layer_ref"
+        },
+        "base": {
+          "$ref": "#/$defs/layer_ref"
+        },
+        "interpretation": {
+          "type": "string",
+          "enum": ["known", "unknown"]
+        },
+        "provenance": {
+          "type": "string",
+          "description": "Original winning layer label saved in a frozen snapshot."
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "contributions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contribution"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "layer": {
+          "$ref": "#/$defs/layer_ref"
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.settings.generated.views",
+      "class": "ExplainReport",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "ExplainReport"
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:artifacts:view:file-version:v1",
+  "title": "FileVersionView",
+  "description": "artifacts view contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "file_version_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "version_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "original_filename": {
+      "type": "string"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "declared_media_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "detected_media_type": {
+      "type": "string"
+    },
+    "created_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "safety_verdict": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "warn",
+        "block"
+      ]
+    }
+  },
+  "required": [
+    "file_version_id",
+    "version_no",
+    "original_filename",
+    "size_bytes",
+    "digest",
+    "declared_media_type",
+    "detected_media_type",
+    "created_at",
+    "created_by",
+    "safety_verdict"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.artifacts.generated.views",
+      "class": "FileVersionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "artifacts.ts",
+      "name": "FileVersionView"
+    }
+  }
+}

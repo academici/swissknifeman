@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:context:research-result:v1",
+  "title": "ResearchResult",
+  "description": "Answer of one research source to one query (spec/modules/context.md §4.6, §5.14; P09.09, audit G3/G39). Retrieved text is data; claims and citations may only reference documents of this result; a source error is status error, never an empty ok.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "query_id",
+    "source_id",
+    "kind",
+    "tier",
+    "retrieved_at",
+    "status",
+    "error",
+    "documents",
+    "citations",
+    "claims",
+    "limitations",
+    "usage",
+    "usage_complete",
+    "cache_status",
+    "cache_key",
+    "query_digest",
+    "source_config_digest",
+    "expires_at"
+  ],
+  "$defs": {
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document_id",
+        "origin",
+        "url",
+        "title",
+        "retrieved_at",
+        "content_digest",
+        "locator",
+        "excerpt",
+        "trust_class",
+        "classification"
+      ],
+      "properties": {
+        "document_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "origin": {
+          "type": "string",
+          "pattern": "^(https?://|repo:|file:|mcp:|answer:).+",
+          "maxLength": 2000
+        },
+        "url": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^https?://",
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "retrieved_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "content_digest": {
+          "oneOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locator": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "line_from": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "line_to": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "fragment": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "page": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "excerpt": {
+          "type": "string",
+          "maxLength": 20000
+        },
+        "trust_class": {
+          "type": "string",
+          "enum": [
+            "repository",
+            "external",
+            "third_party"
+          ]
+        },
+        "classification": {
+          "$ref": "urn:skm:artifacts:defs:v1#/$defs/classification"
+        },
+        "staged_blob": {
+          "oneOf": [
+            {
+              "$ref": "urn:skm:artifacts:defs:v1#/$defs/staged_blob_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "properties": {
+    "query_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "kind": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,62}$",
+      "description": "command | filesystem | mcp_stdio | key of a research_source plugin component."
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "local_docs",
+        "codegraph",
+        "external_search",
+        "deep_research"
+      ]
+    },
+    "retrieved_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "empty",
+        "error"
+      ]
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "RESEARCH_SOURCE_UNAVAILABLE",
+                "RESEARCH_SOURCE_TIMEOUT",
+                "RESEARCH_SOURCE_INVALID"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/document"
+      },
+      "maxItems": 50
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_index",
+          "document_id",
+          "quote"
+        ],
+        "properties": {
+          "claim_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "document_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "quote": {
+            "oneOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "document_ids"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "document_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(source_unavailable|source_timeout|ladder_stopped_at|deep_research_disabled|query_redacted|url_denied|url_not_allowed|truncated_to_max_documents|content_not_retrieved|claim_without_document|answer_without_citations|classification_capped|cache_bypassed_classification)(:.{1,200})?$"
+      }
+    },
+    "usage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requests",
+            "input_tokens",
+            "output_tokens",
+            "cost_usd_micros"
+          ],
+          "properties": {
+            "requests": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "input_tokens": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "output_tokens": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "cost_usd_micros": {
+              "oneOf": [
+                {
+                  "$ref": "urn:skm:kernel:defs:v1#/$defs/usd-micros"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usage_complete": {
+      "type": "boolean"
+    },
+    "cache_status": {
+      "type": "string",
+      "enum": [
+        "miss",
+        "hit",
+        "bypass"
+      ]
+    },
+    "cache_key": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "query_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "source_config_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "expires_at": {
+      "oneOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "error"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "object"
+          },
+          "documents": {
+            "maxItems": 0
+          },
+          "claims": {
+            "maxItems": 0
+          },
+          "expires_at": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "documents": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "empty"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "documents": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.context.generated.research",
+      "class": "ResearchResultDto",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "context.ts",
+      "name": "ResearchResult"
+    }
+  }
+}

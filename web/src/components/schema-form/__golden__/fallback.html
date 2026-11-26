@@ -1,0 +1,98 @@
+<div class="schema-form">
+<fieldset data-pointer="" data-widget="fieldset" id="_R_2_">
+<legend>Параметры</legend>
+<fieldset data-pointer="/tree" data-widget="fieldset" id="_R_am_">
+<legend>tree</legend>
+<div data-pointer="/tree/name" data-widget="text">
+<label for="_R_5aam_">name<span aria-hidden="true"> *</span>
+</label>
+<input id="_R_5aam_" aria-required="true" type="text" spellcheck="true" value="parent">
+</div>
+<fieldset data-pointer="/tree/children" data-widget="list" id="_R_9aam_">
+<legend>children</legend>
+<ol>
+<li>
+<fieldset data-pointer="/tree/children/0" data-widget="json" id="_R_3ipaam_">
+<legend>Элемент 1</legend>
+<pre tabindex="0">
+<code>{
+  "name": "child",
+  "children": []
+}</code>
+</pre>
+<p>Не поддерживается ($ref), редактируйте через import.</p>
+</fieldset>
+<div>
+<button type="button" disabled="" aria-label="Поднять элемент 1">↑</button>
+<button type="button" disabled="" aria-label="Опустить элемент 1">↓</button>
+<button type="button" aria-label="Удалить элемент 1">Удалить</button>
+</div>
+</li>
+</ol>
+</fieldset>
+</fieldset>
+<fieldset data-pointer="/pair" data-widget="fieldset" id="_R_im_">
+<legend>pair</legend>
+<fieldset data-pointer="/pair/kind" data-widget="radio" id="_R_5aim_">
+<legend>kind (обязательное поле)</legend>
+<div>
+<input id="_R_5aim_-0" type="radio" aria-required="true" name="_R_5aim_" checked="" value="0">
+<label for="_R_5aim_-0">a</label>
+</div>
+</fieldset>
+<fieldset data-pointer="/pair/next" data-widget="fieldset" id="_R_9aim_">
+<legend>next</legend>
+<fieldset data-pointer="/pair/next/kind" data-widget="radio" id="_R_1apaim_">
+<legend>kind (обязательное поле)</legend>
+<div>
+<input id="_R_1apaim_-0" type="radio" aria-required="true" name="_R_1apaim_" checked="" value="0">
+<label for="_R_1apaim_-0">b</label>
+</div>
+</fieldset>
+<fieldset data-pointer="/pair/next/next" data-widget="json" id="_R_2apaim_">
+<legend>next</legend>
+<pre tabindex="0">
+<code>{
+  "kind": "a"
+}</code>
+</pre>
+<p>Не поддерживается ($ref), редактируйте через import.</p>
+</fieldset>
+</fieldset>
+</fieldset>
+<div data-pointer="/sku" data-widget="text">
+<label for="_R_qm_">sku</label>
+<input id="_R_qm_" type="text" spellcheck="true" value="ABC-1234">
+</div>
+<fieldset data-pointer="/fallback" data-widget="json" id="_R_12m_">
+<legend>fallback</legend>
+<pre tabindex="0">
+<code>{
+  "unsafe": "&lt;img&gt;\u2066"
+}</code>
+</pre>
+<p>Не поддерживается (if, then, else, allOf, not, patternProperties, anyOf), редактируйте через import.</p>
+</fieldset>
+<fieldset data-pointer="/untagged" data-widget="json" id="_R_1am_">
+<legend>untagged</legend>
+<pre tabindex="0">
+<code>"text"</code>
+</pre>
+<p>Не поддерживается (oneOf), редактируйте через import.</p>
+</fieldset>
+<fieldset data-pointer="/null" data-widget="json" id="_R_1im_">
+<legend>null</legend>
+<pre tabindex="0">
+<code>null</code>
+</pre>
+<p>Не поддерживается (type), редактируйте через import.</p>
+</fieldset>
+<fieldset data-pointer="/unresolved" data-widget="json" id="_R_1qm_">
+<legend>unresolved</legend>
+<pre tabindex="0">
+<code>"•••"</code>
+</pre>
+<p>Не поддерживается ($ref), редактируйте через import.</p>
+</fieldset>
+</fieldset>
+</div>

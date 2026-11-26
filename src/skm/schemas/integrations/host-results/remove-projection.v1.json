@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:remove-projection:v1",
+  "title": "RemoveProjectionResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$ref": "urn:skm:integrations:defs:v1#/$defs/ApplyOutcome",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "RemoveProjectionReport",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RemoveProjectionReport"
+    }
+  }
+}

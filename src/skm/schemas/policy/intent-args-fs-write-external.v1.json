@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:intent-args-fs-write-external:v1",
+  "title": "IntentArgsFsWriteExternal",
+  "description": "Exact host, destination and content bound by an external file write approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "host_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "path": {
+      "type": "string",
+      "pattern": "^/(?:(?!\\.{1,2}(?:/|$))[^/\u0000-\u001f\u007f]+/)*(?!\\.{1,2}$)[^/\u0000-\u001f\u007f]+$"
+    },
+    "content_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "host_id",
+    "path",
+    "content_digest"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.documents",
+      "class": "IntentArgsFsWriteExternal",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "IntentArgsFsWriteExternal"
+    }
+  }
+}

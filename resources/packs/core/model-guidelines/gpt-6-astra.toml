@@ -1,0 +1,27 @@
+schema = "urn:skm:runtimes:model-guideline:v1"
+key = "gpt-6-astra"
+version = "2.0.6"
+model_family = "gpt"
+model_id = "gpt-6-astra"
+display_name = "GPT-6 Astra"
+runtime_ids = ["codex"]
+classes = ["frontier"]
+suited_roles = ["executor", "reviewer", "advisor"]
+notes = "2026 Codex frontier selector."
+strengths = ["frontier coding", "architecture review", "long tasks"]
+delegation_notes = ["Reserve for frontier work.", "Do not send temperature."]
+forbidden_params = ["temperature", "top_p"]
+
+[prompt_style]
+shape = "structured"
+instructions = ["Separate the stable system prefix from the task.", "Name files and checks explicitly."]
+
+[cache_capabilities]
+prompt_cache = "native"
+cache_read = true
+cache_write = false
+min_cacheable_tokens = 1024
+
+[compaction_threshold]
+input_tokens = 200000
+reserve_output_tokens = 16000

@@ -1,0 +1,19 @@
+{
+  "schema": "urn:skm:execution:role-result:executor:v1",
+  "status": "done",
+  "summary": "RotationService added.",
+  "changed_paths": [
+    {
+      "mount": "api",
+      "path": "src/auth/rotation.py",
+      "change": "added"
+    }
+  ],
+  "checks_run": {
+    "V1": "passed"
+  },
+  "open_issues": [],
+  "self_check": {
+    "performed": "yes"
+  }
+}

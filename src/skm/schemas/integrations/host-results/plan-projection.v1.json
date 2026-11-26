@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:host-result:plan-projection:v1",
+  "title": "PlanProjectionResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "array",
+  "items": {
+    "$ref": "urn:skm:integrations:host:projection-plan:v1"
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.host",
+      "class": "PlanProjectionResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "PlanProjectionResult"
+    }
+  }
+}

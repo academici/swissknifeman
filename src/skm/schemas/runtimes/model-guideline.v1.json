@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:model-guideline:v1",
+  "title": "ModelGuideline",
+  "description": "Structured model guideline profile shipped as model-guidelines/<key>.toml (TOML -> JSON). Data for prompt assembly and delegation; it does not select a route.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "key",
+    "version",
+    "model_family",
+    "model_id",
+    "display_name",
+    "strengths",
+    "delegation_notes",
+    "prompt_style",
+    "forbidden_params",
+    "cache_capabilities",
+    "compaction_threshold"
+  ],
+  "properties": {
+    "schema": {
+      "const": "urn:skm:runtimes:model-guideline:v1"
+    },
+    "key": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/resource_key"
+    },
+    "version": {
+      "$ref": "urn:skm:extensions:defs:v1#/$defs/semver"
+    },
+    "model_family": {
+      "type": "string",
+      "enum": [
+        "claude",
+        "gpt",
+        "gemini",
+        "grok",
+        "gpt_oss"
+      ]
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "runtime_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/runtime_id"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/model_class"
+      },
+      "uniqueItems": true,
+      "minItems": 1,
+      "default": ["implementation"]
+    },
+    "suited_roles": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:extensions:defs:v1#/$defs/role_id"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "minItems": 1,
+      "maxItems": 12
+    },
+    "delegation_notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "maxItems": 12
+    },
+    "prompt_style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shape",
+        "instructions"
+      ],
+      "properties": {
+        "shape": {
+          "type": "string",
+          "enum": [
+            "prefix_stable",
+            "conversational",
+            "structured"
+          ]
+        },
+        "instructions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "minItems": 1,
+          "maxItems": 12
+        }
+      }
+    },
+    "forbidden_params": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80,
+        "pattern": "^[a-z][a-z0-9_.-]{0,79}$"
+      },
+      "uniqueItems": true,
+      "maxItems": 24
+    },
+    "legacy_prompt_phrases": {
+      "description": "Standalone prompt directives superseded by this profile.",
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 400},
+      "maxItems": 24,
+      "uniqueItems": true
+    },
+    "incompatible_param_groups": {
+      "description": "Each group lists parameter paths that cannot all be sent together.",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,79}$"},
+        "minItems": 2,
+        "uniqueItems": true
+      },
+      "maxItems": 24
+    },
+    "compatible_advisor_models": {
+      "description": "When declared by an executor profile, only the listed advisor models are compatible.",
+      "type": "array",
+      "items": {"type": "string", "minLength": 1, "maxLength": 120},
+      "uniqueItems": true
+    },
+    "cache_capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prompt_cache",
+        "cache_read",
+        "cache_write"
+      ],
+      "properties": {
+        "prompt_cache": {
+          "type": "string",
+          "enum": [
+            "native",
+            "adapted",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "cache_read": {
+          "type": "boolean"
+        },
+        "cache_write": {
+          "type": "boolean"
+        },
+        "min_cacheable_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "compaction_threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_tokens"
+      ],
+      "properties": {
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 1000
+        },
+        "reserve_output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.documents",
+      "class": "ModelGuideline",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ModelGuideline"
+    }
+  }
+}

@@ -1,0 +1,2195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:defs:v1",
+  "title": "IntegrationsDefinitions",
+  "description": "integrations contract; semantics: the integrations module.",
+  "$defs": {
+    "SubscriptionKind": {
+      "type": "string",
+      "enum": [
+        "webhook",
+        "command",
+        "event_sink"
+      ]
+    },
+    "ExecutionLocation": {
+      "type": "string",
+      "enum": [
+        "control_plane",
+        "host"
+      ]
+    },
+    "FailurePolicy": {
+      "type": "string",
+      "enum": [
+        "deny",
+        "warn",
+        "retry"
+      ]
+    },
+    "TargetId": {
+      "type": "string",
+      "enum": [
+        "claude_code",
+        "codex",
+        "antigravity",
+        "cursor",
+        "gemini_cli",
+        "grok"
+      ]
+    },
+    "Surface": {
+      "type": "string",
+      "enum": [
+        "instructions",
+        "skills",
+        "permissions",
+        "hooks",
+        "mcp",
+        "agents"
+      ]
+    },
+    "SurfaceSupport": {
+      "type": "string",
+      "enum": [
+        "native",
+        "config_native",
+        "hook_native",
+        "unsupported"
+      ]
+    },
+    "ProjectionState": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_sync",
+        "drifted",
+        "failed",
+        "removed"
+      ]
+    },
+    "HookSurfaceId": {
+      "type": "string",
+      "enum": [
+        "lifecycle.git_guardrails",
+        "security.safe_dirs",
+        "lifecycle.plan_guard",
+        "lifecycle.pack_guard",
+        "lifecycle.changelog_gate",
+        "lifecycle.review_gate",
+        "lifecycle.command_log",
+        "context.session_start",
+        "lifecycle.run_report",
+        "custom.subscriptions"
+      ]
+    },
+    "HookClass": {
+      "type": "string",
+      "enum": [
+        "enforcement",
+        "workflow",
+        "observation"
+      ]
+    },
+    "HookEventKind": {
+      "type": "string",
+      "enum": [
+        "session_start",
+        "session_end",
+        "user_prompt",
+        "pre_tool",
+        "post_tool",
+        "pre_shell",
+        "post_shell",
+        "subagent_stop",
+        "stop",
+        "permission_request"
+      ]
+    },
+    "HostCommandVerdict": {
+      "type": "string",
+      "enum": [
+        "deny",
+        "ask",
+        "none"
+      ]
+    },
+    "HostOutcomeStatus": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "failed",
+        "timeout",
+        "invalid_output",
+        "untrusted",
+        "skipped_budget"
+      ]
+    },
+    "PermissionProfile": {
+      "type": "string",
+      "enum": [
+        "observe",
+        "workspace_contained",
+        "trusted_full_access"
+      ]
+    },
+    "FileDecisionKind": {
+      "type": "string",
+      "enum": [
+        "noop",
+        "create",
+        "update",
+        "adopt_clean",
+        "conflict_write_new",
+        "adopt_required",
+        "boundary_invalid",
+        "remove_owned",
+        "leave_modified",
+        "unsafe_target"
+      ]
+    },
+    "Ownership": {
+      "type": "string",
+      "enum": [
+        "managed_file",
+        "managed_block",
+        "merged_json",
+        "merged_toml"
+      ]
+    },
+    "HookMode": {
+      "type": "string",
+      "enum": [
+        "off",
+        "warn",
+        "strict"
+      ]
+    },
+    "HookVerdict": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "deny",
+        "ask",
+        "context",
+        "none"
+      ]
+    },
+    "FirstTurnSourceKind": {
+      "type": "string",
+      "enum": [
+        "skills",
+        "agents",
+        "instructions",
+        "hooks",
+        "mcp"
+      ]
+    },
+    "FirstTurnVerdict": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "elevated",
+        "warn",
+        "incomplete"
+      ]
+    },
+    "Backoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "initial_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "factor": {
+          "type": "number"
+        },
+        "max_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "initial_ms",
+        "factor",
+        "max_ms"
+      ]
+    },
+    "RetrySpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "backoff": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Backoff"
+        }
+      },
+      "required": [
+        "max_attempts",
+        "backoff"
+      ]
+    },
+    "WebhookTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string",
+          "pattern": "^secret://"
+        },
+        "previous_secret": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^secret://"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "url",
+        "secret",
+        "previous_secret",
+        "headers"
+      ]
+    },
+    "CommandTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "enum": [
+            "checkout",
+            "state_dir"
+          ]
+        },
+        "env_allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env_refs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^secret://"
+          }
+        }
+      },
+      "required": [
+        "argv",
+        "cwd",
+        "env_allow",
+        "env_refs"
+      ]
+    },
+    "EventSinkTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sink_id": {
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      },
+      "required": [
+        "sink_id",
+        "config"
+      ]
+    },
+    "HookSubscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hook_class": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+        },
+        "kind": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/SubscriptionKind"
+        },
+        "execution_location": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ExecutionLocation"
+        },
+        "event_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retry": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/RetrySpec"
+        },
+        "failure_policy": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FailurePolicy"
+        },
+        "defined_at": {
+          "type": "string",
+          "enum": [
+            "instance",
+            "workspace",
+            "project",
+            "plan",
+            "run",
+            "host",
+            "worker"
+          ]
+        },
+        "digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "enabled",
+        "hook_class",
+        "kind",
+        "execution_location",
+        "event_types",
+        "target",
+        "timeout_ms",
+        "retry",
+        "failure_policy",
+        "defined_at",
+        "digest"
+      ]
+    },
+    "FileStat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "is_symlink": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "exists",
+        "is_symlink",
+        "size"
+      ]
+    },
+    "TargetCapabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/SurfaceSupport"
+          }
+        },
+        "hook_surfaces": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "tested_client_version": {
+          "type": "string"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "target",
+        "surfaces",
+        "hook_surfaces",
+        "tested_client_version",
+        "verified_at"
+      ]
+    },
+    "CheckResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "level": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "check_id",
+        "target",
+        "level",
+        "title",
+        "detail",
+        "path",
+        "hint"
+      ]
+    },
+    "DoctorReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/CheckResult"
+          }
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "checks",
+        "counts",
+        "status"
+      ]
+    },
+    "FirstTurnReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "target": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/FirstTurnSource"
+          }
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FirstTurnVerdict"
+        }
+      },
+      "required": [
+        "project_id",
+        "target",
+        "thresholds",
+        "sources",
+        "total",
+        "verdict"
+      ]
+    },
+    "TrustReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subscription_id": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "trusted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "subscription_id",
+        "digest",
+        "trusted"
+      ]
+    },
+    "SpoolReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "replayed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dead": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dropped": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "replayed",
+        "dead",
+        "dropped"
+      ]
+    },
+    "CommandResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stdout": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "stderr": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timed_out": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "exit_code",
+        "stdout",
+        "stderr",
+        "duration_ms",
+        "timed_out"
+      ]
+    },
+    "DeliveryResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retry_after_ms": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "response_excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "ok",
+        "retryable",
+        "reason",
+        "status",
+        "retry_after_ms",
+        "response_excerpt"
+      ]
+    },
+    "Projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "workspace_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "checkout_binding_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "state": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionState"
+        },
+        "desired_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applied_desired_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderer_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applied_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drift_checked_at": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row_version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "workspace_id",
+        "project_id",
+        "checkout_binding_id",
+        "target",
+        "state",
+        "desired_digest",
+        "applied_desired_digest",
+        "renderer_version",
+        "applied_at",
+        "drift_checked_at",
+        "row_version"
+      ]
+    },
+    "ProjectionPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "checkout_binding_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "desired_digest": {
+          "type": "string"
+        },
+        "inputs_digest": {
+          "type": "string"
+        },
+        "renderer_version": {
+          "type": "string"
+        },
+        "base_projection_row_version": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/FileDecision"
+          }
+        },
+        "writes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/PlannedWrite"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "plan_digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "checkout_binding_id",
+        "target",
+        "desired_digest",
+        "inputs_digest",
+        "renderer_version",
+        "base_projection_row_version",
+        "decisions",
+        "writes",
+        "diagnostics",
+        "plan_digest"
+      ]
+    },
+    "PlannedWrite": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FileDecisionKind"
+        },
+        "boundary": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ManagedBoundary"
+        },
+        "surface": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Surface"
+        },
+        "new_bytes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "contentEncoding": "base64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "write_path": {
+          "type": "string"
+        },
+        "expected_observed_whole_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "needs_pre_image": {
+          "type": "boolean"
+        },
+        "managed_digest_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "relative_path",
+        "decision",
+        "boundary",
+        "surface",
+        "new_bytes",
+        "write_path",
+        "expected_observed_whole_digest",
+        "needs_pre_image",
+        "managed_digest_after"
+      ]
+    },
+    "ApplyOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "projection_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "state": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ProjectionState"
+        },
+        "written": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "failed": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "adopted_clean": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "left_modified": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "target",
+        "projection_id",
+        "state",
+        "written",
+        "conflicts",
+        "failed",
+        "adopted_clean",
+        "left_modified"
+      ]
+    },
+    "NormalizedHookEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "kind": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookEventKind"
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stop_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raw_event_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "kind",
+        "session_id",
+        "cwd",
+        "tool_name",
+        "command",
+        "paths",
+        "prompt",
+        "stop_status",
+        "raw_event_name"
+      ]
+    },
+    "DesiredFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "surface": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Surface"
+        },
+        "relative_path": {
+          "type": "string"
+        },
+        "boundary": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ManagedBoundary"
+        },
+        "managed_bytes": {
+          "type": "string",
+          "contentEncoding": "base64"
+        },
+        "managed_digest": {
+          "type": "string"
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "executable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "target",
+        "surface",
+        "relative_path",
+        "boundary",
+        "managed_bytes",
+        "managed_digest",
+        "source_refs",
+        "renderer"
+      ]
+    },
+    "DesiredProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/DesiredFile"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "desired_digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "targets",
+        "files",
+        "diagnostics",
+        "desired_digest"
+      ]
+    },
+    "ProjectionInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "target": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+        },
+        "instructions_core": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "instructions_project": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "profile": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/PermissionProfile"
+        },
+        "hook_modes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/HookMode"
+          }
+        },
+        "mcp_servers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "inputs_digest": {
+          "type": "string"
+        },
+        "config_generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        },
+        "host_subscription_events": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/HostSubscriptionEvent"
+          }
+        }
+      },
+      "required": [
+        "project_id",
+        "target",
+        "instructions_core",
+        "instructions_project",
+        "skills",
+        "permissions",
+        "profile",
+        "hook_modes",
+        "mcp_servers",
+        "agents",
+        "inputs_digest",
+        "config_generation",
+        "diagnostics",
+        "host_subscription_events"
+      ]
+    },
+    "HostHookOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "subscription_id": {
+          "type": "string"
+        },
+        "hook_class": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+        },
+        "failure_policy": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FailurePolicy"
+        },
+        "status": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HostOutcomeStatus"
+        },
+        "verdict": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HostCommandVerdict"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additional_context": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "subscription_id",
+        "hook_class",
+        "failure_policy",
+        "status",
+        "verdict",
+        "reason",
+        "additional_context",
+        "duration_ms"
+      ]
+    },
+    "OwnedKeyPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "enum": [
+            "replace",
+            "list_union_tagged"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "mode"
+      ]
+    },
+    "FileDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FileDecisionKind"
+        },
+        "diagnostic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_observed_managed_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_observed_whole_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "relative_path",
+        "kind",
+        "diagnostic",
+        "expected_observed_managed_digest",
+        "expected_observed_whole_digest"
+      ]
+    },
+    "ManagedBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ownership": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Ownership"
+        },
+        "block_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owned_keys": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/OwnedKeyPath"
+          }
+        }
+      },
+      "required": [
+        "ownership"
+      ]
+    },
+    "HookDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "verdict": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookVerdict"
+        },
+        "surface": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookSurfaceId"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "user_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "additional_context": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "verdict",
+        "surface",
+        "reason_code",
+        "user_message",
+        "agent_message",
+        "additional_context"
+      ]
+    },
+    "ObservedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "type": "string"
+        },
+        "exists": {
+          "type": "boolean"
+        },
+        "is_symlink": {
+          "type": "boolean"
+        },
+        "whole_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "managed_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boundary_valid": {
+          "type": "boolean"
+        },
+        "has_conflict_file": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "relative_path",
+        "exists",
+        "is_symlink",
+        "whole_digest",
+        "managed_digest",
+        "boundary_valid",
+        "has_conflict_file"
+      ]
+    },
+    "AppliedFileRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "projection_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "relative_path": {
+          "type": "string"
+        },
+        "surface": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Surface"
+        },
+        "boundary": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/ManagedBoundary"
+        },
+        "applied_managed_digest": {
+          "type": "string"
+        },
+        "applied_whole_digest": {
+          "type": "string"
+        },
+        "pre_image_file_version_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "applied_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "projection_id",
+        "relative_path",
+        "surface",
+        "boundary",
+        "applied_managed_digest",
+        "applied_whole_digest",
+        "pre_image_file_version_id",
+        "renderer",
+        "applied_at"
+      ]
+    },
+    "FirstTurnSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FirstTurnSourceKind"
+        },
+        "tokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "tokens",
+        "method",
+        "detail"
+      ]
+    },
+    "hook_subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "class": {
+          "type": "string",
+          "enum": [
+            "enforcement",
+            "observation",
+            "workflow"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "webhook",
+            "command",
+            "event_sink"
+          ]
+        },
+        "execution_location": {
+          "type": "string",
+          "enum": [
+            "host",
+            "control_plane"
+          ]
+        },
+        "event_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "pattern": "^https?://"
+                },
+                "secret": {
+                  "$ref": "urn:skm:config:secret-ref:v1"
+                },
+                "previous_secret": {
+                  "anyOf": [
+                    {
+                      "$ref": "urn:skm:config:secret-ref:v1"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "headers": {
+                  "type": "object",
+                  "maxProperties": 16,
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "url",
+                "secret"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "argv": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "maxItems": 64
+                },
+                "cwd": {
+                  "type": "string",
+                  "enum": [
+                    "checkout",
+                    "state_dir"
+                  ]
+                },
+                "env_allow": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 32
+                },
+                "env_refs": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "urn:skm:config:secret-ref:v1"
+                  }
+                }
+              },
+              "required": [
+                "argv"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sink_id": {
+                  "type": "string",
+                  "not": {
+                    "const": "webhook"
+                  }
+                },
+                "config": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+                  }
+                }
+              },
+              "required": [
+                "sink_id",
+                "config"
+              ]
+            }
+          ]
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 600000
+        },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_attempts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "backoff": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "initial_ms": {
+                  "type": "integer",
+                  "minimum": 100,
+                  "maximum": 600000
+                },
+                "factor": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 10
+                },
+                "max_ms": {
+                  "type": "integer",
+                  "minimum": 100,
+                  "maximum": 86400000
+                }
+              },
+              "required": []
+            }
+          },
+          "required": []
+        },
+        "failure_policy": {
+          "type": "string",
+          "enum": [
+            "deny",
+            "warn",
+            "retry"
+          ]
+        }
+      },
+      "required": [
+        "class",
+        "kind",
+        "execution_location",
+        "event_types",
+        "target"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "command"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution_location": {
+                "const": "host"
+              },
+              "target": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "argv": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 64
+                  },
+                  "cwd": {
+                    "type": "string",
+                    "enum": [
+                      "checkout",
+                      "state_dir"
+                    ]
+                  },
+                  "env_allow": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 32
+                  },
+                  "env_refs": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "$ref": "urn:skm:config:secret-ref:v1"
+                    }
+                  }
+                },
+                "required": [
+                  "argv"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "execution_location": {
+                "const": "control_plane"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "hook_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "enum": [
+            "claude_code",
+            "codex",
+            "antigravity",
+            "cursor",
+            "gemini_cli",
+            "grok"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "session_start",
+            "session_end",
+            "user_prompt",
+            "pre_tool",
+            "post_tool",
+            "pre_shell",
+            "post_shell",
+            "subagent_stop",
+            "stop",
+            "permission_request"
+          ]
+        },
+        "session_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "tool_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stop_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raw_event_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "kind",
+        "cwd",
+        "paths",
+        "raw_event_name"
+      ]
+    },
+    "target-id": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "surface-id": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookSurfaceId"
+    },
+    "ownership": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/Ownership"
+    },
+    "file-decision": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/FileDecision"
+    },
+    "observed-file": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/ObservedFile"
+    },
+    "desired-file": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/DesiredFile"
+    },
+    "hook-decision": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/HookDecision"
+    },
+    "webhook_target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/WebhookTarget"
+    },
+    "command_target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/CommandTarget"
+    },
+    "event_sink_target": {
+      "$ref": "urn:skm:integrations:defs:v1#/$defs/EventSinkTarget"
+    },
+    "AppliedFileInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "type": "string"
+        },
+        "surface": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Surface"
+        },
+        "ownership": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/Ownership"
+        },
+        "block_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owned_keys": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/OwnedKeyPath"
+          }
+        },
+        "applied_managed_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "applied_whole_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "pre_image_file_version_id": {
+          "anyOf": [
+            {
+              "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "relative_path",
+        "surface",
+        "ownership",
+        "block_ids",
+        "owned_keys",
+        "applied_managed_digest",
+        "applied_whole_digest",
+        "pre_image_file_version_id",
+        "renderer"
+      ]
+    },
+    "HostSubscriptionView": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+        },
+        "event_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwd": {
+          "enum": [
+            "checkout",
+            "state_dir"
+          ]
+        },
+        "env_allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env_refs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^secret://"
+          }
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retry": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/RetrySpec"
+        },
+        "failure_policy": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/FailurePolicy"
+        },
+        "digest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "class",
+        "event_types",
+        "argv",
+        "cwd",
+        "env_allow",
+        "env_refs",
+        "timeout_ms",
+        "retry",
+        "failure_policy",
+        "digest"
+      ]
+    },
+    "HostSubscriptionEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "urn:skm:integrations:defs:v1#/$defs/HookEventKind"
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:skm:integrations:defs:v1#/$defs/HookClass"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "classes"
+      ]
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.documents",
+      "class": "IntegrationsDefinitions",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "IntegrationsDefinitions"
+    }
+  }
+}

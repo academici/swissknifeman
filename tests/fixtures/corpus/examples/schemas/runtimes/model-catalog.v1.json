@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:runtimes:model-catalog:v1",
+  "title": "ModelCatalog",
+  "description": "Normative runtimes contract; details and semantic validation: spec/modules/runtimes.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "urn:skm:runtimes:model-catalog:v1"
+    },
+    "catalog_version": {
+      "type": "string"
+    },
+    "runtimes": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]{1,31}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "class_selectors": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "economy",
+                "implementation",
+                "frontier"
+              ]
+            },
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "effort_selectors": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+              ]
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "runtime_id": {
+                  "type": "string"
+                },
+                "display_name": {
+                  "type": "string"
+                },
+                "classes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "economy",
+                      "implementation",
+                      "frontier"
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "suited_roles": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "scout",
+                      "executor",
+                      "reviewer",
+                      "triager",
+                      "advisor",
+                      "researcher",
+                      "registrar"
+                    ]
+                  }
+                },
+                "context_window_tokens": {
+                  "type": "integer",
+                  "minimum": 1000
+                },
+                "max_output_tokens": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pricing": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "input_per_mtok_usd": {
+                          "type": "string",
+                          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+                        },
+                        "output_per_mtok_usd": {
+                          "type": "string",
+                          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+                        },
+                        "cache_read_per_mtok_usd": {
+                          "type": "string",
+                          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+                        },
+                        "cache_write_per_mtok_usd": {
+                          "type": "string",
+                          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+                        },
+                        "currency": {
+                          "const": "USD"
+                        },
+                        "verified_at": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "source": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "input_per_mtok_usd",
+                        "output_per_mtok_usd",
+                        "currency",
+                        "verified_at",
+                        "source"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "confirmed",
+                    "unverified",
+                    "deprecated"
+                  ]
+                },
+                "verified_at": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "classes",
+                "context_window_tokens",
+                "status",
+                "verified_at",
+                "source"
+              ]
+            }
+          },
+          "inventory_verified_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "inventory_source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "class_selectors",
+          "effort_selectors",
+          "models"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "catalog_version",
+    "runtimes"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.runtimes.generated.documents",
+      "class": "ModelCatalog",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "runtimes.ts",
+      "name": "ModelCatalog"
+    }
+  }
+}

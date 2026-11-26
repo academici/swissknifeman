@@ -1,0 +1,26 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "{{inputs.title}}",
+  "goal": "{{inputs.goal}}",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Fix and Verification",
+      "goal": "{{inputs.goal}}",
+      "design_state": "skeleton"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "title": "{{inputs.title}}",
+      "work_kind": "code",
+      "phase": "P1",
+      "summary": "{{inputs.goal}}",
+      "why": "{{inputs.goal}}",
+      "review": {
+        "mode": "required"
+      }
+    }
+  ]
+}

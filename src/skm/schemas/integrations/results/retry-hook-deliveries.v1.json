@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:result:retry-hook-deliveries:v1",
+  "title": "RetryHookDeliveriesResult",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "requeued": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "requeued"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.results",
+      "class": "RetryHookDeliveriesResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "RetryHookDeliveriesResult"
+    }
+  }
+}

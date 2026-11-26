@@ -1,0 +1,66 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "agent-pack-laravel-package"
+version = "1.0.1"
+title = "Migrated Agent Pack: Reusable PHP and Laravel Packages"
+description = "Neutral reusable PHP library public-API stability, service provider, and compatibility rules migrated as pure data."
+targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
+agents = []
+
+[[skills]]
+key = "code-review"
+
+[[assets]]
+target = "claude_code"
+surface = "agents"
+source = "agents/claude-php-package-reviewer.md"
+path = ".claude/agents/{prefix}-php-package-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "agents"
+source = "agents/codex-php-package-reviewer.toml"
+path = ".codex/agents/{prefix}-php-package-reviewer.toml"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "agents"
+source = "agents/cursor-php-package-reviewer.md"
+path = ".cursor/agents/{prefix}-php-package-reviewer.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/laravel-package.md"
+path = ".claude/rules/laravel-package.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "codex"
+surface = "rules"
+source = "rules/laravel-package.md"
+path = ".codex/rules/laravel-package.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "cursor"
+surface = "rules"
+source = "rules/laravel-package.mdc"
+path = ".cursor/rules/laravel-package.mdc"
+ownership = "managed_file"
+
+[[assets]]
+target = "grok"
+surface = "rules"
+source = "rules/laravel-package.md"
+path = ".grok/rules/laravel-package.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "antigravity"
+surface = "rules"
+source = "rules/laravel-package.md"
+path = ".agents/rules/laravel-package.md"
+ownership = "managed_file"

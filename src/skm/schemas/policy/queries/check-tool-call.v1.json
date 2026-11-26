@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:query:check-tool-call:v1",
+  "title": "CheckToolCall",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "scope_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 0
+    },
+    "role_layer": {
+      "$ref": "urn:skm:policy:permission-layer:v1"
+    },
+    "task_layer": {
+      "$ref": "urn:skm:policy:permission-layer:v1"
+    },
+    "interactive": {
+      "type": "boolean",
+      "default": false
+    },
+    "call": {
+      "$ref": "urn:skm:policy:tool-call:v1"
+    },
+    "roots": {
+      "$ref": "urn:skm:policy:scope-roots:v1"
+    },
+    "observed_origins": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "tracked",
+            "own_untracked",
+            "foreign_untracked",
+            "ignored",
+            "absent",
+            "git_internal"
+          ]
+        }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "agent_unattended",
+        "interactive"
+      ]
+    }
+  },
+  "required": [
+    "scope_id",
+    "call",
+    "roots",
+    "observed_origins",
+    "mode"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.policy.generated.queries",
+      "class": "CheckToolCall",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "policy.ts",
+      "name": "CheckToolCall"
+    }
+  }
+}

@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:config:key-spec:v1",
+  "title": "x-skm key metadata",
+  "description": "Metadata of one settings leaf (the value of its x-skm keyword) and of a section (x-skm-section). Read by platform/config/registry.py; ignored by the JSON Schema validator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chain",
+    "levels",
+    "merge",
+    "reload",
+    "override",
+    "sensitivity",
+    "portable",
+    "lockable",
+    "nullable",
+    "pack",
+    "confirm",
+    "ui"
+  ],
+  "properties": {
+    "chain": {
+      "type": "string",
+      "enum": [
+        "work",
+        "host"
+      ]
+    },
+    "levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "instance",
+          "workspace",
+          "project",
+          "plan",
+          "run",
+          "host"
+        ]
+      }
+    },
+    "merge": {
+      "type": "string",
+      "enum": [
+        "replace",
+        "deep_merge",
+        "append",
+        "append_unique",
+        "union",
+        "narrow"
+      ]
+    },
+    "reload": {
+      "type": "string",
+      "enum": [
+        "live",
+        "run_frozen",
+        "restart"
+      ]
+    },
+    "override": {
+      "type": "boolean",
+      "description": "The invocation level (SKM__… env, --set, --config) may set the key."
+    },
+    "sensitivity": {
+      "type": "string",
+      "enum": [
+        "public",
+        "internal",
+        "secret"
+      ]
+    },
+    "portable": {
+      "type": "boolean",
+      "description": "Exported by ExportConfig with portable_only=true."
+    },
+    "lockable": {
+      "type": "boolean",
+      "description": "An instance or workspace entry may lock the key for nearer levels."
+    },
+    "nullable": {
+      "type": "boolean",
+      "description": "The effective value may be absent (key without default and without contributions)."
+    },
+    "pack": {
+      "type": "boolean",
+      "description": "Pack config fragments (level pack) may set the key."
+    },
+    "confirm": {
+      "type": "boolean",
+      "description": "Writes need confirmed=true (CONFIRMATION_REQUIRED otherwise)."
+    },
+    "path": {
+      "type": "boolean",
+      "description": "String value is a filesystem path: ~ and ${state_dir} are expanded by the loader."
+    },
+    "write_permission": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$",
+      "description": "Permission required in the target scope in addition to config.write / config.write_shared (for example hook.manage for hooks.subscriptions)."
+    },
+    "validators": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$"
+      }
+    },
+    "narrow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "min",
+            "max",
+            "and",
+            "or",
+            "intersect"
+          ]
+        },
+        "order": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "description": "Enum values from the least to the most restrictive; narrow keeps the most restrictive."
+        },
+        "unlimited": {
+          "description": "Value that means 'no limit' (0 for numbers, [] for lists); treated as +infinity / the full set."
+        }
+      }
+    },
+    "deprecated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "since"
+      ],
+      "properties": {
+        "since": {
+          "type": "string"
+        },
+        "replacement": {
+          "type": "string"
+        },
+        "until": {
+          "type": "string"
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "order",
+        "widget"
+      ],
+      "properties": {
+        "group": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "widget": {
+          "type": "string",
+          "enum": [
+            "toggle",
+            "number",
+            "select",
+            "text",
+            "textarea",
+            "path",
+            "tags",
+            "map",
+            "json",
+            "secret"
+          ]
+        },
+        "advanced": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "help_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9_]{1,30}|plugins\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)?)$",
+          "description": "Section id = first key segment; plugin sections are plugins.<plugin_id> (mechanisms/02-plugins §6)."
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,30}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "keys",
+              "rule"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "keys": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "rule": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.platform.config.generated",
+      "class": "KeySpecDoc",
+      "kind": "typeddict"
+    }
+  }
+}

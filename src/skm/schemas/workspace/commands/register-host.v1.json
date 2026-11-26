@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:register-host:v1",
+  "title": "RegisterHost",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_name"
+    },
+    "platform": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/host_platform"
+    }
+  },
+  "required": [
+    "name",
+    "platform"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "RegisterHost",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "RegisterHost"
+    }
+  }
+}

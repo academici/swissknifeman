@@ -1,0 +1,15 @@
+{
+  "contract": "urn:skm:planning:command:import-specification:v1",
+  "request": {
+    "project_id": "0192f5c5-0b33-7c44-9a00-2b3c4d5e6f70",
+    "document": {
+      "schema": "urn:skm:planning:specification:v1",
+      "title": "Audited plan",
+      "goal": "Preserve the source base during import.",
+      "phases": [],
+      "items": []
+    },
+    "mode": "new_draft",
+    "plan_id": "0192f5c5-0000-7000-8000-000000000101"
+  }
+}

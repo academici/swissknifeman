@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:simulation:v1",
+  "title": "SimulationView",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "basis": {
+      "const": "heuristic"
+    },
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    },
+    "task_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tokens": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/range"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Input plus output tokens for one call per implementation task."
+    },
+    "cost_usd_micros": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/range"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Uncached USD cost in millionths of a dollar."
+    },
+    "duration_seconds": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/range"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Cumulative model processing time, using the supplied effective throughput."
+    },
+    "tokens_per_second": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 1000000
+    }
+  },
+  "required": [
+    "basis",
+    "source",
+    "task_count",
+    "tokens",
+    "cost_usd_micros",
+    "duration_seconds",
+    "tokens_per_second"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "SimulationView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "SimulationView"
+    }
+  },
+  "$defs": {
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ]
+    }
+  }
+}

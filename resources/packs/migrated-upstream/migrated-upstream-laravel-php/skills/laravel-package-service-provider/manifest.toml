@@ -1,0 +1,27 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-package-service-provider"
+version = "0.3.1"
+kind = "domain"
+risk = "high"
+license = "MIT"
+roles = ["executor"]
+exclusive_group = "php-packages"
+
+[triggers]
+paths = ["*ServiceProvider.php"]
+deps = ["composer:illuminate/support", "composer:laravel/framework"]
+
+[provenance]
+source = "upstream"
+repo = "WendellAdriel/laravel-expressive"
+strategy = "notify"
+license = "MIT"
+upstream_sha = "92ebc041b22cb17d310b741ed70df22c1321906251def7a011861787addde21d"
+audit_verdict = "clean"
+audit_at = "2026-08-01"
+
+[[provenance.files]]
+path = "SKILL.md"
+url = "https://raw.githubusercontent.com/WendellAdriel/laravel-expressive/main/.agents/skills/package-service-provider/SKILL.md"
+sha256 = "35c5e17291bc4bd08ad097222fb9ada51be18c604c08dcf8f29fc1b6eb5637c6"
+fetched_at = "2026-06-12"

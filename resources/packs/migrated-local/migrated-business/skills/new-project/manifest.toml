@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "new-project"
+version = "0.1.0"
+kind = "workflow"
+risk = "high"
+license = "Apache-2.0"
+roles = ["advisor"]
+requires = ["competitive-analysis", "ecosystem-reuse-gate", "idea-discovery", "risk-assessment"]
+exclusive_group = "pm-pipeline"
+
+[provenance]
+source = "local"

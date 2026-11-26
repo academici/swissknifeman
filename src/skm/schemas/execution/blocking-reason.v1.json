@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:blocking-reason:v1",
+  "title": "BlockingReason",
+  "description": "Normative execution contract; details and semantic validation: spec/modules/execution.md §4.19. The code set equals conventions §6.1 and the CHECK ck_run_tasks__blocking_code; refs, resolver role, actions and times per code are checked by execution.domain.blocking_reason.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "type": "string",
+      "enum": [
+        "WAITING_OWNER",
+        "WAITING_ANSWER",
+        "WAITING_ADVISOR",
+        "WAITING_MANUAL_CHECK",
+        "WAITING_APPROVAL",
+        "WAITING_PROVIDER",
+        "WAITING_BUDGET_RESET",
+        "BLOCKED_BY_DEPENDENCY",
+        "BLOCKED_BY_MATERIAL",
+        "BLOCKED_BY_BUDGET",
+        "BLOCKED_BY_CAPABILITY",
+        "BLOCKED_BY_POLICY",
+        "BLOCKED_BY_INTEGRATION",
+        "SUSPECTED_STALL",
+        "RECOVERING"
+      ]
+    },
+    "task_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "since": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "next_check_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resolver_role": {
+      "description": "Registry role (owner|maintainer|member), advisor or system; null resolves by itself.",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "owner",
+            "maintainer",
+            "member",
+            "advisor",
+            "system"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "allowed_actions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "wait",
+          "answer_question",
+          "record_verdict",
+          "approve_intent",
+          "decide_escalation",
+          "raise_budget",
+          "restart_task",
+          "skip_task",
+          "start_worker",
+          "resume_run",
+          "cancel_run",
+          "retry_now",
+          "provide_material",
+          "accept_deviation"
+        ]
+      }
+    },
+    "deadline_at": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "refs": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "detail": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 300
+    }
+  },
+  "required": [
+    "code",
+    "task_id",
+    "since",
+    "resolver_role",
+    "allowed_actions"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.documents",
+      "class": "BlockingReason",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "BlockingReason"
+    }
+  }
+}

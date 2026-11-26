@@ -1,0 +1,122 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Fixture plan",
+  "goal": "Exercise one schema feature.",
+  "phases": [
+    {
+      "key": "P1",
+      "title": "Phase P1",
+      "goal": "Deliver the phase.",
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Item P1.1",
+      "summary": "Summary.",
+      "why": "Because.",
+      "review": {
+        "mode": "self",
+        "reason": "Documentation-only change."
+      }
+    }
+  ],
+  "materials": [
+    {
+      "key": "pinned-file",
+      "title": "Pinned",
+      "kind": "file_version",
+      "file_version_id": "0192f5c3-9999-7000-8000-000000000001",
+      "role": "input",
+      "required_for": [
+        "execution",
+        "review",
+        "acceptance"
+      ],
+      "freshness": {
+        "policy": "pinned"
+      },
+      "selector": {
+        "kind": "markdown_heading",
+        "value": "Design"
+      },
+      "applies_to": [
+        "P1.1"
+      ]
+    },
+    {
+      "key": "latest-file",
+      "role": "input",
+      "title": "Latest",
+      "kind": "file_version",
+      "file_version_id": "0192f5c3-9999-7000-8000-000000000002",
+      "freshness": {
+        "policy": "latest_at_publish"
+      },
+      "selector": {
+        "kind": "page_range",
+        "from": 1,
+        "to": 3
+      },
+      "global": true
+    },
+    {
+      "key": "refresh-file",
+      "role": "input",
+      "title": "Refresh",
+      "kind": "file_version",
+      "file_version_id": "0192f5c3-9999-7000-8000-000000000003",
+      "freshness": {
+        "policy": "must_refresh",
+        "max_age_seconds": 86400
+      },
+      "selector": {
+        "kind": "line_range",
+        "from": 10,
+        "to": 20
+      }
+    },
+    {
+      "key": "repo-file",
+      "title": "Repo",
+      "kind": "repository_path",
+      "mount": "api",
+      "path": "docs/design.md",
+      "freshness": {
+        "policy": "pinned"
+      },
+      "selector": {
+        "kind": "section_id",
+        "value": "s1"
+      },
+      "role": "reference"
+    },
+    {
+      "key": "web-page",
+      "role": "input",
+      "title": "Web",
+      "kind": "external_source",
+      "url": "https://example.com/page",
+      "external_source_id": "0193a000-0000-7000-8000-000000ee0001",
+      "retrieved_at": "2026-10-20T10:00:00Z",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "freshness": {
+        "policy": "pinned"
+      }
+    },
+    {
+      "key": "web-live",
+      "role": "input",
+      "title": "Web live",
+      "kind": "external_source",
+      "url": "https://example.com/live",
+      "external_source_id": "0193a000-0000-7000-8000-000000ee0002",
+      "freshness": {
+        "policy": "must_refresh",
+        "max_age_seconds": 3600
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "brd"
+version = "0.1.0"
+kind = "domain"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["advisor"]
+requires = ["business-process"]
+exclusive_group = "pm-pipeline"
+
+[provenance]
+source = "local"

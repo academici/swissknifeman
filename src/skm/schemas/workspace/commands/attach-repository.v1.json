@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:workspace:command:attach-repository:v1",
+  "title": "AttachRepository",
+  "description": "workspace command contract from the owning specification.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "repository_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "mount_name": {
+      "$ref": "urn:skm:workspace:defs:v1#/$defs/mount_name",
+      "default": "main"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "secondary",
+        "docs",
+        "infra"
+      ],
+      "default": "primary"
+    }
+  },
+  "required": [
+    "project_id",
+    "repository_id"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.workspace.generated.commands",
+      "class": "AttachRepository",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "workspace.ts",
+      "name": "AttachRepository"
+    }
+  }
+}

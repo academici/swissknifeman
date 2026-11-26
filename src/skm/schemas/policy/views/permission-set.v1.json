@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:policy:view:permission-set:v1",
+  "title": "PermissionSetView",
+  "description": "policy owner contract; see the policy module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fs_read": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/path_policy"
+      }
+    },
+    "fs_write": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/path_policy"
+      }
+    },
+    "commands": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/command_policy"
+    },
+    "network": {
+      "$ref": "urn:skm:policy:profile:v1#/$defs/network_policy"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 0
+        }
+      }
+    },
+    "operations": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/operation_rule"
+      }
+    },
+    "external_effects": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+      }
+    },
+    "effects_need_approval": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/effect_kind"
+      }
+    },
+    "allowed_isolation": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:policy:profile:v1#/$defs/isolation_profile"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 0
+      }
+    },
+    "digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    }
+  },
+  "required": [
+    "fs_read",
+    "fs_write",
+    "commands",
+    "network",
+    "tools",
+    "operations",
+    "external_effects",
+    "effects_need_approval",
+    "allowed_isolation",
+    "sources",
+    "digest"
+  ]
+}

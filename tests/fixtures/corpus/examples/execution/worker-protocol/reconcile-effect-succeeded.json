@@ -1,0 +1,27 @@
+{
+  "command": "execution.record_stage_result",
+  "outcome_contract": "urn:skm:execution:stage-outcome-integrate:v1",
+  "note": "Synthetic admin read-only reconciliation; server Assignment.reconcile_effect_id is authoritative. No workflow advance or new publication.",
+  "request": {
+    "claim": {
+      "assignment_id": "01930000-0000-7000-8000-000000000081",
+      "attempt_id": "01930000-0000-7000-8000-000000000071",
+      "worker_id": "01930000-0000-7000-8000-000000000061",
+      "fencing_token": 1
+    },
+    "stage_record_id": "01930000-0000-7000-8000-000000000051",
+    "outcome_kind": "success",
+    "outcome": {
+      "reconciled_effect": {
+        "effect_id": "01930000-0000-7000-8000-000000000091",
+        "request_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "state": "succeeded",
+        "receipt": {
+          "ref": "https://forge.example.invalid/project/pull/17",
+          "response_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "at": "2026-10-26T10:00:00Z"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:settings:hooks:v1",
+  "title": "Hooks settings",
+  "description": "Settings section 'hooks' owned by integrations. Every leaf carries x-skm metadata read by the settings registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-skm-section": {
+    "id": "hooks",
+    "owner": "integrations",
+    "title": "Hooks",
+    "validators": [
+      {
+        "id": "integrations.hook_subscriptions",
+        "keys": [
+          "hooks.subscriptions"
+        ],
+        "rule": "every subscription satisfies the kind/target/execution_location/class/failure_policy matrix of spec/modules/integrations.md §4.10"
+      }
+    ]
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.settings",
+      "class": "HooksSettings",
+      "kind": "settings_view"
+    },
+    "typescript": {
+      "file": "settings.ts",
+      "name": "HooksSettings"
+    }
+  },
+  "properties": {
+    "subscriptions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+      },
+      "additionalProperties": {
+        "$ref": "urn:skm:integrations:defs:v1#/$defs/hook_subscription"
+      },
+      "default": {},
+      "description": "Hook subscriptions by id: class, kind (webhook, command, event_sink), execution_location (control_plane, host), event types, target, timeout_ms, retry, failure_policy (deny, warn, retry). A nearer level may switch an inherited subscription off with enabled=false.",
+      "x-skm": {
+        "chain": "work",
+        "levels": [
+          "instance",
+          "workspace",
+          "project"
+        ],
+        "merge": "deep_merge",
+        "reload": "live",
+        "override": false,
+        "sensitivity": "public",
+        "portable": true,
+        "lockable": true,
+        "nullable": false,
+        "pack": false,
+        "confirm": true,
+        "validators": [
+          "integrations.hook_subscriptions"
+        ],
+        "write_permission": "hook.manage",
+        "ui": {
+          "group": "Subscriptions",
+          "order": 10,
+          "widget": "json"
+        }
+      }
+    },
+    "webhook": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow_http_loopback": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow http:// webhook URLs on loopback addresses (local testing); https is required otherwise.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Webhooks",
+              "order": 10,
+              "widget": "toggle"
+            }
+          }
+        },
+        "allow_private_networks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow webhook URLs resolving to private or link-local networks.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Webhooks",
+              "order": 20,
+              "widget": "toggle"
+            }
+          }
+        },
+        "max_response_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 65536,
+          "description": "Bytes of a webhook response read before the connection is closed.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Webhooks",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "fanout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_subscriptions_per_event": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128,
+          "default": 32,
+          "description": "Subscriptions one event may be delivered to; more is a configuration error reported by doctor.",
+          "x-skm": {
+            "chain": "work",
+            "levels": [
+              "instance"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": true,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Delivery",
+              "order": 10,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trusted": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9_.-]{0,63}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "default": {},
+          "description": "Command subscriptions trusted on this host: id -> digest of the trusted command target; written by `skm hooks trust`.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "host"
+            ],
+            "merge": "deep_merge",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": false,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "write_permission": "hook.manage",
+            "ui": {
+              "group": "Host",
+              "order": 10,
+              "widget": "json"
+            }
+          }
+        },
+        "max_parallel": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 4,
+          "description": "Host subscriptions executed at the same time by one process.",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 20,
+              "widget": "number"
+            }
+          }
+        },
+        "spool_max_items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 1000,
+          "description": "Host deliveries kept in the local retry spool; 0 disables the spool (retry then behaves like warn).",
+          "x-skm": {
+            "chain": "host",
+            "levels": [
+              "instance",
+              "host"
+            ],
+            "merge": "replace",
+            "reload": "live",
+            "override": false,
+            "sensitivity": "public",
+            "portable": false,
+            "lockable": true,
+            "nullable": false,
+            "pack": false,
+            "confirm": false,
+            "ui": {
+              "group": "Host",
+              "order": 30,
+              "widget": "number"
+            }
+          }
+        }
+      }
+    }
+  }
+}

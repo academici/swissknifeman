@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:knowledge:command:promote-lesson:v1",
+  "title": "PromoteLesson",
+  "description": "knowledge contract; semantics: the knowledge module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "candidate": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/CandidateForPromotion"
+    },
+    "supersedes_lesson_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "applicability": {
+      "$ref": "urn:skm:knowledge:defs:v1#/$defs/LessonApplicability"
+    }
+  },
+  "required": [
+    "candidate"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.knowledge.generated.commands",
+      "class": "PromoteLesson",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "knowledge.ts",
+      "name": "PromoteLesson"
+    }
+  }
+}

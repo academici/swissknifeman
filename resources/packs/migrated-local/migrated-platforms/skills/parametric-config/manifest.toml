@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "parametric-config"
+version = "0.1.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["model-rules"]
+
+[provenance]
+source = "local"

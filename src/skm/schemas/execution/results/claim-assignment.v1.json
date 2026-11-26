@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:execution:result:claim-assignment:v1",
+  "title": "ClaimAssignmentResult",
+  "description": "execution contract declarations; semantic rules belong to the execution module.",
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.execution.generated.results",
+      "class": "ClaimAssignmentResult",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "execution.ts",
+      "name": "ClaimAssignmentResult"
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assignment_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "attempt_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "task_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "run_id": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        "fencing_token": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lease_expires_at": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+        },
+        "lease_ttl_seconds": {
+          "type": "integer"
+        },
+        "renew_every_seconds": {
+          "type": "integer"
+        },
+        "instruction": {
+          "$ref": "urn:skm:execution:defs:v1#/$defs/stage-instruction"
+        },
+        "task": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+          }
+        },
+        "reaped": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+            }
+          }
+        }
+      },
+      "required": [
+        "assignment_id",
+        "attempt_id",
+        "task_id",
+        "run_id",
+        "fencing_token",
+        "lease_expires_at",
+        "lease_ttl_seconds",
+        "renew_every_seconds",
+        "instruction",
+        "task",
+        "reaped"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "const": "nothing_to_claim"
+        }
+      },
+      "required": [
+        "outcome"
+      ]
+    }
+  ]
+}

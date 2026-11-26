@@ -1,0 +1,1001 @@
+{
+  "schema": "urn:skm:planning:specification:v1",
+  "title": "Refresh token rotation",
+  "goal": "Issue one-time refresh tokens, revoke the whole token family on reuse, and let the web client refresh silently.",
+  "context_md": "Today `/auth/refresh` returns a new access token but keeps the same refresh token for 30 days. A leaked refresh token stays valid until expiry. See material `storage-design`.",
+  "non_goals": [
+    "Changing the access-token format",
+    "Single sign-on across products"
+  ],
+  "rules": [
+    "Never log token values; log token family ids only.",
+    "Every database change ships with a reversible migration."
+  ],
+  "brief": {
+    "messages": [
+      {
+        "key": "M1",
+        "at": "2026-10-20",
+        "channel": "chat",
+        "kind": "owner",
+        "text": "Refresh tokens must not be reusable. If someone replays an old one, kill the whole session family."
+      },
+      {
+        "key": "M2",
+        "at": "2026-10-21T09:30:00Z",
+        "channel": "meeting",
+        "kind": "record",
+        "text": "Security asked for a manual browser check before release."
+      }
+    ],
+    "constraints": [
+      "PostgreSQL 16 is the only store."
+    ],
+    "environment": [
+      "Python 3.12 API, TypeScript web client."
+    ],
+    "out_of_scope": [
+      "Mobile clients"
+    ]
+  },
+  "requirements": [
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000001",
+      "key": "R1",
+      "statement": "A refresh token that was already used is rejected, and its whole family is revoked.",
+      "priority": "must",
+      "source": {
+        "kind": "brief_message",
+        "ref": "M1"
+      },
+      "owners": [
+        "P1.2"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000002",
+      "key": "R2",
+      "statement": "The web client refreshes the access token silently before it expires.",
+      "priority": "should",
+      "source": {
+        "kind": "owner"
+      },
+      "owners": [
+        "P2.2"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000003",
+      "key": "R3",
+      "statement": "Security signs off the change after a manual browser check.",
+      "priority": "must",
+      "source": {
+        "kind": "brief_message",
+        "ref": "M2"
+      },
+      "owners": [
+        "P2.3"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000000a",
+      "key": "P1",
+      "title": "Token storage and rotation",
+      "goal": "Store refresh tokens as one-time records grouped in families and rotate them on every refresh.",
+      "contract": {
+        "consumes": [
+          "existing users table"
+        ],
+        "produces": [
+          "refresh_tokens table",
+          "RotationService"
+        ],
+        "boundaries": [
+          "no API shape change in this phase"
+        ]
+      },
+      "scope": {
+        "include": [
+          "api/src/auth",
+          "api/migrations"
+        ],
+        "exclude": [
+          "web"
+        ]
+      },
+      "depends_on": [],
+      "pitfalls": [
+        "Clock skew between API nodes: compare with database time."
+      ],
+      "deliverables": [
+        "Migration with downgrade",
+        "RotationService with tests"
+      ],
+      "batches": [
+        {
+          "key": "B1",
+          "items": [
+            "P1.1",
+            "P1.2"
+          ],
+          "mode": "recommended",
+          "note": "Storage first, then the service that uses it."
+        }
+      ],
+      "design_state": "detailed",
+      "strategy": "dag"
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000000b",
+      "key": "P2",
+      "title": "Client integration and sign-off",
+      "goal": "Expose rotation through the API, use it in the web client and get the security sign-off.",
+      "scope": {
+        "include": [
+          "api/src/http",
+          "web/src/auth"
+        ],
+        "exclude": [
+          "api/migrations"
+        ]
+      },
+      "assurance": {
+        "impact": "All logged-in web sessions refresh through the new endpoint.",
+        "seams": [
+          "api↔web refresh contract"
+        ],
+        "live": true
+      },
+      "batches": [
+        {
+          "key": "B1",
+          "items": [
+            "P2.1",
+            "P2.2"
+          ],
+          "mode": "required",
+          "note": "The endpoint and the client change ship together."
+        },
+        {
+          "key": "B2",
+          "items": [
+            "P2.3"
+          ],
+          "mode": "recommended"
+        }
+      ],
+      "design_state": "detailed"
+    }
+  ],
+  "items": [
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000014",
+      "key": "P1.1",
+      "phase": "P1",
+      "title": "Refresh token table and repository",
+      "summary": "Add refresh_tokens with family_id, used_at, revoked_at and a repository over it.",
+      "why": "Rotation needs to know whether a token was already used.",
+      "work_kind": "code",
+      "scope": {
+        "include": [
+          "migration",
+          "repository"
+        ],
+        "exclude": [
+          "service logic"
+        ]
+      },
+      "implements": [
+        "R1"
+      ],
+      "skills": [
+        {
+          "key": "postgres-migrations"
+        }
+      ],
+      "reads": [
+        {
+          "kind": "material",
+          "ref": "material/storage-design#schema",
+          "why": "Agreed table layout.",
+          "required": true
+        },
+        {
+          "kind": "repository_path",
+          "mount": "api",
+          "path": "src/auth/models.py",
+          "why": "Existing session model.",
+          "required": true
+        }
+      ],
+      "change_hints": [
+        {
+          "mount": "api",
+          "pattern": "migrations/versions/*.py",
+          "change": "create"
+        },
+        {
+          "mount": "api",
+          "pattern": "src/auth/token_repository.py",
+          "change": "create"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_token_repository.py",
+          "change": "create"
+        }
+      ],
+      "deliverables": [
+        "Migration",
+        "TokenRepository"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "review": {
+        "mode": "required",
+        "profile": "code-review",
+        "independence": "separate_session",
+        "max_rounds": 2,
+        "required_evidence": [
+          "diff",
+          "checks",
+          "acceptance_coverage"
+        ]
+      },
+      "authority": {
+        "kind": "routine"
+      },
+      "research": {
+        "need": "none"
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000015",
+      "key": "P1.2",
+      "phase": "P1",
+      "title": "Rotation service",
+      "summary": "Rotate on refresh; on reuse revoke the family.",
+      "why": "Implements R1.",
+      "depends_on": [
+        "P1.1"
+      ],
+      "implements": [
+        "R1"
+      ],
+      "decisions": [
+        "D1"
+      ],
+      "scope": {
+        "include": [
+          "RotationService"
+        ],
+        "exclude": [
+          "HTTP layer"
+        ]
+      },
+      "reads": [
+        {
+          "kind": "plan_entity",
+          "ref": "D1",
+          "why": "Chosen rotation strategy.",
+          "required": true
+        },
+        {
+          "kind": "material",
+          "ref": "material/storage-design#rotation",
+          "why": "Sequence diagram.",
+          "required": true
+        }
+      ],
+      "change_hints": [
+        {
+          "mount": "api",
+          "pattern": "src/auth/rotation.py",
+          "change": "create"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_rotation.py",
+          "change": "create"
+        }
+      ],
+      "deliverables": [
+        "RotationService"
+      ],
+      "guidance_md": "Use SELECT … FOR UPDATE on the token row; reuse detection must be atomic with revocation.",
+      "route": {
+        "class": "frontier",
+        "effort": "high",
+        "correction": {
+          "class": "implementation",
+          "effort": "high"
+        }
+      },
+      "review": {
+        "mode": "required",
+        "profile": "code-review",
+        "independence": "separate_session",
+        "max_rounds": 2,
+        "required_evidence": [
+          "diff",
+          "checks",
+          "acceptance_coverage"
+        ]
+      },
+      "authority": {
+        "kind": "routine"
+      },
+      "research": {
+        "need": "none"
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000016",
+      "key": "P2.1",
+      "phase": "P2",
+      "title": "Refresh endpoint",
+      "summary": "POST /auth/refresh returns a new pair and rejects reused tokens with 401.",
+      "why": "API surface for R1.",
+      "implements": [
+        "R1"
+      ],
+      "scope": {
+        "include": [
+          "HTTP handler",
+          "API docs"
+        ],
+        "exclude": [
+          "web client"
+        ]
+      },
+      "change_hints": [
+        {
+          "mount": "api",
+          "pattern": "src/http/auth_routes.py",
+          "change": "modify"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/api/",
+          "change": "any"
+        }
+      ],
+      "artifacts": [
+        {
+          "key": "refresh-api-spec",
+          "mount": "api",
+          "path": "docs/api/refresh.md",
+          "role": "output"
+        }
+      ],
+      "deliverables": [
+        "Endpoint",
+        "docs/api/refresh.md"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium"
+      },
+      "review": {
+        "mode": "required",
+        "profile": "code-review",
+        "independence": "separate_session",
+        "max_rounds": 2,
+        "required_evidence": [
+          "diff",
+          "checks",
+          "acceptance_coverage"
+        ]
+      },
+      "authority": {
+        "kind": "routine"
+      },
+      "research": {
+        "need": "none"
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000017",
+      "key": "P2.2",
+      "phase": "P2",
+      "title": "Silent refresh in the web client",
+      "summary": "Refresh 60 s before expiry; on 401 from refresh log the user out.",
+      "why": "Implements R2.",
+      "implements": [
+        "R2"
+      ],
+      "decisions": [
+        "D2"
+      ],
+      "scope": {
+        "include": [
+          "web/src/auth"
+        ],
+        "exclude": [
+          "API"
+        ]
+      },
+      "reads": [
+        {
+          "kind": "artifact",
+          "ref": "artifact/refresh-api-spec",
+          "why": "Endpoint contract produced by P2.1.",
+          "required": true
+        }
+      ],
+      "change_hints": [
+        {
+          "mount": "web",
+          "pattern": "src/auth/**",
+          "change": "modify"
+        }
+      ],
+      "artifacts": [
+        {
+          "key": "refresh-api-spec",
+          "mount": "api",
+          "path": "docs/api/refresh.md",
+          "role": "input"
+        }
+      ],
+      "deliverables": [
+        "Silent refresh"
+      ],
+      "route": {
+        "class": "implementation",
+        "effort": "medium",
+        "runtime": "codex",
+        "model": "gpt-5-codex"
+      },
+      "review": {
+        "mode": "required",
+        "profile": "code-review",
+        "independence": "separate_session",
+        "max_rounds": 2,
+        "required_evidence": [
+          "diff",
+          "checks",
+          "acceptance_coverage"
+        ]
+      },
+      "authority": {
+        "kind": "routine"
+      },
+      "research": {
+        "need": "optional",
+        "question": "How do other SPAs schedule silent refresh across tabs?"
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000018",
+      "key": "P2.3",
+      "phase": "P2",
+      "title": "Security sign-off",
+      "summary": "Manual browser check and static scan before release.",
+      "why": "Implements R3.",
+      "depends_on": [
+        "P2.1",
+        "P2.2"
+      ],
+      "work_kind": "review",
+      "implements": [
+        "R3"
+      ],
+      "scope": {
+        "include": [
+          "manual check",
+          "scan"
+        ],
+        "exclude": [
+          "code changes"
+        ]
+      },
+      "reads": [
+        {
+          "kind": "external_source",
+          "url": "https://datatracker.ietf.org/doc/html/rfc6749#section-10.4",
+          "why": "Refresh token threat model.",
+          "required": false,
+          "external_source_id": "0193a000-0000-7000-8000-000000ee0001"
+        }
+      ],
+      "deliverables": [
+        "Sign-off record"
+      ],
+      "route": {
+        "class": "economy",
+        "effort": "low"
+      },
+      "review": {
+        "mode": "waived",
+        "reason": "The item is itself a human review; its manual check is the gate.",
+        "waived_by": "owner"
+      },
+      "authority": {
+        "kind": "owner_gate",
+        "gate": "SEC-SIGNOFF",
+        "scope": "Release of refresh-token rotation to production."
+      },
+      "research": {
+        "need": "none"
+      }
+    }
+  ],
+  "units": [
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000001e",
+      "key": "P1.1/U1",
+      "title": "Migration",
+      "goal": "Create refresh_tokens with downgrade.",
+      "unit_kind": "implementation",
+      "work_kind": "code",
+      "mode": "either",
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "C:/Windows/system32"
+        }
+      ],
+      "checks": [
+        "V2"
+      ],
+      "implements": [
+        "R1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000001f",
+      "key": "P1.1/U2",
+      "title": "Repository",
+      "goal": "TokenRepository with find_for_update, mark_used, revoke_family.",
+      "unit_kind": "implementation",
+      "work_kind": "code",
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/auth/token_repository.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "tests/auth/test_token_repository.py"
+        }
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "checks": [
+        "V1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000020",
+      "key": "P2.1/U1",
+      "title": "Handler",
+      "goal": "Implement POST /auth/refresh and its docs.",
+      "unit_kind": "implementation",
+      "work_kind": "code",
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "src/http/auth_routes.py"
+        },
+        {
+          "mount": "api",
+          "pattern": "docs/api/refresh.md"
+        }
+      ],
+      "outputs": [
+        {
+          "mount": "api",
+          "path": "docs/api/refresh.md"
+        }
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000021",
+      "key": "P2.1/U2",
+      "title": "Endpoint tests",
+      "goal": "Cover rotation, reuse and expiry through HTTP.",
+      "unit_kind": "verification",
+      "work_kind": "test",
+      "write_scope": [
+        {
+          "mount": "api",
+          "pattern": "tests/api/test_refresh_endpoint.py"
+        }
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "checks": [
+        "V1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000022",
+      "key": "P2.2/U1",
+      "title": "Refresh scheduler",
+      "goal": "Schedule refresh 60 s before expiry; single flight across tabs.",
+      "unit_kind": "implementation",
+      "work_kind": "code",
+      "write_scope": [
+        {
+          "mount": "web",
+          "pattern": "src/auth/refresh.ts"
+        }
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000023",
+      "key": "P2.2/U2",
+      "title": "Client tests",
+      "goal": "Unit tests of the scheduler.",
+      "unit_kind": "verification",
+      "work_kind": "test",
+      "write_scope": [
+        {
+          "mount": "web",
+          "pattern": "src/auth/refresh.test.ts"
+        }
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "checks": [
+        "V1"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000028",
+      "key": "V1",
+      "owner": "P1.1",
+      "title": "Repository tests",
+      "category": "acceptance",
+      "kind": "command",
+      "required": true,
+      "definition": {
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "tests/auth/test_token_repository.py",
+          "-q"
+        ],
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        },
+        "timeout_seconds": 300,
+        "expect": "exit 0"
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000029",
+      "key": "V2",
+      "owner": "P1.1",
+      "title": "Migration round trip",
+      "category": "acceptance",
+      "kind": "shell",
+      "required": true,
+      "definition": {
+        "script": "alembic upgrade head && alembic downgrade -1 && alembic upgrade head",
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        },
+        "timeout_seconds": 300,
+        "env_allow": [
+          "DATABASE_URL"
+        ],
+        "risk_ack": "Runs against the disposable test database only."
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002a",
+      "key": "V1",
+      "owner": "P1.2",
+      "title": "Rotation tests",
+      "category": "acceptance",
+      "kind": "command",
+      "required": true,
+      "definition": {
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "tests/auth/test_rotation.py",
+          "-q"
+        ],
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        }
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002b",
+      "key": "V1",
+      "owner": "P1",
+      "title": "Full API test suite",
+      "category": "impact",
+      "kind": "command",
+      "required": false,
+      "rerun_after_integration": true,
+      "definition": {
+        "argv": [
+          "make",
+          "test"
+        ],
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        },
+        "timeout_seconds": 1800
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002c",
+      "key": "V1",
+      "owner": "P2.1",
+      "title": "Endpoint tests",
+      "category": "acceptance",
+      "kind": "command",
+      "required": true,
+      "definition": {
+        "argv": [
+          "python",
+          "-m",
+          "pytest",
+          "tests/api/test_refresh_endpoint.py",
+          "-q"
+        ],
+        "cwd": {
+          "mount": "api",
+          "path": "."
+        }
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002d",
+      "key": "V1",
+      "owner": "P2.2",
+      "title": "Client tests",
+      "category": "acceptance",
+      "kind": "command",
+      "required": true,
+      "definition": {
+        "argv": [
+          "npm",
+          "test",
+          "--",
+          "src/auth/refresh.test.ts"
+        ],
+        "cwd": {
+          "mount": "web",
+          "path": "."
+        },
+        "timeout_seconds": 600
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002e",
+      "key": "V1",
+      "owner": "P2.3",
+      "title": "Manual browser check",
+      "category": "live",
+      "kind": "manual",
+      "required": true,
+      "definition": {
+        "instructions_md": "Log in, copy the refresh cookie, refresh twice, replay the first cookie: the session must end in every tab.",
+        "actor_role": "owner",
+        "allowed_verdicts": [
+          "pass",
+          "fail"
+        ]
+      }
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000002f",
+      "key": "V2",
+      "owner": "P2.3",
+      "title": "Static security scan",
+      "category": "impact",
+      "kind": "external",
+      "required": false,
+      "definition": {
+        "provider": "semgrep",
+        "ref": "p/owasp-top-ten",
+        "params": {
+          "severity": "ERROR"
+        }
+      }
+    }
+  ],
+  "criteria": [
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000032",
+      "key": "AC1",
+      "owner": "P1.2",
+      "statement": "Reusing a rotated refresh token is rejected and revokes its family.",
+      "verification_mode": "check",
+      "checks": [
+        "P1.2:V1"
+      ],
+      "requirements": [
+        "R1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000033",
+      "key": "AC2",
+      "owner": "P2.1/U2",
+      "statement": "POST /auth/refresh returns 401 for a reused token.",
+      "verification_mode": "check",
+      "checks": [
+        "P2.1:V1"
+      ],
+      "requirements": [
+        "R1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000034",
+      "key": "AC3",
+      "owner": "P2.2",
+      "statement": "The client refreshes before expiry without a visible logout.",
+      "verification_mode": "review",
+      "requirements": [
+        "R2"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000035",
+      "key": "AC4",
+      "owner": "P2.3",
+      "statement": "Replaying an old cookie ends the session in every tab.",
+      "verification_mode": "manual",
+      "checks": [
+        "P2.3:V1"
+      ],
+      "requirements": [
+        "R3"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000003c",
+      "key": "D1",
+      "title": "Rotation strategy",
+      "date": "2026-10-21",
+      "state": "accepted",
+      "question": "How do we detect and handle reuse?",
+      "options": [
+        {
+          "key": "A",
+          "text": "One-time tokens grouped by family; reuse revokes the family."
+        },
+        {
+          "key": "B",
+          "text": "Sliding expiry without rotation."
+        }
+      ],
+      "decision": "A",
+      "rationale": "Only A detects replay of a stolen token.",
+      "consequences": [
+        "A refresh race between tabs revokes the family; the client must single-flight refreshes."
+      ],
+      "applies_to": [
+        "P1.2",
+        "P2.2"
+      ],
+      "origin": {
+        "kind": "owner"
+      },
+      "answered_by": "owner"
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-00000000003d",
+      "key": "D2",
+      "title": "Access token TTL",
+      "date": "2026-10-22",
+      "state": "open",
+      "question": "Keep the 15-minute access token TTL or shorten it to 5 minutes?",
+      "options": [
+        {
+          "key": "A",
+          "text": "15 minutes"
+        },
+        {
+          "key": "B",
+          "text": "5 minutes"
+        }
+      ],
+      "applies_to": [
+        "P2.2"
+      ],
+      "origin": {
+        "kind": "agent",
+        "ref": "P2.2"
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000046",
+      "key": "storage-design",
+      "title": "Refresh token storage design",
+      "kind": "file_version",
+      "file_version_id": "0192f5c3-9999-7000-8000-000000000001",
+      "role": "input",
+      "required_for": [
+        "execution",
+        "review"
+      ],
+      "freshness": {
+        "policy": "pinned"
+      },
+      "why": "Agreed schema and rotation sequence.",
+      "applies_to": [
+        "P1"
+      ]
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000047",
+      "key": "auth-module",
+      "title": "Current auth module",
+      "kind": "repository_path",
+      "mount": "api",
+      "path": "src/auth/README.md",
+      "role": "reference",
+      "freshness": {
+        "policy": "pinned"
+      },
+      "global": true
+    },
+    {
+      "id": "0192f5c4-0000-7000-8000-000000000048",
+      "key": "oauth-threats",
+      "title": "OAuth 2.0 refresh token threats",
+      "kind": "external_source",
+      "url": "https://datatracker.ietf.org/doc/html/rfc6819#section-5.2.2.3",
+      "retrieved_at": "2026-10-21T10:00:00Z",
+      "role": "reference",
+      "required_for": [
+        "review"
+      ],
+      "freshness": {
+        "policy": "must_refresh",
+        "max_age_seconds": 2592000
+      },
+      "applies_to": [
+        "P2.3"
+      ],
+      "external_source_id": "0193a000-0000-7000-8000-000000ee0001"
+    }
+  ],
+  "plan_relations": [
+    {
+      "kind": "predecessor",
+      "target": "PLAN3",
+      "note": "Session model introduced by PLAN3."
+    }
+  ],
+  "execution_constraints": {
+    "strategy": "dag",
+    "forbidden_paths": [
+      {
+        "mount": "api",
+        "pattern": "config/secrets/**"
+      }
+    ],
+    "required_isolation": "worktree",
+    "max_parallel_units": 2
+  }
+}

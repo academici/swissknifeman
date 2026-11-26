@@ -1,0 +1,408 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:publication-preview:v1",
+  "title": "PublicationPreviewView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "$ref": "urn:skm:planning:defs:v1#/$defs/source-view"
+    },
+    "base_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "document_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "content_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "pinned_materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "material_key": {
+            "type": "string",
+            "minLength": 0
+          },
+          "file_version_id": {
+            "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+          },
+          "resolved_from": {
+            "type": "string",
+            "enum": [
+              "pinned",
+              "latest_at_publish"
+            ]
+          }
+        },
+        "required": [
+          "material_key",
+          "file_version_id",
+          "resolved_from"
+        ]
+      }
+    },
+    "diff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "from_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "to_digest": {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "plan_fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pointer": {
+                "type": "string",
+                "minLength": 0
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "add",
+                  "remove",
+                  "replace"
+                ]
+              },
+              "before": {},
+              "after": {}
+            },
+            "required": [
+              "pointer",
+              "op",
+              "before",
+              "after"
+            ]
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "entity_id": {
+                "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+              },
+              "entity_kind": {
+                "type": "string",
+                "enum": [
+                  "phase",
+                  "item",
+                  "unit",
+                  "requirement",
+                  "criterion",
+                  "check",
+                  "decision",
+                  "material"
+                ]
+              },
+              "change": {
+                "type": "string",
+                "enum": [
+                  "added",
+                  "removed",
+                  "changed"
+                ]
+              },
+              "key_before": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "key_after": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "rekeyed": {
+                "type": "boolean"
+              },
+              "moved": {
+                "type": "boolean"
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "pointer": {
+                      "type": "string",
+                      "minLength": 0
+                    },
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "add",
+                        "remove",
+                        "replace"
+                      ]
+                    },
+                    "before": {},
+                    "after": {}
+                  },
+                  "required": [
+                    "pointer",
+                    "op",
+                    "before",
+                    "after"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "entity_id",
+              "entity_kind",
+              "change",
+              "key_before",
+              "key_after",
+              "rekeyed",
+              "moved",
+              "fields"
+            ]
+          }
+        }
+      },
+      "required": [
+        "from_digest",
+        "to_digest",
+        "summary",
+        "plan_fields",
+        "entities"
+      ]
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 0
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 0
+              },
+              "entity_key": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "entity_id": {
+                "anyOf": [
+                  {
+                    "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pointer": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": {}
+              }
+            },
+            "required": [
+              "code",
+              "severity",
+              "message",
+              "entity_key",
+              "entity_id",
+              "pointer",
+              "details"
+            ]
+          }
+        },
+        "rule_failures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rule": {
+                "type": "string",
+                "minLength": 0
+              },
+              "error_type": {
+                "type": "string",
+                "minLength": 0
+              },
+              "message": {
+                "type": "string",
+                "minLength": 0
+              },
+              "plugin": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "rule",
+              "error_type",
+              "message",
+              "plugin"
+            ]
+          }
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "error": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "warning": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "info": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "graph": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "tasks": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "edges": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "tasks",
+                "edges"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "findings",
+        "rule_failures",
+        "counts",
+        "graph"
+      ]
+    },
+    "no_changes": {
+      "type": "boolean"
+    },
+    "publishable": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "source",
+    "base_revision_id",
+    "document_digest",
+    "content_digest",
+    "pinned_materials",
+    "diff",
+    "validation",
+    "no_changes",
+    "publishable"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "PublicationPreviewView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "PublicationPreviewView"
+    }
+  }
+}

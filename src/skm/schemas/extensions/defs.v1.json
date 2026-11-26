@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:defs:v1",
+  "title": "Extensions definitions",
+  "description": "Shared values of pack, resource and profile documents (spec/modules/extensions.md §4.1).",
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+      "description": "Strict SemVer 2.0.0 without build metadata."
+    },
+    "version_constraint": {
+      "type": "string",
+      "pattern": "^(latest|((=|>|>=|<|<=)?\\d+(\\.\\d+){0,2}(-[0-9A-Za-z.-]+)?)(,\\s*(=|>|>=|<|<=)?\\d+(\\.\\d+){0,2}(-[0-9A-Za-z.-]+)?)*)$",
+      "description": "Version constraint: '>=1.2.0,<2', '1.2.3' (exact) or 'latest'; ^ and ~ are not supported."
+    },
+    "pack_slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+    },
+    "resource_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,80}$"
+    },
+    "prompt_block_key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-_]*$"
+    },
+    "resource_kind": {
+      "type": "string",
+      "enum": [
+        "skill",
+        "steering",
+        "agent_profile",
+        "workflow",
+        "plan_template",
+        "prompt_block",
+        "integration_bundle",
+        "runtime_catalog",
+        "model_guideline"
+      ],
+      "x-skm-enum-name": "ResourceKind"
+    },
+    "pack_trust": {
+      "type": "string",
+      "enum": [
+        "builtin",
+        "operator",
+        "third_party"
+      ],
+      "x-skm-enum-name": "PackTrust"
+    },
+    "role_id": {
+      "type": "string",
+      "enum": [
+        "scout",
+        "executor",
+        "reviewer",
+        "triager",
+        "advisor",
+        "researcher",
+        "registrar"
+      ],
+      "x-skm-enum-name": "RoleId"
+    },
+    "capability": {
+      "type": "string",
+      "enum": [
+        "headless_execution",
+        "structured_result",
+        "stream_events",
+        "session_resume",
+        "tool_interception",
+        "reliable_cancellation",
+        "usage_reporting",
+        "workspace_binding",
+        "native_subagents",
+        "mcp_support",
+        "permission_flags",
+        "sandbox_native",
+        "effort_control",
+        "model_selection",
+        "config_isolation"
+      ],
+      "x-skm-enum-name": "Capability"
+    },
+    "runtime_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$"
+    },
+    "spdx": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9.+-]+( (AND|OR|WITH) [A-Za-z0-9.+-]+)*$",
+      "description": "SPDX license expression."
+    },
+    "model_class": {
+      "type": "string",
+      "enum": [
+        "economy",
+        "implementation",
+        "frontier"
+      ],
+      "x-skm-enum-name": "ModelClass",
+      "x-skm-order": [
+        "economy",
+        "implementation",
+        "frontier"
+      ]
+    },
+    "effort": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "x-skm-enum-name": "Effort",
+      "x-skm-order": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ]
+    },
+    "block_type": {
+      "type": "string",
+      "enum": [
+        "resume_note",
+        "system_constraints",
+        "role_contract",
+        "run_rules",
+        "runtime_notes",
+        "task_contract",
+        "acceptance",
+        "requirements",
+        "decisions",
+        "decision_answers",
+        "review_feedback",
+        "previous_attempt",
+        "candidate_diff",
+        "findings_under_review",
+        "context_map",
+        "steering",
+        "skills",
+        "skill_index",
+        "materials",
+        "repo_instructions",
+        "research",
+        "memory",
+        "history",
+        "result_contract"
+      ],
+      "x-skm-enum-name": "BlockType"
+    }
+  },
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.documents",
+      "class": "ExtensionsDefinitions",
+      "kind": "alias"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "ExtensionsDefinitions"
+    }
+  }
+}

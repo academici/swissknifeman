@@ -1,0 +1,90 @@
+{
+  "plan_id": "0192f5c5-0000-7000-8000-000000000101",
+  "draft_id": "0192f5c6-0000-7000-8000-000000000201",
+  "expected_edit_version": 7,
+  "changes": [
+    {
+      "op": "patch",
+      "target": "P1.2",
+      "merge_patch": {
+        "title": "Token rotation service",
+        "guidance_md": null
+      }
+    },
+    {
+      "op": "patch",
+      "target": "P1.2:V1",
+      "merge_patch": {
+        "definition": {
+          "timeout_seconds": 300
+        }
+      }
+    },
+    {
+      "op": "patch",
+      "target": "plan",
+      "merge_patch": {
+        "rules": [
+          "Never log token values; log token family ids only.",
+          "Every database change ships with a reversible migration.",
+          "Feature flag auth.rotation guards the rollout."
+        ]
+      }
+    },
+    {
+      "op": "add",
+      "kind": "item",
+      "after": "P2.2",
+      "entity": {
+        "key": "P2.4",
+        "phase": "P2",
+        "title": "Rollout flag",
+        "summary": "Guard rotation behind auth.rotation.",
+        "why": "Safe rollout.",
+        "change_hints": [
+          {
+            "mount": "api",
+            "pattern": "src/config/flags.py",
+            "change": "modify"
+          }
+        ],
+        "review": {
+          "mode": "self",
+          "reason": "One-line flag registration covered by its check."
+        }
+      }
+    },
+    {
+      "op": "remove",
+      "target": "P2.2/U2",
+      "cascade": false
+    },
+    {
+      "op": "rekey",
+      "target": "P2.3",
+      "new_key": "P2.5"
+    },
+    {
+      "op": "patch",
+      "target": "P2.5",
+      "merge_patch": {
+        "depends_on": [
+          "P2.1",
+          "P2.2",
+          "P2.4"
+        ]
+      }
+    },
+    {
+      "op": "move",
+      "target": "P2.5",
+      "after": "P2.4"
+    }
+  ],
+  "notes": [
+    "Changes apply in order to the current draft document; the result must be schema-valid or nothing is saved (SCHEMA_INVALID).",
+    "merge_patch follows RFC 7396: null deletes a key, arrays are replaced whole. id, key (use rekey), unit item prefix and check owner are owned fields (FIELD_OWNED).",
+    "The added item gets a UUIDv7 id and the defaults planning.defaults.route_class/route_effort for its route because it has none.",
+    "rekey P2.3 -> P2.5 rewrites every reference: batches, depends_on, criteria owners, check owners (P2.3:V1 -> P2.5:V1), decision applies_to, read refs, review.covers, requirement owners."
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:mcp:tool-input:plan-show:v1",
+  "title": "skm_plan_show input",
+  "description": "Input for the skm_plan_show MCP tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "plan": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "include_tree": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "plan"
+  ]
+}

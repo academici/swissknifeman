@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "test-strategy"
+version = "0.3.0"
+kind = "workflow"
+risk = "medium"
+license = "Apache-2.0"
+roles = ["reviewer"]
+
+[provenance]
+source = "local"

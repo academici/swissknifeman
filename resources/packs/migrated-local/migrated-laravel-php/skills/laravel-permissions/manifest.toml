@@ -1,0 +1,11 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "laravel-permissions"
+version = "0.3.2"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+exclusive_group = "authz"
+
+[provenance]
+source = "local"

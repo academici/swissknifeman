@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:view:revision:v1",
+  "title": "RevisionView",
+  "description": "planning owner contract; see the planning module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "revision_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "revision_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "parent_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "restore",
+        "import",
+        "system"
+      ]
+    },
+    "restored_from_revision_no": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "content_digest": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/digest"
+    },
+    "published_by": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "published_at": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/timestamp"
+    },
+    "change_reason": {
+      "type": "string",
+      "minLength": 0
+    },
+    "plan_id": {
+      "$ref": "urn:skm:kernel:defs:v1#/$defs/uuid"
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "canonicalization_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "compiler_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "document": {
+      "$ref": "urn:skm:planning:specification:v1"
+    },
+    "tree": {
+      "type": "object",
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "revision_id",
+    "revision_no",
+    "parent_revision_id",
+    "origin",
+    "restored_from_revision_no",
+    "content_digest",
+    "published_by",
+    "published_at",
+    "change_reason",
+    "plan_id",
+    "schema_version",
+    "canonicalization_version",
+    "compiler_version"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.views",
+      "class": "RevisionView",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "RevisionView"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:planning:result:list-drafts:v1",
+  "title": "ListDraftsResult",
+  "description": "planning owner contract; see the planning module. The bus carries objects only: the array of DraftSummaryView of planning.list_drafts is the items member.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "$ref": "urn:skm:planning:view:drafts:v1"
+    }
+  },
+  "required": [
+    "items"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.planning.generated.results",
+      "class": "ListDraftsResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "planning.ts",
+      "name": "ListDraftsResult"
+    }
+  }
+}

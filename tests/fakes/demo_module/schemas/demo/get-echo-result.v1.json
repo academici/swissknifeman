@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:demo:result:get-echo:v1",
+  "title": "GetEchoResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["texts"],
+  "properties": {
+    "texts": {"type": "array", "items": {"type": "string"}}
+  }
+}

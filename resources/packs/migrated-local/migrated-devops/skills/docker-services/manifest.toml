@@ -1,0 +1,12 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "docker-services"
+version = "0.1.0"
+kind = "domain"
+risk = "high"
+license = "Apache-2.0"
+roles = ["executor"]
+requires = ["docker-php", "docker-postgres"]
+exclusive_group = "docker"
+
+[provenance]
+source = "local"

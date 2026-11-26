@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:extensions:result:sync-builtin-packs:v1",
+  "title": "SyncBuiltinPacksResult",
+  "description": "extensions owner contract; see the extensions module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "installed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "minLength": 0
+          },
+          "version": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "required": [
+          "slug",
+          "version"
+        ]
+      }
+    },
+    "already_installed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "minLength": 0
+          },
+          "version": {
+            "type": "string",
+            "minLength": 0
+          }
+        },
+        "required": [
+          "slug",
+          "version"
+        ]
+      }
+    }
+  },
+  "required": [
+    "installed",
+    "already_installed"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.extensions.generated.results",
+      "class": "SyncBuiltinPacksResult",
+      "kind": "dataclass"
+    },
+    "typescript": {
+      "file": "extensions.ts",
+      "name": "SyncBuiltinPacksResult"
+    }
+  }
+}

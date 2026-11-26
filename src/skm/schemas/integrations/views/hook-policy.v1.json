@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skm:integrations:view:hook-policy:v1",
+  "title": "HookPolicyView",
+  "description": "integrations contract; semantics: the integrations module.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hook_modes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:integrations:defs:v1#/$defs/HookMode"
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "urn:skm:execution:defs:v1#/$defs/json-value"
+      }
+    },
+    "reserved_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "managed_file_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "changelog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code_globs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changelog_path": {
+          "type": "string"
+        },
+        "skip_marker": {
+          "type": "string"
+        },
+        "changelog_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "code_globs",
+        "changelog_path",
+        "skip_marker"
+      ]
+    },
+    "subscriptions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:skm:integrations:defs:v1#/$defs/HostSubscriptionView"
+      }
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ttl_seconds": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "hook_modes",
+    "permissions",
+    "reserved_paths",
+    "managed_file_paths",
+    "changelog",
+    "subscriptions",
+    "generation",
+    "ttl_seconds"
+  ],
+  "x-skm-codegen": {
+    "python": {
+      "module": "skm.modules.integrations.generated.views",
+      "class": "HookPolicyView",
+      "kind": "typeddict"
+    },
+    "typescript": {
+      "file": "integrations.ts",
+      "name": "HookPolicyView"
+    }
+  }
+}

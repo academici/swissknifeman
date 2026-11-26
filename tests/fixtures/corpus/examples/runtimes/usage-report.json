@@ -1,0 +1,14 @@
+{
+  "input_tokens": 4210,
+  "output_tokens": 1130,
+  "cache_read_tokens": 12000,
+  "cache_write_tokens": 1800,
+  "reasoning_tokens": null,
+  "cost_usd_micros": null,
+  "status": "reported",
+  "source": "stream:result",
+  "subagents": {
+    "used": false,
+    "disclosed": true
+  }
+}

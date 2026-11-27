@@ -38,6 +38,7 @@
 | `src/skm/adapters/git/repo_inspect.py` | GitRepositoryInspector | P00.04.f → P04.06 |
 | `src/skm/adapters/git/runner.py` | GitRunner, GitResult, GitCommandFailed | P04.06 |
 | `src/skm/adapters/host_commands/__init__.py` | package boundary | P00.04.f |
+| `src/skm/adapters/host_commands/local_gate.py` | LocalUserSchemaValidator, SubprocessGateRunner | P02.02 (SKM-0.2.0) |
 | `src/skm/adapters/host_commands/subprocess_runner.py` | SubprocessHostCommandRunner | P00.04.f → P10.08.b |
 | `src/skm/adapters/http_client/__init__.py` | package boundary | P00.04.f |
 | `src/skm/adapters/http_client/auth.py` | BearerHeaders | P11.04.a |
@@ -295,6 +296,7 @@
 | `src/skm/adapters/runtimes/_cli_session/identity.py` | ProcessGroupTracker | P08.02.b |
 | `src/skm/adapters/runtimes/_cli_session/observation.py` | SessionObservation, collect_observation | P08.02.b |
 | `src/skm/adapters/runtimes/_cli_session/probe.py` | CliDetector, ProbeCacheKey, CommandOutput, ProbeCommandRunner | P08.03 |
+| `src/skm/adapters/runtimes/_cli_session/proxy_bridge.py` | LocalProxyBridge, ProxyEndpoint | P02.01 (SKM-0.2.0) |
 | `src/skm/adapters/runtimes/_cli_session/runtime.py` | CliAgentRuntime, ProbedCli, load_static_declarations | P08.03 |
 | `src/skm/adapters/runtimes/_cli_session/launch.py` | LaunchCommand, ensure_private_dir, prepare_client_home, base_child_env, landlock_argv | P08.03 |
 | `src/skm/adapters/runtimes/_cli_session/usage.py` | TokenCounts, MessageUsageAccumulator, nonneg_counter, nonneg_counter_opt | P08.03 |
@@ -349,7 +351,9 @@
 | `src/skm/adapters/runtimes/pool/adaptive_router.py` | AdaptiveExecutorRouter ranks eligible slots by static provider weight, then runtime and slot ID | P08.01.b → I-07.2 |
 | `src/skm/adapters/runtimes/pool/failover.py` | FailoverCandidate, FailoverController, FailoverDecision, FailoverPolicy gate HTTP 529 cross-cloud failover and local proxy routing on opt-in, consent, ToS, known in-budget pricing, a fresh session, and a run free of HOST_PRIVATE episode consumption | P08.01.b → I-07.3 |
 | `src/skm/adapters/runtimes/pool/quota_prober.py` | QuotaGroup, QuotaProber, QuotaReading, QuotaReply, opus_fallback | P08.01.b → I-07.2 |
-| `src/skm/adapters/runtimes/pool/provider_pool.py` | Host-local slot leases and serialized refresh, slot-scoped session pins, strict credential boundary via host-dispatched tools, ranked slot acquisition | P08.01.b → I-07.1 → I-07.2 |
+| `src/skm/adapters/runtimes/pool/provider_pool.py` | Host-local slot leases and serialized refresh, slot-scoped session pins, strict credential boundary via host-dispatched tools, ranked slot acquisition | P08.01.b → I-07.1 → I-07.2 → SKM-0.2.0 P01 |
+| `src/skm/adapters/runtimes/pool/rate_limit.py` | RateLimitAction, RateLimitDecision, classify_rate_limit | P02.01 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/pool/shallow_home.py` | ShallowHome, fingerprint_credentials | P02.01 (SKM-0.2.0) |
 | `src/skm/adapters/sandbox/__init__.py` | package boundary, SeatbeltSandbox | P00.04.f → I-04.3 |
 | `src/skm/adapters/sandbox/backend.py` | BackendIsolation, SpecView, Companion, CompanionProof, ProofRequest, Coverage, assess (backend contract and coverage check) | P08.07.a |
 | `src/skm/adapters/sandbox/bubblewrap.py` | BubblewrapSandbox (Linux, `skm:bubblewrap`) | P08.07.a → I-04.2 |
@@ -426,7 +430,8 @@
 | `src/skm/bootstrap/plugin_distribution.py` | ENTRY_POINT_GROUP, PluginProvenance, RuntimeDataFiles, default_entry_points, read_runtime_data, provenance, record_digest (steps 1, 2a and 11 of 02-plugins §4, no plugin code runs) | P00.04.f → P01.10 |
 | `src/skm/bootstrap/plugins.py` | LoadedPlugin, PluginStatus, PluginAllowlist, PluginSchema, PluginSchemas, PluginSettingsView, PluginViews, ProcessPlugins, SettingsPhase2, load_plugins (steps 1-11 of 02-plugins §4), capability_catalog, merged_schemas, plugin_settings_view, default_context; `component_problem` and `OWNER_PROTOCOLS` from `bootstrap/builtins.py` check each built component | P00.04.f → P01.10 |
 | `src/skm/bootstrap/provider_accounts.py` | ProviderAccounts, load_provider_accounts compose host-local slot registries and HTTPS probes | P08.01.b → I-07.2 |
-| `src/skm/bootstrap/runtimes.py` | RUNTIME_FACTORIES, build_provider_pool | P00.04.f → P08.03 → P08.04 → P08.05 → I-07.1 → I-07.2 |
+| `src/skm/bootstrap/local_modes.py` | build_local_modes_deps | P02.02 (SKM-0.2.0) |
+| `src/skm/bootstrap/runtimes.py` | RUNTIME_FACTORIES, build_provider_pool | P00.04.f → P08.03 → P08.04 → P08.05 → I-07.1 → I-07.2 → SKM-0.2.0 P01 |
 | `src/skm/bootstrap/services.py` | ServiceDef, BACKGROUND_SERVICES | P00.04.f → P01.09.b → P07.06 |
 | `src/skm/entrypoints/__init__.py` | package boundary | P00.01 → P00.04.f |
 | `src/skm/entrypoints/api/__init__.py` | side-effect-free package boundary | P00.04.f → P11.02.a |

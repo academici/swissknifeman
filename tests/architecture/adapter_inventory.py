@@ -127,6 +127,8 @@ _ADAPTER_IMPLEMENTATIONS = {
     "skm.adapters.resources.compiled_pack": {"PackLock"},  # I-09.2a
     "skm.adapters.resources.pack_reader": {"FilesystemPackReader"},  # P09.01.b
     "skm.adapters.resources.upstream_http": {"HttpUpstreamFetcher"},  # P09.01.c
+    "skm.adapters.runtimes": {"LocalProxyBridge", "ProxyEndpoint"},
+    "skm.adapters.runtimes._cli_session.proxy_bridge": {"LocalProxyBridge", "ProxyEndpoint"},
     "skm.adapters.runtimes.antigravity.runtime": {"AntigravityRuntime"},
     "skm.adapters.runtimes.claude_code.runtime": {"ClaudeCodeRuntime"},  # P08.03
     "skm.adapters.runtimes.codex.runtime": {"CodexRuntime"},  # P08.04
@@ -164,7 +166,12 @@ _ADAPTER_IMPLEMENTATIONS = {
         "ProviderSlot",
         "SessionPin",
         "SlotLease",
+        "SlotModel",
+        "SlotRuntimeConfig",
     },
+    "skm.adapters.runtimes.pool.rate_limit": {"RateLimitAction", "RateLimitDecision"},
+    "skm.adapters.runtimes.pool.shallow_home": {"ShallowHome"},
+    "skm.adapters.host_commands.local_gate": {"LocalUserSchemaValidator", "SubprocessGateRunner"},
     "skm.adapters.memory.blob_store": {"MemoryBlobStore"},  # P06.02
     "skm.adapters.memory.config_store": {"MemoryConfigStore"},
     "skm.adapters.memory.context.research": {"MemoryResearchRepository"},  # P09.09.a

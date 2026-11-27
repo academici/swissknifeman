@@ -598,7 +598,10 @@ review-request agent stages consume task.review_profile. Working-tree receipts u
 | File | Contract | Owner |
 | --- | --- | --- |
 | `src/skm/entrypoints/cli/commands/_adhoc.py` | Ad hoc command DTO and client dispatch shared by exec and pipe | P11.02.e → I-08.2 |
-| `src/skm/entrypoints/cli/commands/context.py` | CLI standalone context assembly, explanation and comparison | P11.02.e → I-08.2 |
+| `src/skm/entrypoints/cli/commands/ask.py` | CLI host-local ask | P02.02 (SKM-0.2.0) |
+| `src/skm/entrypoints/cli/commands/context.py` | CLI standalone context assembly, explanation and comparison | P11.02.e → I-08.2 → SKM-0.2.0 P02 |
+| `src/skm/entrypoints/cli/commands/deliberate.py` | CLI host-local deliberate | P02.02 (SKM-0.2.0) |
+| `src/skm/entrypoints/cli/commands/do.py` | CLI host-local do | P02.02 (SKM-0.2.0) |
 | `src/skm/entrypoints/cli/commands/exec.py` | CLI entry point for an ad hoc task | P11.02.e → I-08.2 |
 | `src/skm/entrypoints/cli/commands/session.py` | Local interactive session start, list, attach and stop | P11.02.e → I-08.3 |
 | `src/skm/entrypoints/cli/commands/pipe.py` | CLI entry point for per-run workflows | P11.02.e → I-08.2 |

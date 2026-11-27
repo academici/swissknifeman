@@ -32,7 +32,7 @@ from skm.modules.integrations.domain.hook_rules import ENFORCEMENT, HookMode
 from skm.modules.integrations.domain.hook_subscriptions import parse_subscriptions
 from skm.modules.integrations.domain.observed import FileKind
 from skm.modules.integrations.domain.target import Surface, TargetId
-from skm.modules.integrations.generated.queries import GetDesiredProjection, ListHookSubscriptions
+from skm.modules.integrations.generated.queries import GetDesiredProjection, GetHookPolicy, ListHookSubscriptions
 from skm.modules.integrations.generated.results import ListHookSubscriptionsResult
 from skm.modules.integrations.generated.settings import IntegrationsSettings
 from skm.modules.integrations.generated.views import DesiredProjectionView
@@ -43,7 +43,6 @@ from skm.modules.integrations.ports import (
     IntegrationTargetRegistry,
     UserHomeReader,
 )
-from skm.modules.integrations.public import GetHookPolicy
 from skm.modules.workspace.public import marker_from_document
 
 from .observe import (

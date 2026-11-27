@@ -197,6 +197,7 @@
 | `src/skm/platform/schema/formats.py` | schema format checks | P01.04 |
 | `src/skm/platform/schema/locator.py` | packaged schema locator | P01.04 |
 | `src/skm/platform/schema/registry.py` | schema registry | P01.04 |
+| `src/skm/platform/schema/user_schema.py` | validate_user_json | P02.02 (SKM-0.2.0) |
 | `src/skm/platform/schema/validator.py` | schema validation; is_schema_type (stock Draft 2020-12 type predicate) | P01.04 |
 | `src/skm/platform/schema/__init__.py` | package boundary | P00.04.b |
 | `src/skm/platform/tokens/heuristic.py` | CHARS_PER_TOKEN_CYR, CHARS_PER_TOKEN_LAT, ESTIMATOR_ID, HeuristicTokenEstimator, estimate_tokens | P09.04.a |

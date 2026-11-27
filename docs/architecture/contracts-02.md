@@ -62,6 +62,7 @@
 | `src/skm/modules/context/host/registry.py` | HOST_OPERATIONS, HOST_OPERATION_NAMES | P00.04.d → P09.04.c → P09.09.b |
 | `src/skm/modules/context/host/research_query.py` | ResearchQueryOperation, research_query, run; injected clock/ids, durable replay and authorized mount resolution | P00.04.d → P09.09.b |
 | `src/skm/modules/context/host/codegraph.py` | Resolve an active project checkout binding and dispatch native index maintenance through CodeGraphIndex | P09.09.b → I-09.3 |
+| `src/skm/modules/context/host/pack_context.py` | pack_context, PackContextResult | P02.02 (SKM-0.2.0) |
 | `src/skm/modules/context/module.py` | MODULE, RESEARCH_SPEC; canonical finalize-manifest registration and research descriptor | P00.04.d → P09.04.a → P09.04.d → P09.09.b |
 | `src/skm/modules/context/permissions.py` | PERMISSIONS | P00.04.d → P09.04.a |
 | `src/skm/modules/context/ports.py` | ContextOwnerClaim, ContextOwnerGuard, ContextRepository, TextStore, MemoryRetriever, CheckoutReader, ResearchSource, ResearchSourceRegistry, ResearchRepository, ReadOutcome | P00.04.d → P09.04.a → P09.04.d → P09.09.a |
@@ -169,6 +170,7 @@
 | `src/skm/modules/execution/host/evidence.py` | EvidenceOperation, EvidenceFile, BlobUploader | P00.04.d → P07.07.a |
 | `src/skm/modules/execution/host/heartbeat.py` | HeartbeatOperation | P00.04.d → P07.07.b |
 | `src/skm/modules/execution/host/isolation.py` | IsolationSpec, WrappedCommand | P00.04.d → P08.07.a |
+| `src/skm/modules/execution/host/local_modes.py` | local_ask, local_do, local_deliberate | P02.02 (SKM-0.2.0) |
 | `src/skm/modules/execution/host/recovery.py` | RecoveryOperation | P00.04.d → P08.08 |
 | `src/skm/modules/execution/host/registry.py` | HOST_OPERATIONS, HOST_OPERATION_NAMES | P00.04.d → P07.07.a → P07.07.b → P09.05 → P09.09.b → P11.04.b → P08.08 → P08.06 → P09.10 → P07.08.a → P07.08.b |
 | `src/skm/modules/execution/host/request_review.py` | request_review.run, registry.operations; immutable target dispatch and patch upload | P00.04.d → P09.10 |
@@ -290,6 +292,7 @@
 | `src/skm/modules/integrations/domain/checks/context.py` | DoctorContext, effective_settings, finding, mapping, strings | P10.07 |
 | `src/skm/modules/integrations/domain/checks/claude.py` | CHECKS, hook_commands | P10.07 |
 | `src/skm/modules/integrations/domain/checks/clients.py` | CODEX_CHECKS, CURSOR_CHECKS | P10.07 |
+| `src/skm/modules/integrations/domain/checks/hygiene.py` | CHECKS, script_path | P02.04 (SKM-0.2.0) |
 | `src/skm/modules/integrations/domain/checks/projections.py` | CHECKS, local_settings_gitignored | P10.07 |
 | `src/skm/modules/integrations/host/doctor.py` | budget_settings, doctor_context, native_inputs, read_layers, read_text | P10.07 |
 | `src/skm/entrypoints/cli/commands/doctor.py` | GROUP, add_parser, register, run_host_operation | P10.07 |
@@ -312,6 +315,7 @@
 | `src/skm/modules/integrations/domain/observed.py` | FileKind, ObservedFile, AppliedFileRecord, extract_managed_bytes, extract_managed_digest, observe_bytes | P00.04.e → P10.01.a |
 | `src/skm/modules/integrations/domain/ownership.py` | Ownership, ManagedBoundary, empty_managed_digest, sha256_tagged | P00.04.e → P10.01.a |
 | `src/skm/modules/integrations/domain/permission_docs.py` | build_permission_request_doc, serialize_permission_set | P10.06 |
+| `src/skm/modules/integrations/domain/presets.py` | PresetId, resolve_preset | P02.04 (SKM-0.2.0) |
 | `src/skm/modules/integrations/domain/profiles.py` | PROFILE_ORDER, PermissionProfile, ProfileResolution, is_at_most_profile, narrow_profile, resolve_profile | P00.04.e → P10.01.a |
 | `src/skm/modules/integrations/domain/projection.py` | PROJECTION_TRANSITIONS, ProjectionId, ProjectionState, Projection, ProjectionPlan, PlannedWrite, ApplyOutcome, build_planned_write, can_transition_projection, next_state_after_apply | P00.04.e → P10.01.a |
 | `src/skm/modules/integrations/domain/reports.py` | CheckResult, DoctorReport, FirstTurnReport, TrustReport, SpoolReport, CommandResult, DeliveryResult | P00.04.e → P10.07 → P10.08.a → P10.08.b |
@@ -325,6 +329,7 @@
 | `src/skm/modules/integrations/host/first_turn_budget.py` | FirstTurnBudgetOperation | P00.04.e → P10.07 |
 | `src/skm/modules/integrations/host/observe.py` | observe, observe_path, CheckoutFs binding/lock/journal/pre-image helpers | P10.01.c |
 | `src/skm/modules/integrations/host/plan_projection.py` | PlanProjectionOperation | P00.04.e → P10.01.c |
+| `src/skm/modules/integrations/host/safe_dirs.py` | evaluate_safe_dirs | P02.04 (SKM-0.2.0) |
 | `src/skm/modules/integrations/host/sync_projections.py` | sync, untrack; sync and untrack host operation specs | P10.01.c → I-09.1 |
 | `src/skm/modules/integrations/host/registry.py` | HOST_OPERATIONS | P00.04.e → P10.01.c → P10.07 → P10.08.b → P10.05.a → P13.03.c |
 | `src/skm/modules/integrations/host/remove_projection.py` | RemoveProjectionOperation | P00.04.e → P10.01.c |

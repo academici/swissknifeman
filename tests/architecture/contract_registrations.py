@@ -102,7 +102,11 @@ _IMPLEMENTED_REGISTRATIONS: dict[tuple[str, str], tuple[str, ...]] = {
         "context.finalize_manifest",
         "context.record_research_result",
     ),
-    ("context", "host_operations"): ("context.host.research_query", "context.host.codegraph"),
+    ("context", "host_operations"): (
+        "context.host.research_query",
+        "context.host.codegraph",
+        "context.host.pack_context",
+    ),
     ("context", "queries"): (  # P09.04.c
         "context.explain_context",
         "context.diff_contexts",
@@ -506,4 +510,9 @@ _IMPLEMENTED_REGISTRATIONS[("execution", "events")] = (
     "TaskWaitChanged",
 )
 
-_IMPLEMENTED_REGISTRATIONS[("execution", "host_operations")] = ("execution.host.request_review",)
+_IMPLEMENTED_REGISTRATIONS[("execution", "host_operations")] = (
+    "execution.host.request_review",
+    "execution.host.local_ask",
+    "execution.host.local_do",
+    "execution.host.local_deliberate",
+)

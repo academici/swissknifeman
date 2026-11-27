@@ -75,7 +75,7 @@ class _LiveClaudeEnv:
 
 
 @pytest.fixture
-def live_claude_env(tmp_path: Path) -> Iterator[_LiveClaudeEnv]:
+def live_claude_env(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[_LiveClaudeEnv]:
     clock = FrozenClock(NOW)
     bs_env = {"SKM_DATABASE_URL": "postgresql://127.0.0.1:5432/mem"}
     bs = replace(
@@ -134,7 +134,9 @@ def live_claude_env(tmp_path: Path) -> Iterator[_LiveClaudeEnv]:
         run_cmd(SyncBuiltinPacks())
         ws_id = WorkspaceId(run_cmd(ws_pub.CreateWorkspace(slug="ws", title="WS")).workspace_id)
         proj_id = ProjectId(
-            run_cmd(ws_pub.CreateProject(workspace_id=ws_id, slug="demo", title="Demo")).project_id
+            run_cmd(
+                ws_pub.CreateProject(workspace_id=ws_id, slug=getattr(request, "param", "demo"), title="Demo")
+            ).project_id
         )
         plat = RegisterHostDefsHostPlatform(os=HostOs.LINUX, arch=HostArch.X86_64)
         host_id = HostId(run_cmd(ws_pub.RegisterHost(name="dev", platform=plat)).host_id)
@@ -263,7 +265,7 @@ def test_apply_idempotency_and_foreign_preservation(live_claude_env: _LiveClaude
     assert any("lifecycle.git_guardrails" in h["hooks"][0]["command"] for h in pre_hooks[1:])
 
     mcp_raw = (checkout / ".mcp.json").read_text(encoding="utf-8")
-    assert "secret://env/GITHUB_TOKEN" in mcp_raw
+    assert "${GITHUB_TOKEN}" in mcp_raw
     assert "ghp_SUPER_SECRET_MUST_NEVER_APPEAR" not in mcp_raw
 
     assert (checkout / ".claude" / "skills" / "spec-review" / "SKILL.md").is_file()

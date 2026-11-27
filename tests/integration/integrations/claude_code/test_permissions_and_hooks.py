@@ -310,7 +310,7 @@ def test_mcp_secret_ref_preserved_and_plaintext_rejected() -> None:
     assert df is not None
     doc = json.loads(df.managed_bytes)
     assert set(doc["mcpServers"]) == {"github", "skm"}
-    assert doc["mcpServers"]["github"]["env"] == {"GITHUB_TOKEN": "secret://env/GITHUB_TOKEN"}
+    assert doc["mcpServers"]["github"]["env"] == {"GITHUB_TOKEN": "${GITHUB_TOKEN}"}
 
     with pytest.raises(ValidationFailed) as exc_info:
         render_mcp(

@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, TextIO, cast
 
 from skm.adapters.integrations.hookd import capability_proven, exchange, listen, remember_capability, serve
 from skm.bootstrap.hook import (
+    active_stop,
     build_embedded_hook_app,
     evaluate_native,
     hook_bootstrap,
@@ -38,10 +39,11 @@ _BACKEND_UNAVAILABLE = "HOOK_BACKEND_UNAVAILABLE"
 _CLAUDE_MINIMUM = (2, 1, 295)
 _CAPABILITY_SECONDS = 60.0
 _BLOCKING_EVENTS = {
-    "claude_code": frozenset({"PreToolUse", "UserPromptSubmit"}),
+    "claude_code": frozenset({"PreToolUse", "UserPromptSubmit", "Stop"}),
     "codex": frozenset({"PreToolUse", "UserPromptSubmit", "PermissionRequest"}),
     "cursor": frozenset({"beforeShellExecution", "preToolUse"}),
     "grok": frozenset({"PreToolUse", "UserPromptSubmit"}),
+    "gemini_cli": frozenset({"BeforeTool"}),
 }
 
 
@@ -133,6 +135,9 @@ def protected_result(args: argparse.Namespace, stdin: TextIO, environ: Mapping[s
     if args.event_name not in _BLOCKING_EVENTS.get(args.target, ()):
         return _refusal("HOOK_BLOCKING_UNAVAILABLE for this client event")
     try:
+        raw = read_bytes(stdin)
+        if active_stop(args, raw):
+            return {"client_output": {"exit_code": 0, "stdout": "", "stderr": ""}}
         timeout_ms = int(environ.get("SKM__INTEGRATIONS__HOOK__TIMEOUT_MS", "2000"))
         deadline = monotonic() + max(1, min(timeout_ms, 10_000)) / 1000
         if args.target == "claude_code":
@@ -142,7 +147,6 @@ def protected_result(args: argparse.Namespace, stdin: TextIO, environ: Mapping[s
                 capable = False
             if not capable:
                 return _refusal("HOOK_BLOCKING_UNAVAILABLE (Claude Code >= 2.1.295 required)")
-        raw = read_bytes(stdin)
         header = json.dumps(
             [args.target, args.surface, args.project, args.event_name, getattr(args, "hook_class", None)]
         ).encode("utf-8")

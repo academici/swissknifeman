@@ -27,6 +27,7 @@ _END_LINE_WITH_NL_RE: Final[re.Pattern[bytes]] = re.compile(
 _END_LINE_EOF_RE: Final[re.Pattern[bytes]] = re.compile(
     rf"^<!-- skm:end id=({_BLOCK_ID_PATTERN}) -->$".encode("ascii")
 )
+_LOCAL_MARKER_RE = re.compile(rb"<!-- skm:local:(?:start|end) -->[ \t]*(?:\r?\n)?")
 _SKM_COMMENT_HINT_RE: Final[re.Pattern[bytes]] = re.compile(rb"<!--\s*skm(?::|\b)")
 
 
@@ -87,6 +88,8 @@ def parse_markers(raw: bytes) -> tuple[BlockMarker, ...] | None:
                     end=end,
                 )
             )
+            continue
+        if _LOCAL_MARKER_RE.fullmatch(line.lstrip(b" \t")):
             continue
         if _SKM_COMMENT_HINT_RE.search(line) is not None:
             return None
@@ -202,6 +205,8 @@ def replace_blocks(raw: bytes, managed: bytes, block_ids: tuple[str, ...]) -> by
     expected_roundtrip = (
         raw + b"\n" if (old_extracted == b"" and managed != b"" and raw and not raw.endswith(b"\n")) else raw
     )
-    if _apply_replace(result, old_extracted, block_ids) != expected_roundtrip:
+    # Removal preserves the unowned slices in place. Re-inserting into a document
+    # with no managed markers would append after any user-written suffix.
+    if managed and _apply_replace(result, old_extracted, block_ids) != expected_roundtrip:
         raise ValueError("INTEGRATION_BOUNDARY_INVALID")
     return result

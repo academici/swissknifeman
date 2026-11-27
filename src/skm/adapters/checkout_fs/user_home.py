@@ -5,14 +5,12 @@ from __future__ import annotations
 import os
 import stat
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from skm.modules.integrations.domain.contracts import UserHomeSelector
 
 __all__ = ["LocalUserHomeReader"]
-
-
-type _Logical = Literal[
-    "claude.user_settings", "claude.managed_settings", "codex.user_config", "vscode.user_settings"
-]
 
 
 class LocalUserHomeReader:
@@ -29,11 +27,12 @@ class LocalUserHomeReader:
         self.managed_root = managed_root.absolute()
         self.max_bytes = max_bytes
 
-    def read(self, logical: _Logical) -> bytes | None:
+    def read(self, logical: UserHomeSelector) -> bytes | None:
         locations = {
             "claude.user_settings": (self.home, (".claude", "settings.json")),
             "claude.managed_settings": (self.managed_root, ("managed-settings.json",)),
             "codex.user_config": (self.home, (".codex", "config.toml")),
+            "gemini.user_settings": (self.home, (".gemini", "settings.json")),
             "vscode.user_settings": (self.home, (".config", "Code", "User", "settings.json")),
         }
         if logical not in locations:

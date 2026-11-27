@@ -18,7 +18,7 @@ from skm.modules.integrations.generated.host import (
     test_host_subscription_request_from_json,
 )
 
-from .host_subscriptions import load_policy, run_one
+from .host_subscriptions import load_policy, run_one, scope_preset_subscriptions
 from .observe import resolve_checkout_for_mount
 
 __all__ = ["SPEC", "run"]
@@ -32,6 +32,16 @@ def run(ctx: HostContext, request: TestHostSubscriptionRequest) -> TestHostSubsc
     if sub is None:
         raise NotFound(ErrorCode.NOT_FOUND, "host subscription not found")
     location = resolve_checkout_for_mount(ctx, ProjectId(UUID(data["project_id"])), "main")
+    scoped = scope_preset_subscriptions(
+        ctx,
+        TargetId.CLAUDE_CODE,
+        data["project_id"],
+        str(location.binding_id),
+        {**policy, "subscriptions": [sub]},
+    )
+    if not scoped["subscriptions"]:
+        raise NotFound(ErrorCode.NOT_FOUND, "host subscription not found")
+    (sub,) = scoped["subscriptions"]
     document = {
         "schema": "urn:skm:integrations:host-command-input:v1",
         "subscription_id": sub["id"],

@@ -1,0 +1,28 @@
+{
+  "client_version": "0.71.1",
+  "protocol": "https://raw.githubusercontent.com/google-gemini/gemini-cli/v0.71.1/docs/hooks/reference.md",
+  "settings_schema": "https://raw.githubusercontent.com/google-gemini/gemini-cli/v0.71.1/schemas/settings.schema.json",
+  "settings": {
+    "context": {"fileName": ["AGENTS.md", "GEMINI.md"]},
+    "advanced": {"ignoreLocalEnv": true},
+    "timeouts_ms": {"BeforeTool": 5000, "AfterTool": 30000}
+  },
+  "payloads": [
+    {
+      "hook_event_name": "BeforeTool", "session_id": "fixture-session", "cwd": "/checkout",
+      "transcript_path": "/tmp/session.json", "timestamp": "2026-11-27T00:00:00Z",
+      "tool_name": "write_file", "tool_input": {"file_path": "/checkout/.env", "content": "VAR=example"}
+    },
+    {
+      "hook_event_name": "BeforeTool", "session_id": "fixture-session", "cwd": "/checkout",
+      "transcript_path": "/tmp/session.json", "timestamp": "2026-11-27T00:00:00Z",
+      "tool_name": "run_shell_command", "tool_input": {"command": "git status"}
+    },
+    {
+      "hook_event_name": "AfterTool", "session_id": "fixture-session", "cwd": "/checkout",
+      "transcript_path": "/tmp/session.json", "timestamp": "2026-11-27T00:00:00Z",
+      "tool_name": "replace", "tool_input": {"file_path": "/checkout/lib/main.dart"},
+      "tool_response": {"llmContent": "Updated", "returnDisplay": "Updated"}
+    }
+  ]
+}

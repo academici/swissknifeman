@@ -8,6 +8,7 @@ from uuid import UUID
 from skm.application_bus.registry import QuerySpec
 from skm.kernel.ids import ProjectId, ScopeId
 from skm.kernel.scopes import ScopeKind, ScopeRef
+from skm.modules.integrations.application.projection_views import applied_preset_subscriptions
 from skm.modules.integrations.application.subscribers import (
     default_hookable_event_types,
     read_hook_subscriptions,
@@ -75,20 +76,16 @@ def handle(query: GetHookPolicy, ctx: QueryContext, uow: UnitOfWork) -> HookPoli
         allow_unconfined=False,
     )
     repo = uow.repo(ProjectionRepository)
-    after = None
-    version = 0
-    while True:
-        page = repo.list_for_project(project, after=after, limit=500)
-        version = max(version, *(item.row_version for item in page.items), 0)
-        after = page.next
-        if after is None:
-            break
+    target = TargetId(query["target"])
+    builtins, version = applied_preset_subscriptions(repo, project, target)
     entries, _ = read_hook_subscriptions(
         ctx.config, hookable_types=default_hookable_event_types(), sink_ids=registered_sink_ids(ctx.config)
     )
     subscriptions: list[dict[str, Any]] = []
-    for sub, violations in entries:
-        if violations or not sub.enabled or sub.execution_location is not ExecutionLocation.HOST:
+    builtin_ids = {sub.id for sub in builtins}
+    configured = (sub for sub, violations in entries if not violations and sub.id not in builtin_ids)
+    for sub in (*builtins, *configured):
+        if not sub.enabled or sub.execution_location is not ExecutionLocation.HOST:
             continue
         if isinstance(sub.target, CommandTarget):
             normalized = subscription_json(sub)
@@ -112,7 +109,7 @@ def handle(query: GetHookPolicy, ctx: QueryContext, uow: UnitOfWork) -> HookPoli
             "hook_modes": {key: value.value for key, value in settings.hooks.mode.items()},
             "permissions": permission_set_to_view(perms),
             "reserved_paths": [".skm/**"],
-            "managed_file_paths": sorted(repo.managed_file_paths(project, TargetId(query["target"]))),
+            "managed_file_paths": sorted(repo.managed_file_paths(project, target)),
             "changelog": {
                 "code_globs": ["src/**", "web/**", *(f"*{suffix}" for suffix in suffixes)],
                 "changelog_path": settings.hooks.changelog_files[0]

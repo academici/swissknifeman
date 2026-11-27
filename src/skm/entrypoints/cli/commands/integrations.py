@@ -98,6 +98,8 @@ def _plan(args: argparse.Namespace, ctx: CliContext) -> int:
     if args.targets:
         payload["targets"] = list(args.targets)
 
+    if args.preset is not None:
+        payload["preset"] = args.preset
     plans = cast("list[dict[str, Any]]", _run_host_op(ctx, _COMMAND["plan"], payload))
     return render(
         ctx,
@@ -129,6 +131,8 @@ def _apply(args: argparse.Namespace, ctx: CliContext) -> int:
     if args.targets:
         plan_payload["targets"] = list(args.targets)
 
+    if args.preset is not None:
+        plan_payload["preset"] = args.preset
     plans = cast("list[dict[str, Any]]", _run_host_op(ctx, _COMMAND["plan"], plan_payload))
     if (
         _needs_apply_confirmation(plans, force_conflicts=bool(args.force_conflicts))
@@ -444,6 +448,11 @@ def register(sub: SubParsers) -> None:
                 help="integration target",
             )
         if verb in ("plan", "apply"):
+            command.add_argument(
+                "--preset",
+                choices=("php-project", "php-package", "dart-project", "dart-package"),
+                help="apply a PHP or Dart projection preset",
+            )
             command.add_argument(
                 "--force-conflicts",
                 action="store_true",

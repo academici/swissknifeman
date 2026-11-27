@@ -17,6 +17,7 @@ from skm.kernel.gateways import host_gateway
 from skm.kernel.ids import ProjectId
 from skm.modules.integrations.domain.hook_events import HookEventKind, HookSurfaceId, NormalizedHookEvent
 from skm.modules.integrations.domain.hook_rules import (
+    HookDecision,
     HookMode,
     HookPolicyContext,
     HookVerdict,
@@ -25,9 +26,15 @@ from skm.modules.integrations.domain.hook_rules import (
     failure_decision,
 )
 from skm.modules.integrations.domain.target import TargetId
-from skm.modules.integrations.ports import IntegrationTargetRegistry, LocalCheckoutProjections
+from skm.modules.integrations.ports import (
+    IntegrationTarget,
+    IntegrationTargetRegistry,
+    LocalCheckoutProjections,
+)
 
 from .hook_state import HookState
+from .host_subscriptions import bound_preset
+from .safe_dirs import evaluate_safe_dirs
 
 if TYPE_CHECKING:
     from skm.kernel.module_manifest import HostOperationSpec
@@ -104,7 +111,7 @@ def _resolve_bound_checkout(
     event: NormalizedHookEvent,
     project: str,
     timeout: int,
-) -> tuple[str, str, str, str]:
+) -> tuple[str, str, str, str, str]:
     offline_snapshot = getattr(ctx.client, "cached_snapshot", None)
     if isinstance(offline_snapshot, dict):
         snapshot = cast("dict[str, Any]", offline_snapshot)
@@ -122,7 +129,7 @@ def _resolve_bound_checkout(
             str(loc["repository_id"]),
             mount,
         )
-        return root, mount, str(loc["repository_id"]), str(proj["slug"])
+        return root, mount, str(loc["repository_id"]), str(proj["slug"]), str(loc["binding_id"])
 
     from skm.modules.workspace.public import GetProject
 
@@ -170,7 +177,13 @@ def _resolve_bound_checkout(
             "mount": mount,
         },
     )
-    return selected.local_locator, mount, str(selected.repository_id), str(view.slug)
+    return (
+        selected.local_locator,
+        mount,
+        str(selected.repository_id),
+        str(view.slug),
+        str(selected.binding_id),
+    )
 
 
 def _context(
@@ -183,7 +196,7 @@ def _context(
     policy: dict[str, Any],
     timeout: int,
 ) -> HookPolicyContext:
-    root, mount, repository_id, slug = _resolve_bound_checkout(ctx, state, event, project, timeout)
+    root, mount, repository_id, slug, _ = _resolve_bound_checkout(ctx, state, event, project, timeout)
     changelog = policy["changelog"]
     context = HookPolicyContext(
         root=root,
@@ -217,32 +230,6 @@ def _context(
                     "use git push --force-with-lease"
                 ),
             )
-    if surface is HookSurfaceId.SAFE_DIRS and event.kind is HookEventKind.PRE_SHELL:
-        from skm.modules.policy.public import (
-            Ask,
-            Deny,
-            EnforcementMode,
-            RunCommand,
-            ScopeRoots,
-            TaskAuthority,
-            check_tool_call,
-            permission_set_from_view,
-        )
-
-        permissions = permission_set_from_view(policy["permissions"])
-        result = check_tool_call(
-            permissions,
-            RunCommand(command, event.cwd),
-            roots=ScopeRoots({mount: root}, None, None, state.home, (), (), frozenset()),
-            facts=state.facts(root),
-            authority=TaskAuthority(None, (), frozenset(), frozenset()),
-            mode=EnforcementMode.INTERACTIVE,
-        )
-        context = replace(
-            context,
-            safe_verdict="deny" if isinstance(result, Deny) else "ask" if isinstance(result, Ask) else "none",
-            safe_reason=result.code if isinstance(result, Deny) else None,
-        )
     if surface in {HookSurfaceId.PLAN_GUARD, HookSurfaceId.PACK_GUARD}:
         from skm.modules.policy.public import managed_hit
 
@@ -280,6 +267,27 @@ def _context(
     return context
 
 
+def _safe_dirs_decision(
+    ctx: HostContext,
+    state: HookState,
+    event: NormalizedHookEvent,
+    project: str,
+    mode: HookMode,
+    policy: dict[str, Any],
+    timeout: int,
+) -> tuple[HookDecision, HookMode]:
+    root, mount, _, _, binding = _resolve_bound_checkout(ctx, state, event, project, timeout)
+    if (
+        mode is not HookMode.STRICT
+        and bound_preset(ctx, state, event.target, project, binding, timeout) == "php-project"
+    ):
+        mode = HookMode.STRICT
+    context = HookPolicyContext(root=root)
+    if mode is not HookMode.OFF:
+        context = evaluate_safe_dirs(state, event, root, mount, policy, context)
+    return evaluate_hook(event, HookSurfaceId.SAFE_DIRS, mode, context), mode
+
+
 def _subscriptions(
     ctx: HostContext,
     state: HookState,
@@ -292,10 +300,13 @@ def _subscriptions(
 ) -> Any:
     from skm.modules.integrations.domain.hook_events import HookClass
 
-    from .host_subscriptions import SubscriptionState, run_host_subscriptions
+    from .host_subscriptions import SubscriptionState, run_host_subscriptions, scope_preset_subscriptions
 
     cls = HookClass(request.get("class") or "enforcement")
-    root, _, _, _ = _resolve_bound_checkout(ctx, state, event, project, timeout)
+    root, _, _, _, binding = _resolve_bound_checkout(ctx, state, event, project, timeout)
+    policy = scope_preset_subscriptions(
+        ctx, event.target, project, binding, policy, state=state, timeout=timeout
+    )
     local = ctx.gateways.get(SubscriptionState)
     elapsed = 0 if started is None else int((local.monotonic() - started) * 1000)
     return run_host_subscriptions(
@@ -318,7 +329,7 @@ def _failure(
     return decision
 
 
-def run(
+def run(  # noqa: PLR0912 - normalize, then evaluate or fail closed
     ctx: HostContext, request: dict[str, Any], *, payload_size: int | None = None, live: bool = False
 ) -> EvaluateHookResult:
     target = TargetId(request["target"])
@@ -331,11 +342,6 @@ def run(
     )
     mode = HookMode.STRICT
     started: float | None = None
-    if surface is HookSurfaceId.SUBSCRIPTIONS:
-        from .host_subscriptions import SubscriptionState
-
-        if ctx.gateways.has(SubscriptionState):
-            started = ctx.gateways.get(SubscriptionState).monotonic()
     state: HookState | None = None
     backend_ok = False
     bound_root = ""
@@ -357,7 +363,16 @@ def run(
             request, surface, mode, "HOOK_PAYLOAD_INVALID", commit=surface is HookSurfaceId.REVIEW_GATE
         )
     else:
+        if event.kind is HookEventKind.STOP and event.stop_status == "active":
+            return _result(
+                adapter, event, mode, HookDecision(HookVerdict.NONE, surface, None, None, None, None)
+            )
         try:
+            if surface is HookSurfaceId.SUBSCRIPTIONS:
+                from .host_subscriptions import SubscriptionState
+
+                if ctx.gateways.has(SubscriptionState):
+                    started = ctx.gateways.get(SubscriptionState).monotonic()
             UUID(project)
             state = ctx.gateways.get(HookState)
             timeout = 2000
@@ -370,6 +385,8 @@ def run(
             mode = HookMode(modes.get(surface.value, modes.get(key, "strict")))
             if surface is HookSurfaceId.SUBSCRIPTIONS:
                 decision = _subscriptions(ctx, state, event, project, policy, request, timeout, started)
+            elif surface is HookSurfaceId.SAFE_DIRS:
+                decision, mode = _safe_dirs_decision(ctx, state, event, project, mode, policy, timeout)
             else:
                 context = _context(ctx, state, event, project, surface, mode, policy, timeout)
                 decision = evaluate_hook(event, surface, mode, context)
@@ -408,12 +425,18 @@ def run(
     ):
         with suppress(Exception):
             state.call(lambda: state.flush(ctx.client), 50)
+    return _result(adapter, event, mode, decision)
+
+
+def _result(
+    adapter: IntegrationTarget, event: NormalizedHookEvent, mode: HookMode, decision: HookDecision
+) -> EvaluateHookResult:
     client_out = cast("dict[str, Any]", adapter.render_hook_decision(event, decision))
     return cast(
         "EvaluateHookResult",
         {
             "schema": "urn:skm:integrations:host:hook-decision:v1",
-            "surface": surface.value,
+            "surface": decision.surface.value,
             "mode": mode.value,
             "verdict": "warn" if decision.verdict is HookVerdict.CONTEXT else decision.verdict.value,
             "reason_code": decision.reason_code,

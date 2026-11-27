@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import shlex
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from typing import Any, Literal, cast
+from typing import Any, cast
 from uuid import UUID
 
 from skm.application_bus.host import HostContext
@@ -16,8 +16,16 @@ from skm.kernel.ids import ProjectId, WorkspaceId
 from skm.kernel.json_types import JsonObject
 from skm.modules.integrations.domain.checks import DoctorContext
 from skm.modules.integrations.domain.checks.claude import hook_commands
-from skm.modules.integrations.domain.checks.context import effective_settings, mapping, strings
-from skm.modules.integrations.domain.contracts import ClientLayer
+from skm.modules.integrations.domain.checks.context import (
+    HygieneObservation,
+    ScriptObservation,
+    effective_settings,
+    mapping,
+    strings,
+)
+from skm.modules.integrations.domain.checks.hygiene import script_path
+from skm.modules.integrations.domain.contracts import ClientLayer, UserHomeSelector
+from skm.modules.integrations.domain.decisions import is_safe_relative_path
 from skm.modules.integrations.domain.desired import DesiredFile, HostSubscriptionEvent, ProjectionInputs
 from skm.modules.integrations.domain.hook_events import HookClass, HookEventKind
 from skm.modules.integrations.domain.hook_rules import ENFORCEMENT, HookMode
@@ -35,6 +43,7 @@ from skm.modules.integrations.ports import (
     IntegrationTargetRegistry,
     UserHomeReader,
 )
+from skm.modules.integrations.public import GetHookPolicy
 from skm.modules.workspace.public import marker_from_document
 
 from .observe import (
@@ -43,7 +52,7 @@ from .observe import (
     resolve_checkout_for_mount,
     resolve_project_workspace_id,
 )
-from .plan_projection import inputs_from_view
+from .plan_projection import checkout_inputs
 
 __all__ = ["budget_settings", "doctor_context", "native_inputs", "read_layers", "read_text"]
 
@@ -73,7 +82,7 @@ def native_inputs(
         )
     )
     assert isinstance(view, DesiredProjectionView)  # noqa: S101
-    inputs = inputs_from_view(view)
+    inputs = checkout_inputs(view, fs)
     return fs, adapter, inputs, adapter.render(inputs)
 
 
@@ -81,12 +90,7 @@ class _ObservedHome:
     def __init__(self, reader: UserHomeReader) -> None:
         self.reader = reader
 
-    def read(
-        self,
-        logical: Literal[
-            "claude.user_settings", "claude.managed_settings", "codex.user_config", "vscode.user_settings"
-        ],
-    ) -> bytes | None:
+    def read(self, logical: UserHomeSelector) -> bytes | None:
         try:
             return self.reader.read(logical)
         except (OSError, ValueError, SkmError):
@@ -109,7 +113,7 @@ class _ObservedCheckout:
 
 def read_layers(ctx: HostContext, adapter: IntegrationTarget, fs: CheckoutFs) -> tuple[ClientLayer, ...]:
     home = _ObservedHome(ctx.gateways.get(UserHomeReader))
-    return adapter.client_layers(cast("CheckoutFs", _ObservedCheckout(fs)), cast("UserHomeReader", home))
+    return adapter.client_layers(cast("CheckoutFs", _ObservedCheckout(fs)), home)
 
 
 def read_text(fs: CheckoutFs, path: str) -> str | None:
@@ -225,6 +229,122 @@ def _supported(adapter: IntegrationTarget, inputs: ProjectionInputs) -> frozense
     )
 
 
+def _native_scripts(layers: tuple[ClientLayer, ...]) -> set[tuple[str, bool]]:
+    found: set[tuple[str, bool]] = set()
+    for layer in layers:
+        for command in hook_commands(mapping(layer.get("data")).get("hooks")):
+            try:
+                words = shlex.split(command)
+            except ValueError:
+                continue
+            if (path := script_path(words)) is not None:
+                found.add((path, path != words[0] or "/" in path))
+    return found
+
+
+def _script_observations(
+    fs: CheckoutFs,
+    runner: HostCommandRunner | None,
+    layers: tuple[ClientLayer, ...],
+    trust: Mapping[str, object],
+    subscriptions: tuple[JsonObject, ...],
+) -> tuple[ScriptObservation, ...]:
+    scripts: list[tuple[str, bool, str | None, bool]] = [
+        (path, local, None, False) for path, local in sorted(_native_scripts(layers))
+    ]
+    for sub in subscriptions:
+        target = mapping(sub.get("target"))
+        argv = strings(target.get("argv"))
+        if (path := script_path(argv)) is not None:
+            local = target.get("cwd") == "checkout" and (path != argv[0] or "/" in path)
+            subscription_id = str(sub["id"])
+            scripts.append((path, local, subscription_id, trust.get(subscription_id) == sub["digest"]))
+
+    observations: list[ScriptObservation] = []
+    for path, local, subscription_id, trusted in scripts:
+        relative = path.removeprefix("./") if local else ""
+        if path.startswith("/"):
+            relative = path.removeprefix(str(fs.root).rstrip("/") + "/")
+        checkout_file = executable = False
+        if is_safe_relative_path(relative):
+            try:
+                checkout_file = fs.read(relative) is not None
+                if checkout_file and runner is not None:
+                    result = runner.run(
+                        ("test", "-x", str(fs.root / relative)),
+                        cwd=fs.root,
+                        env={"PATH": "/usr/bin:/bin"},
+                        stdin=b"",
+                        timeout_ms=1000,
+                    )
+                    executable = result.exit_code == 0 and not result.timed_out
+            except (OSError, ValueError, SkmError):
+                pass
+        observations.append(ScriptObservation(path, executable, checkout_file, subscription_id, trusted))
+    return tuple(observations)
+
+
+def _hygiene(
+    ctx: HostContext,
+    fs: CheckoutFs,
+    layers: tuple[ClientLayer, ...],
+    trust: Mapping[str, object],
+    subscriptions: tuple[JsonObject, ...],
+) -> HygieneObservation:
+    files = {
+        path: text
+        for path in (
+            "AGENTS.md",
+            "CLAUDE.md",
+            "composer.json",
+            "pubspec.yaml",
+            "phpunit.xml",
+            "tests/TestCase.php",
+        )
+        if (text := read_text(fs, path)) is not None
+    }
+    runner = ctx.gateways.get(HostCommandRunner) if ctx.gateways.has(HostCommandRunner) else None
+    observations = _script_observations(fs, runner, layers, trust, subscriptions)
+
+    skills: tuple[str, ...] = ()
+    if "pubspec.yaml" in files and runner is not None:
+        try:
+            result = runner.run(
+                (
+                    "find",
+                    "-P",
+                    "skills",
+                    "-mindepth",
+                    "2",
+                    "-maxdepth",
+                    "2",
+                    "-type",
+                    "f",
+                    "-name",
+                    "SKILL.md",
+                    "-print0",
+                ),
+                cwd=fs.root,
+                env={"PATH": "/usr/bin:/bin"},
+                stdin=b"",
+                timeout_ms=1000,
+            )
+            if result.exit_code == 0 and not result.timed_out:
+                skills = tuple(
+                    sorted(
+                        path
+                        for path in result.stdout.decode("utf-8").split("\0")
+                        if is_safe_relative_path(path)
+                        and path.startswith("skills/")
+                        and path.count("/") == 2
+                        and path.endswith("/SKILL.md")
+                    )
+                )
+        except (OSError, ValueError, SkmError):
+            pass
+    return HygieneObservation(files, skills, observations)
+
+
 def doctor_context(
     ctx: HostContext,
     fs: CheckoutFs,
@@ -283,7 +403,24 @@ def doctor_context(
     subscriptions = tuple(sub for sub in subscriptions if sub.id not in server_ids)
     validated_keys = {"hooks.subscriptions." + sub_id for sub_id in server_ids}
     violations = tuple(problem for problem in violations if problem.key not in validated_keys)
-    subscription_facts = tuple(cast("JsonObject", item.to_json()) for item in listed.items)
+    host_commands: dict[str, JsonObject] = {}
+    if any(item.enabled and item.valid and item.execution_location == "host" for item in listed.items):
+        policy = cast(
+            "Mapping[str, Any]",
+            ctx.client.ask(
+                GetHookPolicy.from_json({"project_id": str(inputs.project_id), "target": inputs.target.value})
+            ),
+        )
+        host_commands = {
+            item["id"]: {"argv": item["argv"], "cwd": item["cwd"], "digest": item["digest"]}
+            for item in policy["subscriptions"]
+        }
+    subscription_facts: tuple[JsonObject, ...] = tuple(
+        {**cast("JsonObject", item.to_json()), "target": host_commands[item.id]}
+        if item.id in host_commands and item.digest == host_commands[item.id]["digest"]
+        else cast("JsonObject", item.to_json())
+        for item in listed.items
+    )
     trust = mapping(_config(ctx, "hooks.host.trusted", {}))
     known = {
         "SessionStart",
@@ -316,4 +453,5 @@ def doctor_context(
             fs, inputs.project_id, workspace_id, repository_id, mount, ctx.instance_id
         ),
         enforcement_enabled=any(inputs.hook_modes.get(surface) is HookMode.STRICT for surface in ENFORCEMENT),
+        hygiene=_hygiene(ctx, fs, layers, trust, subscription_facts),
     )

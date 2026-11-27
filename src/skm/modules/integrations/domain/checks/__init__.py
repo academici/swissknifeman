@@ -1,4 +1,4 @@
-"""The 26 stable doctor checks; IO is supplied as explicit host observations."""
+"""Doctor checks evaluated from explicit host observations."""
 
 from collections import Counter
 from collections.abc import Callable, Iterable
@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable
 from skm.modules.integrations.domain.reports import CheckResult, DoctorReport
 from skm.modules.integrations.domain.target import TargetId
 
-from . import claude, clients, projections
+from . import claude, clients, hygiene, projections
 from .context import DoctorContext
 
 __all__ = ["DoctorContext", "run_checks", "summarize"]
@@ -14,6 +14,7 @@ __all__ = ["DoctorContext", "run_checks", "summarize"]
 
 def run_checks(ctx: DoctorContext) -> DoctorReport:
     checks: list[Callable[[DoctorContext], Iterable[CheckResult]]] = list(projections.CHECKS)
+    checks.extend(hygiene.CHECKS)
     if ctx.target is TargetId.CLAUDE_CODE:
         checks.extend((*claude.CHECKS, projections.local_settings_gitignored))
     elif ctx.target is TargetId.CURSOR:

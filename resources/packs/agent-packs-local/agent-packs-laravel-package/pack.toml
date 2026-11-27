@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-laravel-package"
-version = "1.0.2"
+version = "1.0.3"
 title = "Migrated Agent Pack: Reusable PHP and Laravel Packages"
 description = "Neutral reusable PHP library public-API stability, service provider, and compatibility rules migrated as pure data."
 publisher = "skm-migrated"

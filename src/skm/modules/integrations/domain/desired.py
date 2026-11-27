@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from skm.kernel.error_codes import ErrorCode
 from skm.kernel.ids import ProjectId
 
 from .contracts import (
@@ -20,13 +21,14 @@ from .hook_events import HookClass, HookEventKind, HookSurfaceId
 from .hook_rules import HookMode
 from .ownership import ManagedBoundary
 from .profiles import PermissionProfile
-from .target import Surface, TargetId
+from .target import Surface, SurfaceSupport, TargetCapabilities, TargetId
 
 __all__ = [
     "DesiredFile",
     "DesiredProjection",
     "HostSubscriptionEvent",
     "ProjectionInputs",
+    "unsupported_surface_diagnostics",
 ]
 
 
@@ -74,3 +76,27 @@ class ProjectionInputs:
     inputs_digest: str
     config_generation: int
     diagnostics: tuple[Diagnostic, ...]
+
+
+def unsupported_surface_diagnostics(
+    target: TargetId, inputs: ProjectionInputs, capabilities: TargetCapabilities
+) -> tuple[Diagnostic, ...]:
+    active = (
+        (Surface.INSTRUCTIONS, bool(inputs.instructions_core or inputs.instructions_project)),
+        (Surface.SKILLS, bool(inputs.skills)),
+        (Surface.PERMISSIONS, bool(inputs.permissions)),
+        (Surface.HOOKS, bool(inputs.hook_modes or inputs.host_subscription_events)),
+        (Surface.MCP, bool(inputs.mcp_servers)),
+        (Surface.AGENTS, bool(inputs.agents)),
+    )
+    return tuple(
+        {
+            "code": ErrorCode.CAPABILITY_UNAVAILABLE.value,
+            "severity": "info",
+            "target": target.value,
+            "surface": s.value,
+            "message": f"surface {s.value!r} is unsupported by target {target.value!r}",
+        }
+        for s, has_data in active
+        if has_data and capabilities.surfaces.get(s, SurfaceSupport.UNSUPPORTED) is SurfaceSupport.UNSUPPORTED
+    )

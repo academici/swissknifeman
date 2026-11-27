@@ -1,0 +1,10 @@
+schema = "urn:skm:extensions:pack:v1"
+slug = "agent-packs-dart-package"
+version = "1.0.0"
+title = "Dart package presets"
+description = "Maintainer and consumer guidance for reusable Dart packages."
+publisher = "skm"
+trust = "third_party"
+priority = -100
+license = "Apache-2.0"
+requires_skm = ">=0.1.0,<1"

@@ -9,6 +9,7 @@ from skm.modules.integrations.domain.contracts import InstructionBlock, SourceRe
 from skm.modules.integrations.domain.desired import DesiredFile, ProjectionInputs
 from skm.modules.integrations.domain.managed_block import render_block
 from skm.modules.integrations.domain.ownership import ManagedBoundary, Ownership, sha256_tagged
+from skm.modules.integrations.domain.presets import preset_renderer, read_preset
 from skm.modules.integrations.domain.target import Surface
 
 __all__ = [
@@ -99,5 +100,5 @@ def render_instructions(
         managed_bytes=managed_bytes,
         managed_digest=sha256_tagged(managed_bytes),
         source_refs=_collect_source_refs(inputs.instructions_core, inputs.instructions_project),
-        renderer=renderer,
+        renderer=preset_renderer(renderer, read_preset(inputs.instructions_project.get("preset"))),
     )

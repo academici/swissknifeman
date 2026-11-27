@@ -123,6 +123,7 @@ def _add_invocation_files(
         TargetId.CODEX,
         TargetId.ANTIGRAVITY,
         TargetId.CURSOR,
+        TargetId.GEMINI_CLI,
         TargetId.GROK,
     ):
         return

@@ -10,7 +10,7 @@ from skm.kernel.error_codes import ErrorCode
 
 from .desired import DesiredFile
 from .observed import AppliedFileRecord, FileKind, ObservedFile
-from .ownership import Ownership, empty_managed_digest
+from .ownership import ManagedBoundary, Ownership, empty_managed_digest
 
 __all__ = [
     "DIAG_ADOPTED_IDENTICAL",
@@ -22,6 +22,7 @@ __all__ = [
     "FileDecisionKind",
     "decide_file",
     "is_safe_relative_path",
+    "is_shared_projection_path",
 ]
 
 DIAG_ADOPTED_IDENTICAL: Final[str] = "INTEGRATION_ADOPTED_IDENTICAL"
@@ -56,6 +57,12 @@ class FileDecision:
     def needs_pre_image(self) -> bool:
         """True when an in-place UPDATE overwrites content not backed by our prior apply."""
         return self.kind is FileDecisionKind.UPDATE and self.diagnostic != DIAG_SOURCE_CHANGED
+
+
+def is_shared_projection_path(path: str, boundary: ManagedBoundary) -> bool:
+    return path.startswith(".agents/skills/") or (
+        path == "AGENTS.md" and boundary.ownership is Ownership.MANAGED_BLOCK
+    )
 
 
 def is_safe_relative_path(relative_path: str) -> bool:

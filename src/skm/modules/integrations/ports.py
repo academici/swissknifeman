@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from skm.kernel.gateways import host_gateway
 from skm.kernel.pagination import Cursor, Page
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from skm.kernel.scopes import ScopeRef
     from skm.modules.workspace.public import CheckoutBindingId
 
-    from .domain.contracts import ClientLayer, HookOutput
+    from .domain.contracts import ClientLayer, HookOutput, UserHomeSelector
     from .domain.desired import DesiredFile, ProjectionInputs
     from .domain.filesystem import FileStat
     from .domain.hook_events import NormalizedHookEvent
@@ -152,12 +152,7 @@ class LocalCheckoutProjections(Protocol):
 
 @host_gateway
 class UserHomeReader(Protocol):
-    def read(
-        self,
-        logical: Literal[
-            "claude.user_settings", "claude.managed_settings", "codex.user_config", "vscode.user_settings"
-        ],
-    ) -> bytes | None: ...
+    def read(self, logical: UserHomeSelector) -> bytes | None: ...
 
 
 @host_gateway

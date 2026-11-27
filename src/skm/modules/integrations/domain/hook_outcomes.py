@@ -74,11 +74,7 @@ def _evaluate_outcome(outcome: HostHookOutcome) -> tuple[HookVerdict, str | None
             return HookVerdict.ASK, "HOOK_SUBSCRIPTION_UNTRUSTED", _untrusted_message(outcome.subscription_id)
         msg = outcome.reason or f"hook subscription {outcome.subscription_id} failed ({outcome.status.value})"
         return HookVerdict.DENY, "HOOK_SUBSCRIPTION_FAILED", msg
-    if (
-        outcome.hook_class is HookClass.WORKFLOW
-        and outcome.status is HostOutcomeStatus.OK
-        and outcome.additional_context
-    ):
+    if outcome.hook_class is HookClass.WORKFLOW and outcome.additional_context:
         return HookVerdict.CONTEXT, None, None
     return HookVerdict.NONE, None, None
 

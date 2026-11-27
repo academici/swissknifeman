@@ -70,6 +70,8 @@ def test_entry_projection_preserves_refs_and_override_order(target: TargetId, tr
         "url": "https://example.test/mcp",
         "env": {"A": "secret://env/A", "TOKEN": "secret://env/OVERRIDE", "Z": "secret://env/Z"},
     }
+    if target is TargetId.CLAUDE_CODE:
+        expected["env"] = {"A": "${A}", "TOKEN": "${OVERRIDE}", "Z": "${Z}"}
     if transport != "stdio":
         expected["type"] = transport
     assert projected == {"docs": expected}

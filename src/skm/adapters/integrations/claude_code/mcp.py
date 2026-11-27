@@ -48,7 +48,7 @@ def render_mcp(inputs: ProjectionInputs) -> DesiredFile | None:
                 f"invalid MCP server name {name!r}",
                 details={"server": name},
             )
-        servers_doc[name] = build_server_entry(name, inputs.mcp_servers[name])
+        servers_doc[name] = build_server_entry(name, inputs.mcp_servers[name], env_interpolation=True)
         owned_keys.append(OwnedKeyPath(("mcpServers", name), "replace"))
         refs.append({"kind": "mcp_server", "key": name})
 

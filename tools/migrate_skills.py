@@ -21,7 +21,114 @@ if TYPE_CHECKING:
 
 PACK_SCHEMA, SKILL_SCHEMA = "urn:skm:extensions:pack:v1", "urn:skm:extensions:skill-manifest:v1"
 REQUIRES_SKM, DEFAULT_VERSION, MAX_AUX_FILES = ">=0.1.0,<1", "1.0.0", 198
-CORE_SKILL_KEYS = frozenset({"code-review", "research-method"})
+CORE_SKILL_KEYS = frozenset(
+    {
+        "diagnosing-bugs",
+        "grill-me",
+        "handoff",
+        "implement",
+        "research-method",
+        "review-checklist",
+        "security-review",
+        "spec-review",
+        "tdd",
+        "to-spec",
+        "to-tickets",
+    }
+)
+CORE_REPLACEMENTS: Mapping[str, str] = {
+    "code-review": "spec-review",
+    "grill-with-docs": "grill-me",
+    "session-handoff": "handoff",
+    "spec-interview": "grill-me",
+    "tdd-discipline": "tdd",
+    "to-issues": "to-tickets",
+}
+GUARD_PATH = (
+    "resources/packs/agent-packs-local/agent-packs-backend-laravel/"
+    "integration-bundles/agent-pack-backend-laravel/snippets/TestEnvironmentGuard.php"
+)
+PRUNED_PACK_SKILLS: Mapping[str, tuple[str, ...]] = {
+    "migrated-frontend": (
+        "dark-mode",
+        "eslint-flat-config",
+        "filepond-upload",
+        "inertia-vue",
+        "laravel-echo-client",
+        "naive-ui-theming",
+        "pinia-stores",
+        "reka-ui-cva",
+        "tailwind-conventions",
+        "vitest",
+        "vue-composition-api",
+        "vue-dynamic-icons",
+        "wayfinder",
+    ),
+    "migrated-upstream-frontend": (
+        "antfu",
+        "js-code-style",
+        "motion",
+        "nuxt",
+        "nuxt-modules",
+        "nuxt-seo",
+        "pinia",
+        "vite",
+        "vitepress",
+        "vitest-vue",
+        "vue",
+        "vue-best-practices",
+        "vue-router-best-practices",
+        "vue-testing-best-practices",
+        "vueuse-functions",
+        "web-design-guidelines",
+    ),
+    "migrated-laravel-php": (
+        "database",
+        "dependency-injection",
+        "eloquent-accessors",
+        "enum-attributes",
+        "enum-state-machine",
+        "laravel",
+        "laravel-data",
+        "laravel-dusk",
+        "laravel-permissions",
+        "laravel-structure",
+        "laravel-testing",
+        "livewire-blade-attributes",
+        "medialibrary",
+        "named-arguments",
+        "php-naming-conventions",
+        "php-patterns",
+        "repositories",
+        "spatie-settings",
+        "static-analysis",
+        "test-isolation-guard",
+    ),
+    "migrated-upstream-laravel-php": (
+        "code-style-spatie",
+        "filament",
+        "laravel-best-practices",
+        "laravel-broadcasting",
+        "pennant-development",
+    ),
+    "migrated-upstream-general": (
+        "git-safety",
+        "grill-with-docs",
+        "implement",
+        "to-issues",
+    ),
+    "migrated-upstream-quality-security": (
+        "diagnosing-bugs",
+        "tdd-discipline",
+    ),
+    "migrated-general": (
+        "complex-task-orchestrator",
+        "git-commit-rules",
+        "session-handoff",
+        "spec-interview",
+    ),
+}
+PRUNED_SKILL_KEYS = frozenset(key for keys in PRUNED_PACK_SKILLS.values() for key in keys)
 PERSONAL_BUCKETS = frozenset({"axioma", "azguard", "botkit"})
 OVERLAY_SKILLS: Mapping[tuple[str, str], str] = {
     ("general", "skills-ssot"): "ecosystem_coupled_skill",
@@ -220,8 +327,13 @@ def _discover_donor_skills(source_root: Path) -> list[RawSkill]:
 
 def _exclusion_entry(s: RawSkill) -> dict[str, Any] | None:
     reason: str | None = OVERLAY_SKILLS.get((s.bucket, s.raw_name))
-    if s.key in CORE_SKILL_KEYS:
+    core_key = CORE_REPLACEMENTS.get(s.key, s.key)
+    if core_key in CORE_SKILL_KEYS:
         reason = "already_in_core"
+    elif s.key == "test-isolation-guard":
+        reason = "moved_to_agent_pack"
+    elif s.key in PRUNED_SKILL_KEYS:
+        reason = "pruned_from_builtin_packs"
     elif s.bucket in PERSONAL_BUCKETS:
         reason = "personal_overlay_bucket"
     elif s.origin != "skiller":
@@ -234,11 +346,25 @@ def _exclusion_entry(s: RawSkill) -> dict[str, Any] | None:
     if reason is None:
         return None
     core = reason == "already_in_core"
-    ext = f"resources/packs/core/skills/{s.key}" if core else "operator overlay pack"
-    compat = "Provided by core pack." if core else "Neutral core runs without this skill."
-    usr = "all_skm_users_via_core" if core else "author_or_single_ecosystem"
+    ext = "operator overlay pack"
+    compat = "Neutral core runs without this skill."
+    usr = "author_or_single_ecosystem"
+    if core:
+        ext = f"resources/packs/core/skills/{core_key}"
+        compat = "Provided by core pack."
+        usr = "all_skm_users_via_core"
+    elif reason == "moved_to_agent_pack":
+        ext = GUARD_PATH
+        compat = "The test guard is provided by the Laravel agent pack."
+        usr = "laravel_agent_pack_users"
+    elif reason == "pruned_from_builtin_packs":
+        usr = "project_specific"
     rem = "tests/integration/extensions/test_migrated_packs.py"
-    g36 = {"users_beyond_author": core, "users": usr, "extension_point": ext}
+    g36 = {
+        "users_beyond_author": core or reason == "moved_to_agent_pack",
+        "users": usr,
+        "extension_point": ext,
+    }
     g36 |= {"compatible_without_it": compat, "removal_test": rem}
     base = {"key": s.key, "origin": s.origin, "bucket": s.bucket, "source_path": s.rel_source}
     return base | {"reason": reason, "g36": g36}
@@ -444,8 +570,9 @@ def _render_pack_toml(
     prefix = "Migrated Upstream Skills" if upstream else "Migrated Neutral Skills"
     prov = "upstream-mirrored third-party" if upstream else "neutral authored"
     desc = f"Reproducibly migrated {prov} skills for {t_title} (inert third_party data pack)."
+    version = "1.1.0" if slug in PRUNED_PACK_SKILLS else DEFAULT_VERSION
     lines = [
-        f"schema = {_q(PACK_SCHEMA)}\nslug = {_q(slug)}\nversion = {_q(DEFAULT_VERSION)}",
+        f"schema = {_q(PACK_SCHEMA)}\nslug = {_q(slug)}\nversion = {_q(version)}",
         f"title = {_q(f'{prefix}: {t_title}'[:120])}\ndescription = {_q(desc)}",
         'publisher = "skm-migrated"\ntrust = "third_party"\npriority = -100',
         f'license = "Apache-2.0"\nrequires_skm = {_q(REQUIRES_SKM)}',

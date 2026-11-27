@@ -167,8 +167,13 @@ def first_turn_budget(
     skills = {
         file.relative_path: read_text(fs, file.relative_path)
         for file in files
-        if file.surface is Surface.SKILLS and file.relative_path.endswith("SKILL.md")
+        if file.surface is Surface.SKILLS and file.relative_path.rsplit("/", 1)[-1] == "SKILL.md"
     }
+    codex_skill_metadata = (
+        {path: read_text(fs, path.removesuffix("SKILL.md") + "agents/openai.yaml") for path in skills}
+        if target is TargetId.CODEX
+        else None
+    )
     agents = {
         file.relative_path: read_text(fs, file.relative_path)
         for file in files
@@ -208,6 +213,7 @@ def first_turn_budget(
         deferred_tool_search=deferred,
         listing_fraction=settings.budget.skill_listing.fraction,
         context_window=settings.budget.skill_listing.context_window,
+        codex_skill_metadata=codex_skill_metadata,
     )
     total = source_total(sources)
     return FirstTurnReport(

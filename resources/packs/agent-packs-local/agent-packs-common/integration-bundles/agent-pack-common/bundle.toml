@@ -1,13 +1,13 @@
 schema = "urn:skm:integrations:bundle:v1"
 key = "agent-pack-common"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Common Engineering Workflow"
 description = "Neutral cross-stack review checklist, verification rules, and inert development loop workflow migrated as pure data."
 targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
 agents = []
 
 [[skills]]
-key = "code-review"
+key = "spec-review"
 
 [[assets]]
 target = "claude_code"

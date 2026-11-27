@@ -336,7 +336,7 @@ def test_migrated_agent_packs_neutral_compat_clean_and_installable(bundle_env: _
 def test_bundle_projection_golden_outputs_and_grok_unsupported_agents(bundle_env: _BundleEnv) -> None:
     bundle_env.install_migrated("agent-packs-common", "agent-packs-python-backend")
     tgts, ags = ("claude_code", "codex", "cursor", "grok"), ({"key": "reviewer", "profile": "reviewer"},)
-    review_doc = _bundle_doc("review-kit", targets=tgts, agents=ags, skills=({"key": "code-review"},))
+    review_doc = _bundle_doc("review-kit", targets=tgts, agents=ags, skills=({"key": "spec-review"},))
     bundle_env.seed_bundle_in_core("review-kit", review_doc)
     enabled = ["agent-packs-common", "agent-packs-python-backend"]
     selected = ["agent-pack-common", "agent-pack-python-backend", "review-kit"]
@@ -374,7 +374,7 @@ def test_gemini_cli_projects_and_removes_bundle_without_overwriting_user_context
         "block_id": "bundle.gemini-kit",
     }
     manifest = _bundle_doc(
-        "gemini-kit", targets=(target.value,), assets=(instructions,), skills=({"key": "code-review"},)
+        "gemini-kit", targets=(target.value,), assets=(instructions,), skills=({"key": "spec-review"},)
     )
     bundle_env.seed_bundle_in_core(
         "gemini-kit", manifest, bodies={"instructions.md": b"Verify the checkout before reporting.\n"}
@@ -389,8 +389,8 @@ def test_gemini_cli_projects_and_removes_bundle_without_overwriting_user_context
     assert bundle_env.apply(target).state is ProjectionState.IN_SYNC
     assert context.read_bytes().startswith(user_context)
     assert (GOLDEN_ROOT / "gemini_cli" / "GEMINI.md").read_bytes() in context.read_bytes()
-    skill = checkout / ".gemini" / "skills" / "code-review" / "SKILL.md"
-    assert skill.read_text(encoding="utf-8").startswith("---\nname: code-review\n")
+    skill = checkout / ".gemini" / "skills" / "spec-review" / "SKILL.md"
+    assert skill.read_text(encoding="utf-8").startswith("---\nname: spec-review\n")
     assert bundle_env.apply(target).written == ()
     assert bundle_env.drift(target)["state"] == "in_sync"
     assert bundle_env.remove(target).state is ProjectionState.REMOVED

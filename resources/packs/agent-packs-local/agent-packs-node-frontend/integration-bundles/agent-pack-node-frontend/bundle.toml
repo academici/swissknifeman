@@ -1,13 +1,13 @@
 schema = "urn:skm:integrations:bundle:v1"
 key = "agent-pack-node-frontend"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Node and TypeScript Frontend"
 description = "Neutral TypeScript UI state, accessibility, component isolation, and test conventions migrated as pure data."
 targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
 agents = []
 
 [[skills]]
-key = "code-review"
+key = "spec-review"
 
 [[assets]]
 target = "claude_code"

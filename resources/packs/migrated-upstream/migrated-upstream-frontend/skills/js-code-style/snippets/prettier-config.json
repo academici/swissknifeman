@@ -1,9 +1,0 @@
-{
-  "_comment": "Source: anonymized production Laravel project. Spatie-style: 4 spaces (not 2), width 120 (not 80), single quotes. Duplicate indent in .editorconfig: indent_style = space, indent_size = 4.",
-  "tabWidth": 4,
-  "printWidth": 120,
-  "singleQuote": true,
-  "semi": true,
-  "trailingComma": "all",
-  "vueIndentScriptAndStyle": false
-}

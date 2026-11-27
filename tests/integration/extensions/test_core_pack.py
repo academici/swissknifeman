@@ -127,7 +127,19 @@ EXPECTED_ROLE_PROMPTS = frozenset(
 )
 EXPECTED_INSTRUCTION_PROMPTS = frozenset(("instructions/client-core",))
 EXPECTED_PROMPTS = EXPECTED_SHARED_PROMPTS | EXPECTED_ROLE_PROMPTS | EXPECTED_INSTRUCTION_PROMPTS
-EXPECTED_SKILLS = frozenset(("code-review", "review-checklist", "research-method", "security-review"))
+EXPECTED_SKILL_VERSIONS = {
+    "diagnosing-bugs": "2.1.0",
+    "grill-me": "2.1.0",
+    "handoff": "2.1.0",
+    "implement": "2.1.0",
+    "research-method": "2.0.0",
+    "review-checklist": "2.0.0",
+    "security-review": "2.0.0",
+    "spec-review": "2.1.0",
+    "tdd": "2.1.0",
+    "to-spec": "2.1.0",
+    "to-tickets": "2.1.0",
+}
 EXPECTED_PLAN_TEMPLATES = frozenset(("feature", "bugfix"))
 EXPECTED_MODEL_GUIDELINES = frozenset(
     (
@@ -286,7 +298,7 @@ def test_builtin_sync_core_pack() -> None:
         len(EXPECTED_PROFILES)
         + len(EXPECTED_WORKFLOWS)
         + len(EXPECTED_PROMPTS)
-        + len(EXPECTED_SKILLS)
+        + len(EXPECTED_SKILL_VERSIONS)
         + len(EXPECTED_PLAN_TEMPLATES)
         + 1
         + len(EXPECTED_MODEL_GUIDELINES)
@@ -297,7 +309,7 @@ def test_builtin_sync_core_pack() -> None:
     assert all(item.trust is PackTrust.THIRD_PARTY for item in tables.packs.values() if item.slug != "core")
     (pack_version,) = (item for item in tables.pack_versions.values() if item.pack_id == pack.id)
     core_versions = [item for item in tables.versions.values() if item.pack_version_id == pack_version.id]
-    assert len(core_versions) == expected_total == 61
+    assert len(core_versions) == expected_total == 68
     assert (pack_version.origin, pack_version.state) == ("builtin", PackState.ACTIVE)
     assert (pack_version.manifest.priority, pack_version.manifest.license) == (0, "Apache-2.0")
     assert pack_version.manifest.requires_skm.matches(product_version())
@@ -345,15 +357,15 @@ def test_mandatory_resources_resolvable(synced_world: ExtensionsWorld) -> None:
         assert public.known_keys(uow, ResourceKind.AGENT_PROFILE, config=config) == EXPECTED_PROFILES
         assert public.known_keys(uow, ResourceKind.WORKFLOW, config=config) == EXPECTED_WORKFLOWS
         assert public.known_keys(uow, ResourceKind.PROMPT_BLOCK, config=config) == EXPECTED_PROMPTS
-        assert public.known_keys(uow, ResourceKind.SKILL, config=config) == EXPECTED_SKILLS
+        assert public.known_keys(uow, ResourceKind.SKILL, config=config) == EXPECTED_SKILL_VERSIONS.keys()
         assert public.known_keys(uow, ResourceKind.PLAN_TEMPLATE, config=config) == EXPECTED_PLAN_TEMPLATES
         assert public.known_keys(uow, ResourceKind.RUNTIME_CATALOG, config=config) == frozenset({"models"})
         guidelines = public.known_keys(uow, ResourceKind.MODEL_GUIDELINE, config=config)
         assert guidelines == EXPECTED_MODEL_GUIDELINES
 
-        for key in sorted(EXPECTED_SKILLS):
+        for key, version in EXPECTED_SKILL_VERSIONS.items():
             skill_view = public.resolve_resource(uow, ResourceKind.SKILL, key, config=config)
-            assert (skill_view.key, skill_view.version) == (key, "2.0.0")
+            assert (skill_view.key, skill_view.version) == (key, version)
             assert skill_view.manifest["schema"] == "urn:skm:extensions:skill-manifest:v1"
             assert skill_view.manifest["key"] == key
 
@@ -680,5 +692,5 @@ def test_wheel_packaging_has_no_repo_paths(tmp_path: Path) -> None:
     info = json.loads(proc.stdout.strip())
     assert Path(info["skm_file"]).is_relative_to(site_dir.resolve())
     assert info["count"] == 29
-    assert info["resources"] == 61
+    assert info["resources"] == 68
     assert info["digest"] == expected_candidate.digest

@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-backend-laravel"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Laravel Backend"
 description = "Neutral PHP and Laravel application boundary, query discipline, and migration safety rules migrated as pure data."
 publisher = "skm-migrated"

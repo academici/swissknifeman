@@ -266,8 +266,8 @@ def test_apply_idempotency_and_foreign_preservation(live_claude_env: _LiveClaude
     assert "secret://env/GITHUB_TOKEN" in mcp_raw
     assert "ghp_SUPER_SECRET_MUST_NEVER_APPEAR" not in mcp_raw
 
-    assert (checkout / ".claude" / "skills" / "code-review" / "SKILL.md").is_file()
-    assert not (checkout / ".claude" / "skills" / "code-review" / "skill.toml").exists()
+    assert (checkout / ".claude" / "skills" / "spec-review" / "SKILL.md").is_file()
+    assert not (checkout / ".claude" / "skills" / "spec-review" / "skill.toml").exists()
     assert (checkout / ".claude" / "agents" / "skm-reviewer.md").is_file()
     assert unmanaged_skill.read_bytes() == unmanaged_bytes
 

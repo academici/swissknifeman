@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from itertools import takewhile
+from textwrap import dedent
 from typing import cast
 
 from skm.kernel.json_types import JsonObject, JsonValue
+from skm.kernel.yaml_scalars import parse_quoted_yaml_string
 
+from .merged_json import parse_json_document
 from .merged_toml import parse_toml
 from .target import TargetId
 
@@ -23,6 +26,7 @@ __all__ = [
     "estimate_tokens",
     "first_turn_sources",
     "first_turn_verdict",
+    "frontmatter_end",
     "frontmatter_field",
     "source_total",
 ]
@@ -75,17 +79,25 @@ def source_total(sources: Sequence[FirstTurnSource]) -> int | None:
     )
 
 
+def frontmatter_end(lines: Sequence[str]) -> int | None:
+    """Find the closing fence of an initial Markdown frontmatter block."""
+    if not lines or lines[0].strip() != "---":
+        return None
+    return next((index for index, line in enumerate(lines[1:], 1) if line.strip() == "---"), None)
+
+
 def frontmatter_field(text: str, key: str) -> str | None:
     """Read native string metadata without executing YAML tags or loading an agent body."""
-    lines = text.replace("\r\n", "\n").splitlines()
-    if not lines or lines[0] != "---" or "---" not in lines[1:]:
+    lines = text.removeprefix("\ufeff").splitlines()
+    end = frontmatter_end(lines)
+    if end is None:
         return None
-    header = lines[1 : lines.index("---", 1)]
+    header = lines[1:end]
     for index, line in enumerate(header):
-        match = re.fullmatch(re.escape(key) + r":\s*(.*)", line)
-        if match is None:
+        field, separator, raw_value = line.partition(":")
+        if not separator or field.rstrip() != key:
             continue
-        value = match.group(1).strip()
+        value = raw_value.strip()
         if value in (">", ">-", "|", "|-"):
             parts: list[str] = []
             for continuation in header[index + 1 :]:
@@ -93,16 +105,54 @@ def frontmatter_field(text: str, key: str) -> str | None:
                     break
                 parts.append(continuation.strip())
             return ("\n" if value.startswith("|") else " ").join(parts)
-        if value.startswith('"'):
-            try:
-                decoded = json.loads(value)
-            except ValueError:
-                return None
-            return decoded if isinstance(decoded, str) else None
-        if value.startswith("'"):
-            return value[1:-1].replace("''", "'") if value.endswith("'") else None
+        if value.startswith(('"', "'")):
+            return parse_quoted_yaml_string(value)
         return value
     return None
+
+
+_POLICY = re.compile(r"(?:policy|'policy'|\"policy\")[ \t]*:[ \t]*(.*)")
+_IMPLICIT_INVOCATION = re.compile(
+    r"(?:allow_implicit_invocation|'allow_implicit_invocation'|\"allow_implicit_invocation\")"
+    r"[ \t]*:[ \t\n]*(.*)"
+)
+_YAML_FALSE = frozenset({"false", "False", "FALSE"})
+
+
+def _codex_user_only(metadata: str | None) -> bool:
+    """Recognize an explicit boolean in the native policy mapping, without interpreting YAML tags."""
+    if metadata is None:
+        return False
+    text = metadata.removeprefix("\ufeff")
+    if text.lstrip().startswith("{"):
+        try:
+            policy = cast("JsonValue", parse_json_document(text).get("policy"))
+        except (ValueError, RecursionError):
+            return False
+        return isinstance(policy, dict) and policy.get("allow_implicit_invocation") is False
+
+    lines = [
+        re.split(r"[ \t]+#", line, maxsplit=1)[0].rstrip()
+        for line in text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    policies = [(i, match[1]) for i, line in enumerate(lines) if (match := _POLICY.fullmatch(line))]
+    if len(policies) != 1:
+        return False
+    index, inline = policies[0]
+    block = "\n".join(takewhile(lambda line: line.startswith(" ") or line == "}", lines[index + 1 :]))
+    value = f"{inline}\n{block}".strip()
+    if inline or value.startswith("{"):
+        entry = (
+            _IMPLICIT_INVOCATION.fullmatch(value[1:-1].strip().removesuffix(",").rstrip())
+            if value.startswith("{") and value.endswith("}")
+            else None
+        )
+        return entry is not None and entry[1] in _YAML_FALSE
+    flags = [
+        match[1] for line in dedent(block).splitlines() if (match := _IMPLICIT_INVOCATION.fullmatch(line))
+    ]
+    return len(flags) == 1 and flags[0] in _YAML_FALSE
 
 
 def _detail(texts: Mapping[str, str | None]) -> JsonObject:
@@ -227,8 +277,21 @@ def first_turn_sources(  # noqa: PLR0913 - five sources and target-specific esti
     listing_fraction: float = 0.01,
     context_window: int = 1_000_000,
     deferred_tool_search: bool = False,
+    codex_skill_metadata: Mapping[str, str | None] | None = None,
 ) -> tuple[FirstTurnSource, ...]:
     """Value all five sources, preserving partial native observations as unknown."""
+    if target is TargetId.CLAUDE_CODE:
+        skills = {
+            path: text
+            for path, text in skills.items()
+            if text is None or frontmatter_field(text, "disable-model-invocation") != "true"
+        }
+    elif target is TargetId.CODEX and codex_skill_metadata is not None:
+        skills = {
+            path: text
+            for path, text in skills.items()
+            if text is None or not _codex_user_only(codex_skill_metadata.get(path))
+        }
     instruction_tokens = (
         None
         if any(text is None for text in instructions.values())

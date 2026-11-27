@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Mapping, Sequence
 from typing import Final, cast
 
 from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import ValidationFailed
+from skm.modules.integrations.domain.budget import frontmatter_end, frontmatter_field
 from skm.modules.integrations.domain.contracts import SkillPayload, SourceRef
 from skm.modules.integrations.domain.decisions import is_safe_relative_path
 from skm.modules.integrations.domain.desired import DesiredFile, ProjectionInputs
 from skm.modules.integrations.domain.ownership import ManagedBoundary, Ownership, sha256_tagged
-from skm.modules.integrations.domain.target import Surface
+from skm.modules.integrations.domain.target import Surface, TargetId
 
 __all__ = [
     "CODEX_SKILLS_PREFIX",
@@ -29,6 +31,8 @@ _ENTRY_DESCRIPTION_MAX_CHARS: Final[int] = 1536
 _SKILL_KEY_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 _RESOURCE_MANIFEST_FILENAMES: Final[frozenset[str]] = frozenset({"skill.toml"})
 _YAML_SPECIAL: Final[frozenset[str]] = frozenset(":#\"'{}[]&*!|>%@")
+_INVOCATION_FIELD_RE: Final = re.compile(r"(?:disable-model-invocation|argument-hint)\s*:")
+_OPENAI_METADATA: Final[str] = "agents/openai.yaml"
 
 
 def _yaml_scalar(value: str) -> str:
@@ -41,12 +45,12 @@ def _yaml_scalar(value: str) -> str:
     return cleaned
 
 
-def _ensure_skill_markdown(key: str, manifest: Mapping[str, object], raw_text: str) -> bytes:
-    normalized = raw_text.replace("\r\n", "\n")
-    if normalized.startswith("---\n"):
+def _ensure_skill_markdown(key: str, manifest: Mapping[str, object], raw_text: str) -> str:
+    normalized = raw_text.removeprefix("\ufeff").replace("\r\n", "\n")
+    if normalized.partition("\n")[0].strip() == "---":
         if not normalized.endswith("\n"):
             normalized += "\n"
-        return normalized.encode()
+        return normalized
 
     raw_desc = manifest.get("description")
     desc = str(raw_desc).strip() if isinstance(raw_desc, str) else ""
@@ -58,8 +62,8 @@ def _ensure_skill_markdown(key: str, manifest: Mapping[str, object], raw_text: s
         body += "\n"
     frontmatter = f"---\nname: {key}\ndescription: {_yaml_scalar(desc)}\n---\n"
     if body:
-        return f"{frontmatter}\n{body}".encode()
-    return frontmatter.encode()
+        return f"{frontmatter}\n{body}"
+    return frontmatter
 
 
 def _encode_skill_file(
@@ -68,7 +72,7 @@ def _encode_skill_file(
     if isinstance(content, bytes):
         return content
     if rel_path == "SKILL.md":
-        return _ensure_skill_markdown(key, manifest, content)
+        return _ensure_skill_markdown(key, manifest, content).encode()
     return content.replace("\r\n", "\n").encode()
 
 
@@ -89,9 +93,7 @@ def _parse_file_entry(key: str, manifest: Mapping[str, object], entry: object) -
     return None
 
 
-def _extract_skill_files(
-    key: str, skill: SkillPayload, manifest: Mapping[str, object]
-) -> list[tuple[str, bytes]]:
+def _extract_skill_files(key: str, skill: SkillPayload, manifest: Mapping[str, object]) -> dict[str, bytes]:
     collected: dict[str, bytes] = {}
 
     bodies = skill.get("bodies")
@@ -109,8 +111,57 @@ def _extract_skill_files(
             if parsed is not None and parsed[0] not in _RESOURCE_MANIFEST_FILENAMES:
                 collected[parsed[0]] = parsed[1]
 
-    ordered_keys = sorted(collected, key=lambda p: (0 if p == "SKILL.md" else 1, p))
-    return [(rel, collected[rel]) for rel in ordered_keys]
+    return collected
+
+
+def _add_invocation_files(
+    key: str, manifest: Mapping[str, object], target: TargetId, files: dict[str, bytes]
+) -> None:
+    # Targets sharing .agents/skills must produce identical SKILL.md bytes.
+    if target not in (
+        TargetId.CLAUDE_CODE,
+        TargetId.CODEX,
+        TargetId.ANTIGRAVITY,
+        TargetId.CURSOR,
+        TargetId.GROK,
+    ):
+        return
+    invocation = manifest.get("invocation")
+    if not isinstance(invocation, Mapping) or "SKILL.md" not in files:
+        return
+    invocation = cast("Mapping[str, object]", invocation)
+    if invocation.get("user_only") is not True:
+        return
+
+    normalized = _ensure_skill_markdown(key, manifest, files["SKILL.md"].decode("utf-8-sig"))
+    lines = normalized.split("\n")
+    end = frontmatter_end(lines)
+    if end is None:
+        raise ValidationFailed(
+            ErrorCode.SCHEMA_INVALID,
+            f"unterminated SKILL.md frontmatter for skill {key!r}",
+            details={"skill_key": key},
+        )
+    header = [line for line in lines[1:end] if not _INVOCATION_FIELD_RE.match(line)]
+    header.append("disable-model-invocation: true")
+    hint = invocation.get("argument_hint")
+    if isinstance(hint, str):
+        header.append(f"argument-hint: {json.dumps(hint, ensure_ascii=False)}")
+    markdown = "\n".join(["---", *header, "---", *lines[end + 1 :]])
+    files["SKILL.md"] = markdown.encode()
+
+    if target is TargetId.CODEX:
+        display_name = invocation.get("display_name")
+        if not isinstance(display_name, str) or not display_name.strip():
+            display_name = key.replace("-", " ").replace("_", " ").title()
+        description = frontmatter_field(markdown, "description") or ""
+        files[_OPENAI_METADATA] = (
+            "interface:\n"
+            f"  display_name: {json.dumps(display_name, ensure_ascii=False)}\n"
+            f"  short_description: {json.dumps(description, ensure_ascii=False)}\n"
+            "policy:\n"
+            "  allow_implicit_invocation: false\n"
+        ).encode()
 
 
 def _skill_source_ref(key: str, skill: SkillPayload) -> SourceRef:
@@ -161,7 +212,9 @@ def render_skills(
         )
         source_refs = (_skill_source_ref(raw_key, skill),)
 
-        for rel_inside, file_bytes in _extract_skill_files(raw_key, skill, manifest):
+        skill_files = _extract_skill_files(raw_key, skill, manifest)
+        _add_invocation_files(raw_key, manifest, inputs.target, skill_files)
+        for rel_inside, file_bytes in skill_files.items():
             if not is_safe_relative_path(rel_inside):
                 raise ValidationFailed(
                     ErrorCode.INTEGRATION_UNSAFE_TARGET,

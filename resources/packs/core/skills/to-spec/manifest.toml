@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "to-spec"
+version = "2.1.0"
+kind = "workflow"
+roles = ["advisor", "executor"]
+risk = "low"
+license = "Apache-2.0"
+
+[provenance]
+source = "local"
+
+[invocation]
+user_only = true
+argument_hint = "[design or decision record]"
+display_name = "To Spec"

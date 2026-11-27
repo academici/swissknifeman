@@ -1,13 +1,13 @@
 schema = "urn:skm:integrations:bundle:v1"
 key = "agent-pack-role-tech-lead"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Technical Lead"
 description = "Neutral decomposition, interface sequencing, and integration readiness lens migrated as pure data."
 targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
 agents = []
 
 [[skills]]
-key = "code-review"
+key = "spec-review"
 
 [[assets]]
 target = "claude_code"

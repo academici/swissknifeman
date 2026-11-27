@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Final, cast
 from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import ValidationFailed
 from skm.kernel.json_types import JsonObject, JsonValue
+from skm.kernel.yaml_scalars import parse_quoted_yaml_string
 from skm.modules.extensions.domain.keys import SemVer, parse_resource_key
 from skm.modules.extensions.domain.provenance import (
     CompatAcceptance,
@@ -105,7 +106,10 @@ def parse_skill_frontmatter(text: str, *, key: str = "") -> tuple[SkillFrontmatt
             raise _invalid("frontmatter_key_not_allowed", path="SKILL.md", key=k)
         if k in fm or not raw_v or raw_v[0] in ("|", ">", "[", "{"):
             raise _invalid("frontmatter_invalid", path="SKILL.md", key=k)
-        if len(raw_v) >= 2 and raw_v[0] == raw_v[-1] and raw_v[0] in ('"', "'"):
+        decoded = parse_quoted_yaml_string(raw_v)
+        if decoded is not None:
+            raw_v = decoded
+        elif len(raw_v) >= 2 and raw_v[0] == raw_v[-1] and raw_v[0] in ('"', "'"):
             raw_v = raw_v[1:-1]
         fm[k] = raw_v
     if "name" not in fm or "description" not in fm or not fm["name"]:

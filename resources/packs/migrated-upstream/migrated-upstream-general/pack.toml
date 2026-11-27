@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "migrated-upstream-general"
-version = "1.0.1"
+version = "1.1.0"
 title = "Migrated Upstream Skills: General Engineering Workflows"
 description = "Reproducibly migrated upstream-mirrored third-party skills for General Engineering Workflows (inert third_party data pack)."
 publisher = "skm-migrated"

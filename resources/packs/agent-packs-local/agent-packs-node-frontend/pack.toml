@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-node-frontend"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Node and TypeScript Frontend"
 description = "Neutral TypeScript UI state, accessibility, component isolation, and test conventions migrated as pure data."
 publisher = "skm-migrated"

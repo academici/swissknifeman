@@ -570,6 +570,7 @@
 | `src/skm/kernel/scopes.py` | ScopeKind, ALLOWED_PARENTS, ScopeRef, ScopeRecord, ScopeRegistry, check_scope_parent, check_scope_workspace, scope_not_found | P00.04.a |
 | `src/skm/kernel/tokens.py` | TokenEstimator | P00.04.a |
 | `src/skm/kernel/versions.py` | ExpectedVersion | P00.04.a → P01.01 → P01.02 |
+| `src/skm/kernel/yaml_scalars.py` | parse_quoted_yaml_string | P10.07 → SKM 0.2.0 P03 |
 | `src/skm/modules/__init__.py` | package boundary | P00.04.a |
 | `src/skm/modules/access/__init__.py` | package boundary | P00.04.b |
 | `src/skm/modules/access/application/__init__.py` | package boundary | P00.04.b → P04.02.a |

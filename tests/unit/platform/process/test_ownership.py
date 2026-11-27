@@ -914,7 +914,10 @@ def test_diagnostic_failure_with_failed_cleanup_retains_ownership(
         with ownership._retained_guard:
             assert owned in ownership._retained
         assert owned._pidfd is not None
-        assert owned.exit_code() is None
+        # The handshake socket closes with the failed start. The bootstrap then
+        # exits 125 before exec. That status can already be visible, and it is
+        # not a reap: the pidfd stays open until the cleanup worker runs.
+        assert owned.exit_code() in (None, 125)
         assert "ownership retained" in " ".join(primary.__notes__)
     finally:
         fault.released.set()

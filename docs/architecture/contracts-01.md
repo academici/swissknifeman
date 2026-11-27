@@ -459,8 +459,8 @@
 | `src/skm/entrypoints/api/live.py` | worker-only fenced NDJSON publish and live attempt SSE with continuous AuthBasis revocation checks | P11.03.b → I-10.1c |
 | `src/skm/entrypoints/api/router/__init__.py` | create_router_app | P02.05 (SKM-0.2.0) |
 | `src/skm/entrypoints/api/router/app.py` | create_router_app | P02.05 (SKM-0.2.0) |
-| `src/skm/entrypoints/api/router/exchange.py` | upstream_exchange | P02.05 (SKM-0.2.0) |
-| `src/skm/entrypoints/api/router/inference.py` | inference_handler | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/exchange.py` | Exchange, Reply | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/inference.py` | Invocation, dispatch | P02.05 (SKM-0.2.0) |
 | `src/skm/entrypoints/api/router/sse.py` | stream_sse_response | P02.05 (SKM-0.2.0) |
 | `src/skm/entrypoints/api/versioning.py` | HTTP admission boundary | P11.01.a |
 | `src/skm/schemas/api/health.v1.json` | HTTP API v1 wire schema | P11.01.a |

@@ -2,8 +2,10 @@
 
 import argparse
 import json
+from pathlib import Path
 from typing import cast
 
+from skm.bootstrap.local_modes import DEFAULT_MAX_BYTES, PackContextRequest, pack_local_context
 from skm.entrypoints.cli.commands import CommandGroup, SubParsers
 from skm.entrypoints.cli.commands.project import resolve_project_id
 from skm.entrypoints.cli.context import CliContext
@@ -61,6 +63,22 @@ def _human(value: JsonObject) -> list[str]:
     return json.dumps(value, indent=2, ensure_ascii=False).splitlines()
 
 
+def _pack(args: argparse.Namespace, ctx: CliContext) -> int:
+    result = pack_local_context(
+        args.checkout_root, PackContextRequest(tuple(args.paths), args.max_bytes, args.signatures_only)
+    )
+
+    def human(_: object) -> list[str]:
+        lines: list[str] = []
+        for file in result.files:
+            lines.extend([f"--- {file.path} ---", *file.content.splitlines()])
+        lines.extend(f"skipped {entry.path} ({entry.reason})" for entry in result.skipped)
+        return lines
+
+    render(ctx, result, command=args.command_name, human=human)
+    return result.exit_code
+
+
 def register(sub: SubParsers) -> None:
     parser = sub.add_parser("context", help="assemble and inspect context manifests")
     verbs = parser.add_subparsers(dest="context_verb", required=True)
@@ -89,6 +107,15 @@ def register(sub: SubParsers) -> None:
     diff.add_argument("target", help="target manifest ID")
     diff.add_argument("--step", action="store_true", help="interpret target as a step ID")
     diff.set_defaults(run=_diff, command_name="context.diff_contexts")
+
+    pack = verbs.add_parser("pack", help="pack local checkout files into bounded text")
+    pack.add_argument("paths", nargs="*", help="files or directories (default checkout root)")
+    pack.add_argument("--checkout-root", "--root", type=Path, default=Path("."), help="checkout directory")
+    pack.add_argument(
+        "--max-bytes", type=int, default=DEFAULT_MAX_BYTES, help="byte budget (default 256 KiB)"
+    )
+    pack.add_argument("--signatures-only", action="store_true", help="include Python declarations only")
+    pack.set_defaults(run=_pack, command_name="context.host.pack_context", host_local=True)
 
 
 GROUP = CommandGroup(

@@ -7,6 +7,7 @@ from skm.kernel.ports_uow import Surface
 
 from .application.registry import COMMANDS, QUERIES
 from .host.codegraph import run as run_codegraph
+from .host.registry import operations
 from .host.research_query import run as run_research_query
 from .permissions import PERMISSIONS
 from .ports import (
@@ -51,6 +52,6 @@ MODULE = ModuleManifest(
     commands=COMMANDS,
     queries=QUERIES,
     subscribers=(),
-    host_operations=(RESEARCH_SPEC, CODEGRAPH_SPEC),
+    host_operations=(RESEARCH_SPEC, CODEGRAPH_SPEC, *operations(Surface.CLI)),
     events=(),
 )

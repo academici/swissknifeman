@@ -130,7 +130,9 @@ if not request:
     os._exit(125)
 failure, first, stage = errno.EIO, 0, "exec"
 try:
-    workdir, paths, argv, env = marshal.loads(request)
+    workdir, paths, argv, env, merge_stderr = marshal.loads(request)
+    if merge_stderr:
+        os.dup2(1, 2)
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     signal.signal(signal.SIGXFSZ, signal.SIG_DFL)
     try:
@@ -677,7 +679,9 @@ def _note_failed_start(report: int, primary: BaseException) -> None:
         add_note(primary, f"bootstrap did not start: {data.decode('ascii', 'replace')}")
 
 
-def launch(argv: tuple[str, ...], *, cwd: Path, env: Mapping[str, str]) -> tuple[ChildPipes, OwnedProcess]:
+def launch(
+    argv: tuple[str, ...], *, cwd: Path, env: Mapping[str, str], merge_stderr: bool = False
+) -> tuple[ChildPipes, OwnedProcess]:
     """Start ``argv`` in a new session and return its pipes and the verified owner."""
     require_support()
     recover_cleanups()
@@ -690,6 +694,7 @@ def launch(argv: tuple[str, ...], *, cwd: Path, env: Mapping[str, str]) -> tuple
             _exec_paths(argv[0], env),
             [os.fsencode(item) for item in argv],
             {os.fsencode(name): os.fsencode(value) for name, value in env.items()},
+            merge_stderr,
         )
     )
     _enable_subreaper()

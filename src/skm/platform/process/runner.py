@@ -104,10 +104,12 @@ def _limit(value: int) -> None:
         raise ValueError("output limits must be non-negative integers")
 
 
-def _start(argv: tuple[str, ...], cwd: Path, env: Mapping[str, str]) -> tuple[ChildPipes, OwnedProcess]:
+def _start(
+    argv: tuple[str, ...], cwd: Path, env: Mapping[str, str], *, merge_stderr: bool = False
+) -> tuple[ChildPipes, OwnedProcess]:
     if not isinstance(env, Mapping):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise ValueError("an explicit environment mapping is required")
-    return launch(argv, cwd=cwd, env=build_env({}, extra=env))
+    return launch(argv, cwd=cwd, env=build_env({}, extra=env), merge_stderr=merge_stderr)
 
 
 class _Child:
@@ -536,7 +538,7 @@ class ProcessHandle:
         self._child.send(signal.SIGKILL)
 
 
-def run(
+def run(  # noqa: PLR0913 - explicit subprocess settings
     argv: Sequence[str],
     *,
     cwd: Path,
@@ -546,7 +548,9 @@ def run(
     max_stdout_bytes: int = 1_048_576,
     max_stderr_bytes: int = 65_536,
     grace_seconds: float = 2.0,
+    capture_combined_tail: bool = False,
 ) -> ProcessResult:
+    """Run with bounded capture. A combined tail shares stdout's pipe and byte limit."""
     args = check_argv(argv)
     _seconds(timeout_seconds, "timeout_seconds")
     _seconds(grace_seconds, "grace_seconds")
@@ -554,10 +558,10 @@ def run(
     _limit(max_stderr_bytes)
     if stdin is not None and not isinstance(stdin, bytes):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise ValueError("stdin must be bytes or None")
-    out, err = BoundedCapture(max_stdout_bytes), BoundedCapture(max_stderr_bytes)
-    child = _Child(
-        *_start(args, cwd, env), out.feed, err.feed, line_mode=False, stdin=stdin, manage_stdin=True
-    )
+    out = BoundedCapture(max_stdout_bytes, capture_tail=capture_combined_tail)
+    err = BoundedCapture(max_stderr_bytes)
+    started = _start(args, cwd, env, merge_stderr=True) if capture_combined_tail else _start(args, cwd, env)
+    child = _Child(*started, out.feed, err.feed, line_mode=False, stdin=stdin, manage_stdin=True)
     code = child.collect(timeout_seconds, grace_seconds)
     actual_code = child.leader_code if child.leader_code is not None else code
     return ProcessResult(

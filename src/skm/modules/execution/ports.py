@@ -13,6 +13,7 @@ from .domain._reconfiguration import ReconfigurationRecord as ReconfigurationRec
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
+    from contextlib import AbstractContextManager
     from datetime import datetime, timedelta
     from decimal import Decimal
     from pathlib import Path
@@ -500,6 +501,53 @@ class ExecutionQueries(Protocol):
     def environments_page(
         self, host_id: HostId, removable_only: bool, after: Cursor | None, limit: int
     ) -> Page[EnvironmentView]: ...
+
+
+@dataclass(frozen=True, slots=True)
+class GateCommandResult:
+    """Gate status and the bounded tail of its combined output."""
+
+    exit_code: int
+    output: str
+    timed_out: bool = False
+    truncated: bool = False
+
+
+@host_gateway
+class UserSchemaValidator(Protocol):
+    type SchemaPath = Path
+
+    def validate(self, payload: object, schema_path: Path) -> tuple[bool, str | None]: ...
+
+
+@host_gateway
+class GateCommandRunner(Protocol):
+    type Workdir = Path
+
+    def run_gate(
+        self, argv: tuple[str, ...], *, cwd: Path, timeout_seconds: float, max_output_bytes: int
+    ) -> GateCommandResult: ...
+
+
+@host_gateway
+class LocalRuntimePool[Result](Protocol):
+    class Session[TurnResult](Protocol):
+        @property
+        def slot_id(self) -> str: ...
+        @property
+        def config_mode(self) -> Literal["isolated", "inherit"]: ...
+        @property
+        def supports_resume(self) -> bool: ...
+        def run(
+            self,
+            prompt: str,
+            *,
+            read_only: bool,
+            session_policy: Literal["ephemeral", "persistent"] = "ephemeral",
+            resume_session_ref: str | None = None,
+        ) -> TurnResult: ...
+
+    def open(self, slot_id: str | None) -> AbstractContextManager[Session[Result]]: ...
 
 
 @host_gateway

@@ -14,14 +14,19 @@ _CHUNK = 65_536
 
 
 class BoundedCapture:
-    def __init__(self, limit: int) -> None:
+    def __init__(self, limit: int, *, capture_tail: bool = False) -> None:
         self.limit = limit
+        self.capture_tail = capture_tail
         self.data = bytearray()
         self.truncated = False
 
     def feed(self, chunk: bytes) -> None:
         remaining = self.limit - len(self.data)
-        self.data.extend(chunk[:remaining])
+        if self.capture_tail:
+            del self.data[: max(0, len(chunk) - remaining)]
+            self.data.extend(chunk[max(0, len(chunk) - self.limit) :])
+        else:
+            self.data.extend(chunk[:remaining])
         self.truncated |= len(chunk) > remaining
 
 

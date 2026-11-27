@@ -7,6 +7,12 @@ as a CLI tool with `uv tool install .`. To use the locked development environmen
 instead, run `uv sync --frozen` and prefix the commands below with `uv run --frozen`.
 Check the selected binary with `skm --version`.
 
+## Roll out onto an existing project
+
+New installs and new database plans use this checkout's `skm`. Plans that still live as JSON files, rather than as database rows, stay byte-for-byte where they are. That includes `../swissknifeman/plans/`, an untracked `plans/` tree in a checkout, and the live consumer scopes `project:commerz` and `project:swissknifeman`. Do not import those files, rewrite them, migrate them into the database, or delete them. Moving a project onto this toolkit must not convert those JSON plans.
+
+Delete `../swissknifeman` only after those consumers no longer need it. Do not stop the live `maind` MCP processes that still serve `project:commerz` and `project:swissknifeman`.
+
 For the web UI, use Node.js 22+ and run `make web-build`. Build before
 `uv tool install .` so the wheel includes the bundle. The checkout environment
 serves the bundle directly from `web/dist`.

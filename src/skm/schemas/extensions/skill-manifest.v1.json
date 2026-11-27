@@ -259,6 +259,22 @@
       },
       "default": [],
       "description": "Only for provenance.source = upstream."
+    },
+    "invocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "user_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "argument_hint": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        }
+      }
     }
   },
   "x-skm-codegen": {

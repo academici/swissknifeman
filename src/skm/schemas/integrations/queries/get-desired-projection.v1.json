@@ -14,6 +14,11 @@
     },
     "target": {
       "$ref": "urn:skm:integrations:defs:v1#/$defs/TargetId"
+    },
+    "preset": {
+      "type": ["string", "null"],
+      "enum": ["php-project", "php-package", "dart-project", "dart-package", null],
+      "default": null
     }
   },
   "required": [

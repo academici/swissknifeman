@@ -35,6 +35,11 @@
     "force_conflicts": {
       "type": "boolean",
       "default": false
+    },
+    "preset": {
+      "type": ["string", "null"],
+      "enum": ["php-project", "php-package", "dart-project", "dart-package", null],
+      "default": null
     }
   },
   "required": [

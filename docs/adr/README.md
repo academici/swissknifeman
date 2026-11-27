@@ -6,6 +6,7 @@ addenda written in that record. Proposed records remain proposed; ADR 0024 is
 accepted. These records do not promote a proposed status by blanket.
 Changing an ADR status requires an explicit acceptance or supersession decision.
 Manual review status is tracked separately in [status](../status.md).
+Records 0025 and later use the date and status stated in each record.
 Names, layers and module boundaries follow
 [layers and modules](../architecture/layers-and-modules.md).
 
@@ -34,6 +35,8 @@ Names, layers and module boundaries follow
 | [0022](0022-plugins-stable-api.md) | Plugins through entry points with a stable `skm.plugin_api` | proposed |
 | [0023](0023-staged-blob-upload.md) | Bytes enter only through staged blob upload | proposed |
 | [0024](0024-research-source-component.md) | Research sources are a separate plugin component kind | accepted |
+| [0025](0025-integrations-zero-shadowing-and-presets.md) | Zero-shadowing client projections and project and package presets | proposed |
+| [0026](0026-local-llm-router.md) | Loopback-only LLM router and versioned provider pool | proposed |
 
 ## Record format
 

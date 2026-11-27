@@ -16714,6 +16714,20 @@
           "checkout_binding_id": {
             "$ref": "#/components/schemas/kernel.defs.v1/$defs/uuid"
           },
+          "preset": {
+            "default": null,
+            "enum": [
+              "php-project",
+              "php-package",
+              "dart-project",
+              "dart-package",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "project_id": {
             "$ref": "#/components/schemas/kernel.defs.v1/$defs/uuid"
           },

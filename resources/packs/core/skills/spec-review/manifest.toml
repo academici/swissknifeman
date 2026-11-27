@@ -1,0 +1,21 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "spec-review"
+version = "2.1.0"
+kind = "workflow"
+roles = ["reviewer"]
+requires = []
+requires_tools = ["Read", "Bash"]
+required_capabilities = []
+adapters = []
+exclusive_group = "review-method"
+max_tokens = 4000
+risk = "low"
+license = "Apache-2.0"
+conflicts_with = []
+
+[triggers]
+paths = []
+deps = []
+
+[provenance]
+source = "local"

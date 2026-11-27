@@ -9,6 +9,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final, cast
 
+from skm.adapters.integrations.codex.instructions import render_instructions as render_agents_instructions
+from skm.adapters.integrations.codex.skills import render_skills as render_shared_skills
 from skm.kernel.json_types import JsonObject, JsonValue
 from skm.modules.integrations.domain.bundle import merge_and_render_bundle_assets
 from skm.modules.integrations.domain.contracts import ClientLayer, HookBinding, HookOutput
@@ -75,6 +77,11 @@ class ClaudeCodeTarget:
         if instructions_file is not None:
             files.append(instructions_file)
         files.extend(render_skills(inputs))
+        if inputs.instructions_project.get("zero_shadowing") is True:
+            agents_md = render_agents_instructions(inputs)
+            if agents_md is not None:
+                files.append(agents_md)
+            files.extend(render_shared_skills(inputs))
         files.append(render_project_settings(inputs))
         files.append(render_local_settings(inputs))
         mcp_file = render_mcp(inputs)

@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-dart-flutter"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Dart and Flutter"
 description = "Neutral Dart null-safety, widget tree performance, and cross-platform testing conventions migrated as pure data."
 publisher = "skm-migrated"

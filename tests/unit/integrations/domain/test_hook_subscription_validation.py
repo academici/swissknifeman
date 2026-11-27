@@ -373,7 +373,9 @@ def test_good_ids_are_accepted() -> None:
 
 
 def test_all_defects_of_one_subscription_are_listed_together() -> None:
-    config = changed("enforcement-host", timeout_ms=5, failure_policy="retry", event_types=["client:stop"])
+    config = changed(
+        "enforcement-host", timeout_ms=5, failure_policy="retry", event_types=["client:post_tool"]
+    )
     assert reasons(config) == {"timeout_out_of_range", "failure_policy_not_allowed", "event_type_not_allowed"}
 
 

@@ -12,7 +12,12 @@ from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import NotFound, PreconditionFailed, SkmError, error_for
 from skm.kernel.ids import ProjectId, parse_uuid
 from skm.kernel.module_manifest import HostOperationSpec
-from skm.modules.integrations.domain.decisions import FileDecisionKind, decide_file, is_safe_relative_path
+from skm.modules.integrations.domain.decisions import (
+    FileDecisionKind,
+    decide_file,
+    is_safe_relative_path,
+    is_shared_projection_path,
+)
 from skm.modules.integrations.domain.observed import AppliedFileRecord, FileKind
 from skm.modules.integrations.domain.ownership import ManagedBoundary, Ownership, sha256_tagged
 from skm.modules.integrations.domain.projection import (
@@ -67,8 +72,6 @@ __all__ = [
     "remove_projection",
     "run",
 ]
-
-_SHARED_SKILLS_PREFIX = ".agents/skills/"
 
 
 def reconcile_remove_journal(
@@ -169,7 +172,7 @@ def _check_remove_siblings(
         for sib_target, sib_rec in siblings:
             if sib_rec.relative_path != rec.relative_path:
                 continue
-            if rec.relative_path.startswith(_SHARED_SKILLS_PREFIX):
+            if is_shared_projection_path(rec.relative_path, rec.boundary):
                 shared_skill_keep.add(rec.relative_path)
                 continue
             if boundaries_overlap(sib_rec.boundary, rec.boundary):

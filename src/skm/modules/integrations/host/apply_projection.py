@@ -11,7 +11,11 @@ from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import Conflict, SkmError, error_for
 from skm.kernel.ids import FileVersionId
 from skm.kernel.module_manifest import HostOperationSpec
-from skm.modules.integrations.domain.decisions import FileDecisionKind, is_safe_relative_path
+from skm.modules.integrations.domain.decisions import (
+    FileDecisionKind,
+    is_safe_relative_path,
+    is_shared_projection_path,
+)
 from skm.modules.integrations.domain.observed import AppliedFileRecord, FileKind
 from skm.modules.integrations.domain.ownership import ManagedBoundary, sha256_tagged
 from skm.modules.integrations.domain.projection import (
@@ -68,13 +72,13 @@ __all__ = [
 ]
 
 _ = (reconcile_remove_journal, reconcile_apply_journal)
-_SHARED_SKILLS_PREFIX = ".agents/skills/"
 
 
 def _check_apply_collisions(
     plan: ProjectionPlan,
     meta: Mapping[str, tuple[Surface, ManagedBoundary]],
     siblings: Sequence[tuple[TargetId, AppliedFileRecord]],
+    batch_writes: Mapping[tuple[TargetId, str], PlannedWrite],
 ) -> tuple[set[str], dict[str, str]]:
     shared_skill_keep: set[str] = set()
     shared_skill_digests: dict[str, str] = {}
@@ -88,7 +92,7 @@ def _check_apply_collisions(
         for sib_target, sib_rec in siblings:
             if sib_rec.relative_path != dec.relative_path:
                 continue
-            if dec.relative_path.startswith(_SHARED_SKILLS_PREFIX):
+            if is_shared_projection_path(dec.relative_path, bnd):
                 if dec.kind is FileDecisionKind.REMOVE_OWNED:
                     shared_skill_keep.add(dec.relative_path)
                     continue
@@ -96,6 +100,18 @@ def _check_apply_collisions(
                 after_m = w.managed_digest_after if w is not None else dec.expected_observed_managed_digest
                 if bnd == sib_rec.boundary and after_m == sib_rec.applied_managed_digest:
                     shared_skill_digests[dec.relative_path] = sib_rec.applied_whole_digest
+                    continue
+                peer = batch_writes.get((sib_target, dec.relative_path))
+                if (
+                    w is not None
+                    and peer is not None
+                    and peer.decision is FileDecisionKind.UPDATE
+                    and w.decision is FileDecisionKind.UPDATE
+                    and peer.boundary == bnd
+                    and peer.managed_digest_after == after_m
+                    and peer.new_bytes == w.new_bytes
+                    and peer.expected_observed_whole_digest == w.expected_observed_whole_digest
+                ):
                     continue
             if boundaries_overlap(sib_rec.boundary, bnd):
                 raise collision_error(
@@ -113,6 +129,7 @@ def _stage_writes(
     *,
     restore_pre_image: bool,
     conflict_suffix: str,
+    shared_digests: Mapping[str, str],
 ) -> list[tuple[PlannedWrite, bytes | None, FileVersionId | None, str | None]]:
     staged: list[tuple[PlannedWrite, bytes | None, FileVersionId | None, str | None]] = []
     for w in sorted(plan.writes, key=lambda item: item.relative_path):
@@ -142,7 +159,12 @@ def _stage_writes(
             if obs.outside_root or obs.is_symlink or obs.file_kind is not FileKind.REGULAR or raw is None:
                 pre_err = ErrorCode.INTEGRATION_UNSAFE_TARGET.value
             elif obs.whole_digest != w.expected_observed_whole_digest:
-                pre_err = ErrorCode.PROJECTION_CONFLICT.value
+                if (
+                    eff_bytes is None
+                    or obs.whole_digest != sha256_tagged(eff_bytes)
+                    or obs.whole_digest != shared_digests.get(w.relative_path)
+                ):
+                    pre_err = ErrorCode.PROJECTION_CONFLICT.value
             else:
                 _, pre_id = capture_pre_image(ctx, key, raw, replace_local=prior is None)
         staged.append((w, eff_bytes, pre_id, pre_err))
@@ -339,7 +361,7 @@ def _apply_one_plan(
     restore_pre_image: bool,
     conflict_suffix: str,
     siblings: Sequence[tuple[TargetId, AppliedFileRecord]],
-    batch_desired_skills: frozenset[str],
+    batch: Sequence[ProjectionPlan],
     provided_meta: Mapping[str, tuple[Surface, ManagedBoundary]] | None,
 ) -> ApplyOutcome:
     for dec in plan.decisions:
@@ -367,10 +389,32 @@ def _apply_one_plan(
 
     prior_records = {r.relative_path: r for r in (applied_record_from_view(v) for v in applied_view.files)}
     meta = collect_plan_meta(ctx, plan, prior_records=prior_records, provided=provided_meta)
-    sib_keep, shared_skill_digests = _check_apply_collisions(plan, meta, siblings)
-    shared_skill_keep = sib_keep | set(batch_desired_skills)
+    peers = tuple(peer for peer in batch if peer.target is not plan.target)
+    peer_writes = {(peer.target, write.relative_path): write for peer in peers for write in peer.writes}
+    shared_skill_keep, shared_skill_digests = _check_apply_collisions(plan, meta, siblings, peer_writes)
+    active = {target for target, _ in siblings}
+    shared_skill_keep.update(
+        decision.relative_path
+        for peer in peers
+        if peer.target not in active
+        for decision in peer.decisions
+        if decision.kind not in (FileDecisionKind.REMOVE_OWNED, FileDecisionKind.LEAVE_MODIFIED)
+        and (
+            decision.relative_path.startswith(".agents/skills/")
+            or (
+                (write := peer_writes.get((peer.target, decision.relative_path))) is not None
+                and is_shared_projection_path(write.relative_path, write.boundary)
+            )
+        )
+    )
     effective_writes = _stage_writes(
-        ctx, fs, plan, prior_records, restore_pre_image=restore_pre_image, conflict_suffix=conflict_suffix
+        ctx,
+        fs,
+        plan,
+        prior_records,
+        restore_pre_image=restore_pre_image,
+        conflict_suffix=conflict_suffix,
+        shared_digests=shared_skill_digests,
     )
     acc = ApplyBatchState(prior_records, plan.renderer_version)
     _classify_plan_decisions(plan, meta, prior_records, acc)
@@ -448,21 +492,12 @@ def apply_projection(
         fs = bind_checkout_fs(ctx, checkout.local_locator)
         with hold_binding_lock(fs, binding_id):
             reconcile_binding_journals(ctx, fs, binding_id)
-            for idx, plan in enumerate(group):
+            for plan in group:
                 siblings = active_sibling_files(
                     ctx,
                     project_id=plan.project_id,
                     checkout_binding_id=binding_id,
                     exclude_targets=frozenset({plan.target}),
-                )
-                sib_targets = {s[0] for s in siblings}
-                other_skills = frozenset(
-                    dec.relative_path
-                    for j, other in enumerate(group)
-                    if j != idx and other.target not in sib_targets
-                    for dec in other.decisions
-                    if dec.relative_path.startswith(_SHARED_SKILLS_PREFIX)
-                    and dec.kind not in (FileDecisionKind.REMOVE_OWNED, FileDecisionKind.LEAVE_MODIFIED)
                 )
                 outcomes.append(
                     _apply_one_plan(
@@ -472,7 +507,7 @@ def apply_projection(
                         restore_pre_image=restore_pre_image,
                         conflict_suffix=suffix,
                         siblings=siblings,
-                        batch_desired_skills=other_skills,
+                        batch=group,
                         provided_meta=None if meta_by_target is None else meta_by_target.get(plan.target),
                     )
                 )

@@ -72,6 +72,20 @@ def _collect_source_refs(core: InstructionBlock, project: InstructionBlock) -> t
 
 def render_instructions(inputs: ProjectionInputs) -> DesiredFile | None:
     """Render ``CLAUDE.md`` managed blocks ``instructions.core`` and ``instructions.project``."""
+    if inputs.instructions_project.get("zero_shadowing") is True:
+        block_id = "instructions.project"
+        managed = render_block(block_id, "@AGENTS.md")
+        return DesiredFile(
+            target=TargetId.CLAUDE_CODE,
+            surface=Surface.INSTRUCTIONS,
+            relative_path=CLAUDE_INSTRUCTIONS_PATH,
+            boundary=ManagedBoundary(Ownership.MANAGED_BLOCK, block_ids=(block_id,)),
+            managed_bytes=managed,
+            managed_digest=sha256_tagged(managed),
+            source_refs=(),
+            renderer=CLAUDE_INSTRUCTIONS_RENDERER,
+        )
+
     core_on = _block_enabled(inputs.instructions_core)
     proj_on = _block_enabled(inputs.instructions_project)
     if not core_on and not proj_on:

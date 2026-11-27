@@ -283,8 +283,8 @@ def test_apply_idempotency_foreign_toml_comments_and_secret_refs(live_codex_env:
     assert pre_hooks[0]["hooks"][0]["command"] == "./scripts/team-audit.sh"
     assert any("lifecycle.git_guardrails" in h["hooks"][0]["command"] for h in pre_hooks[1:])
 
-    assert (checkout / ".agents" / "skills" / "code-review" / "SKILL.md").is_file()
-    assert not (checkout / ".agents" / "skills" / "code-review" / "skill.toml").exists()
+    assert (checkout / ".agents" / "skills" / "spec-review" / "SKILL.md").is_file()
+    assert not (checkout / ".agents" / "skills" / "spec-review" / "skill.toml").exists()
     assert (checkout / ".codex" / "agents" / "skm-reviewer.toml").is_file()
     assert unmanaged_skill.read_bytes() == unmanaged_bytes
 

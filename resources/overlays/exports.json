@@ -3,8 +3,8 @@
   "source_root": "../swissknifeman",
   "counts": {
     "source_total": 218,
-    "migrated": 198,
-    "excluded": 20,
+    "migrated": 134,
+    "excluded": 84,
     "packs": 18
   },
   "machine_translation_policy": {
@@ -19,7 +19,7 @@
       "path": "resources/packs/migrated-local/migrated-ai",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:25a24eb32ebe0f80dbc01665a83f3e3e8550b1301d0da6ccc5f78229da3cc6fe",
+      "digest": "sha256:9e80e2b081a8f2aa234f42d5fd95ad8aef06cbbf4b8893faa01134d4a2eec254",
       "skill_count": 1,
       "skills": [
         {
@@ -36,7 +36,7 @@
       "path": "resources/packs/migrated-local/migrated-architect",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:c51d85aaefd3b12ff984ac2046ac58d4a8631adfa25227e15c98552c8cafb890",
+      "digest": "sha256:12d600f1cf1c34308da78283f28bc2bbd33473266d6a04808c951d01e38f7d6e",
       "skill_count": 12,
       "skills": [
         {
@@ -108,7 +108,7 @@
       "path": "resources/packs/migrated-local/migrated-business",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:57f4871fde68026f4d27345fa84e73b69342a76a9df3c0574fc99338ed3cbda6",
+      "digest": "sha256:1d6bd2243e4acdbf3c285bac335147a85cecad9417fd6d0adc8ac84f7f798424",
       "skill_count": 23,
       "skills": [
         {
@@ -235,7 +235,7 @@
       "path": "resources/packs/migrated-local/migrated-devops",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:097dd57af488721fd2699e013ac9da513662657d2c7bb254bcb627f8a88b25bb",
+      "digest": "sha256:f6a49e38b54bf8bfdbb446238a145ce9a8b7accfbc556e751dbc63867e338840",
       "skill_count": 10,
       "skills": [
         {
@@ -297,63 +297,18 @@
       "path": "resources/packs/migrated-local/migrated-frontend",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:632a6c6732f3abac48d372123726985a131b05d271aeee31b4233676ae3ad37b",
-      "skill_count": 17,
+      "digest": "sha256:e3e42694ea896d0673bc18feba87a3d2bf3e24774682bd3c945262af32ffd687",
+      "skill_count": 4,
       "skills": [
         {
           "key": "backend-type-sync",
           "version": "0.1.1",
-          "digest": "sha256:79c4245d3dff7513487844f8075d6b4a66e9743727995993cf870da555c3bee9"
-        },
-        {
-          "key": "dark-mode",
-          "version": "0.1.1",
-          "digest": "sha256:597cdc8c934c6c43e9f3fe47fdd60b8ad1ef18e057c28ba3d09f2b99c71c56e9"
-        },
-        {
-          "key": "eslint-flat-config",
-          "version": "0.1.0",
-          "digest": "sha256:34ac94d9d9dcfb5ab62eeee9420e51c01b8be04b375fef370fd96d8330e59255"
+          "digest": "sha256:95ae1efabd33808cb82461b24c54d69e6842f550554a78e85a4ccf3f41fbb686"
         },
         {
           "key": "figma-to-vue",
           "version": "0.1.0",
           "digest": "sha256:d79f4eebfcc9bb7513540565d3b61552039506e9c7bb92fab81a9a615118ac06"
-        },
-        {
-          "key": "filepond-upload",
-          "version": "0.1.0",
-          "digest": "sha256:b8bb6e094358f885fa2d0e384c811f522b4ee4449be431cf9e37024014a6fd43"
-        },
-        {
-          "key": "inertia-vue",
-          "version": "0.3.1",
-          "digest": "sha256:fa2fb146b73923fd739eecaa0bdd8edd4cba6eb9be675fa30335fe11b4a41ca8"
-        },
-        {
-          "key": "laravel-echo-client",
-          "version": "0.1.1",
-          "digest": "sha256:85a32b6d945e18f7b00d18ce2e75a0d636514d0e69674c8686fd9a86946a1c6e"
-        },
-        {
-          "key": "naive-ui-theming",
-          "version": "0.1.1",
-          "digest": "sha256:cc4db382e773ed056f1e0f277999d293acde1eca0cbc10054ae55c5377a406b3"
-        },
-        {
-          "key": "pinia-stores",
-          "version": "0.1.1",
-          "digest": "sha256:be5f69016d64e7bd8a161656e3ef51288e998ac7dbf3995fa9a1bb6011569a95"
-        },
-        {
-          "key": "reka-ui-cva",
-          "version": "0.1.0",
-          "digest": "sha256:981ad1283344d752df1ac5dcdf8a9c27eb5b8f1a877354f27909ee10df1cf095"
-        },
-        {
-          "key": "tailwind-conventions",
-          "version": "0.1.1",
-          "digest": "sha256:3ed039788da1bb0150cdee493c4d628d965c3718150df9d5359393f9f56a3d53"
         },
         {
           "key": "vite-module-loader",
@@ -364,26 +319,6 @@
           "key": "vite-multi-build",
           "version": "0.1.0",
           "digest": "sha256:1e2302ded99a891ddad001b8ff0975d478b7ce6db3ebfdd023035253f143943e"
-        },
-        {
-          "key": "vitest",
-          "version": "0.1.2",
-          "digest": "sha256:d4c6da3aba7a047785ad066f504dacf5a86811f17dc6f5f75408be8083f995fd"
-        },
-        {
-          "key": "vue-composition-api",
-          "version": "0.2.1",
-          "digest": "sha256:dbf06d86076d00bbffaa9dac29ec3a09dedded426810250b9b7adbdf3773c60c"
-        },
-        {
-          "key": "vue-dynamic-icons",
-          "version": "0.1.1",
-          "digest": "sha256:47c434a34254df63f9283c5b2fe31ec6a0395330df7485414ae351e477583047"
-        },
-        {
-          "key": "wayfinder",
-          "version": "0.1.1",
-          "digest": "sha256:c3e4908edf6bc28236a3e5b3ab261fbd0f160e510ad5cb2b1bcc430405faa4c0"
         }
       ]
     },
@@ -394,8 +329,8 @@
       "path": "resources/packs/migrated-local/migrated-general",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:290f524885e5c023ea30b22dd242657c7aa0370c0db1df7e2979ce303cb22f78",
-      "skill_count": 25,
+      "digest": "sha256:b7efe9a296ca8e6b5cb4e327e61c7d3a437da61db713a6620fd81a4fad9c1dd4",
+      "skill_count": 21,
       "skills": [
         {
           "key": "anti-drift",
@@ -406,11 +341,6 @@
           "key": "compact-responses",
           "version": "0.2.1",
           "digest": "sha256:448c9143fcf408118c0c4395183152b60bf1ff2dfdaed036aa127d6cc69e4bcd"
-        },
-        {
-          "key": "complex-task-orchestrator",
-          "version": "0.2.0",
-          "digest": "sha256:c27350e969c50ab6d192536d2735a5dd40e518a83fc2276aee31ca69d6a7048c"
         },
         {
           "key": "context-economy",
@@ -438,14 +368,9 @@
           "digest": "sha256:6162cead9f1165c539d78e562e669e0a41c83443808d4e57d2ae846b606e7c4c"
         },
         {
-          "key": "git-commit-rules",
-          "version": "0.2.0",
-          "digest": "sha256:d3ea1157463f6b8080ca5a881911fca25b75267e04e54a7623f81fe28136eeb4"
-        },
-        {
           "key": "github-flow",
           "version": "0.2.1",
-          "digest": "sha256:594820e735019a39217abcad02f77a9c6de567ef3fd61cb8a8eba30c10d4f556"
+          "digest": "sha256:35bbee8616e3e5550949554f426dba5e5d14f41820c1d30c721697f89e2c14ff"
         },
         {
           "key": "naming-conventions",
@@ -483,11 +408,6 @@
           "digest": "sha256:7457e81d395498824d7f3e6c12050d0519d4352064899562db9e6663dc2b7d8d"
         },
         {
-          "key": "session-handoff",
-          "version": "0.3.0",
-          "digest": "sha256:7638f270af6d2a215393433b6717df07037ff1742275d3b9f1d108b0b7a4ebaa"
-        },
-        {
           "key": "shell",
           "version": "0.2.0",
           "digest": "sha256:301c1954c84b35818763212db8bc9076714afbdfb3808577d1c13c86fe77354a"
@@ -496,11 +416,6 @@
           "key": "solo-founder",
           "version": "0.2.0",
           "digest": "sha256:38c2928d1e01608a96a4a853ce8e0bbd42f3754dc601439c9918c9a70a0d7d0e"
-        },
-        {
-          "key": "spec-interview",
-          "version": "0.2.0",
-          "digest": "sha256:633f52850e4b3955c12560a2acd236545e308e3e9964b2c01ee145ad470e7d06"
         },
         {
           "key": "startup-cto",
@@ -531,13 +446,13 @@
       "path": "resources/packs/migrated-local/migrated-laravel-php",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:358af56c460b7d029454c8c727bcc8da03864ee865f9b8efcf799ce12030646d",
-      "skill_count": 33,
+      "digest": "sha256:8948bccfb15f967cbe46c9241c20d57a29b09f0abe0d57b238eb6d9b9f1da4e2",
+      "skill_count": 13,
       "skills": [
         {
           "key": "attribute-authorization",
           "version": "0.1.1",
-          "digest": "sha256:d7037f9b3d034b334b7cbc5a943df65e9a4e2daf8dfa36deecac9eecca9ea230"
+          "digest": "sha256:249a8dc3bb92343f6025951a3d0068ce4790b4a6fed619bc80c4d9d027242785"
         },
         {
           "key": "config-driven-abstraction",
@@ -550,49 +465,9 @@
           "digest": "sha256:b48473bec314bfb2a46b5e93e67ed20cc332f060daf960faff7b96c170112ef5"
         },
         {
-          "key": "database",
-          "version": "0.1.1",
-          "digest": "sha256:d1db9597f1a42a3be22237bcf545ec53a7f7bc0824081c902cae5024570f7111"
-        },
-        {
-          "key": "dependency-injection",
-          "version": "0.2.0",
-          "digest": "sha256:7843d217efd27dbdbde352d87cbe05e4501a9b02b24b5859e46aa751cda70e97"
-        },
-        {
-          "key": "eloquent-accessors",
-          "version": "0.1.0",
-          "digest": "sha256:480ce9690701f68f54f27eb2bee16fd42fcf0ce7400b2a9215635c2ebe7f702d"
-        },
-        {
-          "key": "enum-attributes",
-          "version": "0.2.0",
-          "digest": "sha256:c99446fd23ec4266ad7254f9dab4bdb7871475b8e1894f130909a70cfb0a490c"
-        },
-        {
-          "key": "enum-state-machine",
-          "version": "0.1.0",
-          "digest": "sha256:e9048c936d4eb3e5ccf7c1424eee9bbbb1e97687a3d346ffa7b9d787e1a497da"
-        },
-        {
           "key": "health-checks",
           "version": "0.1.1",
           "digest": "sha256:9d6bd65f5dcb9d727a66bc5284bdbd766ac8e21bee9e6f05d1015c0dee664323"
-        },
-        {
-          "key": "laravel",
-          "version": "0.5.0",
-          "digest": "sha256:97cfcd8b38289ec4c9e87e5dfce7ce4b46d50caac9fcc01b84277e4eeefa06db"
-        },
-        {
-          "key": "laravel-data",
-          "version": "0.1.1",
-          "digest": "sha256:7fbf7c0690067d278f16c02711ec917e0c2362f18d63f0232c79a32745049ba0"
-        },
-        {
-          "key": "laravel-dusk",
-          "version": "0.1.1",
-          "digest": "sha256:051b3896c2aab1208096bdd80b03564d9450fdc163c1d4a98f57ffc7e6d2fdd9"
         },
         {
           "key": "laravel-packages",
@@ -600,19 +475,9 @@
           "digest": "sha256:cadda47db9971720e961588210d79ca0c16b0b0abc8df525515ba713d5efba91"
         },
         {
-          "key": "laravel-permissions",
-          "version": "0.3.2",
-          "digest": "sha256:e4c657f09b7a7f30c48b7af057314a697c41b5a56eb22ba5bd4d4c7fbb8181a1"
-        },
-        {
           "key": "laravel-security-audit",
           "version": "0.1.1",
-          "digest": "sha256:f9408835449a14f9fbff2d121878684026bde984db2d56fc43a73bdbfbc7aac3"
-        },
-        {
-          "key": "laravel-structure",
-          "version": "0.3.0",
-          "digest": "sha256:4948f3d9a6c258190871908b24b2cb721c1152684abb62070f7373655cd7afae"
+          "digest": "sha256:09513f5dad583d5824e991f11611cfe21f4ebbde33a1115bb934d922bdb37eb2"
         },
         {
           "key": "laravel-subagents",
@@ -620,29 +485,9 @@
           "digest": "sha256:9ec287915f65297b2a7fe9eae350b0326491ec2d1c322628440847ab5c55dc6b"
         },
         {
-          "key": "laravel-testing",
-          "version": "0.4.2",
-          "digest": "sha256:e4ce532aace9cc01543af95dfe4f0293c961db7de7a2f73d633bb41e2dc99020"
-        },
-        {
-          "key": "livewire-blade-attributes",
-          "version": "0.1.0",
-          "digest": "sha256:1d62f8b90603ebe5860db0e61156fcdfe34fcbcb62a735e847539909deb2020a"
-        },
-        {
-          "key": "medialibrary",
-          "version": "0.1.0",
-          "digest": "sha256:7d4c52f8add4fd8fef017e672de04233fee7a96536d9f6155e3fd6d6e66b3b3d"
-        },
-        {
           "key": "modular-architecture",
           "version": "0.3.0",
-          "digest": "sha256:f909ec45ffa46e7bed2a82422983765f5f582b1c0bd7b1066928fa60b4559c5f"
-        },
-        {
-          "key": "named-arguments",
-          "version": "0.1.1",
-          "digest": "sha256:ac16f78e8e23f8fca31cd2567fc8905d9775e67693af5b6290bf58ea799c4f39"
+          "digest": "sha256:b38b0dc6fc0277afaf2bd7156313ce6bf3f8697f33b6f2ada646cededd7667ff"
         },
         {
           "key": "namespace-refactor-safety",
@@ -655,16 +500,6 @@
           "digest": "sha256:a1aaf97bf3c3ae880ccf4b7c9dc7a246842038ebf12f1338faff090675ae6a0b"
         },
         {
-          "key": "php-naming-conventions",
-          "version": "0.1.1",
-          "digest": "sha256:c2bf155c2cb215949423f9eada44839376e02f3a09fd09a4b92d4990cbd3e1ad"
-        },
-        {
-          "key": "php-patterns",
-          "version": "0.2.0",
-          "digest": "sha256:5a9f2b90cfc4910703cc552fe52696c4be8cd46206e353226d64c894bfd2a15a"
-        },
-        {
           "key": "php-upgrade-checklist",
           "version": "0.1.1",
           "digest": "sha256:37dbcf72c0d2fc403c38baf5c0100ab4e919557483f34ba7106c358d941d9c3b"
@@ -673,26 +508,6 @@
           "key": "production-readiness-checklist",
           "version": "0.1.1",
           "digest": "sha256:ba2706e2c88d275177db05b32564bfa37675d081b55da62828c65313b3e3b403"
-        },
-        {
-          "key": "repositories",
-          "version": "0.2.0",
-          "digest": "sha256:067cedc5c45b35ddfacf420d8e4351a4b994882d7819fdd802363f554db58576"
-        },
-        {
-          "key": "spatie-settings",
-          "version": "0.2.0",
-          "digest": "sha256:1b710c5657a6e6153e43faf39d6f00eff685da535f6689f82f544cfca15026e2"
-        },
-        {
-          "key": "static-analysis",
-          "version": "0.2.1",
-          "digest": "sha256:da2a3133566f586693ceddce72369f7e580e4827e678e4b7be00b049322b5a7a"
-        },
-        {
-          "key": "test-isolation-guard",
-          "version": "0.1.1",
-          "digest": "sha256:2eb5f86160597ab52000a7aa870f683e064e43d37da391adf41cae409e640b5d"
         },
         {
           "key": "transactional-outbox-relay",
@@ -708,7 +523,7 @@
       "path": "resources/packs/migrated-local/migrated-platforms",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:bff8f7151591f73728eda08543e1c2e27e8abf02905d07ebaaad3a81404f0bad",
+      "digest": "sha256:3f7571a257fddf2bd948a5bcd4857fe106f4adbe6831870361b33dd234f16b73",
       "skill_count": 11,
       "skills": [
         {
@@ -775,7 +590,7 @@
       "path": "resources/packs/migrated-local/migrated-python",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:ad8bf1b27f28a7fca66d4f457553704ca4fe0ddbb3fc993fedaaee9f3cfbc502",
+      "digest": "sha256:4ea5f9d6f9c07798f1eace951898a7664d18e1eefe924dd3b699bd8e24ec8114",
       "skill_count": 2,
       "skills": [
         {
@@ -797,7 +612,7 @@
       "path": "resources/packs/migrated-local/migrated-quality-security",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:69714565a217b0748a2350a6a961cfd5808a5ba379d4d71d543aaa92c2ef4866",
+      "digest": "sha256:a3c40c078ced4eae733308271b1f5916f6e7596898c532c02ea0678cc2d8f515",
       "skill_count": 9,
       "skills": [
         {
@@ -854,7 +669,7 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-ai",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:d22e07ba57925cc7a3c61ba9f703ea4eefbdb5e9df7c3bdc6b16c98c9b77fc3d",
+      "digest": "sha256:4cf8b6b17a7e8373861717c19a2eaf840f340f356ce1cbc1d2b22b6c21069ded",
       "skill_count": 3,
       "skills": [
         {
@@ -865,7 +680,7 @@
         {
           "key": "mcp-builder",
           "version": "1.0.0",
-          "digest": "sha256:74dc4c104d498baba63c1a230e9ca9062e007bba9e06104f394a04183e578322"
+          "digest": "sha256:34e49d8866338e62d8c93d2f6ebfb264bc8ef181d50f2d58b30b34c61fa56e8a"
         },
         {
           "key": "performance",
@@ -881,7 +696,7 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-architect",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:6ae9b341d55b05cd8c6e6a01bab18c8d0a703efdcec36b516fc64e4e0193a90c",
+      "digest": "sha256:9fca89c12758236495f5204437ace61c1e0100039e33cba24404c4168f5bb2e4",
       "skill_count": 3,
       "skills": [
         {
@@ -908,7 +723,7 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-business",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:a8178745cd4c93fb7d39eef8ccf7c946dd6706d0d1c330f9ac9fc5f85ac2f2c2",
+      "digest": "sha256:b1b951bb80804ec8ea211d34a94335e59314b0e6e0d30c77beb66aff315cb612",
       "skill_count": 7,
       "skills": [
         {
@@ -955,7 +770,7 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-devops",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:e1c71d29b89cc4d2a3d300be0c91d3991b66861355a873a9e6f336ecaff05fcc",
+      "digest": "sha256:a1ca0048a37fa80447ab7ccfd24904fc7dfbfec524a63bfb2c617daa8a7b2e8b",
       "skill_count": 1,
       "skills": [
         {
@@ -972,98 +787,18 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-frontend",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:c7b9b0300b721fcb876d6ad1608255a106f69bfb7957dc80c27d30a1cc699593",
-      "skill_count": 18,
+      "digest": "sha256:876c39430cc94c860efa189dc062533c94adacf55a9d10d53a2165a9c33fba7f",
+      "skill_count": 2,
       "skills": [
-        {
-          "key": "antfu",
-          "version": "1.0.0",
-          "digest": "sha256:7ae8c2a11053e310c7bc5eede18ba91b4bc8aaffa341b49f17e17964b745d9c7"
-        },
         {
           "key": "document-writer",
           "version": "1.0.0",
           "digest": "sha256:d7a40283980b34c4599289c190bbb7036823b37063e9bfb18e5c9addb8780e3a"
         },
         {
-          "key": "js-code-style",
-          "version": "0.1.0",
-          "digest": "sha256:1d6866db36fa5d5e2efee491d4ee3d4d4fec05bac08b9118543905fd88ddd151"
-        },
-        {
-          "key": "motion",
-          "version": "1.0.0",
-          "digest": "sha256:24e7d990605486a34373fd6ea57869d505dd1a41ead9c6079c90643030002f46"
-        },
-        {
-          "key": "nuxt",
-          "version": "0.1.1",
-          "digest": "sha256:5181b9b5f53441425c482d946ebb443a4358500328b7941721b7a2afa8ef3099"
-        },
-        {
-          "key": "nuxt-modules",
-          "version": "0.1.1",
-          "digest": "sha256:ccb6549df3b7d89806322fb3d3e1ee0d0a84cce3403136296ba742449331e864"
-        },
-        {
-          "key": "nuxt-seo",
-          "version": "0.1.1",
-          "digest": "sha256:f7c9df5bf7914b837fd6031a762fbd208284406378d6792f99585293b9aa457f"
-        },
-        {
-          "key": "pinia",
-          "version": "0.1.1",
-          "digest": "sha256:f049d5f1a10f8141fa263486470ec85dff477ba556608d26eb904a07dab1fedb"
-        },
-        {
           "key": "ts-library",
           "version": "1.0.0",
           "digest": "sha256:0e62697a6222fe8ccfa2176491b3e08281b18ac52bd97887ad64ab3f75c49f5d"
-        },
-        {
-          "key": "vite",
-          "version": "1.0.0",
-          "digest": "sha256:51eaac71acc4961bea512bb932971bf50f73e083325234ff799b68c99298fb5c"
-        },
-        {
-          "key": "vitepress",
-          "version": "1.0.0",
-          "digest": "sha256:8d4de89b46cbaa892d7f52c7fa365dff24b78699209bfde3a23539bf1149b4b9"
-        },
-        {
-          "key": "vitest-vue",
-          "version": "0.1.1",
-          "digest": "sha256:752d244f3a1ff41aee1c1ac1ad48037d0f7c1aaaba552255ec784cd1faaefcec"
-        },
-        {
-          "key": "vue",
-          "version": "0.1.1",
-          "digest": "sha256:c69ee8a98991c7ddec68a1e46c3bc7504dfc1d0de2eb7b049b90832684fcdd31"
-        },
-        {
-          "key": "vue-best-practices",
-          "version": "0.1.1",
-          "digest": "sha256:c7eaae051c669443492b0139382337001cb792b43ec1c392b48e844430ddd9df"
-        },
-        {
-          "key": "vue-router-best-practices",
-          "version": "0.2.1",
-          "digest": "sha256:9b8f114cd01e27a1e6f6ab78fa07b191abd94582c38c14dfdc276dc55e8951ed"
-        },
-        {
-          "key": "vue-testing-best-practices",
-          "version": "1.1.1",
-          "digest": "sha256:c500985f503450db449eae1c2ebf8e4fe63f38fc820b1abd8997f54c82ffb8bf"
-        },
-        {
-          "key": "vueuse-functions",
-          "version": "1.1.0",
-          "digest": "sha256:f22bfa42a9e4c22c465c9a2080375fbd73514e93517d71b0b1191cb9822330ee"
-        },
-        {
-          "key": "web-design-guidelines",
-          "version": "1.0.0",
-          "digest": "sha256:2cb45a2f212c304426941f2d5cc48d5e9d36b18261b38af8abc167719a558061"
         }
       ]
     },
@@ -1074,24 +809,9 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-general",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:c808c97e365652f98049a0e1cbb1fce090b325af4a610755bffe27d0ebf4fa73",
-      "skill_count": 6,
+      "digest": "sha256:28a9d37cd2f545d069d6c7b74076ff5dff63af3def4db0ac6c5550cdacb0a26b",
+      "skill_count": 2,
       "skills": [
-        {
-          "key": "git-safety",
-          "version": "0.1.0",
-          "digest": "sha256:022645d56dcd0e04307bc56785064d09018d49cda0ffee372319f65cbba1b6f5"
-        },
-        {
-          "key": "grill-with-docs",
-          "version": "0.1.0",
-          "digest": "sha256:abf544524e57b57c7e4576e1da1741a5f4afd86af13a9c93b530e2b0ad8ed3a6"
-        },
-        {
-          "key": "implement",
-          "version": "0.1.0",
-          "digest": "sha256:8c9eea81c59c4e54edbd8bd2695fab908ae57ad04da3ee73791ddaa1ce1c8b5b"
-        },
         {
           "key": "issue-triage",
           "version": "0.1.1",
@@ -1100,12 +820,7 @@
         {
           "key": "resolving-merge-conflicts",
           "version": "0.1.1",
-          "digest": "sha256:6915b24b8c8ca6ff7efa2c1dbfd93adae45313cc9be67a2b05cd2bd0b36f288a"
-        },
-        {
-          "key": "to-issues",
-          "version": "0.1.1",
-          "digest": "sha256:71faf3009fbb4ae6a2e748851cc52a49ce6ba89db1d18c72a62ba9f51add5acd"
+          "digest": "sha256:6a62716f67ca506b0145bdd660d28855d63c1676fce6ce84e65d0855a563b590"
         }
       ]
     },
@@ -1116,29 +831,9 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-laravel-php",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:4759444b6fa458a0e17940a26b923f43b6c67ffec26705b8c3332889c2c8b2df",
-      "skill_count": 13,
+      "digest": "sha256:eb44f932df997bfa50a5679d8acbeeb79c5a29b399e9cf0a99c1e8fb572c79d2",
+      "skill_count": 8,
       "skills": [
-        {
-          "key": "code-style-spatie",
-          "version": "0.1.1",
-          "digest": "sha256:81e6ea303f87137a87fafdac59f73fd28e817bfe85e66532e7aa5f7a48334acc"
-        },
-        {
-          "key": "filament",
-          "version": "1.0.1",
-          "digest": "sha256:1f35864fd9d562f43e37a7c21a727f84821a00b1e6cda7693d6c92462214fb96"
-        },
-        {
-          "key": "laravel-best-practices",
-          "version": "0.2.0",
-          "digest": "sha256:1cf15144d381c554b6fa23837843c6ed634310dfa8046d9b49f1ed5a631d257a"
-        },
-        {
-          "key": "laravel-broadcasting",
-          "version": "0.1.1",
-          "digest": "sha256:c5fa54d888e52370ff2ec2f84ea2c734bfc5c83184e2f66d7bb6e44c5d95b71e"
-        },
         {
           "key": "laravel-package-compatibility",
           "version": "0.3.1",
@@ -1178,11 +873,6 @@
           "key": "laravel-package-testing",
           "version": "0.3.1",
           "digest": "sha256:cbe4e34f6bf766d32c4d5e3ac8a0c9b52a78e700b659ca2dc96d82abc01d9016"
-        },
-        {
-          "key": "pennant-development",
-          "version": "0.1.0",
-          "digest": "sha256:4c2f4b720b210e8650be85d932a86b6edcf88fb0c308f5583b143168c6e38fe8"
         }
       ]
     },
@@ -1193,14 +883,9 @@
       "path": "resources/packs/migrated-upstream/migrated-upstream-quality-security",
       "trust": "third_party",
       "priority": -100,
-      "digest": "sha256:273ce7a7a7050007955ee188ec7ef32f17faddbe54eb5b41bf81190b2f7e1353",
-      "skill_count": 4,
+      "digest": "sha256:19c861325b37f45954d3ebe5bf8cb455d9f5fff1b1a573a704fecbc0534fd9de",
+      "skill_count": 2,
       "skills": [
-        {
-          "key": "diagnosing-bugs",
-          "version": "0.2.0",
-          "digest": "sha256:a58e46d33d4fe2b33732abc855c021bbfa309b4c2bae32974301e19fcae37b2b"
-        },
         {
           "key": "research",
           "version": "0.1.0",
@@ -1210,11 +895,6 @@
           "key": "security",
           "version": "0.1.0",
           "digest": "sha256:894aca783f9293e169cbc64a3220a23cad6bbdc770525a4cb0ac0426bc177fb5"
-        },
-        {
-          "key": "tdd-discipline",
-          "version": "0.2.0",
-          "digest": "sha256:62df2b720c28d182814c07fa3193e49c7db52c8a8ef3a4e92cd56e0e4ab1a1d1"
         }
       ]
     }
@@ -1445,6 +1125,482 @@
       }
     },
     {
+      "key": "filepond-upload",
+      "origin": "skiller",
+      "bucket": "frontend",
+      "source_path": "packages/skiller/skills/frontend/filepond-upload",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "web-design-guidelines",
+      "origin": "skiller",
+      "bucket": "frontend",
+      "source_path": "packages/skiller/skills/frontend/web-design-guidelines",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "motion",
+      "origin": "skiller",
+      "bucket": "frontend-animations",
+      "source_path": "packages/skiller/skills/frontend-animations/motion",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "inertia-vue",
+      "origin": "skiller",
+      "bucket": "frontend-backend",
+      "source_path": "packages/skiller/skills/frontend-backend/inertia-vue",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-echo-client",
+      "origin": "skiller",
+      "bucket": "frontend-backend",
+      "source_path": "packages/skiller/skills/frontend-backend/laravel-echo-client",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "antfu",
+      "origin": "skiller",
+      "bucket": "frontend-linting",
+      "source_path": "packages/skiller/skills/frontend-linting/antfu",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "eslint-flat-config",
+      "origin": "skiller",
+      "bucket": "frontend-linting",
+      "source_path": "packages/skiller/skills/frontend-linting/eslint-flat-config",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "js-code-style",
+      "origin": "skiller",
+      "bucket": "frontend-linting",
+      "source_path": "packages/skiller/skills/frontend-linting/js-code-style",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "naive-ui-theming",
+      "origin": "skiller",
+      "bucket": "frontend-naive-ui",
+      "source_path": "packages/skiller/skills/frontend-naive-ui/naive-ui-theming",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "nuxt",
+      "origin": "skiller",
+      "bucket": "frontend-nuxt",
+      "source_path": "packages/skiller/skills/frontend-nuxt/nuxt",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "nuxt-modules",
+      "origin": "skiller",
+      "bucket": "frontend-nuxt",
+      "source_path": "packages/skiller/skills/frontend-nuxt/nuxt-modules",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "nuxt-seo",
+      "origin": "skiller",
+      "bucket": "frontend-nuxt",
+      "source_path": "packages/skiller/skills/frontend-nuxt/nuxt-seo",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "reka-ui-cva",
+      "origin": "skiller",
+      "bucket": "frontend-reka",
+      "source_path": "packages/skiller/skills/frontend-reka/reka-ui-cva",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "dark-mode",
+      "origin": "skiller",
+      "bucket": "frontend-tailwind",
+      "source_path": "packages/skiller/skills/frontend-tailwind/dark-mode",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "tailwind-conventions",
+      "origin": "skiller",
+      "bucket": "frontend-tailwind",
+      "source_path": "packages/skiller/skills/frontend-tailwind/tailwind-conventions",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vite",
+      "origin": "skiller",
+      "bucket": "frontend-vite",
+      "source_path": "packages/skiller/skills/frontend-vite/vite",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vitepress",
+      "origin": "skiller",
+      "bucket": "frontend-vite",
+      "source_path": "packages/skiller/skills/frontend-vite/vitepress",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "pinia",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/pinia",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "pinia-stores",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/pinia-stores",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vitest",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vitest",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vitest-vue",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vitest-vue",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue-best-practices",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue-best-practices",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue-composition-api",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue-composition-api",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue-dynamic-icons",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue-dynamic-icons",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue-router-best-practices",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue-router-best-practices",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vue-testing-best-practices",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vue-testing-best-practices",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "vueuse-functions",
+      "origin": "skiller",
+      "bucket": "frontend-vue",
+      "source_path": "packages/skiller/skills/frontend-vue/vueuse-functions",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "wayfinder",
+      "origin": "skiller",
+      "bucket": "frontend-wayfinder",
+      "source_path": "packages/skiller/skills/frontend-wayfinder/wayfinder",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "complex-task-orchestrator",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/complex-task-orchestrator",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "git-commit-rules",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/git-commit-rules",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "git-safety",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/git-safety",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "grill-with-docs",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/grill-with-docs",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/grill-me",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "implement",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/implement",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/implement",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
       "key": "mcp-advisor",
       "origin": "skiller",
       "bucket": "general",
@@ -1455,6 +1611,20 @@
         "users": "author_or_single_ecosystem",
         "extension_point": "operator overlay pack",
         "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "session-handoff",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/session-handoff",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/handoff",
+        "compatible_without_it": "Provided by core pack.",
         "removal_test": "tests/integration/extensions/test_migrated_packs.py"
       }
     },
@@ -1473,6 +1643,20 @@
       }
     },
     {
+      "key": "spec-interview",
+      "origin": "skiller",
+      "bucket": "general",
+      "source_path": "packages/skiller/skills/general/spec-interview",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/grill-me",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
       "key": "writing-style",
       "origin": "skiller",
       "bucket": "general",
@@ -1487,6 +1671,370 @@
       }
     },
     {
+      "key": "eloquent-accessors",
+      "origin": "skiller",
+      "bucket": "laravel-architecture",
+      "source_path": "packages/skiller/skills/laravel-architecture/eloquent-accessors",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "enum-attributes",
+      "origin": "skiller",
+      "bucket": "laravel-architecture",
+      "source_path": "packages/skiller/skills/laravel-architecture/enum-attributes",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "enum-state-machine",
+      "origin": "skiller",
+      "bucket": "laravel-architecture",
+      "source_path": "packages/skiller/skills/laravel-architecture/enum-state-machine",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-permissions",
+      "origin": "skiller",
+      "bucket": "laravel-auth",
+      "source_path": "packages/skiller/skills/laravel-auth/laravel-permissions",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-broadcasting",
+      "origin": "skiller",
+      "bucket": "laravel-data-layer",
+      "source_path": "packages/skiller/skills/laravel-data-layer/laravel-broadcasting",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-data",
+      "origin": "skiller",
+      "bucket": "laravel-data-layer",
+      "source_path": "packages/skiller/skills/laravel-data-layer/laravel-data",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "medialibrary",
+      "origin": "skiller",
+      "bucket": "laravel-extras",
+      "source_path": "packages/skiller/skills/laravel-extras/medialibrary",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "pennant-development",
+      "origin": "skiller",
+      "bucket": "laravel-extras",
+      "source_path": "packages/skiller/skills/laravel-extras/pennant-development",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "spatie-settings",
+      "origin": "skiller",
+      "bucket": "laravel-extras",
+      "source_path": "packages/skiller/skills/laravel-extras/spatie-settings",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "filament",
+      "origin": "skiller",
+      "bucket": "laravel-filament",
+      "source_path": "packages/skiller/skills/laravel-filament/filament",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "livewire-blade-attributes",
+      "origin": "skiller",
+      "bucket": "laravel-livewire",
+      "source_path": "packages/skiller/skills/laravel-livewire/livewire-blade-attributes",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-dusk",
+      "origin": "skiller",
+      "bucket": "laravel-testing",
+      "source_path": "packages/skiller/skills/laravel-testing/laravel-dusk",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-testing",
+      "origin": "skiller",
+      "bucket": "laravel-testing",
+      "source_path": "packages/skiller/skills/laravel-testing/laravel-testing",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "test-isolation-guard",
+      "origin": "skiller",
+      "bucket": "laravel-testing",
+      "source_path": "packages/skiller/skills/laravel-testing/test-isolation-guard",
+      "reason": "moved_to_agent_pack",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "laravel_agent_pack_users",
+        "extension_point": "resources/packs/agent-packs-local/agent-packs-backend-laravel/integration-bundles/agent-pack-backend-laravel/snippets/TestEnvironmentGuard.php",
+        "compatible_without_it": "The test guard is provided by the Laravel agent pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "to-issues",
+      "origin": "skiller",
+      "bucket": "oss-dev",
+      "source_path": "packages/skiller/skills/oss-dev/to-issues",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/to-tickets",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "code-style-spatie",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/code-style-spatie",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "database",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/database",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "dependency-injection",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/dependency-injection",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/laravel",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-best-practices",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/laravel-best-practices",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "laravel-structure",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/laravel-structure",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "named-arguments",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/named-arguments",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "php-naming-conventions",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/naming-conventions",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "php-patterns",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/php-patterns",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "repositories",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/repositories",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "static-analysis",
+      "origin": "skiller",
+      "bucket": "php",
+      "source_path": "packages/skiller/skills/php/static-analysis",
+      "reason": "pruned_from_builtin_packs",
+      "g36": {
+        "users_beyond_author": false,
+        "users": "project_specific",
+        "extension_point": "operator overlay pack",
+        "compatible_without_it": "Neutral core runs without this skill.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
       "key": "code-review",
       "origin": "skiller",
       "bucket": "quality",
@@ -1495,7 +2043,35 @@
       "g36": {
         "users_beyond_author": true,
         "users": "all_skm_users_via_core",
-        "extension_point": "resources/packs/core/skills/code-review",
+        "extension_point": "resources/packs/core/skills/spec-review",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "diagnosing-bugs",
+      "origin": "skiller",
+      "bucket": "quality",
+      "source_path": "packages/skiller/skills/quality/diagnosing-bugs",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/diagnosing-bugs",
+        "compatible_without_it": "Provided by core pack.",
+        "removal_test": "tests/integration/extensions/test_migrated_packs.py"
+      }
+    },
+    {
+      "key": "tdd-discipline",
+      "origin": "skiller",
+      "bucket": "quality",
+      "source_path": "packages/skiller/skills/quality/tdd-discipline",
+      "reason": "already_in_core",
+      "g36": {
+        "users_beyond_author": true,
+        "users": "all_skm_users_via_core",
+        "extension_point": "resources/packs/core/skills/tdd",
         "compatible_without_it": "Provided by core pack.",
         "removal_test": "tests/integration/extensions/test_migrated_packs.py"
       }

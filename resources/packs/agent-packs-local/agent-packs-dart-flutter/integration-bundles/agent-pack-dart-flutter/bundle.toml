@@ -1,13 +1,13 @@
 schema = "urn:skm:integrations:bundle:v1"
 key = "agent-pack-dart-flutter"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Dart and Flutter"
 description = "Neutral Dart null-safety, widget tree performance, and cross-platform testing conventions migrated as pure data."
 targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
 agents = []
 
 [[skills]]
-key = "code-review"
+key = "spec-review"
 
 [[assets]]
 target = "claude_code"
@@ -63,4 +63,11 @@ target = "antigravity"
 surface = "rules"
 source = "rules/dart-flutter.md"
 path = ".agents/rules/dart-flutter.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "rules/flutter-ui.md"
+path = ".claude/rules/flutter-ui.md"
 ownership = "managed_file"

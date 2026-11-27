@@ -1,0 +1,13 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "tdd"
+version = "2.1.0"
+kind = "workflow"
+roles = ["executor"]
+risk = "low"
+license = "Apache-2.0"
+
+[provenance]
+source = "local"
+
+[invocation]
+user_only = false

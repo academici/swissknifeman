@@ -46,7 +46,7 @@ _CANONICAL_INSTRUCTION_PATHS: Final[Mapping[TargetId, str]] = {
     TargetId.CLAUDE_CODE: "CLAUDE.md",
     TargetId.CODEX: "AGENTS.md",
     TargetId.CURSOR: ".cursor/rules/skm-instructions.mdc",
-    TargetId.GEMINI_CLI: "GEMINI.md",
+    TargetId.GEMINI_CLI: "AGENTS.md",
     TargetId.GROK: ".grok/rules/skm-instructions.md",
 }
 
@@ -176,8 +176,51 @@ def resolve_bundle_asset_path(
     surface: BundleAssetSurface,
     pack_prefix: str,
     ownership: Ownership | None = None,
+    preset: str | None = None,
+    package_name: str | None = None,
+    package_slug: str | None = None,
 ) -> str:
     """Expand ``{prefix}`` and validate canonical target/surface root rules (§4.11)."""
+    if not raw_path:
+        raise ValidationFailed(ErrorCode.INTEGRATION_UNSAFE_TARGET, "empty bundle asset path")
+    package_var = "{package_name}"
+    if package_var in raw_path and (
+        not raw_path.startswith("skills/{package_name}-")
+        or preset != "dart-package"
+        or not package_name
+        or not re.fullmatch(r"[a-z][a-z0-9_]*", package_name)
+    ):
+        raise ValidationFailed(ErrorCode.INTEGRATION_UNSAFE_TARGET, "invalid Dart package skill path")
+    slug_var = "{package_slug}"
+    if slug_var in raw_path and (
+        not raw_path.startswith("resources/boost/skills/{package_slug}/")
+        or preset != "php-package"
+        or not package_slug
+        or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", package_slug)
+    ):
+        raise ValidationFailed(ErrorCode.INTEGRATION_UNSAFE_TARGET, "invalid PHP package skill path")
+    expanded = raw_path.replace(package_var, package_name or "").replace(slug_var, package_slug or "")
+    if expanded.startswith(("resources/boost/", "skills/")):
+        _validate_posix_relative(expanded, code=ErrorCode.INTEGRATION_UNSAFE_TARGET, field="path")
+        php = preset == "php-package" and expanded.startswith("resources/boost/")
+        dart = (
+            preset == "dart-package"
+            and package_name is not None
+            and re.fullmatch(r"[a-z][a-z0-9_]*", package_name) is not None
+            and re.fullmatch(rf"skills/{re.escape(package_name)}-[^/]+/.+", expanded) is not None
+        )
+        if (
+            ownership is Ownership.MANAGED_FILE
+            and (php or dart)
+            and "{" not in expanded
+            and "}" not in expanded
+        ):
+            return expanded
+        raise ValidationFailed(
+            ErrorCode.INTEGRATION_UNSAFE_TARGET,
+            f"preset does not own consumer path {expanded!r}",
+            details={"path": expanded},
+        )
     if (
         (target is TargetId.GROK and surface is BundleAssetSurface.AGENTS)
         or (
@@ -190,12 +233,6 @@ def resolve_bundle_asset_path(
             ErrorCode.CAPABILITY_UNAVAILABLE,
             f"{target.value} target does not support bundle {surface.value} surface",
             details={"target": target.value, "surface": surface.value, "path": raw_path},
-        )
-    if not raw_path:
-        raise ValidationFailed(
-            ErrorCode.INTEGRATION_UNSAFE_TARGET,
-            f"empty bundle asset path {raw_path!r}",
-            details={"path": raw_path, "target": target.value},
         )
     stripped_vars = raw_path.replace("{prefix}", "")
     if "{" in stripped_vars or "}" in stripped_vars:
@@ -432,6 +469,9 @@ def _apply_bundle_asset_entry(
     *,
     target: TargetId,
     renderer: str,
+    preset: str | None,
+    package_name: str | None,
+    package_slug: str | None,
 ) -> None:
     if str(entry.get("target", "")) != target.value:
         return
@@ -440,7 +480,14 @@ def _apply_bundle_asset_entry(
     pack_prefix = str(entry.get("pack_prefix") or "skm")
     raw_path = str(entry.get("raw_path") or entry.get("path") or "")
     expanded = resolve_bundle_asset_path(
-        raw_path=raw_path, target=target, surface=surface, pack_prefix=pack_prefix, ownership=ownership
+        raw_path=raw_path,
+        target=target,
+        surface=surface,
+        pack_prefix=pack_prefix,
+        ownership=ownership,
+        preset=preset,
+        package_name=package_name,
+        package_slug=package_slug,
     )
     try:
         raw_bytes = base64.b64decode(str(entry["content_b64"]), validate=True)
@@ -450,6 +497,10 @@ def _apply_bundle_asset_entry(
             f"invalid base64 payload for bundle asset {expanded!r}",
             details={"path": expanded},
         ) from exc
+
+    for token, value in (("{package_name}", package_name), ("{package_slug}", package_slug)):
+        if token in raw_path and value is not None:
+            raw_bytes = raw_bytes.replace(token.encode(), value.encode())
 
     ref: SourceRef = {"kind": "integration_bundle", "key": str(entry["bundle_key"])}
     for k_in, k_out in (("bundle_version", "version"), ("bundle_digest", "digest")):
@@ -544,12 +595,21 @@ def merge_and_render_bundle_assets(
             )
         by_path[item.relative_path] = item
 
+    preset = inputs.instructions_project.get("preset")
+    package_name = inputs.instructions_project.get("package_name")
+    package_slug = inputs.instructions_project.get("package_slug")
     raw_assets = inputs.instructions_project.get("bundle_assets")
     if isinstance(raw_assets, Sequence) and not isinstance(raw_assets, (str, bytes)):
         for raw_item in cast("Sequence[object]", raw_assets):
             if isinstance(raw_item, Mapping):
                 _apply_bundle_asset_entry(
-                    by_path, cast("Mapping[str, object]", raw_item), target=target, renderer=renderer
+                    by_path,
+                    cast("Mapping[str, object]", raw_item),
+                    target=target,
+                    renderer=renderer,
+                    preset=preset if isinstance(preset, str) else None,
+                    package_name=package_name if isinstance(package_name, str) else None,
+                    package_slug=package_slug if isinstance(package_slug, str) else None,
                 )
 
     return tuple(sorted(by_path.values(), key=lambda f: f.relative_path))

@@ -5,7 +5,6 @@ kind = "workflow"
 risk = "high"
 license = "MIT"
 roles = ["executor"]
-requires = ["git-commit-rules"]
 
 [provenance]
 source = "upstream"

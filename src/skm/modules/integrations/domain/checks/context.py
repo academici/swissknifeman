@@ -13,7 +13,15 @@ from skm.modules.integrations.domain.hook_subscriptions import HookSubscription,
 from skm.modules.integrations.domain.reports import CheckResult
 from skm.modules.integrations.domain.target import TargetId
 
-__all__ = ["DoctorContext", "effective_settings", "finding", "mapping", "strings"]
+__all__ = [
+    "DoctorContext",
+    "HygieneObservation",
+    "ScriptObservation",
+    "effective_settings",
+    "finding",
+    "mapping",
+    "strings",
+]
 
 
 def mapping(value: object) -> JsonObject:
@@ -48,6 +56,22 @@ def effective_settings(layers: Iterable[ClientLayer]) -> JsonObject:
 
 
 @dataclass(frozen=True, slots=True)
+class ScriptObservation:
+    path: str
+    executable: bool
+    checkout_file: bool
+    subscription_id: str | None
+    trusted: bool
+
+
+@dataclass(frozen=True, slots=True)
+class HygieneObservation:
+    files: Mapping[str, str] = field(default_factory=dict[str, str])
+    skills: tuple[str, ...] = ()
+    scripts: tuple[ScriptObservation, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class DoctorContext:
     target: TargetId
     layers: tuple[ClientLayer, ...] = ()
@@ -66,6 +90,7 @@ class DoctorContext:
     supported_kinds: frozenset[HookEventKind] = frozenset()
     enforcement_enabled: bool = False
     checkout_marker: str | None = None  # present | missing | mismatch; None: not observed
+    hygiene: HygieneObservation = field(default_factory=HygieneObservation)
 
     @property
     def effective(self) -> JsonObject:

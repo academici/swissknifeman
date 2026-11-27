@@ -229,9 +229,9 @@ def test_every_check(check, good, bad, level, negative):
     assert all(result.target == (bad if negative else good).target for result in results)
 
 
-def test_exactly_26_stable_ids_and_severity_aggregation():
+def test_exactly_33_stable_ids_and_severity_aggregation():
     results = tuple(result for ctx in (BASE, CURSOR, CODEX) for result in run_checks(ctx).checks)
-    assert len({result.check_id for result in results}) == 26
+    assert len({result.check_id for result in results}) == 33
     report = summarize(results)
     assert report.status == "ok"
     assert report.counts["ok"] == len(results)

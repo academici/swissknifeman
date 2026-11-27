@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from skm.platform.config.secrets import SecretValue
 
 __all__ = [
+    "active_stop",
     "build_embedded_hook_app",
     "evaluate",
     "evaluate_native",
@@ -398,6 +399,24 @@ def read_bytes(stdin: Any) -> bytes:
     return raw.encode("utf-8") if isinstance(raw, str) else raw
 
 
+def active_stop(args: argparse.Namespace, raw: bytes) -> bool:
+    if (args.target, args.event_name) != ("claude_code", "Stop") or len(raw) > 1_048_576:
+        return False
+    from skm.adapters.integrations.claude_code.hooks import normalize_hook_payload
+    from skm.kernel.errors import ValidationFailed
+
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+        if not isinstance(payload, dict):
+            return False
+        document = cast("JsonObject", payload)
+        return document.get("stop_hook_active") is True and (
+            normalize_hook_payload("Stop", document).stop_status == "active"
+        )
+    except (ValueError, RecursionError, ValidationFailed):
+        return False
+
+
 def evaluate(args: argparse.Namespace, stdin: Any, context: Any, *, live: bool = False) -> dict[str, Any]:
     from skm.modules.integrations.host.evaluate_hook import run
 
@@ -499,6 +518,8 @@ def evaluate_native(
     after_output: list[Callable[[], None]] | None = None,
     embedded_app: Callable[[BootstrapConfig], App] | None = None,
 ) -> dict[str, Any]:
+    if active_stop(args, raw):
+        return evaluate(args, io.BytesIO(raw), unavailable_context(), live=live)
     started = monotonic()
     drain_context = None
     session_queued = False

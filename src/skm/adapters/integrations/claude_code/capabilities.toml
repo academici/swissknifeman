@@ -17,7 +17,7 @@ bindings = [{ event = "PreToolUse", matcher = "Bash" }]
 
 [hook_surfaces."security.safe_dirs"]
 class = "enforcement"
-bindings = [{ event = "PreToolUse", matcher = "Bash" }]
+bindings = [{ event = "PreToolUse", matcher = "Edit|Write|MultiEdit|Bash" }]
 
 [hook_surfaces."lifecycle.plan_guard"]
 class = "enforcement"
@@ -58,6 +58,7 @@ pre_shell = { event = "PreToolUse", matcher = "Bash" }
 pre_tool = { event = "PreToolUse", matcher = "Edit|Write|MultiEdit|NotebookEdit" }
 post_tool = { event = "PostToolUse" }
 subagent_stop = { event = "SubagentStop" }
+stop = { event = "Stop" }
 
 [budget]
 skill_listing_entry_max_chars = 1536

@@ -299,9 +299,9 @@ def bundle_env(tmp_path: Path) -> Iterator[_BundleEnv]:
 
 
 def test_migrated_agent_packs_neutral_compat_clean_and_installable(bundle_env: _BundleEnv) -> None:
-    assert len(PackagedBuiltinPacks(PACKS_ROOT).payloads()) == 29
+    assert len(PackagedBuiltinPacks(PACKS_ROOT).payloads()) == 30
     pack_dirs = sorted(p.parent for p in AGENT_PACKS_SLOT.glob("*/pack.toml"))
-    assert len(pack_dirs) == 10
+    assert len(pack_dirs) == 11
     reader, est = FilesystemPackReader(), FakeEstimator()
     for pack_dir in pack_dirs:
         payload = reader.read_dir(str(pack_dir))
@@ -316,14 +316,26 @@ def test_migrated_agent_packs_neutral_compat_clean_and_installable(bundle_env: _
         assert dict(cand.manifest.config) == {}
         assert all(r.compat.verdict is ext_compat.CompatVerdict.CLEAN for r in cand.resources)
         bundles = [r for r in cand.resources if r.kind is ResourceKind.INTEGRATION_BUNDLE]
-        assert len(bundles) == 1
-        assert set(bdom.parse_bundle_manifest(bundles[0].manifest).targets) == {
-            TargetId.ANTIGRAVITY,
-            TargetId.CLAUDE_CODE,
-            TargetId.CODEX,
-            TargetId.CURSOR,
-            TargetId.GROK,
+        expected = {
+            "agent-packs-dart-package": {"skm-preset-dart-package"},
+            "agent-packs-laravel-package": {"agent-pack-laravel-package", "skm-preset-php-package"},
         }
+        assert {bundle.key for bundle in bundles} == expected.get(
+            pack_dir.name, {pack_dir.name.replace("agent-packs-", "agent-pack-", 1)}
+        )
+        for bundle in bundles:
+            targets = set(bdom.parse_bundle_manifest(bundle.manifest).targets)
+            assert targets == (
+                {TargetId.CLAUDE_CODE}
+                if bundle.key.startswith("skm-preset-")
+                else {
+                    TargetId.ANTIGRAVITY,
+                    TargetId.CLAUDE_CODE,
+                    TargetId.CODEX,
+                    TargetId.CURSOR,
+                    TargetId.GROK,
+                }
+            )
 
     bundle_env.install_migrated("agent-packs-common", "agent-packs-python-backend")
     dto = _payload_dto(reader.read_dir(str(AGENT_PACKS_SLOT / "agent-packs-common")))
@@ -336,7 +348,7 @@ def test_migrated_agent_packs_neutral_compat_clean_and_installable(bundle_env: _
 def test_bundle_projection_golden_outputs_and_grok_unsupported_agents(bundle_env: _BundleEnv) -> None:
     bundle_env.install_migrated("agent-packs-common", "agent-packs-python-backend")
     tgts, ags = ("claude_code", "codex", "cursor", "grok"), ({"key": "reviewer", "profile": "reviewer"},)
-    review_doc = _bundle_doc("review-kit", targets=tgts, agents=ags, skills=({"key": "code-review"},))
+    review_doc = _bundle_doc("review-kit", targets=tgts, agents=ags, skills=({"key": "spec-review"},))
     bundle_env.seed_bundle_in_core("review-kit", review_doc)
     enabled = ["agent-packs-common", "agent-packs-python-backend"]
     selected = ["agent-pack-common", "agent-pack-python-backend", "review-kit"]
@@ -359,6 +371,9 @@ def test_bundle_projection_golden_outputs_and_grok_unsupported_agents(bundle_env
     assert "<!-- skm:begin id=bundle.agent-pack-common " in (co / "AGENTS.md").read_text(encoding="utf-8")
     for target, rel_co, rel_gold in BUNDLE_GOLDENS:
         assert (co / rel_co).read_bytes() == (GOLDEN_ROOT / rel_gold).read_bytes(), (target, rel_co)
+    agents = (co / "AGENTS.md").read_bytes()
+    assert bundle_env.remove(TargetId.GEMINI_CLI).state is ProjectionState.REMOVED
+    assert (co / "AGENTS.md").read_bytes() == agents
 
 
 def test_gemini_cli_projects_and_removes_bundle_without_overwriting_user_context(
@@ -369,12 +384,12 @@ def test_gemini_cli_projects_and_removes_bundle_without_overwriting_user_context
         "target": target.value,
         "surface": "instructions",
         "source": "instructions.md",
-        "path": "GEMINI.md",
+        "path": "AGENTS.md",
         "ownership": "managed_block",
         "block_id": "bundle.gemini-kit",
     }
     manifest = _bundle_doc(
-        "gemini-kit", targets=(target.value,), assets=(instructions,), skills=({"key": "code-review"},)
+        "gemini-kit", targets=(target.value,), assets=(instructions,), skills=({"key": "spec-review"},)
     )
     bundle_env.seed_bundle_in_core(
         "gemini-kit", manifest, bodies={"instructions.md": b"Verify the checkout before reporting.\n"}
@@ -382,15 +397,18 @@ def test_gemini_cli_projects_and_removes_bundle_without_overwriting_user_context
     bundle_env.set_cfg("project", bundle_env.project_id, "integrations.bundles", ["gemini-kit"])
     bundle_env.set_cfg("project", bundle_env.project_id, "integrations.targets", [target.value])
     checkout = bundle_env.checkout_dir
-    context = checkout / "GEMINI.md"
+    context = checkout / "AGENTS.md"
+    gemini = checkout / "GEMINI.md"
+    gemini.write_text("# Gemini-specific notes\n")
     user_context = b"# User context\n\nKeep this context.\n"
     context.write_bytes(user_context)
 
     assert bundle_env.apply(target).state is ProjectionState.IN_SYNC
     assert context.read_bytes().startswith(user_context)
     assert (GOLDEN_ROOT / "gemini_cli" / "GEMINI.md").read_bytes() in context.read_bytes()
-    skill = checkout / ".gemini" / "skills" / "code-review" / "SKILL.md"
-    assert skill.read_text(encoding="utf-8").startswith("---\nname: code-review\n")
+    assert gemini.read_text() == "# Gemini-specific notes\n"
+    skill = checkout / ".agents" / "skills" / "spec-review" / "SKILL.md"
+    assert skill.read_text(encoding="utf-8").startswith("---\nname: spec-review\n")
     assert bundle_env.apply(target).written == ()
     assert bundle_env.drift(target)["state"] == "in_sync"
     assert bundle_env.remove(target).state is ProjectionState.REMOVED

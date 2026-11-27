@@ -1,7 +1,7 @@
 # Builtin SKM core pack manifest.
 schema = "urn:skm:extensions:pack:v1"
 slug = "core"
-version = "2.0.8"
+version = "2.1.0"
 title = "SKM core pack"
 description = "Neutral role profiles, prompt blocks, workflows, plan templates, the model catalog and model guideline profiles shipped with SKM."
 publisher = "skm"
@@ -36,3 +36,13 @@ description = "One Python testing style per step."
 name = "research-method"
 max = 1
 description = "One research method per researcher step."
+
+[[overrides]]
+kind = "skill"
+key = "implement"
+reason = "Core takes ownership of the skill previously shipped by migrated-upstream-general."
+
+[[overrides]]
+kind = "skill"
+key = "diagnosing-bugs"
+reason = "Core takes ownership of the skill previously shipped by migrated-upstream-quality-security."

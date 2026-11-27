@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "migrated-general"
-version = "1.0.1"
+version = "1.1.0"
 title = "Migrated Neutral Skills: General Engineering Workflows"
 description = "Reproducibly migrated neutral authored skills for General Engineering Workflows (inert third_party data pack)."
 publisher = "skm-migrated"

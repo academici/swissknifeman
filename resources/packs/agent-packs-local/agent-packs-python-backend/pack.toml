@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-python-backend"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Python Backend"
 description = "Neutral Python backend architecture, typing, transaction boundary, and pytest rules migrated as pure data."
 publisher = "skm-migrated"

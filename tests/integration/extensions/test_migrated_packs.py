@@ -120,6 +120,14 @@ def _write_synthetic_donor(donor: Path) -> None:
     (local_skill / "evals" / "case.json").write_text('{"drop": true}\n', encoding="utf-8")
     (local_skill / "scripts" / "run.py").write_text("raise SystemExit(99)\n", encoding="utf-8")
 
+    github_flow = donor / "packages" / "skiller" / "skills" / "general" / "github-flow"
+    github_flow.mkdir(parents=True)
+    (github_flow / "SKILL.md").write_text(
+        "---\nname: github-flow\ndescription: Review and merge changes.\n"
+        "requires: [general/git-commit-rules, devops/sample-deploy]\n---\n\nReview the change.\n",
+        encoding="utf-8",
+    )
+
     up_skill = donor / "packages" / "skiller" / "skills" / "ai" / "upstream-guide"
     (up_skill / "references").mkdir(parents=True)
     (up_skill / "SKILL.md").write_text(
@@ -150,6 +158,8 @@ def _write_synthetic_donor(donor: Path) -> None:
     for rel in (
         "packages/skiller/skills/axioma/axioma-custom",
         "packages/skiller/skills/quality/code-review",
+        "packages/skiller/skills/general/git-commit-rules",
+        "packages/skiller/skills/frontend-vue/vue-composition-api",
         "packages/maind/skills/local-topology",
     ):
         d = donor / rel
@@ -231,7 +241,7 @@ def test_cli_dry_run_and_idempotent_write_on_synthetic_donor(tmp_path: Path) -> 
     dry = subprocess.run([*base_cmd, "--dry-run"], capture_output=True, text=True, check=True)
     dry_summary = json.loads(dry.stdout)
     assert dry_summary["dry_run"] is True
-    assert dry_summary["counts"] == {"source_total": 5, "migrated": 2, "excluded": 3, "packs": 2}
+    assert dry_summary["counts"] == {"source_total": 8, "migrated": 3, "excluded": 5, "packs": 3}
     assert not out_dir.exists()
     assert not export_path.exists()
 
@@ -249,6 +259,15 @@ def test_cli_dry_run_and_idempotent_write_on_synthetic_donor(tmp_path: Path) -> 
     assert (local_skill_dir / "snippets" / "sentinel.py").is_file()
     assert not (local_skill_dir / "evals").exists()
     assert not (local_skill_dir / "scripts").exists()
+
+    general_pack = out_dir / "migrated-local" / "migrated-general"
+    assert tomllib.loads((general_pack / "pack.toml").read_text(encoding="utf-8"))["version"] == "1.1.0"
+    assert not (general_pack / "skills" / "git-commit-rules").exists()
+    assert not (out_dir / "migrated-local" / "migrated-frontend").exists()
+    flow = tomllib.loads((general_pack / "skills/github-flow/manifest.toml").read_text(encoding="utf-8"))
+    assert flow["requires"] == ["sample-deploy"]
+    exclusions = {entry["key"]: entry for entry in export_doc["excluded_skills"]}
+    assert exclusions["code-review"]["g36"]["extension_point"] == "resources/packs/core/skills/spec-review"
 
     up_manifest = (
         out_dir / "migrated-upstream" / "migrated-upstream-ai" / "skills" / "upstream-guide" / "manifest.toml"
@@ -276,8 +295,8 @@ def test_committed_migrated_packs_reconcile_and_pass_compat_clean() -> None:
     counts = export_doc["counts"]
     assert counts["source_total"] == 218
     assert counts["migrated"] + counts["excluded"] == counts["source_total"]
-    assert counts["migrated"] == 198
-    assert counts["excluded"] == 20
+    assert counts["migrated"] == 134
+    assert counts["excluded"] == 84
     assert counts["packs"] == 18
 
     excluded = export_doc["excluded_skills"]
@@ -327,7 +346,11 @@ def test_committed_migrated_packs_reconcile_and_pass_compat_clean() -> None:
         assert {item.path: item.content for item in packaged_payload.files} == {
             item.path: item.content for item in payload.files
         }
+        assert cand.digest == meta["digest"]
         assert len(cand.resources) == meta["skill_count"]
+        assert [
+            {"key": res.key, "version": str(res.version), "digest": res.digest} for res in cand.resources
+        ] == meta["skills"]
 
         for pf in payload.files:
             text = pf.content.decode("utf-8")
@@ -345,6 +368,7 @@ def test_committed_migrated_packs_reconcile_and_pass_compat_clean() -> None:
             seen_skill_keys.add(res.key)
 
     assert len(seen_skill_keys) == counts["migrated"]
+    assert seen_skill_keys.isdisjoint(excluded_keys)
 
 
 @pytest.mark.pg
@@ -418,6 +442,6 @@ def test_committed_migrated_packs_install_into_postgres_alongside_core(
             if page.next_cursor is None:
                 break
             cursor = page.next_cursor
-        assert len(all_items) == export_doc["counts"]["migrated"] + 4
+        assert len(all_items) == export_doc["counts"]["migrated"] + 11
     finally:
         app.close()

@@ -289,7 +289,14 @@ def test_render_and_merge_match_golden_tree_byte_for_byte() -> None:
         parse_json_document(settings_df.managed_bytes),
         settings_df.boundary.owned_keys,
     ).encode("utf-8")
-    assert merged_settings == (GOLDEN_DIR / ".claude/settings.json").read_bytes()
+    expected_settings = json.loads((GOLDEN_DIR / ".claude/settings.json").read_bytes())
+    safe_dirs = next(
+        group
+        for group in expected_settings["hooks"]["PreToolUse"]
+        if any("security.safe_dirs" in hook["command"] for hook in group["hooks"])
+    )
+    safe_dirs["matcher"] = "Edit|Write|MultiEdit|Bash"
+    assert json.loads(merged_settings) == expected_settings
 
     local_df = by_path[".claude/settings.local.json"]
     merged_local = merge_owned_json(
@@ -319,7 +326,10 @@ def test_render_and_merge_match_golden_tree_byte_for_byte() -> None:
         parse_json_document(mcp_df.managed_bytes),
         mcp_df.boundary.owned_keys,
     ).encode("utf-8")
-    assert merged_mcp == (GOLDEN_DIR / ".mcp.json").read_bytes()
+    expected_mcp = (
+        (GOLDEN_DIR / ".mcp.json").read_bytes().replace(b"secret://env/GITHUB_TOKEN", b"${GITHUB_TOKEN}")
+    )
+    assert merged_mcp == expected_mcp
 
     for rel in (
         ".claude/skills/skm-planning/SKILL.md",

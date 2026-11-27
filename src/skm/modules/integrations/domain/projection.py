@@ -22,6 +22,7 @@ from .merged_json import dumps_merged_json_bytes, merge_owned, parse_json_docume
 from .merged_toml import merge_owned_toml, parse_toml
 from .observed import AppliedFileRecord
 from .ownership import ManagedBoundary, Ownership, empty_managed_digest
+from .presets import preset_of_renderer
 from .target import Surface, TargetId
 
 __all__ = [
@@ -194,7 +195,15 @@ def _render_desired_into_base(desired: DesiredFile, base_bytes: bytes | None) ->
     if boundary.ownership is Ownership.MANAGED_FILE:
         return desired.managed_bytes
     if boundary.ownership is Ownership.MANAGED_BLOCK:
-        return replace_blocks(base_bytes or b"", desired.managed_bytes, boundary.block_ids)
+        rendered = replace_blocks(base_bytes or b"", desired.managed_bytes, boundary.block_ids)
+        if (
+            desired.relative_path == "AGENTS.md"
+            and preset_of_renderer(desired.renderer) is not None
+            and b"<!-- skm:local:start -->" not in rendered
+            and b"<!-- skm:local:end -->" not in rendered
+        ):
+            return rendered + b"\n<!-- skm:local:start -->\n<!-- skm:local:end -->\n"
+        return rendered
     if boundary.ownership is Ownership.MERGED_JSON:
         base_doc = parse_json_document(base_bytes) if base_bytes is not None else {}
         managed_doc = parse_json_document(desired.managed_bytes)

@@ -157,7 +157,7 @@ _WEBHOOK_SINK = frozenset({SubscriptionKind.WEBHOOK, SubscriptionKind.EVENT_SINK
 MATRIX: Final[Mapping[tuple[HookClass, ExecutionLocation], _Row]] = {
     (HookClass.ENFORCEMENT, ExecutionLocation.HOST): _Row(
         frozenset({SubscriptionKind.COMMAND}),
-        frozenset({"pre_shell", "pre_tool", "user_prompt", "permission_request"}),
+        frozenset({"pre_shell", "pre_tool", "user_prompt", "permission_request", "stop"}),
         (FailurePolicy.DENY, FailurePolicy.WARN),
         1000,
         (50, HOST_TIMEOUT_CEILING_MS),
@@ -167,7 +167,7 @@ MATRIX: Final[Mapping[tuple[HookClass, ExecutionLocation], _Row]] = {
     ),
     (HookClass.WORKFLOW, ExecutionLocation.HOST): _Row(
         frozenset({SubscriptionKind.COMMAND}),
-        frozenset({"session_start", "subagent_stop", "stop"}),
+        frozenset({"session_start", "subagent_stop", "stop", "post_tool"}),
         (FailurePolicy.WARN,),
         1000,
         (50, HOST_TIMEOUT_CEILING_MS),

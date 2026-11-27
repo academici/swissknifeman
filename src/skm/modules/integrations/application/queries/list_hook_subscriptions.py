@@ -10,6 +10,7 @@ from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import NotFound
 from skm.kernel.ids import ProjectId, ScopeId, WorkspaceId
 from skm.kernel.scopes import ScopeKind, ScopeRef
+from skm.modules.integrations.application.projection_views import applied_preset_subscriptions
 from skm.modules.integrations.application.subscribers import (
     default_hookable_event_types,
     read_hook_subscriptions,
@@ -21,12 +22,14 @@ from skm.modules.integrations.domain.hook_subscriptions import (
     Violation,
     WebhookTarget,
 )
+from skm.modules.integrations.domain.target import TargetId
 from skm.modules.integrations.generated.queries import ListHookSubscriptions
 from skm.modules.integrations.generated.results import ListHookSubscriptionsResult
 from skm.modules.integrations.generated.views import (
     HookSubscriptionView,
     HookSubscriptionViewDefsJsonValue,
 )
+from skm.modules.integrations.ports import ProjectionRepository
 from skm.modules.workspace import public as workspace
 
 if TYPE_CHECKING:
@@ -105,6 +108,15 @@ def handle(
             code="HOOK_SUBSCRIPTION_INVALID",
             key=violation.key,
             reason=violation.reason,
+        )
+    if query.project_id is not None:
+        presets, _ = applied_preset_subscriptions(
+            uow.repo(ProjectionRepository), ProjectId(query.project_id), TargetId.CLAUDE_CODE
+        )
+        preset_ids = {sub.id for sub in presets}
+        entries = (
+            *((sub, violations) for sub, violations in entries if sub.id not in preset_ids),
+            *((sub, ()) for sub in presets),
         )
     items = tuple(
         HookSubscriptionView(

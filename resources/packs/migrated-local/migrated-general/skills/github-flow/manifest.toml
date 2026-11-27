@@ -5,7 +5,7 @@ kind = "workflow"
 risk = "high"
 license = "Apache-2.0"
 roles = ["executor", "registrar", "triager"]
-requires = ["gh-review", "git-commit-rules", "release-engineering"]
+requires = ["gh-review", "release-engineering"]
 
 [provenance]
 source = "local"

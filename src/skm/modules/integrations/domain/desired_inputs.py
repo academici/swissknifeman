@@ -14,6 +14,7 @@ from skm.kernel.json_types import JsonObject, JsonValue
 from skm.kernel.outcomes import Diagnostic as KernelDiagnostic
 from skm.kernel.outcomes import Severity
 from skm.modules.integrations.domain.bundle import (
+    BundleAssetSurface,
     IntegrationBundleManifest,
     normalize_desired_json,
     normalize_desired_map,
@@ -55,6 +56,7 @@ _AGENT_FILE_FMT: Final[Mapping[TargetId, str]] = {
     TargetId.CODEX: ".codex/agents/{name}.toml",
     TargetId.CURSOR: ".cursor/agents/{name}.md",
 }
+_AGENTS_MD_TARGETS = frozenset({TargetId.CODEX, TargetId.GEMINI_CLI})
 
 
 def build_agent_doc(
@@ -210,6 +212,9 @@ class BundleTargetAccumulator:
 
     target: TargetId
     pack_prefix: str
+    preset: str | None = None
+    package_name: str | None = None
+    package_slug: str | None = None
     seen_agents: set[str] = field(default_factory=set[str])
     occupied_files: set[str] = field(default_factory=set[str])
     occupied_blocks: set[tuple[str, str]] = field(default_factory=set[tuple[str, str]])
@@ -265,10 +270,27 @@ class BundleTargetAccumulator:
         bundle_digest: str,
         bodies: Mapping[str, str] | None,
         file_metas: Sequence[tuple[str, int, str]],
+        paths: frozenset[str] | None = None,
     ) -> None:
+        # Codex and Gemini read the same root document, so its managed blocks must agree.
+        shared_blocks: set[tuple[str | None, str]] = set()
         for asset in manifest.assets:
-            if asset.target is not self.target:
+            shared = (
+                self.target in _AGENTS_MD_TARGETS
+                and asset.target in _AGENTS_MD_TARGETS
+                and asset.path == "AGENTS.md"
+                and asset.surface is BundleAssetSurface.INSTRUCTIONS
+                and asset.ownership is Ownership.MANAGED_BLOCK
+            )
+            if (asset.target is not self.target and not shared) or (
+                paths is not None and asset.path not in paths
+            ):
                 continue
+            if shared:
+                block = (asset.block_id, asset.source)
+                if block in shared_blocks:
+                    continue
+                shared_blocks.add(block)
             raw_bytes = extract_bundle_source_bytes(
                 bodies, file_metas, source=asset.source, bundle_key=manifest.key
             )
@@ -278,6 +300,9 @@ class BundleTargetAccumulator:
                 surface=asset.surface,
                 pack_prefix=self.pack_prefix,
                 ownership=asset.ownership,
+                preset=self.preset,
+                package_name=self.package_name,
+                package_slug=self.package_slug,
             )
             if asset.ownership is Ownership.MANAGED_FILE:
                 if expanded in self.occupied_files or any(p == expanded for p, _ in self.occupied_blocks):

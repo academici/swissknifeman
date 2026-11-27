@@ -1,13 +1,13 @@
 schema = "urn:skm:integrations:bundle:v1"
 key = "agent-pack-role-cto"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Architecture and Risk Advisor"
 description = "Neutral system architecture, operational risk, and technology trade-off advisory lens migrated as pure data."
 targets = ["claude_code", "codex", "cursor", "grok", "antigravity"]
 agents = []
 
 [[skills]]
-key = "code-review"
+key = "spec-review"
 
 [[assets]]
 target = "claude_code"

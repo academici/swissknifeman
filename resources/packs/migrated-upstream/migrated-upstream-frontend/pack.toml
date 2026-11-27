@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "migrated-upstream-frontend"
-version = "1.0.1"
+version = "1.1.0"
 title = "Migrated Upstream Skills: Frontend, Vue & TypeScript"
 description = "Reproducibly migrated upstream-mirrored third-party skills for Frontend, Vue & TypeScript (inert third_party data pack)."
 publisher = "skm-migrated"

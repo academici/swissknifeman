@@ -64,6 +64,7 @@ class HookPolicyContext:
     git_message: str = "Unsafe Git operation blocked by project policy."
     safe_verdict: str = "none"
     safe_reason: str | None = None
+    safe_message: str | None = None
     managed_path: str | None = None
     changelog_required: bool = False
     commit_text: str | None = None
@@ -127,6 +128,42 @@ def _commit_words(command: str, depth: int = 0) -> tuple[str, ...] | None:
     return None
 
 
+_LARAVEL_DESTRUCTIVE = frozenset({"migrate:fresh", "migrate:refresh", "db:wipe"})
+_SAFE_REASONS = {
+    "HOOK_COMMAND_INVALID": "Unable to safely interpret the shell command.",
+    "HOOK_PATH_INVALID": "Unable to verify the edit path in the bound checkout.",
+    "ENV_FILE_PROTECTED": "The .env file is protected. Use .env.example for templates.",
+    "LARAVEL_DB_GUARD": "Destructive Laravel database resets are blocked.",
+}
+
+
+def protected_env_path(path: str) -> bool:
+    return any(
+        part != ".env.example" and (part == ".env" or part.startswith(".env.")) for part in path.split("/")
+    )
+
+
+def safe_shell_words(command: str) -> tuple[str, ...]:
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|<>()")
+    lexer.whitespace_split = True
+    words = tuple(lexer)
+    if not words or "\0" in command:
+        raise ValueError("unparseable command")
+    return words
+
+
+def safe_dirs_violation(paths: tuple[str, ...], words: tuple[str, ...]) -> tuple[str, str] | None:
+    if any(protected_env_path(path) for path in paths):
+        code = "ENV_FILE_PROTECTED"
+    elif any(posixpath.basename(word) == "artisan" for word in words) and _LARAVEL_DESTRUCTIVE.intersection(
+        words
+    ):
+        code = "LARAVEL_DB_GUARD"
+    else:
+        return None
+    return code, _SAFE_REASONS[code]
+
+
 def failure_decision(
     surface: HookSurfaceId, mode: HookMode, reason: str, *, commit: bool = False, detail: str | None = None
 ) -> HookDecision:
@@ -146,10 +183,18 @@ def failure_decision(
 def evaluate_hook(  # noqa: PLR0911 - one rule per built-in surface
     event: NormalizedHookEvent, surface: HookSurfaceId, mode: HookMode, ctx: HookPolicyContext
 ) -> HookDecision:
-    def decision(code: str | None = None, text: str | None = None, *, context: bool = False) -> HookDecision:
+    def decision(
+        code: str | None = None,
+        text: str | None = None,
+        *,
+        context: bool = False,
+        strict: bool = False,
+    ) -> HookDecision:
         verdict = HookVerdict.NONE
         if text:
-            verdict = HookVerdict.CONTEXT if context or mode is HookMode.WARN else HookVerdict.DENY
+            verdict = (
+                HookVerdict.CONTEXT if context or (mode is HookMode.WARN and not strict) else HookVerdict.DENY
+            )
         return HookDecision(
             verdict, surface, code, text, text, text if verdict is HookVerdict.CONTEXT else None
         )
@@ -162,9 +207,14 @@ def evaluate_hook(  # noqa: PLR0911 - one rule per built-in surface
     if surface is HookSurfaceId.GIT_GUARDRAILS and shell:
         if ctx.git_violation:
             return decision(ctx.git_reason, ctx.git_message)
-    elif surface is HookSurfaceId.SAFE_DIRS and shell:
+    elif surface is HookSurfaceId.SAFE_DIRS and (shell or event.kind is HookEventKind.PRE_TOOL):
         if ctx.safe_verdict == "deny":
-            return decision(ctx.safe_reason, "Command denied by project policy.")
+            text = ctx.safe_message or _SAFE_REASONS.get(
+                ctx.safe_reason or "", "Operation denied by project policy."
+            )
+            return decision(
+                ctx.safe_reason, text, strict=ctx.safe_reason in {"HOOK_COMMAND_INVALID", "HOOK_PATH_INVALID"}
+            )
         if ctx.safe_verdict == "ask":
             return HookDecision(
                 HookVerdict.ASK,

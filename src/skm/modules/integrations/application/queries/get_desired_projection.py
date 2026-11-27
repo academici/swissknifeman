@@ -17,7 +17,12 @@ from skm.kernel.outcomes import Diagnostic as KernelDiagnostic
 from skm.kernel.outcomes import Severity
 from skm.kernel.scopes import ScopeKind, ScopeRef
 from skm.modules.extensions import public as extensions
-from skm.modules.integrations.application.projection_views import project_scope, resolve_project_binding_host
+from skm.modules.integrations.application.projection_views import (
+    PacksConfigView,
+    assemble_mcp_servers,
+    project_scope,
+    resolve_project_binding_host,
+)
 from skm.modules.integrations.domain.bundle import (
     BundleSkill,
     normalize_desired_json,
@@ -44,6 +49,14 @@ from skm.modules.integrations.domain.permission_docs import (
     build_permission_request_doc,
     serialize_permission_set,
 )
+from skm.modules.integrations.domain.presets import (
+    PRESET_BUNDLES,
+    Preset,
+    dart_package_fallback,
+    preset_instruction_block,
+    preset_of_renderer,
+    preset_subscription_config,
+)
 from skm.modules.integrations.domain.profiles import PermissionProfile, resolve_profile
 from skm.modules.integrations.domain.target import TargetId
 from skm.modules.integrations.generated.queries import GetDesiredProjection
@@ -53,6 +66,7 @@ from skm.modules.integrations.generated.views import (
     DesiredProjectionViewDefsHostSubscriptionEvent,
     DesiredProjectionViewDefsJsonValue,
 )
+from skm.modules.integrations.ports import ProjectionRepository
 from skm.modules.policy.public import (
     PermissionSet,
     effective_permissions,
@@ -107,27 +121,6 @@ def _host_allows_trusted(uow: UnitOfWork, ctx: QueryContext, host_id: HostId) ->
     host_ref = ScopeRef(ScopeKind.HOST, ScopeId(UUID(str(host_id))))
     eff = ConfigLoader(ctx.config.registry, packs).effective_host(store, scopes, host_ref)
     return eff.section(IntegrationsHostView).trusted_full_access.allowed
-
-
-class _PacksConfigView:
-    __slots__ = ("_base", "_enabled", "_extra_pins")
-
-    def __init__(
-        self,
-        base: EffectiveConfig,
-        enabled: Sequence[str] | None = None,
-        extra_pins: Mapping[str, str] | None = None,
-    ) -> None:
-        self._base = base
-        self._enabled = None if enabled is None else list(enabled)
-        self._extra_pins = dict(extra_pins or {})
-
-    def get(self, key: str) -> Any:
-        if key == "extensions.packs.enabled" and self._enabled is not None:
-            return list(self._enabled)
-        if key == "extensions.resources.pinned" and self._extra_pins:
-            return {**self._extra_pins, **cast("Mapping[str, str]", self._base.get(key))}
-        return self._base.get(key)
 
 
 @dataclass(slots=True)
@@ -276,7 +269,7 @@ def _resolve_presets(
     presets: Sequence[str],
 ) -> tuple[frozenset[str], set[str], list[str]]:
     cfg = st.ctx.config
-    core_pins = _pinned_or_empty(st.uow, cast("EffectiveConfig", _PacksConfigView(cfg, ())))
+    core_pins = _pinned_or_empty(st.uow, cast("EffectiveConfig", PacksConfigView(cfg, ())))
     core_keys: frozenset[str] = (
         extensions.known_keys(st.uow, extensions.ResourceKind.SKILL, config=cfg, pins=core_pins)
         if core_pins
@@ -289,7 +282,7 @@ def _resolve_presets(
         if preset == "core":
             preset_skills.update(core_keys)
             continue
-        probe_cfg = cast("EffectiveConfig", _PacksConfigView(cfg, (preset,)))
+        probe_cfg = cast("EffectiveConfig", PacksConfigView(cfg, (preset,)))
         if core_pins:
             pvid = _pinned_or_empty(st.uow, probe_cfg).get(preset)
             pskills = (
@@ -339,7 +332,7 @@ def _assemble_skills(
     bpins = {f"skill:{s.key}": s.version for s in bundle_skills if s.version is not None}
     skill_cfg = cast(
         "EffectiveConfig",
-        _PacksConfigView(st.ctx.config, [*base_en, *matched_packs] if matched_packs else None, bpins),
+        PacksConfigView(st.ctx.config, [*base_en, *matched_packs] if matched_packs else None, bpins),
     )
 
     cache: dict[str, extensions.ResourceVersionView | None] = {}
@@ -409,22 +402,40 @@ def _assemble_bundles(
     target: TargetId,
     effective_profile: PermissionProfile,
     perms: PermissionSet,
+    preset: Preset | None = None,
+    project_slug: str = "",
 ) -> tuple[
     tuple[Mapping[str, DesiredProjectionViewDefsJsonValue], ...],
     tuple[BundleSkill, ...],
     tuple[Mapping[str, DesiredProjectionViewDefsJsonValue], ...],
 ]:
     acc = BundleTargetAccumulator(
-        target=target, pack_prefix=validate_pack_prefix(settings.agents.pack_prefix)
+        target=target,
+        pack_prefix=validate_pack_prefix(settings.agents.pack_prefix),
+        preset=preset,
+        package_name=dart_package_fallback(project_slug) if preset == "dart-package" else None,
+        package_slug=project_slug,
     )
     seen_bundles: set[str] = set()
     skills_out: list[BundleSkill] = []
 
-    for bundle_key in settings.bundles:
+    preset_pack = PRESET_BUNDLES[preset] if preset is not None and target is TargetId.CLAUDE_CODE else None
+    bundle_keys = [*settings.bundles]
+    if preset_pack is not None and preset_pack[1] not in bundle_keys:
+        bundle_keys.append(preset_pack[1])
+    for bundle_key in bundle_keys:
         if bundle_key in seen_bundles:
             continue
         seen_bundles.add(bundle_key)
-        summary = st.resolve(extensions.ResourceKind.INTEGRATION_BUNDLE, bundle_key)
+        active_preset_pack = preset_pack if preset_pack is not None and bundle_key == preset_pack[1] else None
+        if active_preset_pack is None:
+            summary = st.resolve(extensions.ResourceKind.INTEGRATION_BUNDLE, bundle_key)
+        else:
+            configured = cast("Sequence[str]", st.ctx.config.get("extensions.packs.enabled") or ())
+            cfg = cast(
+                "EffectiveConfig", PacksConfigView(st.ctx.config, (*configured, active_preset_pack[0]))
+            )
+            summary = st.resolve(extensions.ResourceKind.INTEGRATION_BUNDLE, bundle_key, config=cfg)
         if summary is None:
             if (extensions.ResourceKind.INTEGRATION_BUNDLE, bundle_key) in st.seen_q:
                 continue
@@ -433,25 +444,35 @@ def _assemble_bundles(
             st.uow, ResourceVersionId(summary.resource_version_id), include_bodies=True
         )
         manifest = parse_bundle_manifest(full.manifest)
-        if not acc.check_target_supported(manifest, st.diagnostics):
+        supported = acc.check_target_supported(manifest, st.diagnostics)
+        paths = None
+        if supported:
+            skills_out.extend(manifest.skills)
+            bmeta = (manifest.key, manifest.version, full.digest)
+            for bagent in manifest.agents:
+                ename = acc.reserve_agent_name(bagent.key)
+                pview = st.resolve(extensions.ResourceKind.AGENT_PROFILE, bagent.profile)
+                if pview is None:
+                    if (extensions.ResourceKind.AGENT_PROFILE, bagent.profile) in st.seen_q:
+                        continue
+                    raise NotFound(ErrorCode.NOT_FOUND, f"agent_profile {bagent.profile!r} not found")
+                prof = extensions.load_agent_profile(st.uow, ResourceVersionId(pview.resource_version_id))
+                _check_agent_ceiling(st, chain, prof, effective_profile, perms, bundle_key=manifest.key)
+                acc.record_agent(
+                    ename, build_agent_doc(prof, name=ename, digest=pview.digest, bundle_meta=bmeta)
+                )
+            if active_preset_pack is not None and bundle_key not in settings.bundles:
+                paths = active_preset_pack[2]
+        elif target in {TargetId.CODEX, TargetId.GEMINI_CLI}:
+            paths = frozenset({"AGENTS.md"})
+        else:
             continue
-        skills_out.extend(manifest.skills)
-        bmeta = (manifest.key, manifest.version, full.digest)
-        for bagent in manifest.agents:
-            ename = acc.reserve_agent_name(bagent.key)
-            pview = st.resolve(extensions.ResourceKind.AGENT_PROFILE, bagent.profile)
-            if pview is None:
-                if (extensions.ResourceKind.AGENT_PROFILE, bagent.profile) in st.seen_q:
-                    continue
-                raise NotFound(ErrorCode.NOT_FOUND, f"agent_profile {bagent.profile!r} not found")
-            prof = extensions.load_agent_profile(st.uow, ResourceVersionId(pview.resource_version_id))
-            _check_agent_ceiling(st, chain, prof, effective_profile, perms, bundle_key=manifest.key)
-            acc.record_agent(ename, build_agent_doc(prof, name=ename, digest=pview.digest, bundle_meta=bmeta))
         acc.collect_assets(
             manifest,
             bundle_digest=full.digest,
             bodies=full.bodies,
             file_metas=tuple((f.path, f.size_bytes, f.digest) for f in full.files),
+            paths=paths,
         )
 
     return (
@@ -459,26 +480,6 @@ def _assemble_bundles(
         tuple(skills_out),
         tuple(_dmap(doc) for _, _, _, doc in sorted(acc.assets, key=lambda i: i[:3])),
     )
-
-
-def _assemble_mcp_servers(
-    settings: IntegrationsSettings,
-) -> Mapping[str, Mapping[str, DesiredProjectionViewDefsJsonValue]]:
-    servers: dict[str, Mapping[str, DesiredProjectionViewDefsJsonValue]] = {}
-    if settings.mcp.include_skm:
-        servers["skm"] = {"command": "skm", "args": ("mcp", "serve"), "type": "stdio", "enabled": True}
-    for name, entry in sorted(settings.mcp.servers.items()):
-        if entry.enabled is False:
-            servers.pop(name, None)
-            continue
-        spec: dict[str, DesiredProjectionViewDefsJsonValue] = {"enabled": True}
-        for attr in ("type", "command", "args", "url", "tool_count"):
-            if (val := getattr(entry, attr)) is not None:
-                spec[attr] = val
-        if entry.env_refs is not None:
-            spec["env_refs"] = {k: str(v) for k, v in sorted(entry.env_refs.items())}
-        servers[name] = spec
-    return servers
 
 
 def handle(query: GetDesiredProjection, ctx: QueryContext, uow: UnitOfWork) -> DesiredProjectionView:
@@ -508,22 +509,39 @@ def handle(query: GetDesiredProjection, ctx: QueryContext, uow: UnitOfWork) -> D
     serialized_perms = _dmap(serialize_permission_set(perms, digest=permissions_digest(perms)))
 
     st = _ResolveState(uow=uow, ctx=ctx)
-    instructions_core, instructions_project = _assemble_instructions(st, project_slug, settings)
-    if settings.bundles:
-        agents, b_skills, b_assets = _assemble_bundles(st, chain, settings, target, eff_prof, perms)
+    previous = uow.repo(ProjectionRepository).find(project_id, binding_id, target)
+    preset = query.preset
+    if preset is None and previous is not None and previous.state != "removed":
+        preset = preset_of_renderer(previous.renderer_version)
+    if preset is None:
+        instructions_core, instructions_project = _assemble_instructions(st, project_slug, settings)
+    else:
+        instructions_core = {"enabled": False}
+        instructions_project = _dmap(preset_instruction_block(preset, project_slug))
+    if settings.bundles or (preset is not None and target is TargetId.CLAUDE_CODE):
+        agents, b_skills, b_assets = _assemble_bundles(
+            st, chain, settings, target, eff_prof, perms, preset=preset, project_slug=project_slug
+        )
         if b_assets:
             instructions_project["bundle_assets"] = b_assets
     else:
-        b_skills, agents = (), _assemble_default_agents(st, settings)
+        agents, b_skills = (), ()
+    if not settings.bundles:
+        agents = _assemble_default_agents(st, settings)
 
     skills = _assemble_skills(st, settings, target, b_skills)
-    mcp_servers = _assemble_mcp_servers(settings)
+    mcp_servers = assemble_mcp_servers(settings)
     hook_modes: dict[str, Literal["off", "warn", "strict"]] = {
         k: HookMode(v.value).value for k, v in sorted(settings.hooks.mode.items())
     }
+    if preset == "php-project":
+        hook_modes["safe_dirs"] = "strict"
+    configured = cast("Mapping[str, Any]", ctx.config.get("hooks.subscriptions") or {})
     host_events = tuple(
         DesiredProjectionViewDefsHostSubscriptionEvent(kind=cast("Any", k), classes=c)
-        for k, c in collect_host_subscription_events(ctx.config.get("hooks.subscriptions"))
+        for k, c in collect_host_subscription_events(
+            {**configured, **preset_subscription_config(preset, target)}
+        )
     )
     diagnostics = tuple(_dmap(format_diagnostic(d)) for d in (*prof_res.diagnostics, *st.diagnostics))
     inputs_digest = digest_bytes(

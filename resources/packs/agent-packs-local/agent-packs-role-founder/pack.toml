@@ -1,6 +1,6 @@
 schema = "urn:skm:extensions:pack:v1"
 slug = "agent-packs-role-founder"
-version = "1.0.1"
+version = "1.0.2"
 title = "Migrated Agent Pack: Product Scope Advisor"
 description = "Neutral user-value, scope discipline, and iterative delivery advisory lens migrated as pure data."
 publisher = "skm-migrated"

@@ -5,7 +5,6 @@ kind = "workflow"
 risk = "medium"
 license = "Apache-2.0"
 roles = ["reviewer"]
-requires = ["static-analysis"]
 
 [provenance]
 source = "local"

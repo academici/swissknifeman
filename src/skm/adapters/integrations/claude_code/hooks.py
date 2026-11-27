@@ -41,13 +41,14 @@ CLAUDE_HOOK_EVENTS: Final[tuple[str, ...]] = (
     "PostToolUse",
     "UserPromptSubmit",
     "SubagentStop",
+    "Stop",
     "SessionStart",
     "SessionEnd",
 )
 
 _SURFACE_BINDINGS_ORDER: Final[tuple[tuple[HookSurfaceId, tuple[tuple[str, str | None], ...]], ...]] = (
     (HookSurfaceId.GIT_GUARDRAILS, (("PreToolUse", "Bash"),)),
-    (HookSurfaceId.SAFE_DIRS, (("PreToolUse", "Bash"),)),
+    (HookSurfaceId.SAFE_DIRS, (("PreToolUse", "Edit|Write|MultiEdit|Bash"),)),
     (HookSurfaceId.PLAN_GUARD, (("PreToolUse", "Edit|Write|MultiEdit"),)),
     (HookSurfaceId.PACK_GUARD, (("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit"),)),
     (HookSurfaceId.CHANGELOG_GATE, (("PreToolUse", "Bash"),)),
@@ -65,6 +66,7 @@ _SUBSCRIPTION_EVENT_BINDINGS: Final[Mapping[HookEventKind, tuple[str, str | None
     HookEventKind.PRE_TOOL: ("PreToolUse", "Edit|Write|MultiEdit|NotebookEdit"),
     HookEventKind.POST_TOOL: ("PostToolUse", None),
     HookEventKind.SUBAGENT_STOP: ("SubagentStop", None),
+    HookEventKind.STOP: ("Stop", None),
 }
 
 _SURFACE_LOOKUP: Final[Mapping[str, HookSurfaceId]] = {
@@ -148,7 +150,9 @@ def render_hook_entries(inputs: ProjectionInputs) -> dict[str, list[JsonObject]]
                 hook_class=hook_cls,
             )
             by_event.setdefault(client_event, []).append(
-                _hook_entry(matcher, cmd, enforcement=hook_cls is HookClass.ENFORCEMENT)
+                _hook_entry(
+                    matcher, cmd, enforcement=hook_cls is HookClass.ENFORCEMENT and client_event != "Stop"
+                )
             )
 
     return by_event
@@ -373,19 +377,19 @@ def normalize_hook_payload(event_name: str, payload: Mapping[str, JsonValue]) ->
             raw_event_name=event_name,
         )
 
-    if event_name == "SubagentStop":
+    if event_name in {"Stop", "SubagentStop"}:
         session_id = _require_nonempty_str(payload, "session_id", event_name)
         stop_active = payload.get("stop_hook_active")
         if not isinstance(stop_active, bool):
             raise _invalid_payload(
-                "Claude hook 'SubagentStop' payload requires boolean field 'stop_hook_active'",
+                f"Claude hook {event_name!r} requires boolean field 'stop_hook_active'",
                 event_name=event_name,
                 field="stop_hook_active",
             )
         cwd = _optional_str(payload, "cwd", event_name) or ""
         return NormalizedHookEvent(
             target=TargetId.CLAUDE_CODE,
-            kind=HookEventKind.SUBAGENT_STOP,
+            kind=HookEventKind.STOP if event_name == "Stop" else HookEventKind.SUBAGENT_STOP,
             session_id=session_id,
             cwd=cwd,
             tool_name=None,
@@ -427,6 +431,8 @@ def render_hook_decision(event: NormalizedHookEvent, decision: HookDecision) -> 
             or f"skm hook {decision.surface.value}: {perm_decision}"
         )
         sys_msg = decision.user_message or decision.agent_message or reason
+        if event.raw_event_name == "Stop":
+            return {"exit_code": 0, "stdout": {"decision": "block", "reason": reason}, "stderr": ""}
         if event.raw_event_name == "UserPromptSubmit":
             return {
                 "exit_code": 0,

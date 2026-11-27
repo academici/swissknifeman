@@ -20,17 +20,27 @@ from skm.modules.integrations.domain.decisions import (
     FileDecisionKind,
     decide_file,
     is_safe_relative_path,
+    is_shared_projection_path,
 )
 from skm.modules.integrations.domain.desired import (
     DesiredFile,
     DesiredProjection,
     HostSubscriptionEvent,
     ProjectionInputs,
+    unsupported_surface_diagnostics,
 )
 from skm.modules.integrations.domain.hook_events import HookClass, HookEventKind, HookSurfaceId
 from skm.modules.integrations.domain.hook_rules import HookMode
-from skm.modules.integrations.domain.observed import AppliedFileRecord
+from skm.modules.integrations.domain.managed_block import replace_blocks
+from skm.modules.integrations.domain.observed import AppliedFileRecord, extract_managed_digest
 from skm.modules.integrations.domain.ownership import ManagedBoundary, Ownership, sha256_tagged
+from skm.modules.integrations.domain.presets import (
+    Preset,
+    dart_package_name,
+    php_package_slug,
+    preset_renderer,
+    read_preset,
+)
 from skm.modules.integrations.domain.profiles import PermissionProfile
 from skm.modules.integrations.domain.projection import PlannedWrite, ProjectionPlan, build_planned_write
 from skm.modules.integrations.domain.target import Surface, SurfaceSupport, TargetCapabilities, TargetId
@@ -51,6 +61,7 @@ from .observe import (
     collision_error,
     integrations_settings,
     observe_path,
+    resolve_checkout_by_binding,
     resolve_checkout_for_mount,
 )
 
@@ -60,6 +71,7 @@ __all__ = [
     "assemble_desired",
     "boundary_from_wire",
     "boundary_to_wire",
+    "checkout_inputs",
     "collect_plan_meta",
     "compute_plan_digest",
     "inputs_from_view",
@@ -68,7 +80,6 @@ __all__ = [
     "run",
 ]
 
-_SHARED_SKILLS_PREFIX = ".agents/skills/"
 _HOOK_SURFACE_BY_KEY: dict[str, HookSurfaceId] = {
     **{sid.value.rpartition(".")[2]: sid for sid in HookSurfaceId},
     **{sid.value: sid for sid in HookSurfaceId},
@@ -120,27 +131,23 @@ def inputs_from_view(view: DesiredProjectionView) -> ProjectionInputs:
     )
 
 
-def _unsupported_surface_diagnostics(
-    target: TargetId, inputs: ProjectionInputs, capabilities: TargetCapabilities
-) -> tuple[Diagnostic, ...]:
-    active = (
-        (Surface.INSTRUCTIONS, bool(inputs.instructions_core or inputs.instructions_project)),
-        (Surface.SKILLS, bool(inputs.skills)),
-        (Surface.PERMISSIONS, bool(inputs.permissions)),
-        (Surface.HOOKS, bool(inputs.hook_modes or inputs.host_subscription_events)),
-        (Surface.MCP, bool(inputs.mcp_servers)),
-        (Surface.AGENTS, bool(inputs.agents)),
-    )
-    return tuple(
-        {
-            "code": ErrorCode.CAPABILITY_UNAVAILABLE.value,
-            "severity": "info",
-            "target": target.value,
-            "surface": s.value,
-            "message": f"surface {s.value!r} is unsupported by target {target.value!r}",
-        }
-        for s, has_data in active
-        if has_data and capabilities.surfaces.get(s, SurfaceSupport.UNSUPPORTED) is SurfaceSupport.UNSUPPORTED
+def checkout_inputs(view: DesiredProjectionView, fs: CheckoutFs) -> ProjectionInputs:
+    inputs = inputs_from_view(view)
+    preset = read_preset(inputs.instructions_project.get("preset"))
+    if preset not in ("php-package", "dart-package"):
+        return inputs
+    from .doctor import read_text
+
+    if preset == "dart-package":
+        key, value = "package_name", dart_package_name(read_text(fs, "pubspec.yaml"))
+    else:
+        key, value = "package_slug", php_package_slug(read_text(fs, "composer.json"))
+    if value is None or value == inputs.instructions_project.get(key):
+        return inputs
+    return replace(
+        inputs,
+        instructions_project={**inputs.instructions_project, key: value},
+        inputs_digest=sha256_tagged(json.dumps([inputs.inputs_digest, key, value]).encode()),
     )
 
 
@@ -187,7 +194,7 @@ def assemble_desired(
         supported.append(item)
 
     ordered = tuple(sorted(supported, key=lambda f: f.relative_path))
-    extra = () if capabilities is None else _unsupported_surface_diagnostics(target, inputs, capabilities)
+    extra = () if capabilities is None else unsupported_surface_diagnostics(target, inputs, capabilities)
     digest_payload = [
         inputs.inputs_digest,
         renderer_version,
@@ -213,7 +220,7 @@ def _check_collisions(
                 by_path[dfile.relative_path] = (stage.target, dfile.boundary, dfile.managed_digest)
                 continue
             prev_target, prev_boundary, prev_digest = prev
-            if dfile.relative_path.startswith(_SHARED_SKILLS_PREFIX):
+            if is_shared_projection_path(dfile.relative_path, dfile.boundary):
                 if dfile.boundary == prev_boundary and dfile.managed_digest == prev_digest:
                     continue
                 raise collision_error(
@@ -294,6 +301,18 @@ def _plan_single_target(
         boundary = dfile.boundary if dfile is not None else cast("Any", afile).boundary
         observed, raw_bytes, c_digest = observe_path(fs, rel_path, boundary, conflict_suffix=conflict_suffix)
         safe = is_safe_relative_path(rel_path) and not observed.outside_root
+        if (
+            safe
+            and raw_bytes is not None
+            and afile is not None
+            and dfile is not None
+            and afile.boundary.ownership is dfile.boundary.ownership is Ownership.MANAGED_BLOCK
+            and afile.boundary != dfile.boundary
+            and not observed.boundary_valid
+            and extract_managed_digest(raw_bytes, afile.boundary) == (afile.applied_managed_digest, True)
+        ):
+            raw_bytes = replace_blocks(raw_bytes, b"", afile.boundary.block_ids)
+            observed = replace(observed, boundary_valid=True, managed_digest=afile.applied_managed_digest)
         decision = decide_file(dfile, afile, observed, safe=safe, force_conflicts=force_conflicts)
         decisions.append(decision)
         if decision.diagnostic is not None:
@@ -340,6 +359,7 @@ def plan_projection(
     mount: str | None = None,
     targets: tuple[TargetId, ...] | None = None,
     force_conflicts: bool = False,
+    preset: Preset | None = None,
     resolved_checkout: CheckoutLocationView | None = None,
 ) -> tuple[ProjectionPlan, ...]:
     """Build read-only ``ProjectionPlan`` records for each requested target (integrations §7.1)."""
@@ -354,24 +374,29 @@ def plan_projection(
     for target in resolved_targets:
         adapter, t_val = registry.get(target), cast("Any", target.value)
         desired_view = ctx.client.ask(
-            GetDesiredProjection(project_id=project_id, checkout_binding_id=binding_id, target=t_val)
+            GetDesiredProjection(
+                project_id=project_id, checkout_binding_id=binding_id, target=t_val, preset=preset
+            )
         )
         assert isinstance(desired_view, DesiredProjectionView)  # noqa: S101
         applied_view = ctx.client.ask(
             GetAppliedState(project_id=project_id, checkout_binding_id=binding_id, target=t_val)
         )
         assert isinstance(applied_view, AppliedStateView)  # noqa: S101
-        inputs = inputs_from_view(desired_view)
+        inputs = checkout_inputs(desired_view, fs)
+        renderer_version = preset_renderer(
+            adapter.renderer_version, read_preset(inputs.instructions_project.get("preset"))
+        )
         desired_proj = assemble_desired(
             target,
             inputs,
             adapter.render(inputs),
-            renderer_version=adapter.renderer_version,
+            renderer_version=renderer_version,
             capabilities=adapter.capabilities(),
             max_desired_bytes=settings.desired.max_bytes,
         )
         staged.append(
-            _TargetStage(target, inputs.inputs_digest, adapter.renderer_version, desired_proj, applied_view)
+            _TargetStage(target, inputs.inputs_digest, renderer_version, desired_proj, applied_view)
         )
 
     siblings = active_sibling_files(
@@ -400,6 +425,7 @@ def collect_plan_meta(
     *,
     prior_records: Mapping[str, AppliedFileRecord] | None = None,
     provided: Mapping[str, tuple[Surface, ManagedBoundary]] | None = None,
+    preset: Preset | None = None,
 ) -> dict[str, tuple[Surface, ManagedBoundary]]:
     """Resolve ``(Surface, ManagedBoundary)`` for every decision path in ``plan``."""
     meta: dict[str, tuple[Surface, ManagedBoundary]] = dict(provided) if provided else {}
@@ -425,12 +451,18 @@ def collect_plan_meta(
     if any(p not in meta for p in missing):
         desired_view = ctx.client.ask(
             GetDesiredProjection(
-                project_id=plan.project_id, checkout_binding_id=plan.checkout_binding_id, target=t_val
+                project_id=plan.project_id,
+                checkout_binding_id=plan.checkout_binding_id,
+                target=t_val,
+                preset=preset,
             )
         )
         assert isinstance(desired_view, DesiredProjectionView)  # noqa: S101
         adapter = ctx.gateways.get(IntegrationTargetRegistry).get(plan.target)
-        for df in adapter.render(inputs_from_view(desired_view)):
+        checkout = resolve_checkout_by_binding(ctx, plan.project_id, plan.checkout_binding_id)
+        for df in adapter.render(
+            checkout_inputs(desired_view, bind_checkout_fs(ctx, checkout.local_locator))
+        ):
             meta.setdefault(df.relative_path, (df.surface, df.boundary))
     return meta
 
@@ -517,15 +549,20 @@ def run(ctx: HostContext, request: object) -> PlanProjectionResult:
     """HostOperationSpec entrypoint for ``integrations.host.plan_projection``."""
     req = cast("Mapping[str, Any]", plan_projection_request_from_json(request))
     raw_targets = cast("Sequence[str] | None", req.get("targets"))
+    preset = read_preset(req.get("preset"))
     plans = plan_projection(
         ctx,
         project_id=ProjectId(parse_uuid(str(req["project_id"]))),
         mount=None if req.get("mount") is None else str(req["mount"]),
         targets=None if not raw_targets else tuple(TargetId(t) for t in raw_targets),
         force_conflicts=bool(req.get("force_conflicts", False)),
+        preset=preset,
     )
     suffix = integrations_settings(ctx).conflict_suffix
-    return [plan_to_wire(p, meta_by_path=collect_plan_meta(ctx, p), conflict_suffix=suffix) for p in plans]
+    return [
+        plan_to_wire(p, meta_by_path=collect_plan_meta(ctx, p, preset=preset), conflict_suffix=suffix)
+        for p in plans
+    ]
 
 
 class PlanProjectionOperation:

@@ -1,0 +1,27 @@
+schema = "urn:skm:integrations:bundle:v1"
+key = "skm-preset-php-package"
+version = "1.0.0"
+title = "PHP package preset"
+description = "Maintainer skills and consumer documentation for this preset."
+targets = ["claude_code"]
+agents = []
+
+[[skills]]
+key = "spec-review"
+
+[[skills]]
+key = "review-checklist"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "boost-guidelines.md"
+path = "resources/boost/guidelines/core.md"
+ownership = "managed_file"
+
+[[assets]]
+target = "claude_code"
+surface = "rules"
+source = "boost-skill.md"
+path = "resources/boost/skills/{package_slug}/SKILL.md"
+ownership = "managed_file"

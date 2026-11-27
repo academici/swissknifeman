@@ -1,0 +1,15 @@
+schema = "urn:skm:extensions:skill-manifest:v1"
+key = "implement"
+version = "2.1.0"
+kind = "workflow"
+roles = ["executor"]
+risk = "low"
+license = "Apache-2.0"
+
+[provenance]
+source = "local"
+
+[invocation]
+user_only = true
+argument_hint = "[ticket or implementation scope]"
+display_name = "Implement"

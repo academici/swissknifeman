@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Final, Protocol, cast
 from uuid import UUID
@@ -11,12 +12,21 @@ from skm.kernel.errors import NotFound, PreconditionFailed, ValidationFailed
 from skm.kernel.ids import HostId, ProjectId, ScopeId, WorkspaceId
 from skm.kernel.scopes import ScopeKind, ScopeRef, ScopeRegistry
 from skm.modules.integrations.domain.decisions import is_safe_relative_path
+from skm.modules.integrations.domain.hook_subscriptions import HookSubscription, parse_subscriptions
 from skm.modules.integrations.domain.observed import AppliedFileRecord
+from skm.modules.integrations.domain.presets import (
+    CLAUDE_SETTINGS,
+    preset_of_renderer,
+    preset_subscription_config,
+)
 from skm.modules.integrations.domain.projection import Projection
+from skm.modules.integrations.domain.target import TargetId
+from skm.modules.integrations.generated.settings import IntegrationsSettings
 from skm.modules.integrations.generated.views import (
     AppliedStateViewDefsAppliedFileRecord,
     AppliedStateViewDefsManagedBoundary,
     AppliedStateViewDefsOwnedKeyPath,
+    DesiredProjectionViewDefsJsonValue,
     ProjectionSummaryView,
 )
 from skm.modules.workspace import public as workspace
@@ -24,9 +34,15 @@ from skm.modules.workspace.public import CheckoutBindingId
 from skm.platform.jsonc.digest import is_tagged_digest
 
 if TYPE_CHECKING:
+    from skm.kernel.json_types import JsonValue
     from skm.kernel.ports_uow import UnitOfWork
+    from skm.modules.integrations.ports import ProjectionRepository
+    from skm.platform.config import EffectiveConfig
 
 __all__ = [
+    "PacksConfigView",
+    "applied_preset_subscriptions",
+    "assemble_mcp_servers",
     "host_map_for_project",
     "project_scope",
     "require_safe_relative_path",
@@ -38,6 +54,33 @@ __all__ = [
 
 _MAX_RELATIVE_PATH_LEN: Final = 1024
 _SCOPE_PAGE_SIZE: Final = 500
+
+
+def applied_preset_subscriptions(
+    repo: ProjectionRepository, project: ProjectId, target: TargetId
+) -> tuple[tuple[HookSubscription, ...], int]:
+    config: dict[str, JsonValue] = {}
+    version = 0
+    after = None
+    while True:
+        page = repo.list_for_project(project, after=after, limit=_SCOPE_PAGE_SIZE)
+        version = max(version, max((item.row_version for item in page.items), default=0))
+        for projection in page.items:
+            if projection.target is not target or projection.state == "removed":
+                continue
+            preset = preset_of_renderer(projection.renderer_version)
+            if preset is not None and any(
+                file.relative_path == CLAUDE_SETTINGS and preset_of_renderer(file.renderer) == preset
+                for file in repo.files(projection.id)
+            ):
+                config.update(preset_subscription_config(preset, target))
+        after = page.next
+        if after is None:
+            break
+    subscriptions, violations = parse_subscriptions(config, dict.fromkeys(config, "project"))
+    if violations:
+        raise ValueError("invalid built-in preset subscription")
+    return subscriptions, version
 
 
 class _HasProjectId(Protocol):
@@ -183,3 +226,44 @@ def to_applied_file_view(record: AppliedFileRecord) -> AppliedStateViewDefsAppli
         renderer=record.renderer,
         applied_at=record.applied_at,
     )
+
+
+class PacksConfigView:
+    __slots__ = ("_base", "_enabled", "_extra_pins")
+
+    def __init__(
+        self,
+        base: EffectiveConfig,
+        enabled: Sequence[str] | None = None,
+        extra_pins: Mapping[str, str] | None = None,
+    ) -> None:
+        self._base = base
+        self._enabled = None if enabled is None else list(enabled)
+        self._extra_pins = dict(extra_pins or {})
+
+    def get(self, key: str) -> Any:
+        if key == "extensions.packs.enabled" and self._enabled is not None:
+            return list(self._enabled)
+        if key == "extensions.resources.pinned" and self._extra_pins:
+            return {**self._extra_pins, **cast("Mapping[str, str]", self._base.get(key))}
+        return self._base.get(key)
+
+
+def assemble_mcp_servers(
+    settings: IntegrationsSettings,
+) -> Mapping[str, Mapping[str, DesiredProjectionViewDefsJsonValue]]:
+    servers: dict[str, Mapping[str, DesiredProjectionViewDefsJsonValue]] = {}
+    if settings.mcp.include_skm:
+        servers["skm"] = {"command": "skm", "args": ("mcp", "serve"), "type": "stdio", "enabled": True}
+    for name, entry in sorted(settings.mcp.servers.items()):
+        if entry.enabled is False:
+            servers.pop(name, None)
+            continue
+        spec: dict[str, DesiredProjectionViewDefsJsonValue] = {"enabled": True}
+        for attr in ("type", "command", "args", "url", "tool_count"):
+            if (val := getattr(entry, attr)) is not None:
+                spec[attr] = val
+        if entry.env_refs is not None:
+            spec["env_refs"] = {k: str(v) for k, v in sorted(entry.env_refs.items())}
+        servers[name] = spec
+    return servers

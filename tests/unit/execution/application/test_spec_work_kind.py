@@ -11,7 +11,6 @@ from uuid import UUID
 from skm.kernel.ids import RevisionId
 from skm.kernel.json_types import JsonValue
 from skm.modules.execution.application._plain import plain
-from skm.modules.execution.application._start_inputs import compile_spec_tasks
 from skm.modules.execution.domain.workflow.definition import parse_workflow
 from skm.modules.planning.domain.specification import from_document
 from skm.modules.planning.public import compile_execution_graph
@@ -73,22 +72,32 @@ def _workflow() -> Any:
     return definition
 
 
+def _compile(spec: Any, graph: Any, workflow: Any) -> Any:
+    """The compiler readiness and start actually call.
+
+    Parent trees have no ``compile_spec_tasks`` and call ``compile_run_tasks`` with no
+    work-kind facts, so a docs item becomes code. The branch passes the specification.
+    """
+    from skm.modules.execution.application import _start_inputs as inputs
+    from skm.modules.execution.domain.task_graph import compile_run_tasks
+
+    counter = iter(range(1, 1000))
+    kwargs = {
+        "run_id": UUID(int=1),
+        "workspace_id": UUID(int=2),
+        "revision_id": REV,
+        "new_task_id": lambda: UUID(int=next(counter)),
+        "now": NOW,
+    }
+    compile_with_spec = getattr(inputs, "compile_spec_tasks", None)
+    if compile_with_spec is None:
+        return compile_run_tasks(graph, workflow, {}, None, {}, **kwargs)
+    return compile_with_spec(spec, graph, workflow, {}, None, {}, **kwargs)
+
+
 def test_a_docs_item_is_not_compiled_as_code() -> None:
     spec = _docs_spec()
-    counter = iter(range(1, 1000))
-    compiled = compile_spec_tasks(
-        spec,
-        _graph(spec),
-        _workflow(),
-        {},
-        None,
-        {},
-        run_id=UUID(int=1),
-        workspace_id=UUID(int=2),
-        revision_id=REV,
-        new_task_id=lambda: UUID(int=next(counter)),
-        now=NOW,
-    )
+    compiled = _compile(spec, _graph(spec), _workflow())
     kinds = {task.display_key: task.work_kind for task in compiled.tasks}
     assert kinds["P1.1"] == "docs"
     assert kinds["P1#gate"] == "review"

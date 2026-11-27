@@ -384,6 +384,58 @@ def test_local_child_log_reservation_lives_through_writes_and_close(tmp_path: Pa
             service.stop("worker", grace=0)
 
 
+def test_log_write_failure_kills_a_child_blocked_on_a_page_sized_pipe(tmp_path: Path) -> None:
+    """A burst that fits in the default 64KiB pipe must still die before it finishes.
+
+    The owner shrinks the pipe to one page and kills the child on the failed log write.
+    16KiB of payload fits in the old pipe, so the child can finish and touch its marker.
+    It does not fit in 4096 bytes, so the child stays blocked and is killed first.
+    """
+    payload = 16 * 1024
+    service = local_service(tmp_path)
+    log = service.logs / "worker.log"
+    gate, drained, measured = tmp_path / "write", tmp_path / "drained", tmp_path / "pipe-size"
+    (tmp_path / "sitecustomize.py").write_text(
+        "import errno, os\n"
+        "write = os.write\n"
+        "def fail_write(fd, data):\n"
+        f"    if data and data[0] == 88 and os.readlink(f'/proc/self/fd/{{fd}}') == {str(log)!r}:\n"
+        "        raise OSError(errno.ENOSPC, 'log full')\n"
+        "    return write(fd, data)\n"
+        "os.write = fail_write\n"
+    )
+    child = (
+        "import fcntl, pathlib, sys, time\n"
+        "gate, drained, measured = map(pathlib.Path, sys.argv[1:])\n"
+        "print('out', flush=True); print('err', file=sys.stderr, flush=True)\n"
+        "while not gate.exists(): time.sleep(0.01)\n"
+        "measured.write_text(str(fcntl.fcntl(1, fcntl.F_GETPIPE_SZ)))\n"
+        f"sys.stdout.buffer.write(b'X' * {payload})\n"
+        "sys.stdout.flush(); drained.touch(); time.sleep(30)\n"
+    )
+    with service.lock().hold(timeout_seconds=1):
+        inherited = os.environ.get("PYTHONPATH", "")
+        pythonpath = str(tmp_path) if not inherited else str(tmp_path) + os.pathsep + inherited
+        service.start(
+            "worker",
+            [sys.executable, "-c", child, str(gate), str(drained), str(measured)],
+            {**os.environ, "PYTHONPATH": pythonpath},
+        )
+        try:
+            Instance.wait_until(lambda: log.stat().st_size >= 8, timeout=10, description="child log output")
+            gate.touch()
+            Instance.wait_until(measured.is_file, timeout=10, description="child observed the pipe")
+            assert int(measured.read_text()) == 4096
+            Instance.wait_until(
+                lambda: service.lookup("worker") is None,
+                timeout=10,
+                description="write failure stops child",
+            )
+            assert not drained.exists()
+        finally:
+            service.stop("worker", grace=0)
+
+
 @pytest.mark.parametrize("operation", ["enospc", "fsync"])
 def test_runtime_success_is_suppressed_when_transcript_cannot_be_persisted(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str

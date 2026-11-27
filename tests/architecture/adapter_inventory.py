@@ -65,6 +65,7 @@ _ADAPTER_IMPLEMENTATIONS = {
     "skm.adapters.integrations.gemini_cli.target": {"GeminiCliTarget"},
     "skm.adapters.integrations.grok.target": {"GrokTarget"},  # P10.04.b
     "skm.adapters.integrations.registry": {"StaticIntegrationTargetRegistry"},  # P10.02
+    "skm.adapters.http_client.router_upstream": {"RouterUpstream", "UpstreamError", "UpstreamResponse"},
     "skm.adapters.knowledge.manifest_readers.composer_json": {"ComposerJsonReader"},
     "skm.adapters.knowledge.manifest_readers.package_json": {"PackageJsonReader"},
     "skm.adapters.knowledge.manifest_readers.pyproject": {"PyprojectReader"},
@@ -171,6 +172,16 @@ _ADAPTER_IMPLEMENTATIONS = {
     },
     "skm.adapters.runtimes.pool.rate_limit": {"RateLimitAction", "RateLimitDecision"},
     "skm.adapters.runtimes.pool.shallow_home": {"ShallowHome"},
+    "skm.adapters.runtimes.router.cli_bridge": {
+        "CliBridge",
+        "CliRequest",
+        "CliResult",
+        "CliUnavailable",
+        "ConversationBusy",
+        "InternalHop",
+    },
+    "skm.adapters.runtimes.router.dedup": {"Inflight"},
+    "skm.adapters.runtimes.router.scheduler": {"Route", "Scheduler"},
     "skm.adapters.host_commands.local_gate": {"LocalUserSchemaValidator", "SubprocessGateRunner"},
     "skm.adapters.memory.blob_store": {"MemoryBlobStore"},  # P06.02
     "skm.adapters.memory.config_store": {"MemoryConfigStore"},

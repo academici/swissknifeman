@@ -4,6 +4,7 @@ Work in the repository root. Product code is under `src/skm`; schemas under `src
 Use the [codebase map](docs/architecture/CODEBASE-MAP.md) for module boundaries, reusable test fixtures,
 registrations and fast checks. When `.codegraph/` exists, query CodeGraph in the current worktree before
 searching or reading code; then read only missing slices.
+Manual slash orchestrators: `/grill-me`, `/to-spec`, `/to-tickets`, `/implement`, `/handoff` ([ADR 0025](docs/adr/0025-integrations-zero-shadowing-and-presets.md), [ADR 0026](docs/adr/0026-local-llm-router.md)).
 
 1. Start with the owning module, its schemas and its tests.
 2. Use [layers and modules](docs/architecture/layers-and-modules.md) for names and boundaries.

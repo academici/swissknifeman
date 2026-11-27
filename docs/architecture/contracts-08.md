@@ -471,6 +471,7 @@ Executor validation and independent manual review are separate. P07.11 manual re
 | `src/skm/entrypoints/cli/commands/events.py` | Operator CLI `skm events` dead/retry outbox commands | P07.09 |
 | `src/skm/entrypoints/cli/commands/inbox.py` | Operator CLI `skm inbox` decision/approval/verdict commands | P07.09 |
 | `src/skm/entrypoints/cli/commands/policy.py` | Operator CLI `skm policy` show/check commands | P07.09 |
+| `src/skm/entrypoints/cli/commands/router.py` | CLI local HTTP LLM router lifecycle (`skm router`) | P02.05 (SKM-0.2.0) |
 | `src/skm/entrypoints/cli/commands/run.py` | Operator CLI `skm run` lifecycle, inspection, and host-local ephemeral sessions | P07.09 → I-08.1 |
 | `src/skm/entrypoints/cli/follow.py` | Isolated run event stream follower (`skm run follow`) | P07.09 |
 | `src/skm/modules/execution/generated/_documents_stage_outcome_integrate_effect_request.py` | Generated model for integrate `effect_request` schema | P07.09 |

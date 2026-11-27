@@ -239,21 +239,19 @@ def test_installed_skills_require_role_before_expanding_dependencies(installed_s
     if role == "reviewer":
         assert result["included"] == parents
         # The requires targets are considered, then refused: they do not share reviewer.
-        assert {result["excluded"][key] for key in ("brd", "static-analysis")} == {"role_not_allowed"}
+        assert result["excluded"]["brd"] == "role_not_allowed"
     else:
         assert not any(key in result["included"] for key in (*parents, "brd", "business-process"))
         assert {result["excluded"][key] for key in parents} == {"role_not_allowed"}
         # A refused parent does not expand, so the authoring chain stays unseeded.
-        assert {result["excluded"][key] for key in ("brd", "static-analysis")} == {unseeded}
+        assert result["excluded"]["brd"] == unseeded
     assert result["excluded"]["business-process"] == unseeded
-    leaked = {"requirement-critic", "laravel-security-audit", "brd", "business-process", "static-analysis"}
+    leaked = {"requirement-critic", "laravel-security-audit", "brd", "business-process"}
     if role != "reviewer":
         leaked = leaked - set()
         assert not leaked.intersection(result["included"])
     conditional_keys = {item["key"] for item in result["conditional"]}
-    assert not {"brd", "business-process", "static-analysis", "requirement-critic"}.intersection(
-        conditional_keys
-    )
+    assert not {"brd", "business-process", "requirement-critic"}.intersection(conditional_keys)
     if mode == "allowlist":
         assert not result["conditional"]
 
@@ -261,28 +259,31 @@ def test_installed_skills_require_role_before_expanding_dependencies(installed_s
 def test_unknown_role_cannot_match_manifest_or_seed(installed_skills):
     unknown_role = "other"
     skill = replace(
-        installed_skills["code-review"],
-        manifest=replace(installed_skills["code-review"].manifest, roles=(unknown_role,)),
+        installed_skills["spec-review"],
+        manifest=replace(installed_skills["spec-review"].manifest, roles=(unknown_role,)),
     )
     result = choose(
         [skill, installed_skills["research-method"]],
         request(
             role=unknown_role,
             mode="allowlist",
-            explicit_plan=(("code-review", None),),
+            explicit_plan=(("spec-review", None),),
             skills_by_role={unknown_role: ("research-method",)},
         ),
     )
     assert result["included"] == []
-    assert result["excluded"] == {"code-review": "role_not_allowed", "research-method": "excluded"}
+    assert result["excluded"] == {"spec-review": "role_not_allowed", "research-method": "excluded"}
 
 
 def test_installed_role_contract_path_excludes_role_eligible_skill(installed_skills):
     skill = installed_skills["implement"]
     manifest = replace(
-        skill.manifest, roles=("executor",), triggers=replace(skill.manifest.triggers, paths=("src/**",))
+        skill.manifest,
+        replaced_by="role_contract",
+        roles=("executor",),
+        triggers=replace(skill.manifest.triggers, paths=("src/**",)),
     )
-    result = choose([replace(skill, manifest=manifest), installed_skills["tdd-discipline"]], request())
+    result = choose([replace(skill, manifest=manifest), installed_skills["tdd"]], request())
     assert result["included"] == []
     assert result["excluded"]["implement"] == "duplicated_by_role_contract"
 
@@ -290,8 +291,8 @@ def test_installed_role_contract_path_excludes_role_eligible_skill(installed_ski
 @pytest.mark.parametrize(
     ("role", "included", "unseeded"),
     [
-        ("reviewer", "code-review", "research-method"),
-        ("researcher", "research-method", "code-review"),
+        ("reviewer", "spec-review", "research-method"),
+        ("researcher", "research-method", "spec-review"),
     ],
 )
 def test_installed_role_skills_seed_only_matching_role(installed_skills, role, included, unseeded):
@@ -300,7 +301,7 @@ def test_installed_role_skills_seed_only_matching_role(installed_skills, role, i
         request(
             role=role,
             mode="allowlist",
-            skills_by_role={"reviewer": ("code-review",), "researcher": ("research-method",)},
+            skills_by_role={"reviewer": ("spec-review",), "researcher": ("research-method",)},
             final_correction=True,
         ),
     )

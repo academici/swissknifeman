@@ -57,7 +57,7 @@ assert root.is_relative_to(Path(sys.prefix))
 assert not any(Path(p, "skm").is_dir() and not Path(p).is_relative_to(sys.prefix) for p in sys.path)
 assert compose_file() == root / "_deploy/compose.local.yaml"
 packs = PackagedBuiltinPacks().payloads()
-assert len(packs) == 29
+assert len(packs) == 30
 snippet = next((root / "_resources/packs").glob("**/parametric-config/snippets/check.py"))
 assert Path(py_compile.compile(str(snippet), doraise=True)).is_file()
 assert PackagedBuiltinPacks().payloads() == packs

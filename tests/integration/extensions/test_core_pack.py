@@ -290,7 +290,7 @@ def test_builtin_sync_core_pack() -> None:
     first = world.run(SyncBuiltinPacks())
     manifest = tomllib.loads((CORE_ROOT / "pack.toml").read_text(encoding="utf-8"))
     assert (first.installed[0].slug, first.installed[0].version) == ("core", manifest["version"])
-    assert len(first.installed) == 29
+    assert len(first.installed) == 30
     assert first.already_installed == ()
 
     tables = world.tables()
@@ -303,7 +303,7 @@ def test_builtin_sync_core_pack() -> None:
         + 1
         + len(EXPECTED_MODEL_GUIDELINES)
     )
-    assert (len(tables.packs), len(tables.pack_versions)) == (29, 29)
+    assert (len(tables.packs), len(tables.pack_versions)) == (30, 30)
     (pack,) = (item for item in tables.packs.values() if item.slug == "core")
     assert pack.trust is PackTrust.BUILTIN
     assert all(item.trust is PackTrust.THIRD_PARTY for item in tables.packs.values() if item.slug != "core")
@@ -691,6 +691,6 @@ def test_wheel_packaging_has_no_repo_paths(tmp_path: Path) -> None:
     )
     info = json.loads(proc.stdout.strip())
     assert Path(info["skm_file"]).is_relative_to(site_dir.resolve())
-    assert info["count"] == 29
+    assert info["count"] == 30
     assert info["resources"] == 68
     assert info["digest"] == expected_candidate.digest

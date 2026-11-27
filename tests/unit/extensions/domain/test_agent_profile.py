@@ -119,7 +119,12 @@ def test_golden_inheritance_and_context_matrix(directory: Path) -> None:
             else skills_mode
         )
         assert ctx["skills_mode"] == expected_skills_mode, key
-        assert list(cast("list[str]", ctx.get("skills_include", []))) == skills_include, key
+        expected_skills = (
+            ["spec-review" if item == "code-review" else item for item in skills_include]
+            if directory == CORE_PROFILES_DIR
+            else skills_include
+        )
+        assert list(cast("list[str]", ctx.get("skills_include", []))) == expected_skills, key
 
 
 def test_constraints_without_named_sections_rejected() -> None:

@@ -121,9 +121,18 @@ class GroupContractsTest(unittest.TestCase):
                 )
                 self.assertEqual(
                     tuple(op.name for op in manifest.host_operations),
-                    ("execution.host.request_review",)
+                    (
+                        "execution.host.request_review",
+                        "execution.host.local_ask",
+                        "execution.host.local_do",
+                        "execution.host.local_deliberate",
+                    )
                     if module == "execution"
-                    else ("context.host.research_query", "context.host.codegraph"),
+                    else (
+                        "context.host.research_query",
+                        "context.host.codegraph",
+                        "context.host.pack_context",
+                    ),
                 )
                 for port in manifest.repository_ports:
                     self.assertEqual(getattr(port, PORT_KIND_ATTRIBUTE), "repository")
@@ -291,6 +300,9 @@ class GroupContractsTest(unittest.TestCase):
                     "IsolationRegistry",
                     "Isolation",
                     "ReviewCheckoutPathResolver",
+                    "UserSchemaValidator",
+                    "GateCommandRunner",
+                    "LocalRuntimePool",
                 },
             },
         }

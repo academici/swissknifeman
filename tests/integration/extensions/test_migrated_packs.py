@@ -278,7 +278,7 @@ def test_cli_dry_run_and_idempotent_write_on_synthetic_donor(tmp_path: Path) -> 
 
 def test_builtin_packs_discovery_reads_all_packaged_groups() -> None:
     payloads = PackagedBuiltinPacks(PACKS_ROOT).payloads()
-    assert len(payloads) == 29
+    assert len(payloads) == 30
     manifests = [tomllib.loads(payload.manifest_text) for payload in payloads]
     assert manifests[0]["slug"] == "core"
     assert {manifest["slug"] for manifest in manifests} == {
@@ -394,7 +394,7 @@ def test_committed_migrated_packs_install_into_postgres_alongside_core(
 
         client = app.client(actor=SEED.actor(), surface=Surface.CLI)
         sync_res: Any = client.dispatch(SyncBuiltinPacks())
-        assert len(sync_res.installed) == 29
+        assert len(sync_res.installed) == 30
         assert sync_res.installed[0].slug == "core"
         guidelines = client.ask(ListResources(kind=QueryResourceKind.MODEL_GUIDELINE, limit=100))
         assert isinstance(guidelines, ResourcesView)

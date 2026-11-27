@@ -105,11 +105,20 @@ def bind_cli_projections(
         **host.operations,
         **{spec.name: spec for spec in HOST_OPERATIONS if host.surface in spec.surfaces},
     }
-    return replace(
-        host,
-        gateways=GatewayTable(entries, "host_gateway"),
-        operations=operations,
-        instance_id=instance_id or host.instance_id,
+    from skm.bootstrap.hook_subscriptions import with_subscription_gateways
+
+    return cast(
+        "HostServices",
+        with_subscription_gateways(
+            replace(
+                host,
+                gateways=GatewayTable(entries, "host_gateway"),
+                operations=operations,
+                instance_id=instance_id or host.instance_id,
+            ),
+            state_dir,
+            os.environ if environ is None else environ,
+        ),
     )
 
 

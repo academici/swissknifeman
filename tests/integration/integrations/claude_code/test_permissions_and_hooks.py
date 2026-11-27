@@ -481,6 +481,7 @@ class _StubHomeReader:
             "claude.user_settings",
             "claude.managed_settings",
             "codex.user_config",
+            "gemini.user_settings",
             "vscode.user_settings",
         ],
     ) -> bytes | None:

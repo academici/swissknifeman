@@ -54,7 +54,11 @@ class _StubHomeReader:
     def read(
         self,
         logical: Literal[
-            "claude.user_settings", "claude.managed_settings", "codex.user_config", "vscode.user_settings"
+            "claude.user_settings",
+            "claude.managed_settings",
+            "codex.user_config",
+            "gemini.user_settings",
+            "vscode.user_settings",
         ],
     ) -> bytes | None:
         return self._mapping.get(logical)

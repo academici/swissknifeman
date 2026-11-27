@@ -188,17 +188,23 @@ def live_claude_env(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[
             )
         )
 
+        from skm.bootstrap.hook_subscriptions import with_subscription_gateways
+
         state_dir = tmp_path / "state"
         fs = LocalCheckoutFs(checkout_dir, state_dir=state_dir, lock_timeout_seconds=0.1)
-        services = HostServices(
-            host_id=host_id,
-            surface=PortSurface.CLI,
-            gateways=GatewayTable(
-                {CheckoutFs: fs, IntegrationTargetRegistry: default_target_registry()},
-                "host_gateway",
+        services = with_subscription_gateways(
+            HostServices(
+                host_id=host_id,
+                surface=PortSurface.CLI,
+                gateways=GatewayTable(
+                    {CheckoutFs: fs, IntegrationTargetRegistry: default_target_registry()},
+                    "host_gateway",
+                ),
+                host_config=dict,
+                operations={spec.name: spec for spec in HOST_OPERATIONS},
             ),
-            host_config=dict,
-            operations={spec.name: spec for spec in HOST_OPERATIONS},
+            state_dir,
+            {},
         )
         ctx = services.context(
             client=client,

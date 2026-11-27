@@ -33,8 +33,6 @@ from skm.modules.integrations.ports import (
 )
 
 from .hook_state import HookState
-from .host_subscriptions import bound_preset
-from .safe_dirs import evaluate_safe_dirs
 
 if TYPE_CHECKING:
     from skm.kernel.module_manifest import HostOperationSpec
@@ -277,13 +275,15 @@ def _safe_dirs_decision(
     timeout: int,
 ) -> tuple[HookDecision, HookMode]:
     root, mount, _, _, binding = _resolve_bound_checkout(ctx, state, event, project, timeout)
-    if (
-        mode is not HookMode.STRICT
-        and bound_preset(ctx, state, event.target, project, binding, timeout) == "php-project"
-    ):
-        mode = HookMode.STRICT
+    if mode is not HookMode.STRICT:
+        from .host_subscriptions import bound_preset
+
+        if bound_preset(ctx, state, event.target, project, binding, timeout) == "php-project":
+            mode = HookMode.STRICT
     context = HookPolicyContext(root=root)
     if mode is not HookMode.OFF:
+        from .safe_dirs import evaluate_safe_dirs
+
         context = evaluate_safe_dirs(state, event, root, mount, policy, context)
     return evaluate_hook(event, HookSurfaceId.SAFE_DIRS, mode, context), mode
 

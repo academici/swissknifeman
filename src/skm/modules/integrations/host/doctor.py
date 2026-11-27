@@ -32,7 +32,7 @@ from skm.modules.integrations.domain.hook_rules import ENFORCEMENT, HookMode
 from skm.modules.integrations.domain.hook_subscriptions import parse_subscriptions
 from skm.modules.integrations.domain.observed import FileKind
 from skm.modules.integrations.domain.target import Surface, TargetId
-from skm.modules.integrations.generated.queries import GetDesiredProjection, GetHookPolicy, ListHookSubscriptions
+from skm.modules.integrations.generated.queries import GetDesiredProjection, ListHookSubscriptions
 from skm.modules.integrations.generated.results import ListHookSubscriptionsResult
 from skm.modules.integrations.generated.settings import IntegrationsSettings
 from skm.modules.integrations.generated.views import DesiredProjectionView
@@ -45,6 +45,7 @@ from skm.modules.integrations.ports import (
 )
 from skm.modules.workspace.public import marker_from_document
 
+from .host_subscriptions import SubscriptionState, load_policy
 from .observe import (
     bind_checkout_fs,
     integrations_settings,
@@ -403,13 +404,10 @@ def doctor_context(
     validated_keys = {"hooks.subscriptions." + sub_id for sub_id in server_ids}
     violations = tuple(problem for problem in violations if problem.key not in validated_keys)
     host_commands: dict[str, JsonObject] = {}
-    if any(item.enabled and item.valid and item.execution_location == "host" for item in listed.items):
-        policy = cast(
-            "Mapping[str, Any]",
-            ctx.client.ask(
-                GetHookPolicy.from_json({"project_id": str(inputs.project_id), "target": inputs.target.value})
-            ),
-        )
+    if ctx.gateways.has(SubscriptionState) and any(
+        item.enabled and item.valid and item.execution_location == "host" for item in listed.items
+    ):
+        policy = load_policy(ctx, str(inputs.project_id), inputs.target.value)
         host_commands = {
             item["id"]: {"argv": item["argv"], "cwd": item["cwd"], "digest": item["digest"]}
             for item in policy["subscriptions"]

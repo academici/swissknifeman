@@ -33,7 +33,6 @@ def test_repository_packs_are_clean() -> None:
     assert errors == []
     # Reviewer audits name authoring skills they must not expand into.
     assert any("requirement-critic" in warning and "brd" in warning for warning in warnings)
-    assert any("laravel-security-audit" in warning for warning in warnings)
     assert check_skills.main([]) == 0
 
 

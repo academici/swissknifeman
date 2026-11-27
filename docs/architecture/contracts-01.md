@@ -46,6 +46,7 @@
 | `src/skm/adapters/http_client/events.py` | read_events | P11.04.a |
 | `src/skm/adapters/http_client/live.py` | LivePublisher, stream_live | P11.03.b |
 | `src/skm/adapters/http_client/retry.py` | TRANSPORT_FAILURES, idempotency_key, send_with_retry, transport_error | P11.04.a |
+| `src/skm/adapters/http_client/router_upstream.py` | RouterUpstream, UpstreamError, UpstreamResponse | P02.05 (SKM-0.2.0) |
 | `src/skm/adapters/http_client/spool.py` | DEFAULT_MAX_BYTES, DEFAULT_TTL, FORBIDDEN_REPLAY_OPERATIONS, HEARTBEAT_OBSERVATION_OP, BoundedLocalSpool, HistoricalObservation, ReplayReport, SpoolEntry, SpoolItemKind | P13.06 |
 | `src/skm/adapters/http_client/worker_config.py` | RemoteWorkerConfig | P11.02.c → P13.04.b |
 | `src/skm/adapters/integrations/__init__.py` | package boundary | P00.04.f |
@@ -354,6 +355,11 @@
 | `src/skm/adapters/runtimes/pool/provider_pool.py` | Host-local slot leases and serialized refresh, slot-scoped session pins, strict credential boundary via host-dispatched tools, ranked slot acquisition | P08.01.b → I-07.1 → I-07.2 → SKM-0.2.0 P01 |
 | `src/skm/adapters/runtimes/pool/rate_limit.py` | RateLimitAction, RateLimitDecision, classify_rate_limit | P02.01 (SKM-0.2.0) |
 | `src/skm/adapters/runtimes/pool/shallow_home.py` | ShallowHome, fingerprint_credentials | P02.01 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/router/__init__.py` | CliBridge, CliRequest, CliResult, CliUnavailable, ConversationBusy, Inflight, InternalHop, Route, Scheduler | P02.05 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/router/cli_bridge.py` | CliBridge, CliRequest, CliResult, CliUnavailable, ConversationBusy, InternalHop | P02.05 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/router/dedup.py` | Inflight | P02.05 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/router/scheduler.py` | Route, Scheduler | P02.05 (SKM-0.2.0) |
+| `src/skm/adapters/runtimes/router/translator.py` | chat_to_responses, responses_to_chat, translate_request, translate_response | P02.05 (SKM-0.2.0) |
 | `src/skm/adapters/sandbox/__init__.py` | package boundary, SeatbeltSandbox | P00.04.f → I-04.3 |
 | `src/skm/adapters/sandbox/backend.py` | BackendIsolation, SpecView, Companion, CompanionProof, ProofRequest, Coverage, assess (backend contract and coverage check) | P08.07.a |
 | `src/skm/adapters/sandbox/bubblewrap.py` | BubblewrapSandbox (Linux, `skm:bubblewrap`) | P08.07.a → I-04.2 |
@@ -431,6 +437,7 @@
 | `src/skm/bootstrap/plugins.py` | LoadedPlugin, PluginStatus, PluginAllowlist, PluginSchema, PluginSchemas, PluginSettingsView, PluginViews, ProcessPlugins, SettingsPhase2, load_plugins (steps 1-11 of 02-plugins §4), capability_catalog, merged_schemas, plugin_settings_view, default_context; `component_problem` and `OWNER_PROTOCOLS` from `bootstrap/builtins.py` check each built component | P00.04.f → P01.10 |
 | `src/skm/bootstrap/provider_accounts.py` | ProviderAccounts, load_provider_accounts compose host-local slot registries and HTTPS probes | P08.01.b → I-07.2 |
 | `src/skm/bootstrap/local_modes.py` | build_local_modes_deps | P02.02 (SKM-0.2.0) |
+| `src/skm/bootstrap/router.py` | RouterConfig, load_router_config, start_router_daemon, stop_router_daemon | P02.05 (SKM-0.2.0) |
 | `src/skm/bootstrap/runtimes.py` | RUNTIME_FACTORIES, build_provider_pool | P00.04.f → P08.03 → P08.04 → P08.05 → I-07.1 → I-07.2 → SKM-0.2.0 P01 |
 | `src/skm/bootstrap/services.py` | ServiceDef, BACKGROUND_SERVICES | P00.04.f → P01.09.b → P07.06 |
 | `src/skm/entrypoints/__init__.py` | package boundary | P00.01 → P00.04.f |
@@ -450,6 +457,11 @@
 | `src/skm/entrypoints/api/static.py` | Packaged Vite assets and browser history fallback | P15.04.a |
 | `src/skm/entrypoints/api/sse.py` | workspace and project SSE replay, per-event RBAC, continuous AuthBasis revocation checks | P11.03.a → I-10.1c |
 | `src/skm/entrypoints/api/live.py` | worker-only fenced NDJSON publish and live attempt SSE with continuous AuthBasis revocation checks | P11.03.b → I-10.1c |
+| `src/skm/entrypoints/api/router/__init__.py` | create_router_app | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/app.py` | create_router_app | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/exchange.py` | upstream_exchange | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/inference.py` | inference_handler | P02.05 (SKM-0.2.0) |
+| `src/skm/entrypoints/api/router/sse.py` | stream_sse_response | P02.05 (SKM-0.2.0) |
 | `src/skm/entrypoints/api/versioning.py` | HTTP admission boundary | P11.01.a |
 | `src/skm/schemas/api/health.v1.json` | HTTP API v1 wire schema | P11.01.a |
 | `src/skm/schemas/api/page.v1.json` | HTTP API v1 wire schema | P11.01.a |

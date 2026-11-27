@@ -1,5 +1,6 @@
 """Composition and host operations for the local CLI lifecycle."""
 
+import fcntl
 import json
 import os
 import re
@@ -297,14 +298,21 @@ def _run_local_service(state: Path, record: Path, metadata: dict[str, JsonValue]
                     atomic_write(record, json.dumps({**asdict(identity), **metadata}).encode(), mode=0o600)
                     sys.stdout.write("ready\n")
                     sys.stdout.flush()
+                    # One page: a failed log write must still find the child blocked on the pipe.
+                    with suppress(OSError):
+                        fcntl.fcntl(output.fileno(), fcntl.F_SETPIPE_SZ, 4096)
                     remaining = _LOCAL_LOG_BYTES
-                    while chunk := os.read(output.fileno(), 65536):
-                        if remaining:
-                            data = chunk[:remaining]
-                            log.write(data)
-                            remaining -= len(data)
+                    while chunk := os.read(output.fileno(), 4096):
+                        if not remaining:
+                            continue
+                        try:
+                            log.write(chunk[:remaining])
+                        except BaseException:
+                            child.kill()
+                            raise
+                        remaining -= min(len(chunk), remaining)
         except BaseException:
-            if child is not None:
+            if child is not None and child.poll() is None:
                 child.kill()
             raise
         finally:

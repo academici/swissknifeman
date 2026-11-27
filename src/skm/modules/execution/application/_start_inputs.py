@@ -25,7 +25,7 @@ from skm.modules.execution.domain.readiness import (
     design_research_refs,
     snapshot_readiness_inputs,
 )
-from skm.modules.execution.domain.task_graph import SelectionRequest, compile_run_tasks
+from skm.modules.execution.domain.task_graph import SelectionRequest, TaskFacts, compile_run_tasks
 from skm.modules.execution.domain.work_policy import (
     ROLE_NAMES,
     HardCeilings,
@@ -361,6 +361,34 @@ class PreparedStart:
     visa_required: bool
 
 
+def task_work_facts(spec: Any) -> dict[str, TaskFacts]:
+    """Work kind of each item and unit, keyed by the graph display key.
+
+    The execution graph does not carry ``work_kind``. Gates stay ``review`` inside the compiler.
+    """
+    facts: dict[str, TaskFacts] = {}
+    for item in spec.items:
+        facts[item.key] = TaskFacts(spec.work_kind_for(item.id))
+        for unit in spec.units_of(item.key):
+            facts[unit.key] = TaskFacts(spec.work_kind_for(unit.id))
+    return facts
+
+
+def compile_spec_tasks(
+    spec: Any,
+    graph: JsonObject,
+    workflow: Any,
+    policy: Any,
+    selection: SelectionRequest | None,
+    satisfied: Mapping[str, Any],
+    **kwargs: Any,
+) -> Any:
+    """Compile run tasks with the specification's work kinds, not the code default."""
+    return compile_run_tasks(
+        graph, workflow, policy, selection, satisfied, facts=task_work_facts(spec), **kwargs
+    )
+
+
 def prepare_inputs(  # noqa: PLR0913 -- prospective request and observation options
     uow: UnitOfWork,
     ctx: Any,
@@ -414,7 +442,8 @@ def prepare_inputs(  # noqa: PLR0913 -- prospective request and observation opti
         )
     )
     counter = iter(range(1, 100000))
-    compiled = compile_run_tasks(
+    compiled = compile_spec_tasks(
+        spec,
         graph,
         wf,
         policy_doc,

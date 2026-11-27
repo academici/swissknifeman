@@ -20,7 +20,7 @@ from skm.modules.execution.application._events import cause, emit, save_task, ta
 from skm.modules.execution.application._plain import plain
 from skm.modules.execution.application._primitives import budget_accounts
 from skm.modules.execution.application._scheduler_materials import refresh_material_waits
-from skm.modules.execution.application._start_inputs import prepare_inputs, value
+from skm.modules.execution.application._start_inputs import compile_spec_tasks, prepare_inputs, value
 from skm.modules.execution.domain.blocking_reason import BlockingCode, blocking_reason
 from skm.modules.execution.domain.execution_bundle import ExecutionBundle
 from skm.modules.execution.domain.ids import ReadinessReportId
@@ -31,7 +31,6 @@ from skm.modules.execution.domain.task import Task, TaskKind, TaskStatus, transi
 from skm.modules.execution.domain.task_graph import (
     SelectionRequest,
     TaskEdge,
-    compile_run_tasks,
     ready_task_ids,
 )
 from skm.modules.execution.generated.commands import StartRun
@@ -70,7 +69,8 @@ def create_run(
             tuple(request["task_keys"]), tuple(request["phases"]), request.get("stop_after")
         )
     )
-    compiled = compile_run_tasks(
+    compiled = compile_spec_tasks(
+        prepared.spec,
         prepared.graph,
         prepared.workflow,
         prepared.policy,

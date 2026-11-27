@@ -16,7 +16,7 @@ from skm.modules.artifacts import public as artifacts
 from skm.modules.execution.application._events import cause, emit, save_task, task_created
 from skm.modules.execution.application._plain import plain
 from skm.modules.execution.application._primitives import budget_accounts
-from skm.modules.execution.application._start_inputs import prepare_inputs, value
+from skm.modules.execution.application._start_inputs import compile_spec_tasks, prepare_inputs, value
 from skm.modules.execution.application._worker_dtos import WireRecord
 from skm.modules.execution.domain.execution_bundle import ExecutionBundle, ResourcePin, ResourcePins
 from skm.modules.execution.domain.ids import ReviewRequestId
@@ -32,7 +32,7 @@ from skm.modules.execution.domain.review_request import (
 )
 from skm.modules.execution.domain.run import Run, RunKind, RunStatus, mark_ready, start
 from skm.modules.execution.domain.task import TaskStatus, transition
-from skm.modules.execution.domain.task_graph import SelectionRequest, compile_run_tasks
+from skm.modules.execution.domain.task_graph import SelectionRequest
 from skm.modules.execution.ports import (
     AutopilotRepository,
     BudgetRepository,
@@ -60,7 +60,8 @@ def scope_of(cmd: RequestReview) -> ScopeRef:
 
 def create_review_run(prepared: Any, request: ReviewRequest, ctx: Any, uow: UnitOfWork) -> Run:
     rid, now = ctx.ids.new_id(), ctx.clock.now()
-    compiled = compile_run_tasks(
+    compiled = compile_spec_tasks(
+        prepared.spec,
         prepared.graph,
         prepared.workflow,
         prepared.policy,

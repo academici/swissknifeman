@@ -75,6 +75,8 @@ text_contains_any = [
     "billing hard limit",
     "out of extra usage",
     "quota exceeded",
+    "session limit",
+    "weekly limit",
 ]
 retryable = false
 safe_message = "Claude Code account quota or billing balance exhausted"
@@ -90,23 +92,6 @@ signal_not_in = {}
 text_contains_any = []
 retryable = true
 safe_message = "Claude Code rate limit reached"
-retry_after_from = "limit_resets_at"
-
-# After the HTTP 429 rule: these phrases also appear on 429 responses, and an
-# earlier text rule would classify that response as QUOTA_EXHAUSTED.
-[[rules]]
-runtime_id = "claude_code"
-error_class = "quota"
-code = "QUOTA_EXHAUSTED"
-scope = "account"
-signal_any = {}
-signal_not_in = {}
-text_contains_any = [
-    "session limit",
-    "weekly limit",
-]
-retryable = false
-safe_message = "Claude Code account quota or billing balance exhausted"
 retry_after_from = "limit_resets_at"
 
 [[rules]]

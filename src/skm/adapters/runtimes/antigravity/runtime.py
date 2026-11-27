@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, override
 from skm.adapters.runtimes._cli_session.binding import canonical_launch_digest
 from skm.adapters.runtimes._cli_session.launch import (
     LaunchCommand,
+    apply_proxy_env,
     ensure_private_dir,
     landlock_argv,
     resolve_workdir,
@@ -30,10 +31,11 @@ from skm.modules.runtimes.domain.capability import SelfLoadedSource
 from skm.modules.runtimes.domain.classes import Effort, RoleId
 from skm.platform.process.environment import build_env
 
-from .detect import AntigravityDetector, ProbedBinary, apply_probe_to_capabilities
+from .detect import AntigravityDetector, ProbedBinary, apply_probe_to_capabilities, resolve_binary
 from .stream_parser import AntigravityStreamParser
 
 if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge, ProxyEndpoint
     from skm.adapters.runtimes._cli_session.session import ProcessRunner
     from skm.modules.execution.ports import WrappedCommand
     from skm.modules.runtimes.domain.request import AgentRequest, ProcessOwnership
@@ -119,6 +121,7 @@ class AntigravityRuntime(CliAgentRuntime[ProbedBinary]):
         state_dir: Path | None = None,
         binary: str | None = None,
         environ: Mapping[str, str] | None = None,
+        egress_proxy: ProxyEndpoint | None = None,
         local_auth: Callable[[], Mapping[str, str]] | None = None,
         probe_runner: ProbeCommandRunner = default_probe_runner,
         process_runner: ProcessRunner | None = None,
@@ -134,8 +137,9 @@ class AntigravityRuntime(CliAgentRuntime[ProbedBinary]):
             detector=detector,
             apply_probe=apply_probe_to_capabilities,
             state_dir=state_dir,
-            binary=binary,
+            binary=resolve_binary(binary, environ),
             environ=environ,
+            egress_proxy=egress_proxy,
             local_auth=local_auth,
             user_home=None,
             allow_pgroup_best_effort=allow_pgroup_best_effort,
@@ -200,7 +204,13 @@ class AntigravityRuntime(CliAgentRuntime[ProbedBinary]):
 
     @override
     def _build_launch(
-        self, request: AgentRequest, probed: ProbedBinary, *, step_dir: Path, ownership: ProcessOwnership
+        self,
+        request: AgentRequest,
+        probed: ProbedBinary,
+        *,
+        step_dir: Path,
+        ownership: ProcessOwnership,
+        proxy_bridge: LocalProxyBridge | None = None,
     ) -> tuple[WrappedCommand, bytes]:
         workdir = resolve_workdir(request)
         # Managed checkouts can carry executable customization, even with an empty HOME.
@@ -242,6 +252,8 @@ class AntigravityRuntime(CliAgentRuntime[ProbedBinary]):
             XDG_DATA_HOME=str(home / ".local/share"),
             XDG_STATE_HOME=str(home / ".local/state"),
         )
+
+        apply_proxy_env(env, proxy_bridge)
 
         model_args, _ = _model_args(request)
         settings = json.dumps(_SETTINGS, sort_keys=True)

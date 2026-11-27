@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, override
 from skm.adapters.runtimes._cli_session.binding import canonical_launch_digest
 from skm.adapters.runtimes._cli_session.launch import (
     LaunchCommand,
+    apply_proxy_env,
     ensure_private_dir,
     landlock_argv,
     resolve_workdir,
@@ -34,6 +35,7 @@ from .detect import GeminiCliDetector, ProbedBinary, apply_probe_to_capabilities
 from .stream_parser import GeminiCliStreamParser
 
 if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge, ProxyEndpoint
     from skm.adapters.runtimes._cli_session.session import ProcessRunner
     from skm.modules.execution.ports import WrappedCommand
     from skm.modules.runtimes.domain.request import AgentRequest, ProcessOwnership
@@ -77,6 +79,7 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
         state_dir: Path | None = None,
         binary: str | None = None,
         environ: Mapping[str, str] | None = None,
+        egress_proxy: ProxyEndpoint | None = None,
         local_auth: Callable[[], Mapping[str, str]] | None = None,
         probe_runner: ProbeCommandRunner = default_probe_runner,
         process_runner: ProcessRunner | None = None,
@@ -93,6 +96,7 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
             state_dir=state_dir,
             binary=binary,
             environ=environ,
+            egress_proxy=egress_proxy,
             local_auth=local_auth,
             user_home=None,
             allow_pgroup_best_effort=allow_pgroup_best_effort,
@@ -117,6 +121,7 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
                 "argv": (*_LAUNCH_FLAGS, "--model", "{model}"),
                 "settings": _SETTINGS,
                 "env": (_API_KEY, *_TLS_ENV),
+                "mandatory_env": {"GEMINI_TELEMETRY_ENABLED": "false"},
                 "workspace_config": _WORKSPACE_CONFIG,
                 "system_config": tuple(map(str, _SYSTEM_CONFIG)),
                 "isolation": "landlock-abi3:step-home,tmp,protect-workdir",
@@ -161,7 +166,13 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
 
     @override
     def _build_launch(
-        self, request: AgentRequest, probed: ProbedBinary, *, step_dir: Path, ownership: ProcessOwnership
+        self,
+        request: AgentRequest,
+        probed: ProbedBinary,
+        *,
+        step_dir: Path,
+        ownership: ProcessOwnership,
+        proxy_bridge: LocalProxyBridge | None = None,
     ) -> tuple[WrappedCommand, bytes]:
         workdir = resolve_workdir(request)
         step = step_dir.resolve(strict=True)
@@ -198,6 +209,7 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
         if not env.get(_API_KEY):
             raise CapabilityUnavailable(ErrorCode.RUNTIME_AUTH_EXPIRED, "GEMINI_API_KEY is required")
         env.update(
+            GEMINI_TELEMETRY_ENABLED="false",
             GEMINI_CLI_HOME=str(home),
             GEMINI_CLI_SYSTEM_SETTINGS_PATH=str(settings),
             GEMINI_CLI_SYSTEM_DEFAULTS_PATH=str(home / "system-defaults.json"),
@@ -207,6 +219,8 @@ class GeminiCliRuntime(CliAgentRuntime[ProbedBinary]):
             XDG_DATA_HOME=str(home / ".local/share"),
             XDG_STATE_HOME=str(home / ".local/state"),
         )
+
+        apply_proxy_env(env, proxy_bridge)
 
         # Route effort is admission metadata for this client and has no native CLI flag.
         argv = (probed.binary_realpath, *_LAUNCH_FLAGS, "--model", request.model)

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Final
 
 from skm.adapters.runtimes._cli_session.launch import (
     LaunchCommand,
+    apply_proxy_env,
     base_child_env,
     ensure_private_dir,
     home_from_env,
@@ -32,7 +33,7 @@ from skm.platform.process.argv_rules import check_argv
 from .permissions import RenderedPermissions, render_permission_flags
 
 if TYPE_CHECKING:
-    pass
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
 
 __all__: list[str] = []
 
@@ -108,10 +109,12 @@ def build_child_environment(
     host_environ: Mapping[str, str],
     user_home: Path | None,
     step_tmp: Path,
+    proxy_bridge: LocalProxyBridge | None = None,
 ) -> Mapping[str, str]:
     """Construct allowlisted child environment preserving read-only ``~/.grok`` auth access."""
     env = base_child_env(request, host_environ=host_environ, home=home_from_env(user_home, host_environ))
     env["TMPDIR"] = str(step_tmp)
+    apply_proxy_env(env, proxy_bridge)
     return MappingProxyType(env)
 
 
@@ -152,7 +155,7 @@ def _wrap_landlock_argv(
     )
 
 
-def build_launch_plan(
+def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambient reads
     request: AgentRequest,
     *,
     binary_path: str,
@@ -162,6 +165,7 @@ def build_launch_plan(
     user_home: Path | None = None,
     python_executable: str = sys.executable,
     wrap_landlock: bool = True,
+    proxy_bridge: LocalProxyBridge | None = None,
 ) -> LaunchPlan:
     """Assemble Grok argv, Landlock confinement wrapper, environment, and stdin payload."""
     enforce_containment_invariants(request, wrap_landlock=wrap_landlock)
@@ -193,6 +197,7 @@ def build_launch_plan(
         host_environ=host_environ,
         user_home=user_home,
         step_tmp=step_tmp,
+        proxy_bridge=proxy_bridge,
     )
 
     argv_list: list[str] = [

@@ -283,7 +283,7 @@ def test_provider_error_markers_classify_without_stealing_rate_limits() -> None:
         assert failure.error_class is ErrorClass.QUOTA
         assert failure.scope is ErrorScope.ACCOUNT
 
-    # HTTP 429 stays a rate limit even when the new text markers are present.
+    # Codex classifies HTTP 429 ahead of these text markers.
     for text in ("Usage limit exceeded", "authentication failed", "quota exhausted"):
         limited_codex = classify(
             "codex",
@@ -313,9 +313,10 @@ def test_provider_error_markers_classify_without_stealing_rate_limits() -> None:
             claude_rules,
             now_unix=_NOW,
         )
-        assert limited_claude.code is ErrorCode.RATE_LIMITED
-        assert limited_claude.error_class is ErrorClass.RATE_LIMIT
-        assert limited_claude.retryable is True
+        assert limited_claude.code is ErrorCode.QUOTA_EXHAUSTED
+        assert limited_claude.error_class is ErrorClass.QUOTA
+        assert limited_claude.scope is ErrorScope.ACCOUNT
+        assert limited_claude.retryable is False
         assert limited_claude.retry_after_seconds == 30
 
 

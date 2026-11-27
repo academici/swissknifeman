@@ -31,6 +31,10 @@ REQUIRED_FLAGS = (
 )
 
 
+def resolve_binary(binary: str | None, environ: Mapping[str, str] | None) -> str:
+    return binary or (environ or {}).get("AGY_BIN") or "agy"
+
+
 @dataclass(frozen=True, slots=True)
 class ProbedBinary:
     cache_key: ProbeCacheKey

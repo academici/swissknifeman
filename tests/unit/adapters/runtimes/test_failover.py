@@ -1,6 +1,7 @@
 from dataclasses import replace
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 import pytest
 
@@ -14,6 +15,9 @@ from skm.adapters.runtimes.pool import (
 from skm.modules.execution.domain.session import Fresh
 from skm.modules.runtimes.public import Pricing, estimate_from_prompt, unknown_usage
 
+type Trigger = Literal["overload", "quota", "proxy"]
+
+_TRIGGERS = ("overload", "quota", "proxy")
 _OPTED_IN = FailoverPolicy(
     enabled=True,
     explicit_consent=True,
@@ -32,27 +36,28 @@ _FALLBACK = FailoverCandidate(
 
 def _route(
     controller: FailoverController,
-    via_local_proxy: bool,
+    trigger: Trigger,
     candidate: FailoverCandidate = _FALLBACK,
     *,
     consumed_host_private: bool | None = False,
 ) -> FailoverDecision | None:
-    if via_local_proxy:
+    if trigger == "proxy":
         return controller.route_local_proxy(candidate, consumed_host_private=consumed_host_private)
     return controller.select_failover(
         (candidate,),
         source_provider_id="cloud_a",
-        http_status=529,
+        http_status=429 if trigger == "quota" else 529,
+        is_quota_exhausted=trigger == "quota",
         consumed_host_private=consumed_host_private,
     )
 
 
-@pytest.mark.parametrize("via_local_proxy", [False, True], ids=["failover", "proxy"])
-def test_disabled_by_default(via_local_proxy: bool) -> None:
-    assert _route(FailoverController(), via_local_proxy) is None
+@pytest.mark.parametrize("trigger", _TRIGGERS)
+def test_disabled_by_default(trigger: Trigger) -> None:
+    assert _route(FailoverController(), trigger) is None
 
 
-@pytest.mark.parametrize("via_local_proxy", [False, True], ids=["failover", "proxy"])
+@pytest.mark.parametrize("trigger", _TRIGGERS)
 @pytest.mark.parametrize(
     "policy",
     [
@@ -65,18 +70,18 @@ def test_disabled_by_default(via_local_proxy: bool) -> None:
         pytest.param(replace(_OPTED_IN, cost_ceiling_usd_micros=69), id="over-ceiling"),
     ],
 )
-def test_each_policy_gate_is_required(via_local_proxy: bool, policy: FailoverPolicy) -> None:
-    assert _route(FailoverController(policy), via_local_proxy) is None
+def test_each_policy_gate_is_required(trigger: Trigger, policy: FailoverPolicy) -> None:
+    assert _route(FailoverController(policy), trigger) is None
 
 
-@pytest.mark.parametrize("via_local_proxy", [False, True], ids=["failover", "proxy"])
+@pytest.mark.parametrize("trigger", _TRIGGERS)
 @pytest.mark.parametrize("truthy", [1, "true"])
-def test_truthy_values_do_not_count_as_consent_or_tos(via_local_proxy: bool, truthy: bool) -> None:
-    assert _route(FailoverController(replace(_OPTED_IN, explicit_consent=truthy)), via_local_proxy) is None
-    assert _route(FailoverController(replace(_OPTED_IN, tos_acknowledged=truthy)), via_local_proxy) is None
+def test_truthy_values_do_not_count_as_consent_or_tos(trigger: Trigger, truthy: bool) -> None:
+    assert _route(FailoverController(replace(_OPTED_IN, explicit_consent=truthy)), trigger) is None
+    assert _route(FailoverController(replace(_OPTED_IN, tos_acknowledged=truthy)), trigger) is None
 
 
-@pytest.mark.parametrize("via_local_proxy", [False, True], ids=["failover", "proxy"])
+@pytest.mark.parametrize("trigger", _TRIGGERS)
 @pytest.mark.parametrize(
     "candidate",
     [
@@ -88,23 +93,18 @@ def test_truthy_values_do_not_count_as_consent_or_tos(via_local_proxy: bool, tru
         ),
     ],
 )
-def test_unknown_cost_fails_closed(via_local_proxy: bool, candidate: FailoverCandidate) -> None:
-    assert _route(FailoverController(_OPTED_IN), via_local_proxy, candidate) is None
+def test_unknown_cost_fails_closed(trigger: Trigger, candidate: FailoverCandidate) -> None:
+    assert _route(FailoverController(_OPTED_IN), trigger, candidate) is None
 
 
-@pytest.mark.parametrize("via_local_proxy", [False, True], ids=["failover", "proxy"])
+@pytest.mark.parametrize("trigger", _TRIGGERS)
 @pytest.mark.parametrize("consumed_host_private", [True, None], ids=["consumed", "unknown"])
-def test_host_private_episodes_block_routing(
-    via_local_proxy: bool, consumed_host_private: bool | None
-) -> None:
-    assert (
-        _route(FailoverController(_OPTED_IN), via_local_proxy, consumed_host_private=consumed_host_private)
-        is None
-    )
+def test_host_private_episodes_block_routing(trigger: Trigger, consumed_host_private: bool | None) -> None:
+    assert _route(FailoverController(_OPTED_IN), trigger, consumed_host_private=consumed_host_private) is None
 
 
 @pytest.mark.parametrize("http_status", [None, 402, 429, 503, 529.0, "529"])
-def test_only_an_integer_http_529_triggers_failover(http_status: int | None) -> None:
+def test_other_signals_do_not_trigger_failover(http_status: int | None) -> None:
     assert (
         FailoverController(_OPTED_IN).select_failover(
             (_FALLBACK,), source_provider_id="cloud_a", http_status=http_status, consumed_host_private=False
@@ -147,4 +147,11 @@ def test_local_proxy_returns_a_fresh_session_without_a_provider_error() -> None:
     assert decision.slot == proxy.slot
     assert decision.estimated_cost_usd_micros == 0
     assert decision.via_local_proxy is True
+    assert decision.session == Fresh("ROUTE_CHANGED", handoff=False)
+
+
+def test_explicit_quota_selects_a_fresh_affordable_route() -> None:
+    decision = _route(FailoverController(_OPTED_IN), "quota")
+    assert decision is not None
+    assert decision.slot == _FALLBACK.slot
     assert decision.session == Fresh("ROUTE_CHANGED", handoff=False)

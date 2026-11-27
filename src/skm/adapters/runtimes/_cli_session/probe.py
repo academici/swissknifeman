@@ -32,6 +32,8 @@ from skm.platform.process.environment import build_env
 from skm.platform.process.ownership import OwnershipUnavailable, require_support
 from skm.platform.process.runner import run
 
+from .launch import apply_proxy_env
+
 __all__: list[str] = []
 
 VERSION_TIMEOUT_SECONDS: Final = 10.0
@@ -249,6 +251,7 @@ class CliDetector[ProbedT]:
         digest = sha256_file(resolved)
         os_kernel = self._os_kernel_fn()
         probe_env = build_env(environ, allow=env_allowlist, extra=self.probe_env_extra)
+        apply_proxy_env(probe_env)
 
         def key_for(version: str | None) -> ProbeCacheKey:
             return ProbeCacheKey(

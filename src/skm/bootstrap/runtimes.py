@@ -62,7 +62,7 @@ _ACCOUNT_ENV = {
     for runtime in (AntigravityRuntime, ClaudeCodeRuntime, CodexRuntime, GeminiCliRuntime)
 }
 _PROVIDER_ENV = frozenset[str]().union(*_ACCOUNT_ENV.values())
-_WORKER_ENV = frozenset((*BASE_ALLOW, "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS"))
+_WORKER_ENV = frozenset((*BASE_ALLOW, "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS", "AGY_BIN"))
 
 
 def _invalid_worker_setting(key: str) -> ValidationFailed:
@@ -237,12 +237,29 @@ def runtime_environment(environ: Mapping[str, str], redactor: Redactor) -> dict[
 
 
 def build_provider_pool(
-    root: Path, slots: Iterable[ProviderSlot] | None = None, *, strict_isolated: bool = False
+    root: Path,
+    slots: Iterable[ProviderSlot] | None = None,
+    *,
+    strict_isolated: bool = False,
+    workdir: Path | None = None,
 ) -> ProviderPoolManager:
-    """Compose the pool with the host's separate mount namespace for tool dispatch."""
-    if slots is None:
-        slots = load_provider_accounts(None, os.environ, Path.home()).slots
-    return ProviderPoolManager(root, slots, strict_isolated=strict_isolated, tool_sandbox=BubblewrapSandbox())
+    """Compose the isolated pool and protect the workdir, defaulting to the current directory."""
+    workdir = Path.cwd() if workdir is None else workdir
+    sandbox = BubblewrapSandbox()
+    if slots is not None:
+        return ProviderPoolManager(
+            root, slots, strict_isolated=strict_isolated, tool_sandbox=sandbox, workdir=workdir
+        )
+    accounts = load_provider_accounts(None, os.environ, Path.home())
+    return ProviderPoolManager(
+        root,
+        accounts.slots,
+        strict_isolated=strict_isolated,
+        tool_sandbox=sandbox,
+        configs={slot.slot_id: accounts.config_for(slot.slot_id) for slot in accounts.slots},
+        host_home=accounts.host_home,
+        workdir=workdir,
+    )
 
 
 def _extract_config_mapping(config: object, key: str) -> Mapping[str, object]:
@@ -341,8 +358,8 @@ def _build_antigravity_runtime(ctx: object = None, /, **kwargs: Any) -> AgentRun
     options = dict(kwargs)
     binaries = _extract_config_mapping(getattr(ctx, "config", None), "runtimes.binaries")
     binary = binaries.get("antigravity")
-    if isinstance(binary, str) and binary:
-        options.setdefault("binary", binary)
+    if not options.get("binary") and isinstance(binary, str) and binary:
+        options["binary"] = binary
     options.setdefault("environ", dict(os.environ))
     return AntigravityRuntime(**options)
 

@@ -1,3 +1,4 @@
+import json
 import tomllib
 from collections.abc import Mapping
 from dataclasses import replace
@@ -132,6 +133,7 @@ def test_codex_uses_distinct_file_stores_for_leased_slots(tmp_path: Path) -> Non
     ambient = {"CODEX_HOME": str(ambient_home), "CODEX_HOME_USER": str(ambient_home)}
 
     for slot in slots:
+        credentials = json.dumps({"account": slot.slot_id})
         request, owner = _make_request(
             runtime_id="codex",
             workdir=tmp_path / "work",
@@ -144,7 +146,7 @@ def test_codex_uses_distinct_file_stores_for_leased_slots(tmp_path: Path) -> Non
         assert lease.credential_isolation == "unsupported"
         with pool.use(lease) as home:
             credential = home / codex.CREDENTIAL_FILENAME
-            credential.write_text(slot.slot_id, encoding="utf-8")
+            credential.write_text(credentials, encoding="utf-8")
             plan = codex.build_launch_plan(
                 lease.bind_request(request),
                 binary_path="/usr/bin/codex",
@@ -156,7 +158,7 @@ def test_codex_uses_distinct_file_stores_for_leased_slots(tmp_path: Path) -> Non
             assert plan.client_home == home
             assert plan.command.env["CODEX_HOME"] == plan.command.env["HOME"] == str(home)
             assert "CODEX_HOME_USER" not in plan.command.env
-            assert credential.read_text(encoding="utf-8") == slot.slot_id
+            assert credential.read_text(encoding="utf-8") == credentials
             assert credential.stat().st_mode & 0o777 == 0o600
             config = tomllib.loads(plan.permissions.config_path.read_text(encoding="utf-8"))
             assert config["cli_auth_credentials_store"] == "file"

@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
 
+from skm.adapters.runtimes._cli_session.launch import apply_proxy_env
+from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
 from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import CapabilityUnavailable
 from skm.kernel.isolation import IsolationProfile
@@ -97,7 +99,21 @@ def _toml_string_array(values: tuple[str, ...] | list[str]) -> str:
     return "[" + ", ".join(_toml_string(item) for item in values) + "]"
 
 
-def render_codex_config_toml(request: AgentRequest) -> str:
+def codex_network_access(request: AgentRequest, proxy_bridge: LocalProxyBridge | None) -> bool:
+    network = request.permissions.network
+    if network.mode == "allowlist" and (
+        not isinstance(proxy_bridge, LocalProxyBridge)
+        or proxy_bridge.url is None
+        or proxy_bridge.allowed_hosts != frozenset(network.hosts)
+    ):
+        raise CapabilityUnavailable(
+            ErrorCode.CAPABILITY_UNAVAILABLE,
+            "Codex network allowlist requires an active bridge configured for the same hosts",
+        )
+    return network.mode in ("any", "allowlist")
+
+
+def render_codex_config_toml(request: AgentRequest, *, proxy_bridge: LocalProxyBridge | None = None) -> str:
     """Render minimal isolated ``config.toml`` with explicit request MCP servers and zero secrets."""
     secret_values = tuple(secret.reveal() for secret in request.secret_env.values())
     lines: list[str] = [
@@ -105,6 +121,29 @@ def render_codex_config_toml(request: AgentRequest) -> str:
     ]
     if request.config_mode == "isolated":
         lines.append('cli_auth_credentials_store = "file"')
+    network_access = codex_network_access(request, proxy_bridge)
+    lines.extend(("", "[sandbox_workspace_write]", f"network_access = {str(network_access).lower()}"))
+    network = request.permissions.network
+    if network.mode == "allowlist":
+        # Keep the shell sandbox behind Codex's managed proxy. SKM's upstream bridge
+        # remains responsible for the exact host and port policy.
+        lines.extend(
+            (
+                "",
+                "[features.network_proxy]",
+                "enabled = true",
+                "allow_upstream_proxy = true",
+                "allow_local_binding = false",
+                "enable_socks5 = false",
+                "",
+                "[features.network_proxy.domains]",
+            )
+        )
+        domains: set[str] = set()
+        for pattern in network.hosts:
+            host, _, port = pattern.rpartition(":")
+            domains.add(host if port.isdecimal() else pattern)
+        lines.extend(f'{_toml_string(host)} = "allow"' for host in sorted(domains))
     for server in sorted(request.mcp_servers, key=lambda item: item.name):
         if not _SAFE_MCP_NAME_RE.fullmatch(server.name):
             raise ValueError(f"invalid MCP server name: {server.name!r}")
@@ -118,13 +157,15 @@ def render_codex_config_toml(request: AgentRequest) -> str:
                 if not _SAFE_ENV_KEY_RE.fullmatch(secret_name):
                     raise ValueError(f"invalid MCP secret_env name: {secret_name!r}")
             lines.append(f"env_vars = {_toml_string_array(sorted(set(server.secret_env_names)))}")
-        if server.env:
+        server_env = dict(server.env)
+        apply_proxy_env(server_env, proxy_bridge)
+        if server_env:
             lines.append("")
             lines.append(f"[mcp_servers.{server.name}.env]")
-            for key in sorted(server.env):
+            for key in sorted(server_env):
                 if not _SAFE_ENV_KEY_RE.fullmatch(key):
                     raise ValueError(f"invalid MCP env key: {key!r}")
-                lines.append(f"{key} = {_toml_string(server.env[key])}")
+                lines.append(f"{key} = {_toml_string(server_env[key])}")
 
     payload = "\n".join(lines) + "\n"
     if any(secret and secret in payload for secret in secret_values):
@@ -132,9 +173,11 @@ def render_codex_config_toml(request: AgentRequest) -> str:
     return payload
 
 
-def write_codex_config_toml(request: AgentRequest, target_dir: Path) -> Path:
+def write_codex_config_toml(
+    request: AgentRequest, target_dir: Path, *, proxy_bridge: LocalProxyBridge | None = None
+) -> Path:
     """Write a private ``config.toml``, read-only for a verified launch."""
-    payload = render_codex_config_toml(request)
+    payload = render_codex_config_toml(request, proxy_bridge=proxy_bridge)
     config_path = target_dir / "config.toml"
     mode = 0o600 if request.verification_context is None else 0o400
     atomic_write(config_path, payload.encode("utf-8"), mode=mode, private=True)
@@ -145,6 +188,7 @@ def render_permission_flags(
     request: AgentRequest,
     *,
     config_dir: Path,
+    proxy_bridge: LocalProxyBridge | None = None,
     policy_profile: str | None = None,
     allow_full_access: bool = False,
     bypass_supported: bool = True,
@@ -167,12 +211,26 @@ def render_permission_flags(
         bypass_supported=bypass_supported,
         request_bypass=request_bypass,
     )
-    config_path = write_codex_config_toml(request, config_dir)
+    if request.permissions.network.mode == "allowlist" and (sandbox_mode != "workspace-write" or bypass):
+        raise CapabilityUnavailable(
+            ErrorCode.CAPABILITY_UNAVAILABLE, "Codex network allowlist requires the workspace-write sandbox"
+        )
+    config_path = write_codex_config_toml(request, config_dir, proxy_bridge=proxy_bridge)
 
     if request.resume_session_ref is not None:
         flags: list[str] = ["-c", f'sandbox_mode="{sandbox_mode}"']
     else:
         flags = ["--sandbox", sandbox_mode]
+    if request.permissions.network.mode == "allowlist":
+        flags.append("--strict-config")
+    if request.config_mode == "inherit":
+        enabled = str(codex_network_access(request, proxy_bridge)).lower()
+        flags.extend(("-c", f"sandbox_workspace_write.network_access={enabled}"))
+    if proxy_bridge is not None:
+        proxy_env: dict[str, str] = {}
+        apply_proxy_env(proxy_env, proxy_bridge)
+        for key, value in proxy_env.items():
+            flags.extend(("-c", f"shell_environment_policy.set.{key}={_toml_string(value)}"))
 
     return RenderedPermissions(
         sandbox_mode=sandbox_mode,

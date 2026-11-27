@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Final
 
 from skm.adapters.runtimes._cli_session.launch import (
     LaunchCommand,
+    apply_proxy_env,
     base_child_env,
     ensure_private_dir,
     env_auth_present,
@@ -35,6 +36,8 @@ from skm.platform.process.argv_rules import check_argv
 from .permissions import RenderedPermissions, can_skip_permissions, render_permission_flags
 
 if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
+
     from .detect import ProbedBinary
 
 __all__: list[str] = []
@@ -150,6 +153,7 @@ def build_child_environment(
     *,
     host_environ: Mapping[str, str],
     client_home: Path | None,
+    proxy_bridge: LocalProxyBridge | None = None,
     setup_token: SecretStr | None = None,
 ) -> Mapping[str, str]:
     """Construct minimal allowlisted child environment with mandatory Claude isolation overrides."""
@@ -174,6 +178,7 @@ def build_child_environment(
         env = {name: value for name, value in env.items() if not _provider_override(name)}
         env[SETUP_TOKEN_ENV] = setup_token.reveal()
 
+    apply_proxy_env(env, proxy_bridge)
     return MappingProxyType(env)
 
 
@@ -184,6 +189,7 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
     step_dir: Path,
     ownership: ProcessOwnership,
     host_environ: Mapping[str, str],
+    proxy_bridge: LocalProxyBridge | None = None,
     probed: ProbedBinary | None = None,
     policy_profile: str | None = None,
     allow_skip_permissions: bool = False,
@@ -238,12 +244,14 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
         request,
         host_environ=host_environ,
         client_home=client_home,
+        proxy_bridge=proxy_bridge,
         setup_token=setup_token,
     )
 
     rendered_perms = render_permission_flags(
         request,
         step_dir=resolved_step_dir,
+        proxy_bridge=proxy_bridge,
         permission_mode_supported=permission_mode_supported,
         strict_mcp_supported=strict_mcp_supported,
         policy_profile=effective_policy_profile,

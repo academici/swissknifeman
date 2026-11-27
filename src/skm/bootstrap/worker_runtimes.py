@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
 from skm import __version__
+from skm.adapters.runtimes.antigravity.detect import resolve_binary as resolve_agy_binary
 from skm.adapters.runtimes.grok.runtime import grok_account_available
 from skm.adapters.runtimes.launch_identity import matches_cli_binary
 from skm.bootstrap.runtimes import RUNTIME_FACTORIES, WorkerRuntimeSettings
@@ -406,6 +407,8 @@ class WorkerRuntimes:
     ) -> bool:
         binaries = cast("dict[str, str] | None", local.get("runtimes.binaries")) or {}
         candidate = binaries.get(request.runtime_id)
+        if request.runtime_id == "antigravity":
+            candidate = resolve_agy_binary(candidate, self._environ)
         context = request.verification_context
         if candidate is None and context is None and request.runtime_id not in RUNTIME_FACTORIES:
             return True  # Plugin runtimes can have no local CLI executable.

@@ -15,7 +15,9 @@ from typing import TYPE_CHECKING, Final
 
 from skm.adapters.runtimes._cli_session.binding import canonical_launch_digest
 from skm.adapters.runtimes._cli_session.launch import (
+    PROXY_ENV_KEYS,
     LaunchCommand,
+    apply_proxy_env,
     base_child_env,
     ensure_private_dir,
     env_auth_present,
@@ -39,11 +41,13 @@ from .permissions import (
     RenderedPermissions,
     SandboxMode,
     can_bypass_approvals_and_sandbox,
+    codex_network_access,
     render_codex_config_toml,
     render_permission_flags,
 )
 
 if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
     from skm.modules.runtimes.domain.request import McpServerSpec
 
     from .detect import ProbedBinary
@@ -108,13 +112,15 @@ def compute_launch_config_digest(
     return canonical_launch_digest(template)
 
 
-def _verified_stage_tool_config(request: AgentRequest, config: str) -> str:
+def _verified_stage_tool_config(
+    request: AgentRequest, config: str, proxy_bridge: LocalProxyBridge | None
+) -> str:
     socket_path = request.stage_tool_socket
     if socket_path is None:
         return config
 
     # Only worker-bound broker metadata can substitute a dynamic value in the attested template.
-    if config != render_codex_config_toml(request):
+    if config != render_codex_config_toml(request, proxy_bridge=proxy_bridge):
         raise ValueError("Codex launch configuration changed after rendering")
     servers: list[McpServerSpec] = []
     for server in request.mcp_servers:
@@ -124,7 +130,7 @@ def _verified_stage_tool_config(request: AgentRequest, config: str) -> str:
         if server.env != {"SKM_STAGE_SOCKET": socket_path} or server.secret_env_names:
             raise ValueError("The configured SKM MCP server differs from the worker broker")
         servers.append(replace(server, env={"SKM_STAGE_SOCKET": _VERIFICATION_SOCKET}))
-    return render_codex_config_toml(replace(request, mcp_servers=tuple(servers)))
+    return render_codex_config_toml(replace(request, mcp_servers=tuple(servers)), proxy_bridge=proxy_bridge)
 
 
 def _launch_template_digest(
@@ -133,6 +139,7 @@ def _launch_template_digest(
     *,
     copy_credentials: bool,
     state_home: Path,
+    proxy_bridge: LocalProxyBridge | None,
 ) -> Digest:
     command = plan.command
     argv = list(plan.codex_argv[1:])
@@ -166,6 +173,17 @@ def _launch_template_digest(
             raise ValueError("The worker broker socket differs from the Codex launch environment")
         env["SKM_STAGE_SOCKET"] = _VERIFICATION_SOCKET
     config = plan.permissions.config_path.read_text(encoding="utf-8")
+    config = _verified_stage_tool_config(request, config, proxy_bridge)
+    if proxy_bridge is not None and (url := proxy_bridge.url) is not None:
+        placeholder = "http://127.0.0.1:{proxy_port}"
+        for key in PROXY_ENV_KEYS & env.keys():
+            if env[key] == url:
+                env[key] = placeholder
+        argv = [
+            arg.replace(url, placeholder) if arg.startswith("shell_environment_policy.set.") else arg
+            for arg in argv
+        ]
+        config = config.replace(url, placeholder)
     template: dict[str, object] = {
         "argv": argv,
         "wrapper": wrapper,
@@ -173,7 +191,7 @@ def _launch_template_digest(
         "ownership": command.ownership.kind,
         "sandbox_mode": plan.sandbox_mode,
         "config_mode": request.config_mode,
-        "config": _verified_stage_tool_config(request, config),
+        "config": config,
         "session_policy": request.session_policy,
         "network": (request.permissions.network.mode, request.permissions.network.hosts),
         "env": env,
@@ -240,6 +258,7 @@ def build_child_environment(
     *,
     host_environ: Mapping[str, str],
     client_home: Path | None,
+    proxy_bridge: LocalProxyBridge | None = None,
 ) -> Mapping[str, str]:
     """Construct minimal allowlisted child environment with mandatory Codex isolation overrides."""
     env = base_child_env(
@@ -254,6 +273,7 @@ def build_child_environment(
         env["CODEX_HOME"] = str(client_home)
         env["TMPDIR"] = str(client_home / "tmp")
 
+    apply_proxy_env(env, proxy_bridge)
     return MappingProxyType(env)
 
 
@@ -348,6 +368,7 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
     step_dir: Path,
     ownership: ProcessOwnership,
     host_environ: Mapping[str, str],
+    proxy_bridge: LocalProxyBridge | None = None,
     probed: ProbedBinary | None = None,
     policy_profile: str | None = None,
     allow_full_access: bool = False,
@@ -359,6 +380,11 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
     wrap_landlock: bool = True,
 ) -> LaunchPlan:
     """Assemble Codex argv, isolated CODEX_HOME, step/home config.toml, and stdin payload."""
+    codex_network_access(request, proxy_bridge)
+    if proxy_bridge is not None and request.config_mode != "isolated":
+        raise CapabilityUnavailable(
+            ErrorCode.CAPABILITY_UNAVAILABLE, "Codex egress bridge requires an isolated home"
+        )
     resolved_workdir = resolve_workdir(request)
     resolved_step_dir = ensure_private_dir(step_dir)
     if resolved_step_dir.is_relative_to(resolved_workdir):
@@ -430,6 +456,7 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
     rendered_perms = render_permission_flags(
         request,
         config_dir=config_target_dir,
+        proxy_bridge=proxy_bridge,
         policy_profile=effective_policy_profile,
         allow_full_access=allow_full_access,
         bypass_supported=bypass_supported,
@@ -439,6 +466,7 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
         request,
         host_environ=host_environ,
         client_home=client_home,
+        proxy_bridge=proxy_bridge,
     )
     codex_argv = _render_codex_argv(
         request,
@@ -488,7 +516,11 @@ def build_launch_plan(  # noqa: PLR0913 - explicit launch boundary without ambie
         command = replace(
             command,
             verification_template=_launch_template_digest(
-                request, plan, copy_credentials=copy_credentials, state_home=state_home
+                request,
+                plan,
+                copy_credentials=copy_credentials,
+                state_home=state_home,
+                proxy_bridge=proxy_bridge,
             ),
         )
         plan = replace(plan, command=command)

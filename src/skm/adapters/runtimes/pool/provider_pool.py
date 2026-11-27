@@ -6,33 +6,39 @@ import json
 import math
 import os
 import re
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Literal, Protocol
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal, Protocol, cast
 from uuid import uuid4
 
 from skm.adapters.runtimes._cli_session.launch import ensure_private_dir
+from skm.adapters.runtimes.pool.rate_limit import RateLimitAction, RateLimitDecision
+from skm.adapters.runtimes.pool.shallow_home import ShallowHome, paths_overlap, validate_directory
 from skm.kernel.error_codes import ErrorCode
-from skm.kernel.errors import CapabilityUnavailable, PreconditionFailed
+from skm.kernel.errors import CapabilityUnavailable, PreconditionFailed, ValidationFailed
 from skm.modules.runtimes.domain.ids import is_runtime_id
-from skm.platform.fs.atomic_write import atomic_write
+from skm.platform.fs.atomic_write import assert_safe_replace_target, atomic_write
 from skm.platform.fs.file_lock import FileLock
 from skm.platform.process.runner import run
 from skm.platform.system_clock import SystemClock
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable, Sequence
-    from pathlib import Path
+    from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 
+    from skm.adapters.runtimes._cli_session.proxy_bridge import ProxyEndpoint
     from skm.kernel.clock import Clock
     from skm.kernel.json_types import JsonObject
     from skm.modules.runtimes.domain.request import AgentRequest
+    from skm.platform.config.secrets import SecretRef
     from skm.platform.process.runner import ProcessResult
 
-__all__ = ["ProviderPoolManager", "ProviderSlot", "SessionPin", "SlotLease"]
+__all__ = ["ProviderPoolManager", "ProviderSlot", "SessionPin", "SlotLease", "SlotModel", "SlotRuntimeConfig"]
 
 type CredentialIsolation = Literal["supported", "unsupported"]
+type Transport = Literal["cli_subprocess", "http_api", "oauth_gateway"]
 
 _SLOT_ID = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
 _CLI_RUNTIMES = frozenset({"antigravity", "claude_code", "codex", "cursor", "gemini_cli", "grok"})
@@ -55,12 +61,40 @@ class _ToolSandbox(Protocol):
 
 
 @dataclass(frozen=True, slots=True)
+class SlotModel:
+    name: str
+    is_compat: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class SlotRuntimeConfig:
+    """Host-only configuration. Public serializers receive ProviderSlot instead."""
+
+    proxy: ProxyEndpoint | None = field(default=None, repr=False)
+    wallet_path: Path | None = None
+    shallow_home: Path | None = None
+    symlink_host_files: tuple[str, ...] = ()
+    write_back: bool = True
+    worker_mode: Literal["ephemeral", "hot_pool"] = "ephemeral"
+    provider: str | None = None
+    base_url: str | None = field(default=None, repr=False)
+    api_key_ref: SecretRef | None = field(default=None, repr=False)
+    token_file: Path | None = field(default=None, repr=False)
+    provider_routing: Mapping[str, bool] = field(default_factory=dict[str, bool])
+
+
+@dataclass(frozen=True, slots=True)
 class ProviderSlot:
     """Host-registered account. Host dispatch requires a trusted client with no internal tool execution."""
 
     runtime_id: str
     slot_id: str
     host_dispatches_tools: bool = False
+    tier: int = 1
+    transport: Transport = "cli_subprocess"
+    models: tuple[SlotModel, ...] = ()
+    has_egress_proxy: bool = False
+    proxy_scheme: str | None = None
 
     def __post_init__(self) -> None:
         if not is_runtime_id(self.runtime_id) or not _SLOT_ID.fullmatch(self.slot_id):
@@ -110,6 +144,8 @@ class SlotLease:
             raise ValueError("provider slots require an isolated client home")
         if request.resume_session_ref is not None and request.resume_session_ref != self.resume_ref(previous):
             raise ValueError("admit a fresh session before moving to another provider slot")
+        if paths_overlap(self.client_home, Path(request.workdir).resolve()):
+            raise ValidationFailed(ErrorCode.RUNTIME_INVALID_REQUEST, "provider home overlaps the workdir")
         return replace(request, client_home=str(self.client_home))
 
 
@@ -134,7 +170,7 @@ class ProviderPoolManager:
     even if its lease expires. An expired idle lease is reclaimable and its token cannot release a successor.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - host bindings and optional slot layout
         self,
         root: Path,
         slots: Iterable[ProviderSlot],
@@ -142,13 +178,50 @@ class ProviderPoolManager:
         strict_isolated: bool = False,
         clock: Clock | None = None,
         tool_sandbox: _ToolSandbox | None = None,
+        configs: Mapping[str, SlotRuntimeConfig] | None = None,
+        host_home: Path | None = None,
+        workdir: Path | None = None,
+        initialize: bool = True,
     ) -> None:
         self._slots: dict[str, ProviderSlot] = {}
         for slot in slots:
             if slot.slot_id in self._slots:
                 raise ValueError(f"duplicate provider slot: {slot.slot_id}")
             self._slots[slot.slot_id] = slot
-        self._root = ensure_private_dir(root)
+        self._root = validate_directory(root)
+        self._workdir = (Path.cwd() if workdir is None else workdir).resolve()
+        if paths_overlap(self._root, self._workdir):
+            raise ValidationFailed(ErrorCode.RUNTIME_INVALID_REQUEST, "provider pool overlaps the workdir")
+        self._homes: dict[str, ShallowHome] = {}
+        paths: list[Path] = []
+        for slot in self._slots.values():
+            config = (configs or {}).get(slot.slot_id, SlotRuntimeConfig())
+            directory = self._directory(slot)
+            home = ShallowHome(
+                session_home=(config.shallow_home or directory / "client").absolute(),
+                wallet=(config.wallet_path or directory / "wallet").absolute(),
+                host_home=host_home,
+                symlink_host_files=config.symlink_host_files,
+                write_back=config.write_back,
+            )
+            for target, default in ((home.session_home, "client"), (home.wallet, "wallet")):
+                if paths_overlap(target, self._root) and target != directory / default:
+                    raise ValidationFailed(
+                        ErrorCode.RUNTIME_INVALID_REQUEST, "configured provider directory overlaps the pool"
+                    )
+            paths.extend((home.session_home, home.wallet))
+            self._homes[slot.slot_id] = home
+        if len(set(paths)) != len(paths):
+            raise ValidationFailed(ErrorCode.RUNTIME_INVALID_REQUEST, "provider slot directories overlap")
+        for home in self._homes.values():
+            home.validate(
+                workdir=self._workdir,
+                reserved=tuple(path for path in paths if path not in (home.session_home, home.wallet)),
+            )
+        for slot in self._slots.values():
+            validate_directory(self._directory(slot), owned_from=self._root)
+        if initialize:
+            ensure_private_dir(self._root)
         self._strict_isolated = strict_isolated
         self._clock = clock if clock is not None else SystemClock()
         self._sandbox = tool_sandbox
@@ -163,9 +236,39 @@ class ProviderPoolManager:
             return "supported"
         return "unsupported"
 
+    def _directory(self, slot: ProviderSlot) -> Path:
+        return self._root / slot.runtime_id / slot.slot_id
+
     def _slot_dir(self, slot: ProviderSlot) -> Path:
-        runtime_dir = ensure_private_dir(self._root / slot.runtime_id)
-        return ensure_private_dir(runtime_dir / slot.slot_id)
+        directory = validate_directory(self._directory(slot), owned_from=self._root)
+        for path in (self._root, directory.parent, directory):
+            ensure_private_dir(path)
+        return directory
+
+    def active_slots(self) -> tuple[ProviderSlot, ...]:
+        """Read the unexpired lease records without exposing lease owners or tokens."""
+        now = self._clock.now()
+        active: list[ProviderSlot] = []
+        for slot in self._slots.values():
+            directory = validate_directory(self._directory(slot), owned_from=self._root)
+            current = _read_lease(directory / "lease.json")
+            if current is not None and (current[1] > now or self._slot_in_use(directory)):
+                active.append(slot)
+        return tuple(active)
+
+    @staticmethod
+    def _slot_in_use(directory: Path) -> bool:
+        lock = FileLock(directory / "slot.lock", create=False, readonly=True)
+        try:
+            if not lock.acquire():
+                return True
+        except FileNotFoundError:
+            return False
+        except RuntimeError:
+            # FileLock refuses a second acquisition by the thread already holding the lease.
+            return True
+        lock.release()
+        return False
 
     def _check_isolation(self, slot: ProviderSlot) -> CredentialIsolation:
         isolation = self.credential_isolation(slot.slot_id)
@@ -183,6 +286,8 @@ class ProviderPoolManager:
             raise ValueError("a lease needs an owner and a finite, positive TTL")
         slot = self._slots[slot_id]
         isolation = self._check_isolation(slot)
+        home = self._homes[slot_id]
+        home.validate(workdir=self._workdir)
         directory = self._slot_dir(slot)
         lock = FileLock(directory / "slot.lock")
         if not lock.acquire():
@@ -196,7 +301,7 @@ class ProviderPoolManager:
             lease = SlotLease(
                 slot,
                 owner_id,
-                ensure_private_dir(directory / "client"),
+                ensure_private_dir(home.session_home),
                 now + timedelta(seconds=ttl_seconds),
                 isolation,
                 uuid4().hex,
@@ -208,16 +313,92 @@ class ProviderPoolManager:
             lock.release()
 
     def acquire_ranked(
-        self, slots: Iterable[ProviderSlot], owner_id: str, *, ttl_seconds: float
+        self, slots: Iterable[ProviderSlot], owner_id: str, *, ttl_seconds: float, model: str | None = None
     ) -> SlotLease | None:
-        """Lease the highest-ranked slot still available when acquisition takes place."""
+        """Lease the highest-ranked available slot outside its cooling period for this model."""
+        if model is None:
+            return self._acquire_ranked(slots, owner_id, ttl_seconds)
+        with FileLock(self._root / "rotation.lock").hold(timeout_seconds=None):
+            _, cooldowns = self._read_rotation()
+            now = self._clock.now()
+            blocked = frozenset(
+                slot_id
+                for slot_id, models in cooldowns.items()
+                if model in models and datetime.fromisoformat(models[model]) > now
+            )
+            return self._acquire_ranked(slots, owner_id, ttl_seconds, blocked=blocked)
+
+    def _acquire_ranked(
+        self,
+        slots: Iterable[ProviderSlot],
+        owner_id: str,
+        ttl_seconds: float,
+        *,
+        blocked: frozenset[str] = frozenset(),
+    ) -> SlotLease | None:
         for slot in slots:
             if self._slots.get(slot.slot_id) != slot:
                 raise ValueError("ranked slot belongs to another pool")
+            if slot.slot_id in blocked:
+                continue
             lease = self.acquire(slot.slot_id, owner_id, ttl_seconds=ttl_seconds)
             if lease is not None:
                 return lease
         return None
+
+    def _read_rotation(self) -> tuple[int, dict[str, dict[str, str]]]:
+        try:
+            generation, cooldowns = json.loads((self._root / "rotation.json").read_bytes())
+        except FileNotFoundError:
+            return 0, {}
+        return cast("int", generation), cast("dict[str, dict[str, str]]", cooldowns)
+
+    @property
+    def route_generation(self) -> int:
+        with FileLock(self._root / "rotation.lock").hold(timeout_seconds=None):
+            return self._read_rotation()[0]
+
+    def handle_rate_limit(
+        self,
+        slot_id: str,
+        model: str,
+        decision: RateLimitDecision,
+        *,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> RateLimitDecision:
+        """Publish one cooldown per failing route and wait outside the shared rotation lock."""
+        if slot_id not in self._slots or not model:
+            raise ValueError("rate limit route needs a registered slot and model")
+        decision = self._apply_cooldown(slot_id, model, decision)
+        if decision.action is RateLimitAction.WAIT_SAME_SLOT:
+            sleep(decision.wait_s)
+            decision = self._apply_cooldown(slot_id, model, decision)
+        return decision
+
+    def _apply_cooldown(self, slot_id: str, model: str, decision: RateLimitDecision) -> RateLimitDecision:
+        with FileLock(self._root / "rotation.lock").hold(timeout_seconds=None):
+            generation, cooldowns = self._read_rotation()
+            now = self._clock.now()
+            existing = cooldowns.get(slot_id, {}).get(model)
+            if existing is not None and (until := datetime.fromisoformat(existing)) > now:
+                return replace(decision, action=RateLimitAction.ROTATE_SLOT, wait_s=0, cooldown_until=until)
+            if decision.action is RateLimitAction.ROTATE_SLOT:
+                until = decision.cooldown_until
+                if until is None or until <= now:
+                    until = now + timedelta(seconds=60)
+                cooldowns = {
+                    slot: {
+                        name: expiry
+                        for name, expiry in models.items()
+                        if datetime.fromisoformat(expiry) > now
+                    }
+                    for slot, models in cooldowns.items()
+                }
+                cooldowns.setdefault(slot_id, {})[model] = until.isoformat()
+                record = json.dumps([generation + 1, cooldowns]).encode()
+                atomic_write(self._root / "rotation.json", record, mode=0o600, private=True)
+                return replace(decision, cooldown_until=until)
+        return decision
 
     def release(self, lease: SlotLease) -> bool:
         """Release the current lease after in-flight use completes. Stale releases have no effect."""
@@ -231,13 +412,9 @@ class ProviderPoolManager:
 
     def _lease_path(self, lease: SlotLease) -> Path:
         slot = self._slots.get(lease.slot.slot_id)
-        if (
-            slot is None
-            or slot != lease.slot
-            or (lease.client_home != self._root / slot.runtime_id / slot.slot_id / "client")
-        ):
+        if slot is None or slot != lease.slot or lease.client_home != self._homes[slot.slot_id].session_home:
             raise ValueError("lease belongs to another provider pool")
-        return lease.client_home.with_name("lease.json")
+        return validate_directory(self._directory(slot), owned_from=self._root) / "lease.json"
 
     @contextmanager
     def use(self, lease: SlotLease) -> Generator[Path]:
@@ -253,7 +430,16 @@ class ProviderPoolManager:
                     "provider slot lease is no longer active",
                     details={"reason": "provider_slot_lease_inactive"},
                 )
-            yield lease.client_home
+            home = self._homes[lease.slot.slot_id]
+            home.prepare(lease.slot.runtime_id, workdir=self._workdir)
+            wallet_lock = home.wallet.resolve(strict=True) / ".credentials.lock"
+            assert_safe_replace_target(wallet_lock)
+            with FileLock(wallet_lock).hold(timeout_seconds=None):
+                original = home.stage(lease.slot.runtime_id)
+                try:
+                    yield lease.client_home
+                finally:
+                    home.persist(lease.slot.runtime_id, original)
 
     def pin_session(self, lease: SlotLease, session_ref: str) -> SessionPin:
         """Record a provider session's slot while holding `use` for that lease."""
@@ -283,14 +469,23 @@ class ProviderPoolManager:
                 "host-dispatched tools require a credential-isolating sandbox",
                 details={"credential_isolation": "unsupported"},
             )
+        protected = (
+            self._root,
+            *(
+                path
+                for home in self._homes.values()
+                for path in (home.wallet, home.session_home)
+                if not path.is_relative_to(self._root)
+            ),
+        )
         for grant in (worktree.resolve(), tool_home.resolve()):
-            if grant.is_relative_to(self._root) or self._root.is_relative_to(grant):
+            if any(paths_overlap(grant, path) for path in protected):
                 raise ValueError("tool filesystem grant overlaps the provider pool")
         command = self._sandbox.filesystem_argv(
             argv,
             worktree=worktree,
             step_tmp=tool_home,
-            protected=(self._root,),
+            protected=protected,
             writable_worktree=writable_worktree,
         )
         return run(

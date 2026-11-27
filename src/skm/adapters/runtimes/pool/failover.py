@@ -51,11 +51,14 @@ class FailoverController:
         *,
         source_provider_id: str,
         http_status: int | None,
+        is_quota_exhausted: bool = False,
         consumed_host_private: bool | None = None,
     ) -> FailoverDecision | None:
-        """Select the first affordable eligible slot on a different cloud after an HTTP 529."""
+        """Select the first eligible, affordable slot on another cloud after overload or quota exhaustion."""
         ceiling = self._routing_ceiling(consumed_host_private)
-        if ceiling is None or type(http_status) is not int or http_status != 529:
+        if ceiling is None or type(http_status) is not int:
+            return None
+        if http_status != 529 and (http_status != 429 or is_quota_exhausted is not True):
             return None
         if not is_runtime_id(source_provider_id):
             return None

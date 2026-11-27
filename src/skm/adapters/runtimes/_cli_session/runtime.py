@@ -41,6 +41,7 @@ from .binding import bind_launch, bind_observation, verified_probe
 from .cancel import Sleeper
 from .observation import LiveQueue
 from .probe import HELP_TIMEOUT_SECONDS, VERSION_TIMEOUT_SECONDS, ProbeCacheKey
+from .proxy_bridge import LocalProxyBridge
 from .session import CliSession, ProcessRunner, SessionLimits, StreamParser, TrustedProcessRunner
 from .transcript import TranscriptWriter
 
@@ -48,6 +49,8 @@ if TYPE_CHECKING:
     from skm.kernel.clock import Clock, Monotonic
     from skm.modules.execution.ports import WrappedCommand
     from skm.modules.runtimes.domain.ids import Digest
+
+    from .proxy_bridge import ProxyEndpoint
 
 __all__: list[str] = []
 
@@ -182,6 +185,7 @@ class _ManagedSession:
     requested_model: str
     cli_session: _SpawningCliSession
     cancel_event: threading.Event
+    proxy_bridge: LocalProxyBridge | None = None
     cond: threading.Condition = field(default_factory=threading.Condition)
     emitted: list[SessionEvent] = field(default_factory=list[SessionEvent])
     done: bool = False
@@ -225,6 +229,7 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
         result_grace_seconds: float,
         live_queue_factory: Callable[[], LiveQueue | None] | None,
         local_auth: Callable[[], Mapping[str, str]] | None = None,
+        egress_proxy: ProxyEndpoint | None = None,
     ) -> None:
         static_caps, rules = load_static_declarations(package_dir)
         self._static_caps = static_caps
@@ -233,6 +238,7 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
         self._apply_probe_fn = apply_probe
         self._state_dir = state_dir
         self._binary = binary
+        self._egress_proxy = egress_proxy
         self._environ: Mapping[str, str] = dict(environ) if environ is not None else {}
         self._user_home = user_home
         self._allow_pgroup_best_effort = allow_pgroup_best_effort
@@ -287,6 +293,7 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
         *,
         step_dir: Path,
         ownership: ProcessOwnership,
+        proxy_bridge: LocalProxyBridge | None = None,
     ) -> tuple[WrappedCommand, bytes]:
         """Wrapped command and stdin payload for one step."""
 
@@ -374,6 +381,11 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
     @override
     def start(self, request: AgentRequest) -> SessionHandle:  # noqa: PLR0915 - ordered bound spawn lifecycle
         validate_request(request, self.capabilities())
+        network = request.permissions.network
+        if self._egress_proxy is not None and network.mode == "none":
+            raise CapabilityUnavailable(
+                ErrorCode.CAPABILITY_UNAVAILABLE, "configured egress proxy requires network access"
+            )
         self._validate_start(request)
         probed = self._probe_for_start(request)
         caps = self._apply_probe(probed)
@@ -403,8 +415,11 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
         )
 
         bound_program = None
+        proxy_bridge = None
 
         def cleanup_scratch() -> None:
+            if proxy_bridge is not None:
+                proxy_bridge.close()
             if bound_program is not None:
                 shutil.rmtree(step_dir / ".pinned-bin", ignore_errors=True)
             for name in self.scratch_directories:
@@ -412,8 +427,17 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
 
         try:
             launch_request = self._with_local_auth(request)
+            if self._egress_proxy is not None:
+                allowed = frozenset(network.hosts) if network.mode == "allowlist" else None
+                proxy_bridge = LocalProxyBridge(self._egress_proxy, allowed_hosts=allowed)
+                try:
+                    proxy_bridge.__enter__()
+                except OSError:
+                    raise CapabilityUnavailable(
+                        ErrorCode.CAPABILITY_UNAVAILABLE, "egress bridge unavailable"
+                    ) from None
             command, stdin = self._build_launch(
-                launch_request, probed, step_dir=step_dir, ownership=ownership
+                launch_request, probed, step_dir=step_dir, ownership=ownership, proxy_bridge=proxy_bridge
             )
             command, bound_program = bind_launch(request, probed, command, step_dir)
             if bound_program is not None:
@@ -449,9 +473,8 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
         except BaseException:
             cleanup_scratch()
             raise
-        self._register_launch_secrets(writer, request, command.env)
-
         try:
+            self._register_launch_secrets(writer, request, command.env)
             parser = self._make_parser(request, probed, writer.redact)
             runner: ProcessRunner = (
                 self._process_runner
@@ -500,6 +523,8 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
             )
             if not unconfirmed:
                 cleanup_scratch()
+            elif proxy_bridge is not None:
+                proxy_bridge.close()
             raise
         handle = SessionHandle(
             runtime_id=self.runtime_id,
@@ -510,7 +535,11 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
             ownership=cli_session.ownership,
         )
         managed = _ManagedSession(
-            handle=handle, requested_model=request.model, cli_session=cli_session, cancel_event=cancel_event
+            handle=handle,
+            requested_model=request.model,
+            cli_session=cli_session,
+            cancel_event=cancel_event,
+            proxy_bridge=proxy_bridge,
         )
         driver = threading.Thread(
             target=self._drive_session,
@@ -599,9 +628,13 @@ class CliAgentRuntime[ProbedT: ProbedCli](AgentRuntime):
                 for name in self.scratch_directories:
                     shutil.rmtree(managed.cli_session.transcript.step_dir / name, ignore_errors=True)
         finally:
-            with managed.cond:
-                managed.done = True
-                managed.cond.notify_all()
+            try:
+                if managed.proxy_bridge is not None:
+                    managed.proxy_bridge.close()
+            finally:
+                with managed.cond:
+                    managed.done = True
+                    managed.cond.notify_all()
 
     def _update_auth_from_result(self, res: RuntimeResult) -> None:
         with self._lock:

@@ -4,4 +4,7 @@
 CLI-based adapter builds on; each runtime subpackage adds detection, launch, permissions and stream parsing.
 """
 
-__all__: list[str] = []
+from ._cli_session.launch import apply_proxy_env
+from ._cli_session.proxy_bridge import LocalProxyBridge, ProxyEndpoint
+
+__all__ = ["LocalProxyBridge", "ProxyEndpoint", "apply_proxy_env"]

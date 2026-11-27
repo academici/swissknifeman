@@ -8,13 +8,17 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+from skm.adapters.runtimes._cli_session.launch import apply_proxy_env
 from skm.kernel.isolation import IsolationProfile
 from skm.modules.runtimes.domain.classes import RoleId
 from skm.modules.runtimes.domain.request import AgentRequest
 from skm.platform.fs.atomic_write import atomic_write
 from skm.platform.process.argv_rules import check_argv
+
+if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
 
 __all__: list[str] = []
 
@@ -140,7 +144,7 @@ def _build_settings_document(
     }
 
 
-def _write_mcp_config(request: AgentRequest, step_dir: Path) -> Path:
+def _write_mcp_config(request: AgentRequest, step_dir: Path, proxy_bridge: LocalProxyBridge | None) -> Path:
     servers: dict[str, object] = {}
     secret_values = tuple(secret.reveal() for secret in request.secret_env.values())
     for server in request.mcp_servers:
@@ -151,6 +155,7 @@ def _write_mcp_config(request: AgentRequest, step_dir: Path) -> Path:
         for secret_name in server.secret_env_names:
             # Never materialize secret plaintext in mcp.json; expand from child env at runtime.
             env_map[secret_name] = f"${{{secret_name}}}"
+        apply_proxy_env(env_map, proxy_bridge)
         servers[server.name] = {
             "args": list(argv[1:]),
             "command": argv[0],
@@ -179,6 +184,7 @@ def render_permission_flags(
     policy_profile: str | None = None,
     allow_skip_permissions: bool = False,
     extra_dirs: Sequence[str] = (),
+    proxy_bridge: LocalProxyBridge | None = None,
 ) -> RenderedPermissions:
     """Write ``<step_dir>/settings.json`` (and optional ``mcp.json``) and render Claude CLI flags."""
     if step_dir.resolve().is_relative_to(Path(request.workdir).resolve()):
@@ -232,7 +238,7 @@ def render_permission_flags(
 
     mcp_path: Path | None = None
     if request.mcp_servers:
-        mcp_path = _write_mcp_config(request, step_dir)
+        mcp_path = _write_mcp_config(request, step_dir, proxy_bridge)
         flags.extend(("--mcp-config", str(mcp_path)))
         if strict_mcp_supported:
             flags.append("--strict-mcp-config")

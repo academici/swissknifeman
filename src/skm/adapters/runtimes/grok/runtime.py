@@ -34,6 +34,7 @@ from .stream_parser import GrokStreamParser
 if TYPE_CHECKING:
     from skm.adapters.runtimes._cli_session.cancel import Sleeper
     from skm.adapters.runtimes._cli_session.observation import LiveQueue
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
     from skm.adapters.runtimes._cli_session.session import ProcessRunner, StreamParser
     from skm.kernel.clock import Clock, Monotonic
     from skm.modules.execution.ports import WrappedCommand
@@ -299,6 +300,7 @@ class GrokRuntime(CliAgentRuntime[ProbedBinary]):
         *,
         step_dir: Path,
         ownership: ProcessOwnership,
+        proxy_bridge: LocalProxyBridge | None = None,
     ) -> tuple[WrappedCommand, bytes]:
         plan = build_launch_plan(
             request,
@@ -308,6 +310,7 @@ class GrokRuntime(CliAgentRuntime[ProbedBinary]):
             host_environ=self._environ,
             user_home=self._user_home,
             wrap_landlock=self._wrap_landlock,
+            proxy_bridge=proxy_bridge,
         )
         return plan.command.as_wrapped(), plan.stdin
 

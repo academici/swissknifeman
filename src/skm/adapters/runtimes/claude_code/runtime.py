@@ -26,6 +26,7 @@ from .stream_parser import ClaudeStreamParser
 if TYPE_CHECKING:
     from skm.adapters.runtimes._cli_session.cancel import Sleeper
     from skm.adapters.runtimes._cli_session.observation import LiveQueue
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge, ProxyEndpoint
     from skm.adapters.runtimes._cli_session.session import ProcessRunner, StreamParser
     from skm.kernel.clock import Clock, Monotonic
     from skm.modules.execution.ports import WrappedCommand
@@ -52,6 +53,7 @@ class ClaudeCodeRuntime(CliAgentRuntime[ProbedBinary]):
         state_dir: Path | None = None,
         binary: str | None = None,
         environ: Mapping[str, str] | None = None,
+        egress_proxy: ProxyEndpoint | None = None,
         local_auth: Callable[[], Mapping[str, str]] | None = None,
         copy_credentials: bool = True,
         allow_skip_permissions: bool = False,
@@ -88,6 +90,7 @@ class ClaudeCodeRuntime(CliAgentRuntime[ProbedBinary]):
             state_dir=state_dir,
             binary=binary,
             environ=environ,
+            egress_proxy=egress_proxy,
             local_auth=local_auth,
             user_home=user_home,
             allow_pgroup_best_effort=allow_pgroup_best_effort,
@@ -142,12 +145,14 @@ class ClaudeCodeRuntime(CliAgentRuntime[ProbedBinary]):
         *,
         step_dir: Path,
         ownership: ProcessOwnership,
+        proxy_bridge: LocalProxyBridge | None = None,
     ) -> tuple[WrappedCommand, bytes]:
         plan = build_launch_plan(
             request,
             binary_path=probed.binary_realpath,
             step_dir=step_dir,
             ownership=ownership,
+            proxy_bridge=proxy_bridge,
             host_environ=self._environ,
             probed=probed,
             policy_profile=self._policy_profile,

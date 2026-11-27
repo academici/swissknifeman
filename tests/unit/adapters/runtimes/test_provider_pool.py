@@ -9,6 +9,7 @@ from fakes.clock import FrozenClock
 from skm.adapters.runtimes.pool import ProviderPoolManager, ProviderSlot
 from skm.kernel.error_codes import ErrorCode
 from skm.kernel.errors import CapabilityUnavailable, PreconditionFailed
+from skm.platform.fs.atomic_write import atomic_write
 
 _CODEX = ProviderSlot("codex", "a")
 _OTHER_CODEX = ProviderSlot("codex", "b")
@@ -97,7 +98,7 @@ def test_refresh_serializes_across_managers_without_blocking_another_slot(tmp_pa
     def refresh_first(home: Path) -> None:
         entered.set()
         assert finish.wait(timeout=5)
-        (home / "auth.json").write_text("rotated", encoding="utf-8")
+        atomic_write(home / "auth.json", b'{"token":"rotated"}', mode=0o600, private=True)
 
     def refresh_second() -> str:
         queued.set()
@@ -114,7 +115,7 @@ def test_refresh_serializes_across_managers_without_blocking_another_slot(tmp_pa
         finally:
             finish.set()
         running.result(timeout=5)
-        assert waiting.result(timeout=5) == "rotated"
+        assert waiting.result(timeout=5) == '{"token":"rotated"}'
 
 
 def test_expiry_during_refresh_preserves_exclusivity_and_fences_waiters(tmp_path: Path) -> None:

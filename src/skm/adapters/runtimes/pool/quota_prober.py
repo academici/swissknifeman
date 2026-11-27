@@ -61,12 +61,23 @@ class QuotaReading:
 
 class QuotaProber:
     def __init__(
-        self, groups: Sequence[QuotaGroup], transport: Callable[[ProviderSlot, QuotaGroup], QuotaReply | None]
+        self,
+        groups: Sequence[QuotaGroup],
+        transport: Callable[[ProviderSlot, QuotaGroup], QuotaReply | None],
+        *,
+        required_groups: int | None = 6,
     ) -> None:
         self.groups = tuple(groups)
         ids = {group.group_id for group in self.groups}
-        if len(self.groups) != 6 or len(ids) != 6 or any(not name.strip() for name in ids):
+        if required_groups is not None and len(self.groups) != required_groups:
             raise ValueError("expected six distinct named quota groups")
+        if len(ids) != len(self.groups) or any(not name.strip() for name in ids):
+            message = (
+                "expected distinct named quota groups"
+                if required_groups is None
+                else "expected six distinct named quota groups"
+            )
+            raise ValueError(message)
         self._transport = transport
 
     def probe(self, slot: ProviderSlot) -> tuple[QuotaReading, ...]:

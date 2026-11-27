@@ -20,10 +20,13 @@ from skm.platform.process.argv_rules import check_argv
 from skm.platform.process.environment import build_env
 
 if TYPE_CHECKING:
+    from skm.adapters.runtimes._cli_session.proxy_bridge import LocalProxyBridge
     from skm.modules.execution.ports import WrappedCommand
     from skm.modules.runtimes.domain.ids import Digest
 
 __all__ = [
+    "PROXY_ENV_KEYS",
+    "apply_proxy_env",
     "base_child_env",
     "ensure_private_dir",
     "env_auth_present",
@@ -37,6 +40,40 @@ __all__ = [
 ]
 
 _TLS_ENV: tuple[str, ...] = ("SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS")
+
+
+PROXY_ENV_KEYS = frozenset(
+    {
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "NO_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "all_proxy",
+        "no_proxy",
+    }
+)
+_PROXY_ENV_NORMALIZED = frozenset(key.lower() for key in PROXY_ENV_KEYS)
+
+
+def apply_proxy_env(env: dict[str, str], bridge: LocalProxyBridge | None = None) -> None:
+    """Scrub the final environment and, when present, install the active host bridge."""
+    for key in tuple(env):
+        if key.lower() in _PROXY_ENV_NORMALIZED:
+            del env[key]
+    if bridge is not None:
+        url = bridge.url
+        if url is None:
+            raise CapabilityUnavailable(ErrorCode.CAPABILITY_UNAVAILABLE, "egress proxy bridge is inactive")
+        env.update(
+            HTTP_PROXY=url,
+            HTTPS_PROXY=url,
+            http_proxy=url,
+            https_proxy=url,
+            NO_PROXY="127.0.0.1,localhost,::1",
+            no_proxy="127.0.0.1,localhost,::1",
+        )
 
 
 @dataclass(frozen=True, slots=True)

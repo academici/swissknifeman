@@ -28,6 +28,7 @@ from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
 from skm.adapters.postgres.migrations.runner import discover_migrations
+from skm.adapters.resources.builtin_packs import PackagedBuiltinPacks
 from skm.adapters.secrets.file import FileSecretResolver
 from skm.bootstrap.local_postgres import (
     ManagedPostgres,
@@ -588,7 +589,9 @@ def test_init_checks_project_app_and_migrator_database_before_writing(
             with psycopg.connect(baseline_app) as conn:
                 assert conn.execute("SELECT current_user").fetchone() == (login,)
                 assert conn.execute("SELECT count(*) FROM skm_core.scopes").fetchone() == (2,)
-                assert conn.execute("SELECT count(*) FROM skm_extensions.pack_versions").fetchone() == (29,)
+                assert conn.execute("SELECT count(*) FROM skm_extensions.pack_versions").fetchone() == (
+                    len(PackagedBuiltinPacks(ROOT / "resources/packs").payloads()),
+                )
         finally:
             admin.execute(sql.SQL("DROP ROLE {}").format(login_identifier))
 

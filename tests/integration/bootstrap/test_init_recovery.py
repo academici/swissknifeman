@@ -26,6 +26,7 @@ import pytest
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
+from skm.adapters.resources.builtin_packs import PackagedBuiltinPacks
 from skm.application_bus.client import EmbeddedClient
 from skm.bootstrap.composition import App, open_cli_app
 from skm.entrypoints.cli.commands import init as init_module
@@ -45,6 +46,7 @@ from skm.modules.access.public import (
 from skm.modules.workspace.public import CreateWorkspace, ListProjects
 from skm.platform.config.bootstrap import load_bootstrap
 
+PACKS_ROOT = Path(__file__).resolve().parents[3] / "resources/packs"
 ENTRY = "import sys; from skm.entrypoints.cli.main import main; sys.exit(main())"
 # Only what the interpreter needs; HOME and XDG always point into the sandbox.
 PASSED = ("PATH", "PYTHONPATH", "LANG", "LC_ALL", "TMPDIR")
@@ -431,7 +433,9 @@ with patch("skm.bootstrap.instance._identities", side_effect=error):
     again = ok(box, "init", "--no-workspace")
     assert again["instance_id"] == instance_id
     assert (again["system_principal_created"], again["owner"]["created"]) == (True, True)
-    assert rows(box.dsn, "SELECT count(*) FROM skm_extensions.pack_versions") == [(29,)]
+    assert rows(box.dsn, "SELECT count(*) FROM skm_extensions.pack_versions") == [
+        (len(PackagedBuiltinPacks(PACKS_ROOT).payloads()),)
+    ]
     assert mode(box.owner_token) == 0o600
     assert ok(box, "whoami")["principal"]["principal_id"] == again["owner_principal_id"]
 

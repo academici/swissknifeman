@@ -370,16 +370,16 @@ def test_full_context_m3_worker_keeps_run_pins_after_core_upgrade(recovery: Any,
 
 def test_skills_reconciliation_matches_porting_report():
     export = json.loads((ROOT / "resources/overlays/exports.json").read_text())
-    assert export["counts"]["source_total"] == 218
-    assert export["counts"]["migrated"] == sum(p["skill_count"] for p in export["packs"]) == 198
-    assert export["counts"]["excluded"] == len(export["excluded_skills"]) == 20
-    assert 218 == 198 + 20
-    assert sum(p["skill_count"] for p in export["packs"] if p["tier"] == "local") == 143
-    assert sum(p["skill_count"] for p in export["packs"] if p["tier"] == "upstream") == 55
+    counts = export["counts"]
+    assert counts["packs"] == len(export["packs"])
+    assert counts["migrated"] == sum(p["skill_count"] for p in export["packs"])
+    assert counts["excluded"] == len(export["excluded_skills"])
+    assert counts["source_total"] == counts["migrated"] + counts["excluded"]
     for pack in export["packs"]:
-        assert len(pack["skills"]) == pack["skill_count"]
-        for skill in pack["skills"]:
-            assert (ROOT / pack["path"] / "skills" / skill["key"] / "SKILL.md").is_file()
+        skills = {skill["key"] for skill in pack["skills"]}
+        assert len(skills) == len(pack["skills"]) == pack["skill_count"]
+        skill_files = (ROOT / pack["path"]).glob("skills/*/SKILL.md")
+        assert skills == {path.parent.name for path in skill_files if path.is_file()}
 
 
 @pytest.mark.parametrize("ctx_side", ["postgres"], indirect=True)

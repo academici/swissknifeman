@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 import sys
+import tomllib
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterator, Mapping
@@ -39,6 +40,7 @@ from skm.platform.config.bootstrap import load_bootstrap
 
 pytestmark = [pytest.mark.e2e, pytest.mark.pg]
 
+PACKS_ROOT = Path(__file__).resolve().parents[2] / "resources/packs"
 ENTRY = "import sys; from skm.entrypoints.cli.main import main; sys.exit(main())"
 PASSED = ("PATH", "PYTHONPATH", "LANG", "LC_ALL", "TMPDIR")
 
@@ -304,8 +306,11 @@ def test_extensions_cli_lifecycle_and_upstream_check_without_auto_apply(  # noqa
     assert sub.returncode == 0, sub.stdout + sub.stderr
     packs_initial = json.loads(sub.stdout)["result"]["items"]
     initial_slugs = {pack["slug"] for pack in packs_initial}
-    assert len(packs_initial) == len(initial_slugs) == 29
-    assert [pack["slug"] for pack in packs_initial].count("core") == 1
+    packaged_slugs = {
+        tomllib.loads(pack.manifest_text)["slug"] for pack in PackagedBuiltinPacks(PACKS_ROOT).payloads()
+    }
+    assert initial_slugs == packaged_slugs
+    assert len(packs_initial) == len(initial_slugs)
 
     # 2. Prepare external pack with upstream-tracked and local skills
     clean_body = b"# Clean Skill v1\nFollow the specification.\n"

@@ -335,8 +335,15 @@ def test_shared_skills_foreign_bytes_json_toml_and_secret_refs_preserved(acc_box
     for t in ("codex", "cursor", "grok"):
         files = acc_box.ask_applied(t).files
         sdig[t] = {r.relative_path: r.applied_whole_digest for r in files if "skills/" in r.relative_path}
-    assert sdig["codex"]
-    assert (sdig["codex"], sdig["cursor"], any(co.rglob("skill.toml"))) == (sdig["grok"], sdig["grok"], False)
+    assert sdig["grok"]
+    assert sdig["grok"] == sdig["cursor"]
+    codex_metadata = {rel for rel in sdig["codex"] if rel.endswith("/agents/openai.yaml")}
+    assert codex_metadata == {
+        f".agents/skills/{key}/agents/openai.yaml"
+        for key in ("grill-me", "handoff", "implement", "to-spec", "to-tickets")
+    }
+    assert {rel: digest for rel, digest in sdig["codex"].items() if rel not in codex_metadata} == sdig["grok"]
+    assert not any(co.rglob("skill.toml"))
     assert (co / "CLAUDE.md").read_text().startswith(c_hdr)
     assert (co / "AGENTS.md").read_text().startswith(a_hdr)
     c_set = json.loads((co / ".claude/settings.json").read_text())
@@ -351,9 +358,16 @@ def test_shared_skills_foreign_bytes_json_toml_and_secret_refs_preserved(acc_box
         txt = tp.read_text()
         assert "# Foreign TOML comment" in txt
         assert tomllib.loads(txt)["mcp_servers"]["docs"] == {"command": "npx", "args": ["docs"]}
-    for mp in (".mcp.json", ".cursor/mcp.json", ".codex/config.toml", ".grok/config.toml"):
-        raw = (co / mp).read_text()
-        assert ("secret://env/GITHUB_TOKEN" in raw, ENV_SECRET in raw) == (True, False)
+    mcp_refs = {
+        ".mcp.json": "${GITHUB_TOKEN}",
+        ".cursor/mcp.json": "secret://env/GITHUB_TOKEN",
+        ".codex/config.toml": "secret://env/GITHUB_TOKEN",
+        ".grok/config.toml": "secret://env/GITHUB_TOKEN",
+    }
+    for path, ref in mcp_refs.items():
+        raw = (co / path).read_text()
+        assert ref in raw
+        assert ENV_SECRET not in raw
     desired = cfg.read_bytes()
     edited = desired.replace(b'"gh"', b'"local-gh"')
     cfg.write_bytes(edited)
@@ -364,6 +378,7 @@ def test_shared_skills_foreign_bytes_json_toml_and_secret_refs_preserved(acc_box
     cfg.write_bytes(desired)
     for t in ("codex", "cursor", "grok"):
         acc_box.ok("integrations", "remove", "--target", t, "--yes")
+        assert all(not (co / rel).exists() for rel in codex_metadata)
         assert all((co / rel).exists() == (t != "grok") for rel in sdig["grok"])
     assert (co / ".agents/skills/team-own/SKILL.md").read_text() == skill_md
 
@@ -643,7 +658,7 @@ def test_capability_facts_and_summarize_session_none_ench6_boundary(tmp_path: Pa
         target.TargetId.CLAUDE_CODE: ("claude_code@1", "2.1.220", date(2026, 8, 2), nat),
         target.TargetId.CODEX: ("codex@1", "0.165.0", date(2026, 10, 26), nat),
         target.TargetId.CURSOR: ("cursor@1", "2026.09.15-d2fe57e", date(2026, 10, 26), nat),
-        target.TargetId.GEMINI_CLI: ("gemini_cli@1", "unverified", date(2026, 11, 23), unsup),
+        target.TargetId.GEMINI_CLI: ("gemini_cli@2", "0.71.1", date(2026, 11, 27), unsup),
         target.TargetId.GROK: ("grok@1", "0.1.0", date(2026, 10, 26), unsup),
     }
     reg = default_target_registry()
@@ -660,12 +675,22 @@ def test_capability_facts_and_summarize_session_none_ench6_boundary(tmp_path: Pa
         r_ver, c_ver, v_date, ag_sup = expected[adapter.target_id]
         assert (adapter.renderer_version, caps.tested_client_version) == (r_ver, c_ver)
         assert (caps.verified_at, caps.surfaces[target.Surface.AGENTS]) == (v_date, ag_sup)
-        supported = (
-            {target.Surface.INSTRUCTIONS, target.Surface.SKILLS}
-            if adapter.target_id in {target.TargetId.ANTIGRAVITY, target.TargetId.GEMINI_CLI}
-            else set(nat_surfs)
-        )
-        assert {surface for surface in nat_surfs if caps.surfaces[surface] is nat} == supported
+        if adapter.target_id is target.TargetId.GEMINI_CLI:
+            assert dict(caps.surfaces) == {
+                target.Surface.INSTRUCTIONS: target.SurfaceSupport.CONFIG_NATIVE,
+                target.Surface.SKILLS: nat,
+                target.Surface.PERMISSIONS: target.SurfaceSupport.CONFIG_NATIVE,
+                target.Surface.HOOKS: target.SurfaceSupport.HOOK_NATIVE,
+                target.Surface.MCP: unsup,
+                target.Surface.AGENTS: unsup,
+            }
+        else:
+            supported = (
+                {target.Surface.INSTRUCTIONS, target.Surface.SKILLS}
+                if adapter.target_id is target.TargetId.ANTIGRAVITY
+                else set(nat_surfs)
+            )
+            assert {surface for surface in nat_surfs if caps.surfaces[surface] is nat} == supported
         assert adapter.summarize_session(pl, fake_fs) is None
         assert adapter.summarize_session(pl, local_fs) is None
     raw_sum = (

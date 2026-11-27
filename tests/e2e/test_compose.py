@@ -359,6 +359,7 @@ _SEED_FAKE_RUN = """
 import json
 import os
 import sys
+import tomllib
 from base64 import b64decode
 from dataclasses import replace
 from io import BytesIO
@@ -367,6 +368,7 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from zipfile import ZipFile
 
+from skm.adapters.resources.builtin_packs import PackagedBuiltinPacks
 from skm.bootstrap.composition_resources import token_pepper
 from skm.kernel.ids import ScopeId
 from skm.platform.config.bootstrap import load_bootstrap
@@ -393,9 +395,19 @@ def seed(root, owner, worker_python):
     harness.seed_principals = existing_owner
 
     pack = harness._pack()
+    # The live stack already installed its built-in core. Give the fake workflow a newer version.
+    builtin_manifests = [
+        tomllib.loads(payload.manifest_text) for payload in PackagedBuiltinPacks().payloads()
+    ]
+    core_major = max(
+        int(manifest["version"].split(".")[0])
+        for manifest in builtin_manifests
+        if manifest["slug"] == "core"
+    )
+    fixture_version = f"{core_major + 1}.0.0"
     harness._pack = lambda: harness.pack_payload(
-        "core", "2.1.0",
-        files={file.path: file.content.decode().replace("1.3.0", "2.1.0") for file in pack.files},
+        "core", fixture_version,
+        files={file.path: file.content.decode().replace("1.3.0", fixture_version) for file in pack.files},
     )
     side = harness.recovery.__wrapped__(
         SimpleNamespace(session=SimpleNamespace(addfinalizer=lambda _: None)),

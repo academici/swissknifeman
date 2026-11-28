@@ -26,7 +26,7 @@ of them. On a push to a work branch (not main or new), a ``CI-Only:`` line in th
 the run to the listed lanes or matrix cells, so a fix is verified on the cells that failed before one
 full run at the end::
 
-    CI-Only: lint, unit/platform@3.15, pg/hooks@19.0, e2e, web
+    CI-Only: lint, unit/platform@3.15, pg/hooks@19.0, pg/e2e-integrations, e2e, web
 """
 
 from __future__ import annotations
@@ -81,9 +81,26 @@ def _module(name: str, *, pg: bool = True) -> Shard:
 SHARDS: tuple[Shard, ...] = (
     # Native hook deadline checks must not compete with xdist workers (see `make test-pg`).
     Shard("hooks", ("tests/e2e/test_projected_hooks.py",), unit=False, workers="0"),
-    # The pg/e2e cell is the CI wall-time critical path (8-13 min of pytest). A more specific
-    # shard runs first; remaining tests/e2e/ files stay in `e2e`. Two workers per job keep
-    # one shared Postgres from being oversubscribed the way `-n auto` can be.
+    # The pg/e2e cell is the CI wall-time critical path. On the 2026-11-28 full run,
+    # PostgreSQL 19.0 / e2e-lifecycle spent 373s in pytest and set the 473s wall.
+    # The slowest calls were instance profiles (~76s), installed fleet projections (~74s)
+    # and the integrations acceptance file (~101s across its slow cases). Those files are
+    # entirely pg+e2e, so they move to their own cell with a separate Postgres. Two workers
+    # per job keep one database from being oversubscribed the way `-n auto` can be.
+    # Remaining tests/e2e/ files stay in `e2e`.
+    Shard(
+        "e2e-integrations",
+        (
+            "tests/e2e/test_extensions_cli.py",
+            "tests/e2e/test_instance_profiles.py",
+            "tests/e2e/test_integrations_acceptance.py",
+            "tests/e2e/test_integrations_cli.py",
+            "tests/e2e/test_integrations_doctor.py",
+        ),
+        unit=False,
+        e2e=False,
+        workers="2",
+    ),
     Shard(
         "e2e-lifecycle",
         (
@@ -95,12 +112,7 @@ SHARDS: tuple[Shard, ...] = (
             "tests/e2e/test_http_worker.py",
             "tests/e2e/test_http_worker_resilience.py",
             "tests/e2e/test_execution_cli.py",
-            "tests/e2e/test_extensions_cli.py",
-            "tests/e2e/test_instance_profiles.py",
             "tests/e2e/test_review_request.py",
-            "tests/e2e/test_integrations_acceptance.py",
-            "tests/e2e/test_integrations_cli.py",
-            "tests/e2e/test_integrations_doctor.py",
         ),
         e2e=True,
         workers="2",

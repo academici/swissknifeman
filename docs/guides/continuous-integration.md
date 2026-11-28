@@ -46,11 +46,20 @@ The unit suite, and `make test`, pass `--timeout 60 --timeout-method signal -o f
 unit test then fails with its name and a thread dump, instead of sitting until the job's 30-minute limit. The
 `pg` and `e2e` suites keep their longer waits and do not use this bound.
 
-The wall-time critical path after `lint` is the PostgreSQL e2e work: pytest there has taken 8-13 minutes
-even with a uv cache hit and a sub-two-second environment sync. That work is split into `e2e-lifecycle`
-(serve, HTTP, integrations, review, authoring) and `e2e` (the remaining `tests/e2e/` files, including later
-additions). Each uses two xdist workers so one shared Postgres is not oversubscribed. PostgreSQL cells also
-print `--durations=20`. A targeted rerun of this path should name both shards (`pg/e2e-lifecycle`, `pg/e2e`).
+The wall-time critical path after `lint` is the PostgreSQL e2e work. A full run on 2026-11-28 finished in
+473 seconds; `PostgreSQL 19.0 / e2e-lifecycle` was the longest job at 407 seconds, of which pytest took 373.
+That work is three cells, each with its own Postgres and two xdist workers:
+
+- `e2e-integrations` — instance profiles, extension CLI and the integrations acceptance, CLI and doctor files.
+  On that run their slowest calls were about 76, 74 and 101 seconds, and every test in the files is `pg`.
+- `e2e-lifecycle` — serve, HTTP, authoring, review and the execution CLI.
+- `e2e` — the remaining `tests/e2e/` files, including later additions.
+
+PostgreSQL cells also print `--durations=20`. A targeted rerun of this path should name the cells that were
+slow (`pg/e2e-integrations`, `pg/e2e-lifecycle`, `pg/e2e`).
+
+GitHub's `gh run rerun --failed` reruns only the failed cells plus `CI gate`. Use that when the same commit
+should be retried. A new commit on a work branch starts a full run unless its message contains `CI-Only:`.
 
 ## Targeted runs
 

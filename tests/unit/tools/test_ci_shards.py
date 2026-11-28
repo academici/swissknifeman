@@ -41,6 +41,8 @@ def test_no_shard_is_stale() -> None:
 def test_first_matching_prefix_wins_and_unknown_paths_land_in_other() -> None:
     assert ci_shards.shard_of("tests/e2e/test_projected_hooks.py").name == "hooks"
     assert ci_shards.shard_of("tests/e2e/test_local_lifecycle.py").name == "e2e-lifecycle"
+    assert ci_shards.shard_of("tests/e2e/test_instance_profiles.py").name == "e2e-integrations"
+    assert ci_shards.shard_of("tests/e2e/test_integrations_acceptance.py").name == "e2e-integrations"
     assert ci_shards.shard_of("tests/e2e/test_m3_execution.py").name == "e2e"
     assert ci_shards.shard_of("tests/contracts/execution/test_x.py").name == "execution"
     assert ci_shards.shard_of("tests/integration/postgres/test_x.py").name == "adapters"
@@ -67,7 +69,9 @@ def test_suites_select_their_flagged_shards() -> None:
     pg = {shard.name for shard in ci_shards.shards_for("pg")}
     e2e = {shard.name for shard in ci_shards.shards_for("e2e")}
     assert "hooks" not in unit
-    assert {"hooks", "adapters", "execution"} <= pg
+    assert {"hooks", "adapters", "execution", "e2e-integrations"} <= pg
+    assert "e2e-integrations" not in unit
+    assert "e2e-integrations" not in e2e
     assert "platform" not in pg
     assert "architecture" not in pg
     assert {"e2e", "e2e-lifecycle"} <= e2e

@@ -462,6 +462,20 @@ def build_runtime_request(
     )
 
 
+def _publish_complete(
+    storage: "StorageBudget", root: Path, owner_id: str, target: Path, content: bytes
+) -> None:
+    """Publish ``target`` only once ``content`` is complete.
+
+    Reserving through ``open_file`` creates the final name as an empty file before the
+    write. Readers that glob that name then parse it as JSON.
+    """
+    from skm.platform.fs.atomic_write import atomic_write
+
+    with storage.reserve(root, owner_id=owner_id, max_bytes=len(content), min_free_bytes=0):
+        atomic_write(target, content, mode=0o600)
+
+
 class WorkerReaper:
     """Keep durable proofs until the server acknowledges claim; uncertain markers block all slots."""
 
@@ -499,12 +513,7 @@ class WorkerReaper:
             },
             default=str,
         ).encode()
-        with self.storage.reserve(
-            root, owner_id=handle.request_id, max_bytes=len(content), min_free_bytes=0
-        ) as reservation:
-            writer = reservation.open_file(target)
-            writer.write(content)
-            writer.close()
+        _publish_complete(self.storage, root, handle.request_id, target, content)
 
     def reap(self) -> tuple[JsonObject, ...]:
         from typing import cast
@@ -554,15 +563,7 @@ class WorkerReaper:
                             "identity": self.identity_facts(),
                         }
                         content = json.dumps(proof, default=str).encode()
-                        with outer.storage.reserve(
-                            outer._proofs,
-                            owner_id=str(owner.unit_id),
-                            max_bytes=len(content),
-                            min_free_bytes=0,
-                        ) as reservation:
-                            with_file = reservation.open_file(target)
-                            with_file.write(content)
-                            with_file.close()
+                        _publish_complete(outer.storage, outer._proofs, str(owner.unit_id), target, content)
                 return empty
 
         def resolve(ownership: "ProcessOwnership") -> "OwnedContainment | None":

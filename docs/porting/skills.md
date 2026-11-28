@@ -8,21 +8,21 @@ In legacy v1, `packages/skiller` coupled skill authoring, publication, provider 
 
 - **Zero code execution or legacy imports**: [`tools/migrate_skills.py`](../../tools/migrate_skills.py) reads donor directories strictly as UTF-8 text and JSON documents. No donor Python package is imported, and executable `scripts/` are never copied into skill packs.
 - **Strict schema & compatibility gate**: Every generated pack is validated in memory through `build_candidate(..., scan=True)` against [`pack.v1.json`](../../src/skm/schemas/extensions/pack.v1.json), [`skill-manifest.v1.json`](../../src/skm/schemas/extensions/skill-manifest.v1.json), `validate_layout`, and `check_resource`, requiring `CompatVerdict.CLEAN` before any file is written.
-- **Isolation from built-in `core` sync**: Built-in synchronization (`PackagedBuiltinPacks`) scans direct subdirectories of `resources/packs/*/pack.toml` and reserves `trust = "builtin"` exclusively for [`resources/packs/core/pack.toml`](../../resources/packs/core/pack.toml). Migrated packs live one level deeper under `resources/packs/migrated-local/<slug>/` and `resources/packs/migrated-upstream/<slug>/` with `trust = "third_party"`, `priority = -100`, and **no `[config]` table** (preserving security invariant S26).
+- **Isolation from built-in `core` sync**: Built-in synchronization (`PackagedBuiltinPacks`) discovers packaged manifests recursively under `resources/packs/` and reserves `trust = "builtin"` exclusively for [`resources/packs/core/pack.toml`](../../resources/packs/core/pack.toml). Migrated packs live one level deeper under `resources/packs/migrated-local/<slug>/` and `resources/packs/migrated-upstream/<slug>/` with `trust = "third_party"`, `priority = -100`, and **no `[config]` table** (preserving security invariant S26).
 
-## Corpus Reconciliation (`218 = 198 + 20`)
+## Corpus reconciliation
 
-Every skill directory containing `SKILL.md` in the donor repository is accounted for in [`resources/overlays/exports.json`](../../resources/overlays/exports.json):
+The original P09.06 migration classified 198 of 218 donor skills as migrated and 20 as excluded.
+Core 2.1.0 revised that classification. The current export counts the same 209 skiller skills and
+9 skills from the other donor packages. Its 18 migrated packs contain 106 local skills and 28 upstream skills.
+The per-skill records and exclusion reasons are in [the export](../../resources/overlays/exports.json).
 
-| Partition | Count | Destination / Disposition |
-|---|---:|---|
-| Donor `packages/skiller/skills/*/*` | `209` | Evaluated for neutrality and core overlap |
-| Donor `packages/{analyst,brain,harness,maind,planner}/skills/*` | `9` | Evaluated under G36 neutrality criteria |
-| **Total donor skills (`source_total`)** | **`218`** | `migrated (198) + excluded (20) == 218` |
-| Neutral local authored skills | `143` | `10` topic packs under `resources/packs/migrated-local/migrated-*` |
-| Upstream-mirrored third-party skills | `55` | `8` topic packs under `resources/packs/migrated-upstream/migrated-upstream-*` |
-| **Total migrated skills (`migrated`)** | **`198`** | **`18` installable `third_party` packs** |
-| **Total excluded skills (`excluded`)** | **`20`** | Recorded with G36 rationale in [`exports.json`](../../resources/overlays/exports.json) |
+| Export field | Count |
+|---|---:|
+| `source_total` | 218 |
+| `migrated` | 134 |
+| `excluded` | 84 |
+| `packs` | 18 |
 
 ## Migrated Topic Packs
 
@@ -34,12 +34,12 @@ Neutral local skills (`provenance.source = "local"`) and upstream-mirrored skill
 | `architect` | `migrated-architect` | 12 | `migrated-upstream-architect` | 3 |
 | `business` | `migrated-business` | 23 | `migrated-upstream-business` | 7 |
 | `devops` | `migrated-devops` | 10 | `migrated-upstream-devops` | 1 |
-| `frontend` | `migrated-frontend` | 17 | `migrated-upstream-frontend` | 18 |
-| `general` | `migrated-general` | 25 | `migrated-upstream-general` | 6 |
-| `laravel-php` | `migrated-laravel-php` | 33 | `migrated-upstream-laravel-php` | 13 |
+| `frontend` | `migrated-frontend` | 4 | `migrated-upstream-frontend` | 2 |
+| `general` | `migrated-general` | 21 | `migrated-upstream-general` | 2 |
+| `laravel-php` | `migrated-laravel-php` | 13 | `migrated-upstream-laravel-php` | 8 |
 | `platforms` | `migrated-platforms` | 11 | — | 0 |
 | `python` | `migrated-python` | 2 | — | 0 |
-| `quality-security` | `migrated-quality-security` | 9 | `migrated-upstream-quality-security` | 4 |
+| `quality-security` | `migrated-quality-security` | 9 | `migrated-upstream-quality-security` | 2 |
 
 Exact SHA-256 pack and resource digests are pinned in [`resources/overlays/exports.json`](../../resources/overlays/exports.json).
 
@@ -68,9 +68,10 @@ Every skill manifest declares a non-empty `roles` list drawn from the seven-role
 
 ## Excluded Skills & Operator Overlays (Criterion G36)
 
-Twenty donor skills are excluded from neutral packs and cataloged in [`resources/overlays/exports.json`](../../resources/overlays/exports.json) with all four G36 answers (`users`, `extension_point`, `compatible_without_it`, `removal_test`). See [`docs/extensions/overlays.md`](../extensions/overlays.md) for packaging and enabling operator overlays:
+Eighty-four donor skills are excluded from neutral packs and cataloged in [`resources/overlays/exports.json`](../../resources/overlays/exports.json) with all four G36 answers (`users`, `extension_point`, `compatible_without_it`, `removal_test`). See [`docs/extensions/overlays.md`](../extensions/overlays.md) for packaging and enabling operator overlays:
 
-- **`already_in_core` (`1`)**: `code-review` — already shipped in built-in `resources/packs/core/skills/code-review` (`trust = "builtin"`).
+- Eight skills already ship in core, including `code-review` (`already_in_core`).
+- The export records 56 skills pruned from the packaged catalog (`pruned_from_builtin_packs`) and one moved to an agent pack (`moved_to_agent_pack`).
 - **`personal_overlay_bucket` (`6`)**: `axioma-doctrine`, `axioma-glossary`, `axioma-stack`, `ecosystem-map` (`axioma`), `azguard` (`azguard`), `botkit` (`botkit`).
 - **`legacy_monorepo_package` (`9`)**: `session-observer` (`analyst`), `brain-locator` (`brain`), `agent-packs` (`harness`), `cross-project-coordinator`, `local-topology`, `shared-memory`, `swissknifeman-locator` (`maind`), `plan-protocol`, `workflow-craft` (`planner`).
 - **`ecosystem_coupled_skill` (`3`)**: `skills-ssot`, `mcp-advisor` (`general`), `defensibility` (`founder`).

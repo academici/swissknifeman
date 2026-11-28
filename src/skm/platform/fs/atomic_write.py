@@ -45,18 +45,18 @@ def assert_safe_replace_target(path: Path, *, dir_fd: int | None = None) -> None
 _UNSUPPORTED_SYNC = {errno.EINVAL, errno.ENOTSUP, errno.EPERM, errno.EISDIR, errno.EBADF}
 
 
-def fsync_dir(folder: Path) -> None:
+def fsync_dir(folder: Path, *, strict: bool = False) -> None:
     try:
         fd = os.open(folder, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
     except OSError as error:
-        if error.errno in _UNSUPPORTED_SYNC:
+        if not strict and error.errno in _UNSUPPORTED_SYNC:
             return
         raise
     primary: BaseException | None = None
     try:
         os.fsync(fd)
     except BaseException as error:
-        if not isinstance(error, OSError) or error.errno not in _UNSUPPORTED_SYNC:
+        if strict or not isinstance(error, OSError) or error.errno not in _UNSUPPORTED_SYNC:
             primary = error
             raise
     finally:

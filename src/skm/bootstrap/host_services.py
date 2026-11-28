@@ -465,15 +465,8 @@ def build_runtime_request(
 def _publish_complete(
     storage: "StorageBudget", root: Path, owner_id: str, target: Path, content: bytes
 ) -> None:
-    """Publish ``target`` only once ``content`` is complete.
-
-    Reserving through ``open_file`` creates the final name as an empty file before the
-    write. Readers that glob that name then parse it as JSON.
-    """
-    from skm.platform.fs.atomic_write import atomic_write
-
-    with storage.reserve(root, owner_id=owner_id, max_bytes=len(content), min_free_bytes=0):
-        atomic_write(target, content, mode=0o600)
+    with storage.reserve(root, owner_id=owner_id, max_bytes=len(content), min_free_bytes=0) as reservation:
+        reservation.publish_bytes(target, content)
 
 
 class WorkerReaper:
@@ -516,10 +509,12 @@ class WorkerReaper:
         _publish_complete(self.storage, root, handle.request_id, target, content)
 
     def reap(self) -> tuple[JsonObject, ...]:
+        import os
         from typing import cast
 
         from skm.adapters.runtimes._cli_session.identity import reap_orphans
         from skm.modules.runtimes.public import process_ownership_to_json
+        from skm.platform.fs.atomic_write import fsync_dir
 
         outer = self
 
@@ -554,7 +549,21 @@ class WorkerReaper:
                 if empty is True:
                     owner = self.ownership.owner
                     target = outer._proofs / f"{owner.unit_id}.json"
-                    if not target.exists():
+                    if target.exists():
+                        # A prior writer may have renamed the receipt but failed its directory fsync.
+                        with target.open("rb") as source:
+                            existing = json.load(source)
+                            os.fsync(source.fileno())
+                        if (
+                            existing["unit_id"] != str(owner.unit_id)
+                            or existing["unit_kind"] != owner.unit_kind
+                            or existing["stage_record_id"] != str(owner.stage_record_id)
+                            or existing["dead"] is not True
+                            or existing["identity"]["ownership"] != process_ownership_to_json(self.ownership)
+                        ):
+                            raise ValueError("reap proof differs from the pending ownership marker")
+                        fsync_dir(outer._proofs, strict=True)
+                    else:
                         proof = {
                             "stage_record_id": str(owner.stage_record_id),
                             "unit_kind": owner.unit_kind,
@@ -575,6 +584,7 @@ class WorkerReaper:
             return tuple(
                 cast("JsonObject", json.loads(path.read_text()))
                 for path in sorted(self._proofs.glob("*.json"))
+                if not (self._identities / path.name).exists()
             )
 
     def pending(self) -> bool:

@@ -371,6 +371,13 @@ def test_full_context_m3_worker_keeps_run_pins_after_core_upgrade(recovery: Any,
 def test_skills_reconciliation_matches_porting_report():
     export = json.loads((ROOT / "resources/overlays/exports.json").read_text())
     counts = export["counts"]
+    report = (ROOT / "docs/porting/skills.md").read_text()
+    report_counts = {}
+    for row in report.splitlines():
+        cells = [cell.strip() for cell in row.strip("|").split("|")]
+        if len(cells) == 2 and cells[0].strip("`") in counts:
+            report_counts[cells[0].strip("`")] = int(cells[1])
+    assert report_counts == counts
     assert counts["packs"] == len(export["packs"])
     assert counts["migrated"] == sum(p["skill_count"] for p in export["packs"])
     assert counts["excluded"] == len(export["excluded_skills"])

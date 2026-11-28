@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from skm.kernel.errors import BackendUnavailable, ErrorCode
-from skm.platform.fs.atomic_write import atomic_write, fsync_dir
+from skm.platform.fs.atomic_write import assert_safe_replace_target, atomic_write, fsync_dir
 from skm.platform.fs.file_lock import FileLock, LockTimeout
 from skm.platform.fs.safe_paths import safe_join
 
@@ -118,6 +118,7 @@ class _Entry:
     max_files: int
     allocation_block: int
     paths: list[_OwnedPath] = field(default_factory=_paths)
+    publishing: bool = False
     release_pending: bool = field(default=False, compare=False, repr=False)
 
     @classmethod
@@ -146,6 +147,10 @@ class _Entry:
             or any(ch not in "0123456789abcdef" for ch in entry.token)
         ):
             raise ValueError("invalid reserve/root")
+        publishing = obj.get("publishing", False)
+        if not isinstance(publishing, bool):
+            raise ValueError("invalid publication flag")
+        entry.publishing = publishing
         paths = obj["paths"]
         if not isinstance(paths, list):
             raise ValueError("invalid paths")
@@ -170,6 +175,42 @@ class _Entry:
         if len({item.path for item in entry.paths}) != len(entry.paths):
             raise ValueError("duplicate paths")
         return entry
+
+
+def _publication_stage(entry: _Entry) -> Path:
+    return Path(entry.root) / f".skm-publish-{entry.token}.tmp"
+
+
+def _discard_publication_stage(entry: _Entry, owned: _OwnedPath) -> bool:
+    """Settle this reservation's private staging name, including an already completed rename."""
+    stage = _publication_stage(entry)
+    directory = stage.parent
+    info = directory.lstat()
+    if (
+        directory.resolve() != directory
+        or not stat.S_ISDIR(info.st_mode)
+        or info.st_dev != entry.filesystem
+        or info.st_mode & 0o077
+        or info.st_uid != os.geteuid()
+    ):
+        return False
+    try:
+        info = stage.lstat()
+    except FileNotFoundError:
+        pass
+    else:
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.geteuid():
+            return False
+        if owned.ino is None:
+            # The publisher reserved this absent name under its random token in a private
+            # directory. It cannot write any bytes until open_file persists the identity.
+            if info.st_size or info.st_mode & 0o077:
+                return False
+        elif (info.st_dev, info.st_ino) != (owned.dev, owned.ino):
+            return False
+        stage.unlink(missing_ok=True)
+    fsync_dir(stage.parent, strict=True)
+    return True
 
 
 class StorageBudget:
@@ -240,6 +281,8 @@ class StorageBudget:
         for entry in entries:
             record = asdict(entry)
             record.pop("release_pending")
+            if not entry.publishing:
+                record.pop("publishing")
             records.append(record)
         data: dict[str, object] = {"version": 1, "reservations": records}
         encoded = json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
@@ -300,6 +343,10 @@ class StorageBudget:
     @staticmethod
     def _files_settled(entry: _Entry) -> bool:
         for owned in entry.paths:
+            if entry.publishing and Path(owned.path) == _publication_stage(entry):
+                if not _discard_publication_stage(entry, owned):
+                    return False
+                continue
             try:
                 path = Path(owned.path)
                 safe_join(Path(entry.root), str(path.relative_to(entry.root)))
@@ -493,6 +540,38 @@ class WriteReservation:
                             error.add_note(f"open_file cleanup failed for {writer.path}: {cleanup}")
                 raise
             return writer
+
+    def publish_bytes(self, target: Path, content: bytes) -> None:
+        """Replace a file in the reserved private directory with complete, durable bytes."""
+        with self._state.guard:
+            self._state.require_open()
+            root = Path(self._entry.root)
+            target = Path(os.path.abspath(target))
+            stage = _publication_stage(self._entry)
+            if target.parent != root or target == stage:
+                raise ValueError("publication target must be a file in the reservation root")
+            info = root.stat()
+            if info.st_uid != os.geteuid() or info.st_mode & 0o077:
+                raise ValueError("publication directory must be private and owned by this user")
+            if os.path.lexists(stage):
+                raise FileExistsError(stage)
+            self._entry.publishing = True
+            writer = self.open_file(stage)
+            owned = self._entry.paths[-1]
+            try:
+                writer.write(content)
+                writer.close()
+                assert_safe_replace_target(target)
+                os.replace(stage, target)
+                fsync_dir(root, strict=True)
+            except BaseException as primary:
+                try:
+                    if not _discard_publication_stage(self._entry, owned):
+                        raise OSError("publication staging identity changed")
+                except BaseException as cleanup:  # noqa: BLE001 -- retain the original publication error
+                    self._state.cleanup_failed = True
+                    primary.add_note(f"publication cleanup failed for {stage}: {cleanup}")
+                raise
 
     def close(self) -> None:
         with self._state.guard:

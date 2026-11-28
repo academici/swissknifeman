@@ -1,6 +1,5 @@
 """Composition and host operations for the local CLI lifecycle."""
 
-import fcntl
 import json
 import os
 import re
@@ -285,7 +284,11 @@ def _run_local_service(state: Path, record: Path, metadata: dict[str, JsonValue]
                     path.replace(path.with_suffix(".previous.log"))
                 log = hold.open_file(path)
                 child = subprocess.Popen(  # noqa: TID251 -- the detached log owner drains the service pipe
-                    argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                    argv,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    pipesize=4096,
                 )
                 if child.stdout is None:
                     raise RuntimeError("local service has no output pipe")
@@ -298,9 +301,6 @@ def _run_local_service(state: Path, record: Path, metadata: dict[str, JsonValue]
                     atomic_write(record, json.dumps({**asdict(identity), **metadata}).encode(), mode=0o600)
                     sys.stdout.write("ready\n")
                     sys.stdout.flush()
-                    # One page: a failed log write must still find the child blocked on the pipe.
-                    with suppress(OSError):
-                        fcntl.fcntl(output.fileno(), fcntl.F_SETPIPE_SZ, 4096)
                     remaining = _LOCAL_LOG_BYTES
                     while chunk := os.read(output.fileno(), 4096):
                         if not remaining:

@@ -46,17 +46,18 @@ The unit suite, and `make test`, pass `--timeout 60 --timeout-method signal -o f
 unit test then fails with its name and a thread dump, instead of sitting until the job's 30-minute limit. The
 `pg` and `e2e` suites keep their longer waits and do not use this bound.
 
-The wall-time critical path after `lint` is the PostgreSQL e2e work. A full run on 2026-11-28 finished in
-473 seconds; `PostgreSQL 19.0 / e2e-lifecycle` was the longest job at 407 seconds, of which pytest took 373.
-That work is three cells, each with its own Postgres and two xdist workers:
+The PostgreSQL e2e tests run in three cells per database version. Each cell uses its own Postgres
+and two xdist workers. Use the cell name to rerun a failed group independently.
 
-- `e2e-integrations` — instance profiles, extension CLI and the integrations acceptance, CLI and doctor files.
-  On that run their slowest calls were about 76, 74 and 101 seconds, and every test in the files is `pg`.
-- `e2e-lifecycle` — serve, HTTP, authoring, review and the execution CLI.
-- `e2e` — the remaining `tests/e2e/` files, including later additions.
+- `e2e-integrations` covers instance profiles, extension CLI and the integrations acceptance, CLI and doctor files.
+- `e2e-lifecycle` covers serve, HTTP, authoring, review and the execution CLI.
+- `e2e` collects the remaining files under `tests/e2e/`, including new ones.
 
-PostgreSQL cells also print `--durations=20`. A targeted rerun of this path should name the cells that were
-slow (`pg/e2e-integrations`, `pg/e2e-lifecycle`, `pg/e2e`).
+The split reduced the longest lifecycle cell from 407 to 210 seconds. The two full runs spanned 473 and
+471 seconds from first job start to gate completion. In the second run the 307-second PostgreSQL 19.0
+e2e cell finished before the last unit cells. PostgreSQL cells print `--durations=20` for timing comparisons.
+[Before the split](https://github.com/academici/swissknifeman/actions/runs/46055624769) ·
+[After the split](https://github.com/academici/swissknifeman/actions/runs/46111951772)
 
 GitHub's `gh run rerun --failed` reruns only the failed cells plus `CI gate`. Use that when the same commit
 should be retried. A new commit on a work branch starts a full run unless its message contains `CI-Only:`.

@@ -43,11 +43,10 @@ claim (`LEASE_LOST`), S26 third-party config, flag-K isolation/selection/ceiling
 
 ## Сверка skills
 
-Согласно [skills.md](skills.md) и [exports.json](../../resources/overlays/exports.json):
-**218 = 198 + 20**. Из 218 исходных skills (209 skiller + 9 остальных пакетов) перенесены
-198: 143 local в 10 packs и 55 upstream в 8 packs. Все 20 исключений перечислены с причиной
-в `excluded_skills`. M4 тест сверяет суммы manifest, число записей исключений и corpus counts.
-Это учёт миграции, а не автоматическое включение всех 18 third-party packs в core.
+При первоначальном переносе P09.06 в packs попали 198 из 218 исходных skills. После обновления
+core до 2.1.0 в 18 мигрированных packs осталось 134 skills, ещё 84 учтены в `excluded_skills`.
+Локальные packs содержат 106 skills, upstream packs — 28. M4 сверяет текущую таблицу отчёта
+с экспортом и файлами пакетов. [Отчёт](skills.md) · [Экспорт](../../resources/overlays/exports.json)
 
 ## Валидация и ревью
 

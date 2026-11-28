@@ -1,6 +1,7 @@
 """OPS-NEW-04: disk admission and durable evidence share one host ledger."""
 
 import errno
+import fcntl
 import json
 import os
 import subprocess
@@ -384,6 +385,28 @@ def test_local_child_log_reservation_lives_through_writes_and_close(tmp_path: Pa
             service.stop("worker", grace=0)
 
 
+def test_log_pipe_is_bounded_when_popen_returns(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    service = local_service(tmp_path)
+    popen = subprocess.Popen  # noqa: TID251 -- observe the supervisor-created pipe before its first read
+    sizes: list[int] = []
+
+    def observe_spawn(*args, **kwargs):
+        child = popen(*args, **kwargs)
+        assert child.stdout is not None
+        sizes.append(fcntl.fcntl(child.stdout.fileno(), fcntl.F_GETPIPE_SZ))
+        return child
+
+    monkeypatch.setattr(subprocess, "Popen", observe_spawn)
+    with service.lock().hold(timeout_seconds=1):
+        lifecycle._run_local_service(
+            service.config.state_dir,
+            service.pids / "worker.pid",
+            {"role": "worker"},
+            ["/bin/echo", "started"],
+        )
+    assert sizes == [4096]
+
+
 def test_log_write_failure_kills_a_child_blocked_on_a_page_sized_pipe(tmp_path: Path) -> None:
     """A burst that fits in the default 64KiB pipe must still die before it finishes.
 
@@ -409,7 +432,8 @@ def test_log_write_failure_kills_a_child_blocked_on_a_page_sized_pipe(tmp_path: 
         "gate, drained, measured = map(pathlib.Path, sys.argv[1:])\n"
         "print('out', flush=True); print('err', file=sys.stderr, flush=True)\n"
         "while not gate.exists(): time.sleep(0.01)\n"
-        "measured.write_text(str(fcntl.fcntl(1, fcntl.F_GETPIPE_SZ)))\n"
+        "sample = measured.with_suffix('.tmp'); sample.write_text(str(fcntl.fcntl(1, fcntl.F_GETPIPE_SZ)))\n"
+        "sample.replace(measured)\n"
         f"sys.stdout.buffer.write(b'X' * {payload})\n"
         "sys.stdout.flush(); drained.touch(); time.sleep(30)\n"
     )

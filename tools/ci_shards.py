@@ -81,13 +81,8 @@ def _module(name: str, *, pg: bool = True) -> Shard:
 SHARDS: tuple[Shard, ...] = (
     # Native hook deadline checks must not compete with xdist workers (see `make test-pg`).
     Shard("hooks", ("tests/e2e/test_projected_hooks.py",), unit=False, workers="0"),
-    # The pg/e2e cell is the CI wall-time critical path. On the 2026-11-28 full run,
-    # PostgreSQL 19.0 / e2e-lifecycle spent 373s in pytest and set the 473s wall.
-    # The slowest calls were instance profiles (~76s), installed fleet projections (~74s)
-    # and the integrations acceptance file (~101s across its slow cases). Those files are
-    # entirely pg+e2e, so they move to their own cell with a separate Postgres. Two workers
-    # per job keep one database from being oversubscribed the way `-n auto` can be.
-    # Remaining tests/e2e/ files stay in `e2e`.
+    # These five pg+e2e files share a database cell and can be retried independently.
+    # Keep the specific prefixes ahead of the tests/e2e/ catch-all.
     Shard(
         "e2e-integrations",
         (

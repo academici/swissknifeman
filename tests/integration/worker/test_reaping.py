@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import errno
 import os
 import signal
 import sys
@@ -98,6 +99,36 @@ def test_confirmed_reap_has_durable_owner_proof_before_marker_removal(tmp_path):
     assert WorkerReaper(tmp_path, budget, resolve=lambda _: backend).reap() == (proof,)
     reaper.acknowledge((proof,))
     assert reaper.reap() == ()
+
+
+@pytest.mark.parametrize("error_number", [errno.EIO, errno.EPERM])
+def test_reap_retries_proof_directory_sync_before_removing_marker(tmp_path, monkeypatch, error_number):
+    owner = ownership_at(tmp_path)
+    marker = create_marker(tmp_path / "identities", owner)
+    budget = build_host_storage(tmp_path)
+    backend = Containment(owner, empty=True)
+    proofs = tmp_path / "recovery/reaped"
+    target = proofs / f"{owner.owner.unit_id}.json"
+    reaper = WorkerReaper(tmp_path, budget, resolve=lambda _: backend)
+    real_sync = os.fsync
+    failures = []
+
+    def fail_published_directory(fd):
+        if os.path.samefile(f"/proc/self/fd/{fd}", proofs) and target.exists():
+            failures.append(fd)
+            raise OSError(error_number, "proof directory sync failed")
+        real_sync(fd)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(os, "fsync", fail_published_directory)
+        for _ in range(2):
+            count = len(failures)
+            assert reaper.reap() == ()
+            assert len(failures) > count
+            assert marker.exists()
+    (proof,) = reaper.reap()
+    assert proof["unit_id"] == str(owner.owner.unit_id)
+    assert not marker.exists()
 
 
 def test_kill9_leader_and_setsid_descendant_require_empty_backend_on_restart(tmp_path):
